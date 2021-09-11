@@ -137,9 +137,9 @@ QuantumBasis["Wigner", args___] := QuantumBasis[{"Wigner", 2}, args]
 
 QuantumBasis[{"Wigner", dimension_Integer}, args___] := QuantumBasis[{"Wigner", QuantumBasis[dimension]}, args]
 
-QuantumBasis[{"Wigner", qb_QuantumBasis /; ValidQuantumBasisQ[qb]}] := QuantumBasis[{"Wigner", qb}, "PhaseSpace"]
+QuantumBasis[{"Wigner", qb_QuantumBasis}] := QuantumBasis[{"Wigner", qb}, "PhaseSpace"]
 
-QuantumBasis[{"Wigner", qb_QuantumBasis /; ValidQuantumBasisQ[qb]}, args___] := Module[{
+QuantumBasis[{"Wigner", qb_QuantumBasis /; QuantumBasisQ[qb]}, args___] := Module[{
     dimensionality, positionBasis, momentumBasis, kernelElement
 },
         dimensionality = First @ qb["Dimensions"];
@@ -147,12 +147,14 @@ QuantumBasis[{"Wigner", qb_QuantumBasis /; ValidQuantumBasisQ[qb]}, args___] := 
         momentumBasis = With[{dimension = #},
             {(dimension + 1) ->
                 (1 / Sqrt[Length[positionBasis]]) *
-                Total[(Exp[(I 2 Pi dimension #) / Length[positionBasis]] (Values @@ positionBasis[[# + 1]])) & /@ Range[0, Length[positionBasis] - 1]]
+                Total[(Exp[(I 2 Pi dimension #) / Length[positionBasis]] (Values @@ positionBasis[[# + 1]])) & /@
+                    Range[0, Length[positionBasis] - 1]
+                ]
             }
         ] & /@ Range[0, dimensionality - 1];
-        kernelElement = With[{eigensystem =
+        kernelElement = ComplexExpand @ With[{eigensystem =
               Reverse @ Sort[
-                  Apply[Rule, #] & /@ Thread @ Eigensystem @ Partition[
+                  Apply[Rule, #] & /@ ComplexExpand @ Thread @ Eigensystem @ Partition[
                     Map[
                         With[{q1 = #[[1, 1]], p1 = #[[1, 2]], q2 = #[[2, 1]], p2 = #[[2, 2]]},
                             Exp[(2 Pi I (q1 - q2) (p1 - p2)) / dimensionality]
@@ -174,7 +176,7 @@ QuantumBasis[{"Wigner", qb_QuantumBasis /; ValidQuantumBasisQ[qb]}, args___] := 
 
             Flatten[
                 Table[
-                    With[{labels = Normal @ AssociationThread[Tuples[Range[0, dimensionality - 1], 2], Range[dimensionality^2]]},
+                    With[{labels = Thread[Tuples[Range[0, dimensionality - 1], 2] -> Range[dimensionality ^ 2]]},
                         Sqrt[dimensionality] * Total @ Map[
                             With[{q1 = #[[1]], p1 = #[[2]]},
                                 Extract[kernelElement, ({{i, j}, #} /. labels)] *

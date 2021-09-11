@@ -2,7 +2,7 @@ Package["QuantumFramework`"]
 
 
 
-QuantumBasis /: MakeBoxes[qb_QuantumBasis /; ValidQuantumBasisQ[qb], format_] := With[{
+QuantumBasis /: MakeBoxes[qb_QuantumBasis /; Quiet @ QuantumBasisQ[Unevaluated @ qb], format_] := With[{
     icon = MatrixPlot[
         Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], qb["MatrixRepresentation"], {2}],
         ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},

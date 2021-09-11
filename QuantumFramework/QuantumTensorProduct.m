@@ -11,7 +11,7 @@ QuantumTensorProduct[args : Except[_List]] := QuantumTensorProduct[{args}]
 
 (* basis x basis *)
 
-QuantumTensorProduct[qb1_ ? ValidQuantumBasisQ, qb2_ ? ValidQuantumBasisQ] /; qb1["Picture"] === qb2["Picture"] :=
+QuantumTensorProduct[qb1_ ? QuantumBasisQ, qb2_ ? QuantumBasisQ] /; qb1["Picture"] === qb2["Picture"] :=
 QuantumBasis[
     AssociationThread[
         Catenate @ Outer[Apply[CircleTimes] @* Join, qb1["NormalBasisElementNames"], qb2["NormalBasisElementNames"], 1],

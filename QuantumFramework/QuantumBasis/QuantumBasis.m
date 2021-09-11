@@ -2,7 +2,7 @@ Package["QuantumFramework`"]
 
 PackageExport["QuantumBasis"]
 
-PackageScope["ValidQuantumBasisQ"]
+PackageScope["QuantumBasisQ"]
 PackageScope["$QuantumBasisPictures"]
 PackageScope["QuantumBasisProp"]
 
@@ -25,29 +25,30 @@ QuantumBasis::inconsistentElements = "elements should have the same dimensions";
 QuantumBasis::dependent = "elements should be linearly independent";
 
 
-ValidQuantumBasisQ[qb_[basisElements_Association, picture_String]] :=
-    SymbolName[qb] === "QuantumBasis" &&
-    (MemberQ[$QuantumBasisPictures, picture] || Message[QuantumBasis::picture]) &&
-    (Length[basisElements] > 0 || Message[QuantumBasis::zeroDimensions]) &&
-    (Equal @@ basisElementNameLength /@ Keys[basisElements] || Message[QuantumBasis::inconsistentNames]) &&
+QuantumBasisQ[QuantumBasis[basisElements_Association, picture_String]] :=
+    (MemberQ[$QuantumBasisPictures, picture] || (Message[QuantumBasis::picture]; False)) &&
+    (Length[basisElements] > 0 || (Message[QuantumBasis::zeroDimensions]; False)) &&
+    (Equal @@ basisElementNameLength /@ Keys[basisElements] || (Message[QuantumBasis::inconsistentNames]; False)) &&
     (
         AnyTrue[basisElements, symbolicTensorQ] ||
         (
            Equal @@ Dimensions /@ basisElements ||
-           Message[QuantumBasis::inconsistentElements]
+           (Message[QuantumBasis::inconsistentElements]; False)
+        ) &&
+        (
+            AllTrue[basisElements, ArrayQ[#, _ ? NumericQ] &] &&
+            ResourceFunction["LinearlyIndependent"] @ Values[Flatten /@ basisElements] ||
+            (Message[QuantumBasis::dependent]; False)
         )
-    ) &&
-    (
-        AllTrue[basisElements, ArrayQ[#, _ ? NumericQ] &] &&
-        ResourceFunction["LinearlyIndependent"] @ Values[Flatten /@ basisElements] ||
-        Message[QuantumBasis::dependent]
     )
 
-ValidQuantumBasisQ[___] := False
+QuantumBasisQ[___] := False
 
 
-qb_QuantumBasis["ValidQ"] := ValidQuantumBasisQ[qb]
+qb_QuantumBasis["ValidQ"] := QuantumBasisQ[qb]
 
+
+qb : QuantumBasis[_Association, _String] := qb /; ! QuantumBasisQ[Unevaluated @ qb]
 
 
 $QuantumBasisProperties = {
@@ -67,31 +68,22 @@ QuantumBasis["Properties"] := $QuantumBasisProperties
 
 QuantumBasis::undefprop = "QuantumBasis property `` is undefined for this basis";
 
-expr : (qb_QuantumBasis[arg : prop_String | {prop_String, ___}, args___]) /; ValidQuantumBasisQ[qb] :=
+expr : (qb_QuantumBasis[prop_ ? propQ, args___]) /; QuantumBasisQ[qb] :=
     Enclose[
         ConfirmMatch[
-            QuantumBasisProp[qb, arg, args],
+            QuantumBasisProp[qb, prop, args],
             Except[_QuantumBasisProp],
             Message[QuantumBasis::undefprop, prop]
         ],
-    Defer[expr] &
+        Defer[expr] &
     ]
-
-QuantumBasisProp[_, "Properties"] := QuantumBasis["Properties"]
-
-
-(* getters *)
-
-QuantumBasisProp[QuantumBasis[basisElements_, _], "BasisElementAssociation" | "Association"] := basisElements
-
-QuantumBasisProp[QuantumBasis[_, picture_String], "Picture"] := picture
 
 
 (* mutation *)
 
-QuantumBasis[qb_ ? ValidQuantumBasisQ] := qb
+QuantumBasis[qb_ ? QuantumBasisQ] := qb
 
-QuantumBasis[qb_ ? ValidQuantumBasisQ, picture_String] := QuantumBasis[qb["Association"], picture]
+QuantumBasis[qb_ ? QuantumBasisQ, picture_String] := QuantumBasis[qb["Association"], picture]
 
 
 (* construction *)
@@ -104,7 +96,7 @@ QuantumBasis[assoc_Association] := QuantumBasis[assoc, "Schrodinger"]
 
 
 QuantumBasis[assoc_Association, args : Except[_String]] := Enclose @
-    QuantumBasis[ConfirmBy[QuantumBasis[assoc], ValidQuantumBasisQ], args]
+    QuantumBasis[ConfirmBy[QuantumBasis[assoc], QuantumBasisQ], args]
 
 
 QuantumBasis[elements_ /; VectorQ[elements, TensorQ], args___] := QuantumBasis[
@@ -117,20 +109,20 @@ QuantumBasis[elements_ /; VectorQ[elements, TensorQ], args___] := QuantumBasis[
 
 (* TODO: generalize to any rank *)
 
-QuantumBasis[qb_ ? ValidQuantumBasisQ, 1] := qb
+QuantumBasis[qb_ ? QuantumBasisQ, 1] := qb
 
-QuantumBasis[qb_ ? ValidQuantumBasisQ, multiplicity_Integer] /; multiplicity > 1 && qb["Rank"] == 1 := QuantumBasis[
+QuantumBasis[qb_ ? QuantumBasisQ, multiplicity_Integer] /; multiplicity > 1 && qb["Rank"] == 1 := QuantumBasis[
     AssociationThread[
         CircleTimes @@ # & /@ Tuples[qb["BasisElementNames"], multiplicity],
-        Flatten[Apply[KroneckerProduct, #]] & /@ Distribute[Table[qb["BasisElement"], multiplicity], List]
+        Flatten[Apply[KroneckerProduct, #]] & /@ Distribute[Table[qb["BasisElements"], multiplicity], List]
     ],
     qb["Picture"]
 ]
 
-QuantumBasis[qb_ ? ValidQuantumBasisQ, multiplicity_Integer] /; multiplicity > 1 && qb["Rank"] == 2 := QuantumBasis[
+QuantumBasis[qb_ ? QuantumBasisQ, multiplicity_Integer] /; multiplicity > 1 && qb["Rank"] == 2 := QuantumBasis[
     AssociationThread[
         CircleTimes @@ # & /@ Tuples[qb["BasisElementNames"], multiplicity],
-        Flatten[Outer[KroneckerProduct, ##, 1] & @@ Table[qb["BasisElement"], multiplicity], multiplicity - 1]
+        Flatten[Outer[KroneckerProduct, ##, 1] & @@ Table[qb["BasisElements"], multiplicity], multiplicity - 1]
     ],
     qb["Picture"]
 ]
