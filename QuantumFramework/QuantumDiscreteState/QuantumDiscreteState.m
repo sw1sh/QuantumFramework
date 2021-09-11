@@ -1,0 +1,127 @@
+Package["QuantumFramework`"]
+
+PackageExport["QuantumDiscreteState"]
+
+PackageScope["QuantumDiscreteStateQ"]
+
+
+QuantumDiscreteState::inState = "is invalid";
+
+QuantumDiscreteState::inBasis = "has invalid basis";
+
+QuantumDiscreteState::incompatible = "is incompatible with its basis";
+
+
+QuantumDiscreteStateQ[QuantumDiscreteState[state_, basis_]] :=
+    (stateQ[state] || (Message[QuantumDiscreteState::inState]; False)) &&
+    (QuantumBasisQ[basis] || (Message[QuantumDiscreteState::inBasis]; False)) &&
+    (Length[state] === basis["Size"] || (Message[QuantumDiscreteState::incompatible]; False))
+
+QuantumDiscreteStateQ[___] := False
+
+qds_QuantumDiscreteState["ValidQ"] := QuantumDiscreteStateQ[qds]
+
+
+
+(* basis argument input *)
+
+QuantumDiscreteState[state_ ? stateQ, basisArgs___] /; !QuantumBasisQ[basisArgs] := Enclose @ Module[{
+    basis, multiplicity
+},
+    basis = ConfirmBy[QuantumBasis[basisArgs], QuantumBasisQ];
+    multiplicity = basisMultiplicity[Length[state], basis["Size"]];
+    basis = ConfirmBy[QuantumBasis[basis, multiplicity], QuantumBasisQ];
+    QuantumDiscreteState[
+        PadRight[state, Table[basis["Size"], TensorRank[state]]],
+        basis
+    ]
+]
+
+
+(* association input *)
+
+QuantumDiscreteState[state_ ? AssociationQ, basisArgs___] /; VectorQ[Values[state]] := Enclose @ Module[{
+    basis = ConfirmBy[QuantumBasis[basisArgs], QuantumBasisQ], multiplicity},
+    multiplicity = basisMultiplicity[Length[state], basis["Size"]];
+    basis = ConfirmBy[QuantumBasis[basis, multiplicity], QuantumBasisQ];
+    ConfirmAssert[ContainsOnly[normalBasisElementName /@ Keys[state], basis["NormalBasisElementNames"]]];
+    QuantumDiscreteState[
+        Values @ KeyMap[normalBasisElementName, state][[Key /@ basis["NormalBasisElementNames"]]] /. _Missing -> 0,
+        basis
+    ]
+]
+
+
+(* eigenvalues input *)
+
+QuantumDiscreteState["Eigenvalues" -> eigenvalues_ ? VectorQ, basisArgs___] := With[{
+    basis = QuantumBasis[basisArgs]
+},
+    QuantumDiscreteState[
+        Total @ MapThread[#1 #2 &, {eigenvalues, basis["Projectors"]}],
+        basis
+    ] /; Length[eigenvalues] == basis["Size"]
+]
+
+
+(* expand basis *)
+
+QuantumDiscreteState[state_ ? stateQ, basis_ ? QuantumBasisQ] := QuantumDiscreteState[
+    state,
+    QuantumTensorProduct[basis, QuantumBasis[Max[2, Length[state] - basis["Size"]]]]
+] /; Length[state] > basis["Size"]
+
+
+(* pad state *)
+
+QuantumDiscreteState[state_ ? stateQ, basis_ ? QuantumBasisQ] := QuantumDiscreteState[
+    PadRight[state, Table[basis["Size"], TensorRank[state]]],
+    basis
+] /; Length[state] < basis["Size"]
+
+
+(* Mutation *)
+
+(* change of basis *)
+
+QuantumDiscreteState[qds_ ? QuantumDiscreteStateQ, newBasis_ ? QuantumBasisQ] /;
+    qds["BasisElementDimension"] === newBasis["BasisElementDimension"] :=
+Module[{
+    state = qds["State"],
+    matrixRepresentation = qds["Basis"]["MatrixRepresentation"],
+    newMatrixRepresentation = newBasis["MatrixRepresentation"]
+},
+    Switch[qds["StateType"],
+    "Vector",
+    QuantumDiscreteState[
+        PseudoInverse[newMatrixRepresentation] . (matrixRepresentation . state),
+        newBasis
+    ],
+    "Matrix",
+    QuantumDiscreteState[
+        PseudoInverse[newMatrixRepresentation] . (matrixRepresentation . state . PseudoInverse[matrixRepresentation]) . newMatrixRepresentation,
+        newBasis]
+   ]
+  ]
+
+
+(* renew basis *)
+
+QuantumDiscreteState[qds_ ? QuantumDiscreteStateQ, args___] := With[{
+    newBasis = QuantumBasis[qds["Basis"], args]},
+    If[qds["Basis"] === newBasis,
+        qds,
+        QuantumDiscreteState[qds["State"], newBasis]
+    ]
+]
+
+
+(* normalize vector state  *)
+\
+QuantumDiscreteState[state_ ? VectorQ, basis_] /; Norm[state] != 1:= QuantumDiscreteState[state / Norm[state], basis]
+
+(* normalize matrix state *)
+
+QuantumDiscreteState[state_ ? MatrixQ, basis_] /; Check[! PossibleZeroQ[Tr[state] - 1], False] :=
+    QuantumDiscreteState[state / Tr[state], basis]
+
