@@ -7,6 +7,8 @@ PackageScope["QuantumDiscreteStateProp"]
 $QuantumDiscreteStateProperties = {
      "StateType", "State", "Basis",
      "Amplitudes", "StateVector", "DensityMatrix",
+     "NormalizedState", "NormalizedAmplitudes", "NormalizedStateVector", "NormalizedDensityMatrix",
+     "NormalizedMatrix",
      "MatrixRepresentation", "Matrix",
      "VonNeumannEntropy",
      "Purity", "Type", "PureStateQ", "MixedStateQ",
@@ -23,22 +25,21 @@ QuantumDiscreteState["Properties"] := $QuantumDiscreteStateProperties
 QuantumDiscreteStateProp[_, "Properties"] := QuantumDiscreteState["Properties"]
 
 
+qds_QuantumDiscreteState["ValidQ"] := QuantumDiscreteStateQ[qds]
+
+
 QuantumDiscreteState::undefprop = "property `` is undefined for this state";
 
-expr : (qds_QuantumDiscreteState[prop_ ? propQ, args___]) /; QuantumDiscreteStateQ[qds] :=
-    Enclose[
-        ConfirmMatch[
-            QuantumDiscreteStateProp[qds, prop, args],
-            Except[_QuantumDiscreteStateProp],
-            Message[QuantumDiscreteState::undefprop, prop]
-        ],
-        Defer[expr] &
-    ]
+(qds_QuantumDiscreteState[prop_ ? propQ, args___]) /; QuantumDiscreteStateQ[qds] := With[{
+    result = QuantumDiscreteStateProp[qds, prop, args]
+    },
+    result /; !MatchQ[result, _QuantumDiscreteStateProp] || Message[QuantumDiscreteState::undefprop, prop]
+]
 
 
 QuantumDiscreteStateProp[qds_, "Properties"] := Complement[
     QuantumDiscreteState["Properties"],
-    Switch[qds["StateType"], "Matrix", {"Amplitudes", "StateVector"}, _, {}]
+    Switch[qds["StateType"], "Matrix", {"Amplitudes", "StateVector", "NormalizedAmplitudes", "NormalizedStateVector"}, _, {}]
 ]
 
 
@@ -68,6 +69,23 @@ QuantumDiscreteStateProp[qds_, "Amplitudes"] /; qds["StateType"] === "Vector" :=
 QuantumDiscreteStateProp[qds_, "StateVector"] /; qds["StateType"] === "Vector" := qds["State"]
 
 
+(* normalization *)
+
+QuantumDiscreteStateProp[qds_, "NormalizedState"] := With[{state = qds["State"]},
+    Switch[qds["StateType"], "Vector", Normalize[state], "Matrix", normalizeMatrix[state], _, state]
+]
+
+QuantumDiscreteStateProp[qds_, "NormalizedAmplitudes"] /; qds["StateType"] === "Vector" := With[{amplitudes = qds["Amplitudes"]},
+    amplitudes / Norm[Values[amplitudes]]
+]
+
+QuantumDiscreteStateProp[qds_, "NormalizedStateVector"] /; qds["StateType"] === "Vector" := qds["NormalizedState"]
+
+QuantumDiscreteStateProp[qds_, "NormalizedDensityMatrix"]:= normalizeMatrix @ qds["DensityMatrix"]
+
+QuantumDiscreteStateProp[qds_, "NormalizedMatrixRepresentation" | "NormalizedMatrix"] := normalizeMatrix @ qds["Matrix"]
+
+
 (* density matrix *)
 
 QuantumDiscreteStateProp[qds_, "DensityMatrix"] /; qds["StateType"] === "Vector" :=
@@ -90,12 +108,15 @@ QuantumDiscreteStateProp[qds_, "Eigenstates"] := QuantumDiscreteState[#, qds["Ba
 
 (* entropy *)
 
-QuantumDiscreteStateProp[qds_, "VonNeumannEntropy", logBase_ ? NumericQ] := If[
-    qds["Type"] === "Pure",
-    0,
-    (* - Total @ Map[# Log[logBase, #] &, Select[Re @ Eigenvalues@qds[DensityMatrix"], Positive]] *)
+QuantumDiscreteStateProp[qds_, "VonNeumannEntropy", logBase_ ? NumericQ] := With[{
+    matrix = qds["NormalizedDensityMatrix"]
+},  If[
+        qds["Type"] === "Pure",
+        0,
+        (* - Total @ Map[# Log[logBase, #] &, Select[Re @ Eigenvalues@qds[DensityMatrix"], Positive]] *)
 
-    Check[- Tr[qds["DensityMatrix"] . MatrixLog[qds["DensityMatrix"]]] / Log[logBase], $Failed]
+        Enclose[- Tr[matrix . ConfirmBy[MatrixLog[matrix], MatrixQ]] / Log[logBase], $Failed &]
+    ]
 ]
 
 QuantumDiscreteStateProp[qds_, "VonNeumannEntropy"] := qds["VonNeumannEntropy", E]
@@ -105,15 +126,7 @@ QuantumDiscreteStateProp[qds_, {"VonNeumannEntropy", logBase_}] := qds["VonNeuma
 
 (* purity *)
 
-QuantumDiscreteStateProp[qds_, "Purity"] := Switch[
-    qds["StateType"],
-    "Vector",
-    1,
-    "Matrix",
-    Abs[Tr[qds["State"] . qds["State"]]],
-    _,
-    $Failed
-]
+QuantumDiscreteStateProp[qds_, "Purity"] := Abs[Tr[MatrixPower[qds["NormalizedDensityMatrix"], 2]]]
 
 QuantumDiscreteStateProp[qds_, "Type"] := Which[
     qds["Purity"] === 1,
@@ -131,7 +144,7 @@ QuantumDiscreteStateProp[qds_, "MixedStateQ"] := qds["Type"] === "Mixed"
 
 (* block sphere*)
 
-QuantumDiscreteStateProp[qds_, "BlochSphericalCoordinates"] /; qds["Size"] == 2 := With[{state = qds["State"]},
+QuantumDiscreteStateProp[qds_, "BlochSphericalCoordinates"] /; qds["Size"] == 2 := With[{state = qds["NormalizedState"]},
     Switch[
         qds["StateType"],
 
@@ -158,7 +171,7 @@ QuantumDiscreteStateProp[qds_, "BlochSphericalCoordinates"] /; qds["Size"] == 2 
     ]
 ]
 
-QuantumDiscreteStateProp[qds_, "BlochCartesianCoordinates"] /; qds["Size"] == 2 :=  With[{state = qds["State"]},
+QuantumDiscreteStateProp[qds_, "BlochCartesianCoordinates"] /; qds["Size"] == 2 :=  With[{state = qds["NormalizedState"]},
     Switch[
         qds["StateType"],
 

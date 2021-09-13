@@ -9,6 +9,8 @@ PackageScope["nameQ"]
 PackageScope["propQ"]
 PackageScope["stateQ"]
 PackageScope["operatorQ"]
+PackageScope["orderQ"]
+PackageScope["normalizeMatrix"]
 PackageScope["kroneckerProduct"]
 PackageScope["OrderedMatrixRepresentation"]
 
@@ -45,12 +47,14 @@ orderQ[order_] := VectorQ[order, IntegerQ]
 
 (* Matrix tools *)
 
+normalizeMatrix[matrix_] := matrix SparseArray[{i_, i_} -> 1 / Tr[matrix], Dimensions[matrix], 1]
+
 kroneckerProduct[arg_] := arg
 
 kroneckerProduct[args___] := KroneckerProduct[args]
 
 
-OrderedMatrixRepresentation[matrix_ ? SquareMatrixQ, quditCount_Integer ? Positive, order_ ? orderQ] := Enclose @ Module[{
+OrderedMatrixRepresentation[matrix_ ? MatrixQ, quditCount_Integer ? Positive, order_ ? orderQ] := Enclose @ Module[{
     dimension, arity,
     subsystems, passiveSubsystems, ordering,
     passiveMatrixRepresentations, matrixShape,
@@ -66,7 +70,7 @@ OrderedMatrixRepresentation[matrix_ ? SquareMatrixQ, quditCount_Integer ? Positi
         subsystems = Range[quditCount];
         passiveSubsystems = Complement[subsystems, order];
         ordering = Join[order, passiveSubsystems];
-        passiveMatrixRepresentations = Table[IdentityMatrix[dimension],  Length[passiveSubsystems]];
+        passiveMatrixRepresentations = Table[IdentityMatrix[dimension], Length[passiveSubsystems]];
         matrixShape = ConstantArray[dimension, 2 quditCount];
         newMatrixRepresentation = kroneckerProduct @@ Join[{matrix}, passiveMatrixRepresentations];
         newMatrixRepresentation = ArrayReshape[newMatrixRepresentation, matrixShape];

@@ -4,7 +4,10 @@ Package["QuantumFramework`"]
 
 QuantumDiscreteState /: MakeBoxes[qds_QuantumDiscreteState /; Quiet @ QuantumDiscreteStateQ[Unevaluated @ qds], format_] := With[{
     icon = MatrixPlot[
-        Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], qds["DensityMatrix"], {2}],
+        Check[
+            Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], qds["DensityMatrix"], {2}],
+            RandomReal[{0, 1}, {qds["Dimension"], qds["Dimension"]}]
+        ],
         ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},
         Frame -> False,
         FrameTicks -> None

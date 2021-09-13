@@ -19,9 +19,6 @@ QuantumDiscreteStateQ[QuantumDiscreteState[state_, basis_]] :=
 
 QuantumDiscreteStateQ[___] := False
 
-qds_QuantumDiscreteState["ValidQ"] := QuantumDiscreteStateQ[qds]
-
-
 
 (* basis argument input *)
 
@@ -114,14 +111,4 @@ QuantumDiscreteState[qds_ ? QuantumDiscreteStateQ, args___] := With[{
         QuantumDiscreteState[qds["State"], newBasis]
     ]
 ]
-
-
-(* normalize vector state  *)
-\
-QuantumDiscreteState[state_ ? VectorQ, basis_] /; Norm[state] != 1:= QuantumDiscreteState[state / Norm[state], basis]
-
-(* normalize matrix state *)
-
-QuantumDiscreteState[state_ ? MatrixQ, basis_] /; Check[! PossibleZeroQ[Tr[state] - 1], False] :=
-    QuantumDiscreteState[state / Tr[state], basis]
 
