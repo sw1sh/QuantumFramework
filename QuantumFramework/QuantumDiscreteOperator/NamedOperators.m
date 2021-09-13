@@ -92,26 +92,29 @@ QuantumDiscreteOperator[name : "CX" | "CY" | "CZ", args___] := QuantumDiscreteOp
 
 QuantumDiscreteOperator[{"CX", dimension_Integer}, args___] := QuantumDiscreteOperator[
     controlledMatrix[SparseArray[({i_, j_}  /; Mod[i - 1, dimension, 1] == j) -> 1, {dimension, dimension}], dimension],
+    dimension,
     args
 ]
 
 QuantumDiscreteOperator[{"CY", dimension_Integer}, args___] := QuantumDiscreteOperator[
     (* TODO: generalize for arbitrary dimension *)
     controlledMatrix[SparseArray[{{1, 2} -> -I, {2, 1} -> I}], dimension],
+    dimension,
     args
 ]
 
 QuantumDiscreteOperator[{"CZ", dimension_Integer}, args___] := QuantumDiscreteOperator[
     controlledMatrix[SparseArray[{_, j_} :> Exp[(2 Pi I j / dimension) + I Pi], {dimension, dimension}], dimension],
+    dimension,
     args
 ]
 
 
 QuantumDiscreteOperator[{"ControlledU", arg_, dimension_Integer : 2}, args___] :=
-    QuantumDiscreteOperator[{"ControlledU", QuantumDiscreteOperator[arg], dimension}, args]
+    QuantumDiscreteOperator[{"ControlledU", QuantumDiscreteOperator[arg, dimension]}, args]
 
-QuantumDiscreteOperator[{"ControlledU", qdo_ ? QuantumDiscreteOperatorQ, dimension_Integer}, args___] :=
-    controlledMatrix[qdo["MatrixRepresentation"], dimension, args]
+QuantumDiscreteOperator[{"ControlledU", qdo_ ? QuantumDiscreteOperatorQ}, args___] :=
+    QuantumDiscreteOperator[controlledMatrix[qdo["MatrixRepresentation"], qdo["InputDimension"]], qdo["InputDimension"], args]
 
 
 QuantumDiscreteOperator["Fourier", args___] := QuantumDiscreteOperator[{"Fourier", 2}, args]
@@ -171,6 +174,7 @@ QuantumDiscreteOperator[{"SUM", dimension_Integer}, args___] := QuantumDiscreteO
         ],
         {dimension ^ 2, dimension ^ 2}
     ],
+    dimension,
     args
 ]
 
@@ -203,7 +207,7 @@ QuantumDiscreteOperator[{"PauliY", dimension_Integer}, args___] := With[{
     ]
 ]
 
-QuantumDiscreteOperator[{"PauliY", dimension_Integer}, args___] := With[{
+QuantumDiscreteOperator[{"PauliZ", dimension_Integer}, args___] := With[{
     s = (dimension - 1) / 2
 },
     QuantumDiscreteOperator[
@@ -224,6 +228,7 @@ QuantumDiscreteOperator[{"RootNOT", dimension_Integer}, args___] := QuantumDiscr
         SparseArray[({i_, j_} /; Mod[i - 1, dimension, 1] == j) -> 1, {dimension, dimension}],
         1 / 2
     ],
+    dimension,
     args
 ]
 

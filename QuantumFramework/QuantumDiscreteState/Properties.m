@@ -22,8 +22,6 @@ $QuantumDiscreteStateProperties =  DeleteDuplicates @ Join[$QuantumDiscreteState
 
 QuantumDiscreteState["Properties"] := $QuantumDiscreteStateProperties
 
-QuantumDiscreteStateProp[_, "Properties"] := QuantumDiscreteState["Properties"]
-
 
 qds_QuantumDiscreteState["ValidQ"] := QuantumDiscreteStateQ[qds]
 
@@ -129,7 +127,7 @@ QuantumDiscreteStateProp[qds_, {"VonNeumannEntropy", logBase_}] := qds["VonNeuma
 QuantumDiscreteStateProp[qds_, "Purity"] := Abs[Tr[MatrixPower[qds["NormalizedDensityMatrix"], 2]]]
 
 QuantumDiscreteStateProp[qds_, "Type"] := Which[
-    qds["Purity"] == 1,
+    TrueQ[qds["Purity"] == 1],
     "Pure",
     PositiveSemidefiniteMatrixQ[qds["DensityMatrix"]],
     "Mixed",

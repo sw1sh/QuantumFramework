@@ -16,7 +16,7 @@ $QuantumDiscreteOperatorProperties = DeleteDuplicates @ Join[$QuantumDiscreteOpe
 
 QuantumDiscreteOperator["Properties"] := $QuantumDiscreteOperatorProperties
 
-QuantumDiscreteOperatorProp[qdo_, "Properties"] := Join[QuantumDiscreteOperator["Properties"], qdo["State"]["Properties"]]
+QuantumDiscreteOperatorProp[qdo_, "Properties"] := DeleteDuplicates @ Join[QuantumDiscreteOperator["Properties"], qdo["State"]["Properties"]]
 
 
 qdo_QuantumDiscreteOperator["ValidQ"] := QuantumDiscreteOperatorQ[qdo]

@@ -20,7 +20,10 @@ QuantumDiscreteOperator /: MakeBoxes[qdo_QuantumDiscreteOperator /; QuantumDiscr
                 BoxForm`SummaryItem[{"Arity: ", qdo["Arity"]}]
             },
             {
-                BoxForm`SummaryItem[If[Equal @@ qdo["Dimensions"], {"Dimension: ", qdo["InputDimension"]}, {"Dimensions: ", qdo["Dimensions"]}]],
+                BoxForm`SummaryItem[If[qdo["InputDimension"] === qdo["OutputDimension"],
+                    {"Dimension: ", qdo["InputDimension"]},
+                    {"Dimensions: ", qdo["Dimensions"]}
+                ]],
                 BoxForm`SummaryItem[{"Qudits: ",
                     If[qdo["InputQudits"] === qdo["OutputQudits"], qdo["InputQudits"], {qdo["OutputQudits"], qdo["InputQudits"]}]
                 }]
