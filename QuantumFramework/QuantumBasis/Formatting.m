@@ -2,9 +2,12 @@ Package["QuantumFramework`"]
 
 
 
-QuantumBasis /: MakeBoxes[qb_QuantumBasis /; Quiet @ QuantumBasisQ[Unevaluated @ qb], format_] := With[{
+QuantumBasis /: MakeBoxes[qb_QuantumBasis /; QuantumBasisQ[Unevaluated @ qb], format_] := With[{
     icon = MatrixPlot[
-        Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], qb["MatrixRepresentation"], {2}],
+        Check[
+            Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], qb["MatrixRepresentation"], {2}],
+            RandomReal[{0, 1}, PadRight[qb["BasisElementDimensions"], 2, 2]]
+        ],
         ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},
         Frame -> False,
         FrameTicks -> None
@@ -25,7 +28,7 @@ QuantumBasis /: MakeBoxes[qb_QuantumBasis /; Quiet @ QuantumBasisQ[Unevaluated @
             BoxForm`SummaryItem[{"Qudits: ", qb["Qudits"]}]
         },
         {
-            BoxForm`SummaryItem[{"Dimensions: ", qb["Dimensions"]}]
+            BoxForm`SummaryItem[{"Dimensions: ", MapAt[Style[#, Bold] &, qb["Dimensions"], {;; qb["InputQudits"]}]}]
         },
         {
             BoxForm`SummaryItem[{"Element dimensions: ", qb["BasisElementDimensions"]}]
