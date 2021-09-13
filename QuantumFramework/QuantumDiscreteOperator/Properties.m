@@ -35,19 +35,13 @@ QuantumDiscreteOperatorProp[QuantumDiscreteOperator[_, order_], "Order"] := orde
 (qdo_QuantumDiscreteOperator[prop_ ? propQ, args___]) /; QuantumDiscreteOperatorQ[qdo] := With[{
     result = QuantumDiscreteOperatorProp[qdo, prop, args]
     },
-    result /; !MatchQ[result, _QuantumDiscreteOperatorProp] || Message[QuantumDiscreteOperator::undefprop, prop]
+    (QuantumDiscreteOperatorProp[qdo, prop, args] = result) /; !MatchQ[result, _QuantumDiscreteOperatorProp] || Message[QuantumDiscreteOperator::undefprop, prop]
 ]
 
 
 (* computed properties *)
 
 QuantumDiscreteOperatorProp[qdo_, "Arity"] := Length @ qdo["Order"]
-
-QuantumDiscreteOperatorProp[qdo_, "Qudits"] := qdo["InputQudits"]
-
-QuantumDiscreteOperatorProp[qdo_, "Dimensions"] := qdo["State"]["Dimensions"][[- qdo["InputQudits"] ;; ]]
-
-QuantumDiscreteOperatorProp[qdo_, "Dimension"] := Sqrt @ qdo["State"]["Dimension"]
 
 
 QuantumDiscreteOperatorProp[qdo_, "MatrixRepresentation" | "Matrix"] := With[{
@@ -56,7 +50,7 @@ QuantumDiscreteOperatorProp[qdo_, "MatrixRepresentation" | "Matrix"] := With[{
     Switch[
         qdo["StateType"],
         "Vector",
-        ArrayReshape[state["StateVector"], {qdo["Dimension"], qdo["Dimension"]}],
+        ArrayReshape[state["StateVector"], qdo["MatrixNameDimensions"]],
         "Matrix",
         $Failed
     ]
@@ -65,10 +59,10 @@ QuantumDiscreteOperatorProp[qdo_, "MatrixRepresentation" | "Matrix"] := With[{
 QuantumDiscreteOperatorProp[qdo_, "Operator"] := Association @ Thread[qdo["BasisElementNames"] -> Flatten[qdo["MatrixRepresentation"]]]
 
 
-QuantumDiscreteOperatorProp[qdo_, "OrderedMatrixRepresentation"] := qdo[{"OrderedMatrixRepresentation", Max[qdo["Qudits"], Max[qdo["Order"]]]}]
+QuantumDiscreteOperatorProp[qdo_, "OrderedMatrixRepresentation"] := qdo[{"OrderedMatrixRepresentation", Max[qdo["InputQudits"], Max[qdo["Order"]]]}]
 
-QuantumDiscreteOperatorProp[qdo_, {"OrderedMatrixRepresentation", length_Integer ? Positive}] :=
-    OrderedMatrixRepresentation[qdo["MatrixRepresentation"], length, qdo["Order"]]
+QuantumDiscreteOperatorProp[qdo_, {"OrderedMatrixRepresentation", qudits_Integer}] :=
+    OrderedMatrixRepresentation[qdo["MatrixRepresentation"], qudits, qdo["Order"]]
 
 
 QuantumDiscreteOperatorProp[qdo_, "HermitianQ"] := HermitianMatrixQ[qdo["MatrixRepresentation"]]

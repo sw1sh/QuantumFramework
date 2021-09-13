@@ -2,13 +2,13 @@ Package["QuantumFramework`"]
 
 
 
-QuantumBasis[] := QuantumBasis["Computational"]
+QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) | _Rule) ...] := QuantumBasis["Computational", args]
 
 QuantumBasis[dimension_Integer, args___] := QuantumBasis[{"Computational", dimension}, args]
 
 QuantumBasis["Computational", args___] := QuantumBasis[{"Computational", 2}, args]
 
-QuantumBasis[{"Computational", dimension_Integer ? Positive}, args___] := QuantumBasis[IdentityMatrix[dimension], args]
+QuantumBasis[{"Computational", dimension_Integer}, args___] := QuantumBasis[identityMatrix[dimension] /. {{}} -> {}, args]
 
 
 QuantumBasis["Bell", args___] := QuantumBasis[

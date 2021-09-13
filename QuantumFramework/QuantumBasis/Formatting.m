@@ -28,7 +28,8 @@ QuantumBasis /: MakeBoxes[qb_QuantumBasis /; QuantumBasisQ[Unevaluated @ qb], fo
             BoxForm`SummaryItem[{"Qudits: ", qb["Qudits"]}]
         },
         {
-            BoxForm`SummaryItem[{"Dimensions: ", MapAt[Style[#, Bold] &, qb["Dimensions"], {;; qb["InputQudits"]}]}]
+            BoxForm`SummaryItem[{"Dimensions: ",
+                If[qb["InputQudits"] > 0, MapAt[Style[#, Bold] &, qb["Dimensions"], {- qb["InputQudits"] ;; }], qb["Dimensions"]]}]
         },
         {
             BoxForm`SummaryItem[{"Element dimensions: ", qb["BasisElementDimensions"]}]

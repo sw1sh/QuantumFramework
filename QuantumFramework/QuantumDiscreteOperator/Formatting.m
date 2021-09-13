@@ -2,7 +2,7 @@ Package["QuantumFramework`"]
 
 
 
-QuantumDiscreteOperator /: MakeBoxes[qdo_QuantumDiscreteOperator /; QuantumDiscreteOperatorQ[qdo], format_] := With[{
+QuantumDiscreteOperator /: MakeBoxes[qdo_QuantumDiscreteOperator /; QuantumDiscreteOperatorQ[Unevaluated @ qdo], format_] := With[{
     icon = MatrixPlot[
         Enclose[
             Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], Confirm[qdo["OrderedMatrixRepresentation"]], {2}],
@@ -20,8 +20,10 @@ QuantumDiscreteOperator /: MakeBoxes[qdo_QuantumDiscreteOperator /; QuantumDiscr
                 BoxForm`SummaryItem[{"Arity: ", qdo["Arity"]}]
             },
             {
-                BoxForm`SummaryItem[{"Dimension: ", qdo["Dimension"]}],
-                BoxForm`SummaryItem[{"Qudits: ", qdo["Qudits"]}]
+                BoxForm`SummaryItem[If[Equal @@ qdo["Dimensions"], {"Dimension: ", qdo["InputDimension"]}, {"Dimensions: ", qdo["Dimensions"]}]],
+                BoxForm`SummaryItem[{"Qudits: ",
+                    If[qdo["InputQudits"] === qdo["OutputQudits"], qdo["InputQudits"], {qdo["OutputQudits"], qdo["InputQudits"]}]
+                }]
             },
             {
                 SpanFromLeft,

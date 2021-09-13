@@ -19,12 +19,26 @@ QuantumDiscreteOperator[qds_QuantumDiscreteState ? QuantumDiscreteStateQ] :=
     QuantumDiscreteOperator[qds, {1}]
 
 
+QuantumDiscreteOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, args___, order : (_ ? orderQ) : {1}] := Module[{
+    dimensions = TensorDimensions[tensor],
+    rank,
+    targetOrder
+},
+    rank = Max[Length[dimensions], Max[order]];
+    targetOrder = Reverse[rank - order + 1];
+    tensor = Transpose[tensor, Join[Complement[Range[rank], targetOrder], targetOrder]];
+    QuantumDiscreteOperator[
+        ArrayReshape[tensor, Times @@@ TakeDrop[Dimensions[tensor], - Length[targetOrder]]],
+        args,
+        order
+    ]
+]
+
 QuantumDiscreteOperator[assoc_Association, args___] := With[{
     dimensions = basisElementNamesDimensions[Keys[assoc]]
 },
     QuantumDiscreteOperator[
         ArrayReshape[Values[assoc], dimensions],
-        AssociationThread[Keys[assoc], QuantumBasis[dimensions]["BasisElements"]],
         args
     ]
 ]
@@ -32,24 +46,25 @@ QuantumDiscreteOperator[assoc_Association, args___] := With[{
 
 QuantumDiscreteOperator::invalidState = "invalid state specification";
 
-QuantumDiscreteOperator[matrix_ ? MatrixQ, args___, order : (_ ? orderQ) : {1}] := Module[{result},
-    result = Enclose @ With[{state = ConfirmBy[
-            With[{state = QuantumDiscreteState[Flatten[matrix], args]},
-                QuantumDiscreteState[state, "InputQudits" -> Length[order]]
+QuantumDiscreteOperator[matrix_ ? MatrixQ, args___, order : (_ ? orderQ) : {1}] := Module[{
+    result, outputQudits, inputQudits
+},
+    result = Enclose[Module[{state, basis},
+        basis = QuantumBasis[args];
+        (* if no inputs assume same input/output basis *)
+        {outputQudits, inputQudits} = Log[basis["MatrixNameDimensions"] /. {x_, 1} :> {x, x}, Dimensions[matrix]];
+        ConfirmAssert[IntegerQ[outputQudits] && IntegerQ[inputQudits], Message[QuantumDiscreteOperator::invalidState]];
+        state = ConfirmBy[
+            QuantumDiscreteState[
+                Flatten[matrix],
+                QuantumBasis[QuantumBasis[basis, outputQudits], "Input" -> QuantumBasis[basis, inputQudits]["Output"]]
             ],
             QuantumDiscreteStateQ,
             Message[QuantumDiscreteOperator::invalidState]
-        ]},
-        QuantumDiscreteOperator[
-            QuantumDiscreteState[
-                state,
-                QuantumBasis[
-                    state["Basis"],
-                    MapAt[ReplaceAll[Ket -> Bra], state["BasisElementNames"], {All, - state["InputQudits"] ;;}]
-                ]
-            ],
-            order
-        ]
+        ];
+        QuantumDiscreteOperator[state, order]
+    ],
+        $Failed &
     ];
     result /; !FailureQ[result]
 ]
@@ -75,11 +90,16 @@ QuantumDiscreteOperator[qdo_ ? QuantumDiscreteOperatorQ, qb_ ? QuantumBasisQ] :=
     result = Enclose @ QuantumDiscreteOperator[
         ConfirmBy[
             QuantumDiscreteState[
-                Flatten @ If[ qb["Size"] > qdo["Dimension"] ^ 2,
-                    ResourceFunction["BlockDiagonalMatrix"][qdo["Matrix"], IdentityMatrix[qb["Size"] - qdo["Dimension"] ^ 2]],
-                    qdo["Matrix"]
+                Flatten[
+                ResourceFunction["BlockDiagonalMatrix"] @@
+                    {
+                        If[ qb["OutputDimension"] > qdo["OutputDimension"], IdentityMatrix[qb["OutputDimension"] - qdo["OutputDimension"]], Nothing],
+                        qdo["Matrix"],
+                        If[ qb["InputDimension"] > qdo["InputDimension"], IdentityMatrix[qb["InputDimension"] - qdo["InputDimension"]], Nothing]
+                    }
                 ],
-                qb
+
+                If[qb["Dimension"] === qdo["Dimension"], qb, QuantumBasis[qb, "Input" -> qb["Output"]]]
             ],
             QuantumDiscreteStateQ,
             Message[QuantumDiscreteOperator::invalidState]
@@ -94,7 +114,7 @@ QuantumDiscreteOperator[qdo_ ? QuantumDiscreteOperatorQ, qb_ ? QuantumBasisQ] :=
 
 (qdo_QuantumDiscreteOperator ? QuantumDiscreteOperatorQ)[qds_ ? QuantumDiscreteStateQ] /;
 qdo["Picture"] === qdo["Picture"] && qds["Picture"] =!= "Heisenberg" := With[{
-    matrix = qdo[{"OrderedMatrixRepresentation", qds["Qudits"]}]
+    matrix = qdo[{"OrderedMatrixRepresentation", qds["OutputQudits"]}]
 },
     If[ qds["StateType"] === "Vector",
         QuantumDiscreteState[matrix . qds["StateVector"], qds["Basis"]],
@@ -104,5 +124,9 @@ qdo["Picture"] === qdo["Picture"] && qds["Picture"] =!= "Heisenberg" := With[{
 
 (qdo_QuantumDiscreteOperator ? QuantumDiscreteOperatorQ)[op_ ? QuantumDiscreteOperatorQ] /;
 qdo["Picture"] === op["Picture"] && MemberQ[{"Heisenberg", "Interaction"}, op["Picture"]] :=
-    QuantumDiscreteOperator[qdo["OrderedMatrixRepresentation"] . op["OrderedMatrixRepresentation"], op["Order"]]
+    QuantumDiscreteOperator[
+        qdo[{"OrderedMatrixRepresentation", op["OutputQudits"]}] . op["OrderedMatrixRepresentation"],
+        QuantumBasis[op["InputBasis"], "Output" -> qdo["Output"]],
+        op["Order"]
+    ]
 

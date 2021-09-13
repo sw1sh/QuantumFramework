@@ -1,7 +1,12 @@
 Package["QuantumFramework`"]
 
+PackageScope["$BasisNameZero"]
+PackageScope["$BasisNameIdentity"]
 PackageScope["basisElementNameLength"]
+PackageScope["simplifyBasisElementName"]
 PackageScope["normalBasisElementName"]
+PackageScope["prettyBasisElementName"]
+PackageScope["basisElementQudits"]
 PackageScope["basisElementNamesDimensions"]
 PackageScope["symbolicTensorQ"]
 PackageScope["basisMultiplicity"]
@@ -11,18 +16,46 @@ PackageScope["stateQ"]
 PackageScope["operatorQ"]
 PackageScope["orderQ"]
 PackageScope["normalizeMatrix"]
+PackageScope["tensorToVector"]
+PackageScope["identityMatrix"]
 PackageScope["kroneckerProduct"]
 PackageScope["OrderedMatrixRepresentation"]
 
 
-basisElementNameLength[name : _TensorProduct | _CircleTimes | _List] := Length @ name
+
+(* basis names *)
+
+$BasisNameZero = CircleTimes[]
+
+$BasisNameIdentity = \[FormalCapitalI]
+
+BasisNameHeadQ = MatchQ[_TensorProduct | _CircleTimes | _List];
+
+
+basisElementNameLength[name_ ? BasisNameHeadQ] := Length @ name
 
 basisElementNameLength[_] := 1
 
 
-normalBasisElementName[name : _TensorProduct | _CircleTimes | _List] := List @@ name
+simplifyBasisElementName[name_] := With[{
+    noIdentities = DeleteCases[name, $BasisNameIdentity]
+},
+    If[ basisElementNameLength[noIdentities] == 1 && BasisNameHeadQ[noIdentities],
+        First[noIdentities, $BasisNameIdentity],
+        noIdentities
+    ]
+]
+
+
+normalBasisElementName[name_ ? BasisNameHeadQ] := List @@ name
 
 normalBasisElementName[name_] := {name}
+
+
+prettyBasisElementName[name_] := simplifyBasisElementName[CircleTimes @@ normalBasisElementName[name]]
+
+
+basisElementQudits[name_] := basisElementNameLength @ DeleteCases[$BasisNameIdentity] @ normalBasisElementName @ name
 
 
 basisElementNamesDimensions[names_] := CountDistinct /@ Transpose[normalBasisElementName /@ names]
@@ -32,6 +65,7 @@ symbolicTensorQ[a_] := MatchQ[a, _Symbol] || TensorQ[a] && AnyTrue[Level[a, {-1}
 
 
 basisMultiplicity[dim_, size_] := Quiet[Ceiling @ Log[size, dim] /. 0 | Indeterminate -> 1, Divide::indet]
+
 
 
 nameQ[name_] := MatchQ[name, _String | {_String, ___}]
@@ -47,11 +81,21 @@ orderQ[order_] := VectorQ[order, IntegerQ]
 
 (* Matrix tools *)
 
-normalizeMatrix[matrix_] := matrix SparseArray[{i_, i_} -> 1 / Tr[matrix], Dimensions[matrix], 1]
+tensorToVector[t_ ? TensorQ] := Flatten[t]
 
-kroneckerProduct[arg_] := arg
+(* scalar *)
+tensorToVector[t_] := {t}
 
-kroneckerProduct[args___] := KroneckerProduct[args]
+
+identityMatrix[0] := {{}}
+
+identityMatrix[n_] := IdentityMatrix[n]
+
+
+normalizeMatrix[matrix_] := matrix / Tr[matrix] (*SparseArray[{i_, i_} -> 1 / Tr[matrix], Dimensions[matrix], 1]*)
+
+
+kroneckerProduct[ts___] := Fold[If[ArrayQ[#1] && ArrayQ[#2], KroneckerProduct[##], Times[##]] &, {ts}]
 
 
 OrderedMatrixRepresentation[matrix_ ? MatrixQ, quditCount_Integer ? Positive, order_ ? orderQ] := Enclose @ Module[{

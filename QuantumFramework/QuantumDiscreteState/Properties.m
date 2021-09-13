@@ -33,7 +33,7 @@ QuantumDiscreteState::undefprop = "property `` is undefined for this state";
 (qds_QuantumDiscreteState[prop_ ? propQ, args___]) /; QuantumDiscreteStateQ[qds] := With[{
     result = QuantumDiscreteStateProp[qds, prop, args]
     },
-    result /; !MatchQ[result, _QuantumDiscreteStateProp] || Message[QuantumDiscreteState::undefprop, prop]
+    (QuantumDiscreteStateProp[qds, prop, args] = result) /; !MatchQ[result, _QuantumDiscreteStateProp] || Message[QuantumDiscreteState::undefprop, prop]
 ]
 
 
@@ -111,7 +111,7 @@ QuantumDiscreteStateProp[qds_, "Eigenstates"] := QuantumDiscreteState[#, qds["Ba
 QuantumDiscreteStateProp[qds_, "VonNeumannEntropy", logBase_ ? NumericQ] := With[{
     matrix = qds["NormalizedDensityMatrix"]
 },  If[
-        qds["Type"] === "Pure",
+        qds["StateType"] === "Vector",
         0,
         (* - Total @ Map[# Log[logBase, #] &, Select[Re @ Eigenvalues@qds[DensityMatrix"], Positive]] *)
 
@@ -129,7 +129,7 @@ QuantumDiscreteStateProp[qds_, {"VonNeumannEntropy", logBase_}] := qds["VonNeuma
 QuantumDiscreteStateProp[qds_, "Purity"] := Abs[Tr[MatrixPower[qds["NormalizedDensityMatrix"], 2]]]
 
 QuantumDiscreteStateProp[qds_, "Type"] := Which[
-    qds["Purity"] === 1,
+    qds["Purity"] == 1,
     "Pure",
     PositiveSemidefiniteMatrixQ[qds["DensityMatrix"]],
     "Mixed",
@@ -144,7 +144,7 @@ QuantumDiscreteStateProp[qds_, "MixedStateQ"] := qds["Type"] === "Mixed"
 
 (* block sphere*)
 
-QuantumDiscreteStateProp[qds_, "BlochSphericalCoordinates"] /; qds["Size"] == 2 := With[{state = qds["NormalizedState"]},
+QuantumDiscreteStateProp[qds_, "BlochSphericalCoordinates"] /; qds["Dimension"] == 2 := With[{state = qds["NormalizedState"]},
     Switch[
         qds["StateType"],
 
@@ -171,7 +171,7 @@ QuantumDiscreteStateProp[qds_, "BlochSphericalCoordinates"] /; qds["Size"] == 2 
     ]
 ]
 
-QuantumDiscreteStateProp[qds_, "BlochCartesianCoordinates"] /; qds["Size"] == 2 :=  With[{state = qds["NormalizedState"]},
+QuantumDiscreteStateProp[qds_, "BlochCartesianCoordinates"] /; qds["Dimension"] == 2 :=  With[{state = qds["NormalizedState"]},
     Switch[
         qds["StateType"],
 
@@ -196,7 +196,7 @@ QuantumDiscreteStateProp[qds_, "BlochCartesianCoordinates"] /; qds["Size"] == 2 
     ]
 ]
 
-QuantumDiscreteStateProp[qds_, "BlochPlot"] /; qds["Size"] == 2 := Module[{
+QuantumDiscreteStateProp[qds_, "BlochPlot"] /; qds["Dimension"] == 2 := Module[{
     greatCircles, referenceStates, u, v, w
 },
     greatCircles = ParametricPlot3D[

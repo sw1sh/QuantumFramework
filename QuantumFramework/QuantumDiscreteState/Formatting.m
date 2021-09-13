@@ -33,6 +33,9 @@ QuantumDiscreteState /: MakeBoxes[qds_QuantumDiscreteState /; Quiet @ QuantumDis
         },
         {
             BoxForm`SummaryItem[{"Von Neumann Entropy: ", N @ qds["VonNeumannEntropy"]}]
+        },
+        {
+            BoxForm`SummaryItem[{"Dimensions: ", MapAt[Style[#, Bold] &, qds["Dimensions"], {;; qds["InputQudits"]}]}]
         }
     },
     format,
