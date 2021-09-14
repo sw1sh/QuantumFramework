@@ -34,8 +34,25 @@ QuantumBasis[<|
 |>]
 
 
-(* name x name *)
+(* state x state *)
 
+QuantumTensorProduct[qds1_ ? QuantumDiscreteStateQ, qds2_ ? QuantumDiscreteStateQ] /; qds1["Picture"] === qds2["Picture"] :=
+QuantumDiscreteState[
+    If[qds1["Type"] === qds2["Type"] === "Vector",
+        Catenate[KroneckerProduct[qds1["StateVector"], qds2["StateVector"]]],
+        KroneckerProduct[qds1["DensityMatrix"], qds2["DensityMatrix"]]
+    ],
+    QuantumTensorProduct[qds1["Basis"], qds2["Basis"]]
+]
+
+
+(* operator x operator *)
+
+QuantumTensorProduct[qdo1_ ? QuantumDiscreteOperatorQ, qdo2_ ? QuantumDiscreteOperatorQ] :=
+    QuantumDiscreteOperator[QuantumTensorProduct[qdo1["State"], qdo2["State"]], Join[qdo1["Order"], qdo2["Order"]]]
+
+
+(* name x name *)
 
 QuantumTensorProduct[name1_, name2_] := If[name1 === $BasisNameZero || name2 === $BasisNameZero,
     $BasisNameZero,

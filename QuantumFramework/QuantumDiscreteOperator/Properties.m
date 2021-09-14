@@ -7,7 +7,7 @@ PackageScope["QuantumDiscreteOperatorProp"]
 
 $QuantumDiscreteOperatorProperties = {
     "MatrixRepresentation",
-    "OrderedMatrixRepresentation", "Arity", "Order",
+    "OrderedMatrixRepresentation", "Arity", "MaxArity", "Order",
     "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors"
 };
 
@@ -43,6 +43,8 @@ QuantumDiscreteOperatorProp[QuantumDiscreteOperator[_, order_], "Order"] := orde
 
 QuantumDiscreteOperatorProp[qdo_, "Arity"] := Length @ qdo["Order"]
 
+QuantumDiscreteOperatorProp[qdo_, "MaxArity"] := Max[qdo["InputQudits"], Max[qdo["Order"]]]
+
 
 QuantumDiscreteOperatorProp[qdo_, "MatrixRepresentation" | "Matrix"] := With[{
     state = qdo["State"]
@@ -59,10 +61,10 @@ QuantumDiscreteOperatorProp[qdo_, "MatrixRepresentation" | "Matrix"] := With[{
 QuantumDiscreteOperatorProp[qdo_, "Operator"] := Association @ Thread[qdo["BasisElementNames"] -> Flatten[qdo["MatrixRepresentation"]]]
 
 
-QuantumDiscreteOperatorProp[qdo_, "OrderedMatrixRepresentation"] := qdo[{"OrderedMatrixRepresentation", Max[qdo["InputQudits"], Max[qdo["Order"]]]}]
+QuantumDiscreteOperatorProp[qdo_, "OrderedMatrixRepresentation"] := qdo[{"OrderedMatrixRepresentation", qdo["MaxArity"]}]
 
-QuantumDiscreteOperatorProp[qdo_, {"OrderedMatrixRepresentation", qudits_Integer}] :=
-    OrderedMatrixRepresentation[qdo["MatrixRepresentation"], qudits, qdo["Order"]]
+QuantumDiscreteOperatorProp[qdo_, {"OrderedMatrixRepresentation", arity_Integer}] :=
+    OrderedMatrixRepresentation[qdo["MatrixRepresentation"], arity, qdo["Order"]]
 
 
 QuantumDiscreteOperatorProp[qdo_, "HermitianQ"] := HermitianMatrixQ[qdo["MatrixRepresentation"]]

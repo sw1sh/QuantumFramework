@@ -109,7 +109,7 @@ QuantumDiscreteStateProp[qds_, "Eigenstates"] := QuantumDiscreteState[#, qds["Ba
 QuantumDiscreteStateProp[qds_, "VonNeumannEntropy", logBase_ ? NumericQ] := With[{
     matrix = qds["NormalizedDensityMatrix"]
 },  If[
-        qds["StateType"] === "Vector",
+        qds["Type"] === "Pure",
         0,
         (* - Total @ Map[# Log[logBase, #] &, Select[Re @ Eigenvalues@qds[DensityMatrix"], Positive]] *)
 

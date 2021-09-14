@@ -87,7 +87,7 @@ QuantumBasis["Schwinger"] := QuantumBasis[{"Schwinger", 2}]
 
 QuantumBasis[{"Schwinger", dimension_Integer ? Positive}, args___] := QuantumBasis[
     AssociationThread[
-        Ket[Subscript["S", #]] & /@ Range[dimension ^ 2],
+        Ket[Subscript["S", ToString[#]]] & /@ Tuples[Range[0, dimension - 1], 2],
         Flatten /@ (
             MatrixPower[RotateLeft[IdentityMatrix[dimension]], #[[1]]] .
             MatrixPower[((Exp[I 2 Pi / dimension]) ^ #) & /@ Range[0, dimension - 1] IdentityMatrix[dimension], #[[2]]]
@@ -140,9 +140,9 @@ QuantumBasis[{"Wigner", dimension_Integer}, args___] := QuantumBasis[{"Wigner", 
 QuantumBasis[{"Wigner", qb_QuantumBasis}] := QuantumBasis[{"Wigner", qb}, "PhaseSpace"]
 
 QuantumBasis[{"Wigner", qb_QuantumBasis /; QuantumBasisQ[qb]}, args___] := Module[{
-    dimensionality, positionBasis, momentumBasis, kernelElement
+    dimension, positionBasis, momentumBasis, kernelElement
 },
-        dimensionality = First @ qb["Dimensions"];
+        dimension = First @ qb["Dimensions"];
         positionBasis = {#} & /@ Normal[qb["BasisElementAssociation"]];
         momentumBasis = With[{dimension = #},
             {(dimension + 1) ->
@@ -151,18 +151,18 @@ QuantumBasis[{"Wigner", qb_QuantumBasis /; QuantumBasisQ[qb]}, args___] := Modul
                     Range[0, Length[positionBasis] - 1]
                 ]
             }
-        ] & /@ Range[0, dimensionality - 1];
+        ] & /@ Range[0, dimension - 1];
         kernelElement = ComplexExpand @ With[{eigensystem =
               Reverse @ Sort[
                   Apply[Rule, #] & /@ ComplexExpand @ Thread @ Eigensystem @ Partition[
                     Map[
                         With[{q1 = #[[1, 1]], p1 = #[[1, 2]], q2 = #[[2, 1]], p2 = #[[2, 2]]},
-                            Exp[(2 Pi I (q1 - q2) (p1 - p2)) / dimensionality]
+                            Exp[(2 Pi I (q1 - q2) (p1 - p2)) / dimension]
                         ] &,
-                        Tuples[Tuples[Range[0, dimensionality - 1], 2], 2],
+                        Tuples[Tuples[Range[0, dimension - 1], 2], 2],
                         {1}
                     ],
-                    dimensionality ^ 2
+                    dimension ^ 2
                 ]
             ]
         },
@@ -172,12 +172,12 @@ QuantumBasis[{"Wigner", qb_QuantumBasis /; QuantumBasisQ[qb]}, args___] := Modul
         ];
 
         QuantumBasis[AssociationThread[
-            Ket[Subscript["W", ToString[#]]] & /@ Tuples[Range[0, dimensionality - 1], 2],
+            Ket[Subscript["W", ToString[#]]] & /@ Tuples[Range[0, dimension - 1], 2],
 
             Flatten[
                 Table[
-                    With[{labels = Thread[Tuples[Range[0, dimensionality - 1], 2] -> Range[dimensionality ^ 2]]},
-                        Sqrt[dimensionality] * Total @ Map[
+                    With[{labels = Thread[Tuples[Range[0, dimension - 1], 2] -> Range[dimension ^ 2]]},
+                        Sqrt[dimension] * Total @ Map[
                             With[{q1 = #[[1]], p1 = #[[2]]},
                                 Extract[kernelElement, ({{i, j}, #} /. labels)] *
                                     Flatten[(Conjugate[Values[momentumBasis[[p1 + 1]]]] .
@@ -187,11 +187,11 @@ QuantumBasis[{"Wigner", qb_QuantumBasis /; QuantumBasisQ[qb]}, args___] := Modul
                                         Conjugate[Values[positionBasis[[q1 + 1]]][[1]]]
                                     ])
                             ] &,
-                            Tuples[Range[0, dimensionality - 1], 2],
+                            Tuples[Range[0, dimension - 1], 2],
                             {1}
                         ]
                     ],
-                    {i, 0, dimensionality - 1}, {j, 0, dimensionality - 1}
+                    {i, 0, dimension - 1}, {j, 0, dimension - 1}
                 ],
                 {1, 2}
             ]
