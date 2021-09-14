@@ -13,8 +13,8 @@ PackageScope["basisMultiplicity"]
 PackageScope["nameQ"]
 PackageScope["propQ"]
 PackageScope["stateQ"]
-PackageScope["operatorQ"]
 PackageScope["orderQ"]
+PackageScope["measurementReprQ"]
 PackageScope["normalizeMatrix"]
 PackageScope["tensorToVector"]
 PackageScope["identityMatrix"]
@@ -61,22 +61,25 @@ basisElementQudits[name_] := basisElementNameLength @ DeleteCases[$BasisNameIden
 basisElementNamesDimensions[names_] := CountDistinct /@ Transpose[normalBasisElementName /@ names]
 
 
+(* *)
+
 symbolicTensorQ[a_] := MatchQ[a, _Symbol] || TensorQ[a] && AnyTrue[Level[a, {-1}], MatchQ[_Symbol]]
 
 
 basisMultiplicity[dim_, size_] := Quiet[Ceiling @ Log[size, dim] /. 0 | Indeterminate -> 1, Divide::indet]
 
 
+(* test functions *)
 
 nameQ[name_] := MatchQ[name, _String | {_String, ___}]
 
-propQ[prop_] := MatchQ[prop, _String | {_String, ___}]
+propQ[prop_] := MatchQ[prop, _String | {_String, ___} | (_String -> _)]
 
 stateQ[state_] := !nameQ[state] && VectorQ[state] && Length[state] > 0 || SquareMatrixQ[state]
 
-operatorQ[op_] := SquareMatrixQ[op]
-
 orderQ[order_] := VectorQ[order, IntegerQ]
+
+measurementReprQ[state_] := TensorQ[state] && MemberQ[{2, 3}, TensorRank[state]]
 
 
 (* Matrix tools *)

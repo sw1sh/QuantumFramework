@@ -1,5 +1,16 @@
 Package["QuantumFramework`"]
 
+PackageScope["basisDimensionSummaryItem"]
+PackageScope["basisQuditsSummaryItem"]
+
+
+
+basisDimensionSummaryItem[o_] := If[o["InputDimension"] === o["OutputDimension"],
+    {"Dimension: ", o["InputDimension"]},
+    {"Dimensions: ", o["Dimensions"]}
+]
+
+basisQuditsSummaryItem[o_] := {"Qudits: ", If[o["InputQudits"] === o["OutputQudits"], o["InputQudits"], {o["OutputQudits"], o["InputQudits"]}]}
 
 
 QuantumBasis /: MakeBoxes[qb_QuantumBasis /; QuantumBasisQ[Unevaluated @ qb], format_] := With[{
@@ -20,12 +31,12 @@ QuantumBasis /: MakeBoxes[qb_QuantumBasis /; QuantumBasisQ[Unevaluated @ qb], fo
             BoxForm`SummaryItem[{"Rank: ", qb["Rank"]}]
         },
         {
-            BoxForm`SummaryItem[{"Dimension: ", qb["Dimension"]}]
+            BoxForm`SummaryItem[basisDimensionSummaryItem[qb]]
         }
     },
     {
         {
-            BoxForm`SummaryItem[{"Qudits: ", qb["Qudits"]}]
+            BoxForm`SummaryItem[basisQuditsSummaryItem[qb]]
         },
         {
             BoxForm`SummaryItem[{"Dimensions: ",

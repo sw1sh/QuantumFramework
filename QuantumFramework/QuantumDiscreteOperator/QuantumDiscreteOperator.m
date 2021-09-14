@@ -57,7 +57,7 @@ QuantumDiscreteOperator[matrix_ ? MatrixQ, args___, order : (_ ? orderQ) : {1}] 
         state = ConfirmBy[
             QuantumDiscreteState[
                 Flatten[matrix],
-                QuantumBasis[QuantumBasis[basis, outputQudits], "Input" -> QuantumBasis[basis, inputQudits]["Output"]]
+                QuantumBasis[basis, outputQudits, "Input" -> QuantumBasis[basis, inputQudits]["Output"]]
             ],
             QuantumDiscreteStateQ,
             Message[QuantumDiscreteOperator::invalidState]

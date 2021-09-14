@@ -107,11 +107,12 @@ QuantumBasis[data_Association ? (Keys /* Not @* ContainsExactly[$QuantumBasisDat
 
 (* multiplicity *)
 
-QuantumBasis[qb_ ? QuantumBasisQ, 1] := qb
+QuantumBasis[qb_ ? QuantumBasisQ, 1, args___] := QuantumBasis[qb, args]
 
-QuantumBasis[qb_ ? QuantumBasisQ, multiplicity_Integer] := QuantumBasis[qb,
+QuantumBasis[qb_ ? QuantumBasisQ, multiplicity_Integer, args___] := QuantumBasis[qb,
     "Input" -> multiplyElements[qb["Input"], multiplicity],
-    "Output" -> multiplyElements[qb["Output"], multiplicity]
+    "Output" -> multiplyElements[qb["Output"], multiplicity],
+    args
 ]
 
 

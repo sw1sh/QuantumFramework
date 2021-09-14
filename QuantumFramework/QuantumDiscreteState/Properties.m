@@ -108,7 +108,7 @@ QuantumDiscreteStateProp[qds_, "Eigenstates"] := QuantumDiscreteState[#, qds["Ba
 
 QuantumDiscreteStateProp[qds_, "VonNeumannEntropy", logBase_ ? NumericQ] := With[{
     matrix = qds["NormalizedDensityMatrix"]
-},  If[
+},  Simplify @ If[
         qds["Type"] === "Pure",
         0,
         (* - Total @ Map[# Log[logBase, #] &, Select[Re @ Eigenvalues@qds[DensityMatrix"], Positive]] *)
@@ -124,10 +124,10 @@ QuantumDiscreteStateProp[qds_, {"VonNeumannEntropy", logBase_}] := qds["VonNeuma
 
 (* purity *)
 
-QuantumDiscreteStateProp[qds_, "Purity"] := Abs[Tr[MatrixPower[qds["NormalizedDensityMatrix"], 2]]]
+QuantumDiscreteStateProp[qds_, "Purity"] := Simplify @ Abs[Tr[MatrixPower[qds["NormalizedDensityMatrix"], 2]]]
 
 QuantumDiscreteStateProp[qds_, "Type"] := Which[
-    TrueQ[qds["Purity"] == 1],
+    qds["StateType"] === "Vector" || TrueQ[qds["Purity"] == 1],
     "Pure",
     PositiveSemidefiniteMatrixQ[qds["DensityMatrix"]],
     "Mixed",

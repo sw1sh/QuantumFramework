@@ -12,7 +12,7 @@ $QuantumBasisProperties = {
      "InputBasisElementDimensions", "OutputBasisElementDimensions", "BasisElementDimensions", "BasisElementDimension",
      "MatrixElementDimensions",
      "OrthogonalBasisElements",
-     "Projectors",
+     "Projectors", "PureStates", "PureEffects", "PureMaps",
      "InputSize", "OutputSize", "Size",
      "InputRank", "OutputRank", "Rank", "Type",
      "InputNameDimensions", "InputNameDimension", "InputDimension",
@@ -115,9 +115,9 @@ QuantumBasisProp[qb_, "OutputQudits"] := basisElementQudits @ First[qb["OutputBa
 QuantumBasisProp[qb_, "Qudits"] := qb["InputQudits"] + qb["OutputQudits"]
 
 
-QuantumBasisProp[qb_, "InputNameDimensions"] := basisElementNamesDimensions @ qb["InputBasisElementNames"]
+QuantumBasisProp[qb_, "InputNameDimensions" | "InputDimensions"] := basisElementNamesDimensions @ qb["InputBasisElementNames"]
 
-QuantumBasisProp[qb_, "OutputNameDimensions"] := basisElementNamesDimensions @ qb["OutputBasisElementNames"]
+QuantumBasisProp[qb_, "OutputNameDimensions" | "OutputDimensions"] := basisElementNamesDimensions @ qb["OutputBasisElementNames"]
 
 QuantumBasisProp[qb_, "NameDimensions" | "Dimensions"] := DeleteCases[Join[qb["OutputNameDimensions"], qb["InputNameDimensions"]], 1]
 
@@ -154,4 +154,14 @@ QuantumBasisProp[qb_, "MatrixRepresentation" | "Matrix"] := ArrayReshape[qb["Bas
 
 
 QuantumBasisProp[qb_, "Projectors"] := KroneckerProduct[ConjugateTranspose[#, Reverse @ Range @ TensorRank @ #], #] & /@ qb["BasisElements"]
+
+QuantumBasisProp[qb_, "PureStates"] := QuantumDiscreteState[SparseArray[# -> 1, qb["OutputDimension"]], qb] & /@ Range[qb["OutputDimension"]]
+
+QuantumBasisProp[qb_, "PureEffects"] := QuantumDiscreteState[SparseArray[# -> 1, qb["InputDimension"]], qb] & /@ Range[qb["InputDimension"]]
+
+QuantumBasisProp[qb_, "PureMaps" | "PureOperators"] :=
+    Table[
+        QuantumDiscreteState[SparseArray[{i, j} -> 1, {qb["OutputDimension"], qb["InputDimension"]}], qb],
+        {i, qb["OutputDimension"]}, {j, qb["InputDimension"]}
+    ]
 
