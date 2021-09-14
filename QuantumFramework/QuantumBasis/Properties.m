@@ -9,7 +9,7 @@ $QuantumBasisProperties = {
      "InputBasisElementNames", "OutputBasisElementNames", "BasisElementNames",
      "NormalBasisElementNames",
      "InputBasisElements", "OutputBasisElements", "BasisElements",
-     "InputBasisElementDimensions", "OutputBasisElementDimensions", "BasisElementDimensions",
+     "InputBasisElementDimensions", "OutputBasisElementDimensions", "BasisElementDimensions", "BasisElementDimension",
      "MatrixElementDimensions",
      "OrthogonalBasisElements",
      "Projectors",
