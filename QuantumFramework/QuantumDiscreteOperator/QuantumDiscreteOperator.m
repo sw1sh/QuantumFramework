@@ -22,13 +22,13 @@ QuantumDiscreteOperator[qds_QuantumDiscreteState ? QuantumDiscreteStateQ] :=
 QuantumDiscreteOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, args___, order : (_ ? orderQ) : {1}] := Module[{
     dimensions = TensorDimensions[tensor],
     rank,
-    targetOrder
+    targetOrder, newTensor
 },
     rank = Max[Length[dimensions], Max[order]];
     targetOrder = Reverse[rank - order + 1];
-    tensor = Transpose[tensor, Join[Complement[Range[rank], targetOrder], targetOrder]];
+    newTensor = Transpose[tensor, Join[Complement[Range[rank], targetOrder], targetOrder]];
     QuantumDiscreteOperator[
-        ArrayReshape[tensor, Times @@@ TakeDrop[Dimensions[tensor], - Length[targetOrder]]],
+        ArrayReshape[newTensor, Times @@@ TakeDrop[TensorDimensions[newTensor], rank - Length[targetOrder]]],
         args,
         order
     ]
@@ -47,17 +47,27 @@ QuantumDiscreteOperator[assoc_Association, args___] := With[{
 QuantumDiscreteOperator::invalidState = "invalid state specification";
 
 QuantumDiscreteOperator[matrix_ ? MatrixQ, args___, order : (_ ? orderQ) : {1}] := Module[{
-    result, outputQudits, inputQudits
+    result
 },
-    result = Enclose[Module[{state, basis},
-        basis = QuantumBasis[args];
+    result = Enclose[Module[{outputs, inputs, quditBasis, outputQudits, inputQudits, basis, state},
+        {outputs, inputs} = Dimensions[matrix];
+        quditBasis = QuantumBasis[args];
         (* if no inputs assume same input/output basis *)
-        {outputQudits, inputQudits} = Log[basis["MatrixNameDimensions"] /. {x_, 1} :> {x, x}, Dimensions[matrix]];
-        ConfirmAssert[IntegerQ[outputQudits] && IntegerQ[inputQudits], Message[QuantumDiscreteOperator::invalidState]];
+        {outputQudits, inputQudits} = Log[quditBasis["MatrixNameDimensions"] /. {x_, 1} :> {x, x}, {outputs, inputs}];
+        basis = If[ IntegerQ[outputQudits],
+            QuantumBasis[quditBasis, outputQudits],
+            QuantumTensorProduct[QuantumBasis[ConfirmBy[outputs / quditBasis["OutputDimension"], IntegerQ]], quditBasis]
+        ];
+        basis = If[ IntegerQ[inputQudits],
+            QuantumBasis[basis,
+                "Input" -> QuantumBasis[quditBasis, inputQudits]["Output"]],
+            QuantumBasis[basis,
+                "Input" -> QuantumTensorProduct[QuantumBasis[ConfirmBy[inputs / quditBasis["InputDimension"], IntegerQ]], quditBasis]["Output"]]
+        ];
         state = ConfirmBy[
             QuantumDiscreteState[
                 Flatten[matrix],
-                QuantumBasis[basis, outputQudits, "Input" -> QuantumBasis[basis, inputQudits]["Output"]]
+                basis
             ],
             QuantumDiscreteStateQ,
             Message[QuantumDiscreteOperator::invalidState]

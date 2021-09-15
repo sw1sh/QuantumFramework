@@ -40,15 +40,23 @@ QuantumMeasurementOperatorProp[_[op_], "DiscreteOperator"] := op
 
 
 QuantumMeasurementOperatorProp[qmo_, "Type"] := Which[
-    qmo["InputDimension"] == qmo["OutputDimension"],
+    qmo["Rank"] == 2,
     "Projection",
+    qmo["Rank"] == 3,
+    "POVM",
     True,
-    "POVM"
+    "Unknown"
 ]
 
 QuantumMeasurementOperatorProp[qmo_, "ProjectionQ"] := qmo["Type"] === "Projection"
 
 QuantumMeasurementOperatorProp[qmo_, "POVMQ"] := qmo["Type"] === "POVM"
+
+QuantumMeasurementOperatorProp[qmo_, "POVMElements"] /; qmo["POVMQ"] := qmo["Tensor"]
+
+QuantumMeasurementOperatorProp[qmo_, "OrderedPOVMElements"] /; qmo["POVMQ"] := qmo["OrderedTensor"]
+
+QuantumMeasurementOperatorProp[qmo_, {"OrderedPOVMElements", arity_Integer}] /; qmo["POVMQ"] := qmo[{"OrderedTensor", arity}]
 
 
 (* operator properties *)

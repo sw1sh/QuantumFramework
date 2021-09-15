@@ -10,12 +10,12 @@ $QuantumDiscreteStateProperties = {
      "NormalizedState", "NormalizedAmplitudes", "NormalizedStateVector", "NormalizedDensityMatrix",
      "NormalizedMatrix",
      "MatrixRepresentation", "Matrix",
-     "VonNeumannEntropy",
+     "Entropy", "VonNeumannEntropy",
      "Purity", "Type", "PureStateQ", "MixedStateQ",
      "BlochSphericalCoordinates", "BlochCartesianCoordinates",
      "BlochPlot",
      "Operator",
-     "Eigenvalues", "Eigenstates"
+     "Eigenvalues", "Eigenvectors", "Eigenstates"
 };
 
 $QuantumDiscreteStateProperties =  DeleteDuplicates @ Join[$QuantumDiscreteStateProperties, QuantumBasis["Properties"]];
@@ -101,12 +101,14 @@ QuantumDiscreteStateProp[qds_, "MatrixRepresentation" | "Matrix"] := QuantumDisc
 
 QuantumDiscreteStateProp[qds_, "Eigenvalues"] := Eigenvalues[qds["DensityMatrix"]]
 
-QuantumDiscreteStateProp[qds_, "Eigenstates"] := QuantumDiscreteState[#, qds["Basis"]] & /@ Eigenvectors[qds["DensityMatrix"]]
+QuantumDiscreteStateProp[qds_, "Eigenvectors"] := Eigenvectors[qds["DensityMatrix"]]
+
+QuantumDiscreteStateProp[qds_, "Eigenstates"] := QuantumDiscreteState[#, qds["Basis"]] & /@ qds["Eigenvectors"]
 
 
 (* entropy *)
 
-QuantumDiscreteStateProp[qds_, "VonNeumannEntropy", logBase_ ? NumericQ] := With[{
+QuantumDiscreteStateProp[qds_, "VonNeumannEntropy" | "Entropy", logBase_ ? NumericQ] := With[{
     matrix = qds["NormalizedDensityMatrix"]
 },  Simplify @ If[
         qds["Type"] === "Pure",
@@ -117,9 +119,9 @@ QuantumDiscreteStateProp[qds_, "VonNeumannEntropy", logBase_ ? NumericQ] := With
     ]
 ]
 
-QuantumDiscreteStateProp[qds_, "VonNeumannEntropy"] := qds["VonNeumannEntropy", E]
+QuantumDiscreteStateProp[qds_, "VonNeumannEntropy" | "Entropy"] := qds["VonNeumannEntropy", E]
 
-QuantumDiscreteStateProp[qds_, {"VonNeumannEntropy", logBase_}] := qds["VonNeumannEntropy", logBase]
+QuantumDiscreteStateProp[qds_, {"VonNeumannEntropy" | "Entropy", logBase_}] := qds["VonNeumannEntropy", logBase]
 
 
 (* purity *)
