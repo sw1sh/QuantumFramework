@@ -235,6 +235,9 @@ QuantumDiscreteOperator[{"RootNOT", dimension_Integer}, args___] := QuantumDiscr
 
 QuantumDiscreteOperator["Hadamard", args___] := QuantumDiscreteOperator[HadamardMatrix[2], args]
 
+QuantumDiscreteOperator[{"Hadamard", qudits_Integer ? Positive}, args___] :=
+    QuantumTensorProduct[Table[QuantumDiscreteOperator["Hadamard", args], qudits]]
+
 
 QuantumDiscreteOperator["Toffoli", args___, order_?orderQ] := QuantumDiscreteOperator[{"Toffoli", Length[order]}, args, order]
 

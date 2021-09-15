@@ -49,7 +49,12 @@ QuantumDiscreteState[
 (* operator x operator *)
 
 QuantumTensorProduct[qdo1_ ? QuantumDiscreteOperatorQ, qdo2_ ? QuantumDiscreteOperatorQ] :=
-    QuantumDiscreteOperator[QuantumTensorProduct[qdo1["State"], qdo2["State"]], Join[qdo1["Order"], qdo2["Order"]]]
+    QuantumDiscreteOperator[QuantumTensorProduct[qdo1["State"], qdo2["State"]], Join[qdo1["Order"], qdo2["Order"] + Max[qdo1["TotalOrder"]]]]
+
+
+QuantumTensorProduct[qmo1_ ? QuantumMeasurementOperatorQ, qmo2_ ? QuantumMeasurementOperatorQ] :=
+    QuantumMeasurementOperator[QuantumTensorProduct[qmo1["DiscreteOperator"], qmo2["DiscreteOperator"]]]
+
 
 
 (* name x name *)

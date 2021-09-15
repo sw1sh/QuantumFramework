@@ -10,7 +10,7 @@ $QuantumDiscreteOperatorProperties = {
     "TensorRepresentation", "Tensor",
     "OrderedMatrixRepresentation", "OrderedMatrix",
     "OrderedTensorRepresentation", "OrderedTensor",
-    "Arity", "MaxArity", "Order",
+    "Arity", "MaxArity", "Order", "TotalOrder",
     "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors", "Projectors"
 };
 
@@ -47,6 +47,8 @@ QuantumDiscreteOperatorProp[QuantumDiscreteOperator[_, order_], "Order"] := orde
 QuantumDiscreteOperatorProp[qdo_, "Arity"] := Length @ qdo["Order"]
 
 QuantumDiscreteOperatorProp[qdo_, "MaxArity"] := Max[qdo["InputQudits"], Max[qdo["Order"]]]
+
+QuantumDiscreteOperatorProp[qdo_, "TotalOrder"] := Join[qdo["Order"], Complement[Range[qdo["MaxArity"]], qdo["Order"]]]
 
 
 QuantumDiscreteOperatorProp[qdo_, "TensorRepresentation" | "Tensor"] := Switch[
