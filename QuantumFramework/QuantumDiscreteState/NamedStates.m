@@ -21,6 +21,10 @@ QuantumDiscreteState["PhiPlus", args___] := QuantumDiscreteState[{0, 1, 1, 0}, a
 
 QuantumDiscreteState["PhiMinus", args___] := QuantumDiscreteState[{0, 1, -1, 0}, args]
 
+QuantumDiscreteState[{name : "Plus" | "Minus" | "Left" | "Right" | "PsiPlus" | "PsiMinus" | "PhiPlus" | "PhiMinus", n_Integer ? Positive}, args___] :=
+    QuantumTensorProduct @ Table[QuantumDiscreteState[name, args], n]
+
+
 
 QuantumDiscreteState[{"BasisState", basisElement_List}, args___] := QuantumDiscreteState[{"BasisState", basisElement}, 2, args]
 

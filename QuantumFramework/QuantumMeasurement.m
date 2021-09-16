@@ -48,9 +48,11 @@ QuantumMeasurementProp[qm_, args :
     "Categories" | "Probabilities" | "ProbabilityTable" | "ProbabilityArray" |
     "ProbabilityPlot" |
     "TopProbabilities" | ("TopProbabilities" -> _Integer) |
-    "Entropy" | "NEntropy"] := qm["DistributionInformation", args]
+    "Entropy"] := qm["DistributionInformation", args]
 
 QuantumMeasurementProp[qm_, "Outcomes"] := qm["DistributionInformation", "Categories"]
+
+QuantumMeasurementProp[qm_, "NEntropy"] := N @ qm["Entropy"]
 
 QuantumMeasurementProp[qm_, "ProbabilitiesList"] := Normal @ qm["ProbabilityArray"]
 

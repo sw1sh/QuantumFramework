@@ -102,7 +102,7 @@ normalizeMatrix[matrix_] := matrix / Tr[matrix] (*SparseArray[{i_, i_} -> 1 / Tr
 kroneckerProduct[ts___] := Fold[If[ArrayQ[#1] && ArrayQ[#2], KroneckerProduct[##], Times[##]] &, {ts}]
 
 
-projector[v_] := (*ConjugateTranspose[{v}] . {v}*) KroneckerProduct[Conjugate[v], v]
+projector[v_] := (*ConjugateTranspose[{v}] . {v}*) KroneckerProduct[v, Conjugate[v]]
 
 
 OrderedMatrixRepresentation[matrix_ ? MatrixQ, quditCount_Integer ? Positive, order_ ? orderQ] := Enclose @ Module[{

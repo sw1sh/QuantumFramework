@@ -86,9 +86,9 @@ QuantumDiscreteOperatorProp[qdo_, "HermitianQ"] := HermitianMatrixQ[qdo["MatrixR
 QuantumDiscreteOperatorProp[qdo_, "UnitaryQ"] := UnitaryMatrixQ[qdo["MatrixRepresentation"]]
 
 
-QuantumDiscreteOperatorProp[qdo_, "Eigenvalues"] := Eigenvalues[qdo["OrderedMatrix"]]
+QuantumDiscreteOperatorProp[qdo_, "Eigenvalues"] := Eigenvalues[qdo["Matrix"]]
 
-QuantumDiscreteOperatorProp[qdo_, "Eigenvectors"] := Eigenvectors[qdo["OrderedMatrix"]]
+QuantumDiscreteOperatorProp[qdo_, "Eigenvectors"] := Eigenvectors[qdo["Matrix"]]
 
 QuantumDiscreteOperatorProp[qdo_, "Projectors"] := projector /@ qdo["Eigenvectors"]
 

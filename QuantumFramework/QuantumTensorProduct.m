@@ -39,7 +39,7 @@ QuantumBasis[<|
 QuantumTensorProduct[qds1_ ? QuantumDiscreteStateQ, qds2_ ? QuantumDiscreteStateQ] /; qds1["Picture"] === qds2["Picture"] :=
 QuantumDiscreteState[
     If[qds1["StateType"] === qds2["StateType"] === "Vector",
-        Catenate[KroneckerProduct[qds1["StateVector"], qds2["StateVector"]]],
+        Flatten[KroneckerProduct[qds1["StateVector"], qds2["StateVector"]]],
         KroneckerProduct[qds1["DensityMatrix"], qds2["DensityMatrix"]]
     ],
     QuantumTensorProduct[qds1["Basis"], qds2["Basis"]]

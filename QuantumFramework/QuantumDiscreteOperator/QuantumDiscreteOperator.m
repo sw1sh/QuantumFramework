@@ -34,12 +34,16 @@ QuantumDiscreteOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, args___, or
     ]
 ]
 
-QuantumDiscreteOperator[assoc_Association, args___] := With[{
-    dimensions = basisElementNamesDimensions[Keys[assoc]]
+QuantumDiscreteOperator[assoc_Association, args___, order : (_ ? orderQ) : {1}] := Enclose @ Module[{
+    dimensions = basisElementNamesDimensions[Keys[assoc]],
+    tensorDimensions
 },
+    ConfirmAssert[Length[assoc] > 0 && Equal @@ TensorDimensions /@ assoc];
+    tensorDimensions = TensorDimensions @ First[assoc];
     QuantumDiscreteOperator[
-        ArrayReshape[Values[assoc], dimensions],
-        args
+        ArrayReshape[Values[assoc], Join[dimensions, tensorDimensions]],
+        args,
+        Join[Complement[Range[Length[tensorDimensions]], order], order]
     ]
 ]
 

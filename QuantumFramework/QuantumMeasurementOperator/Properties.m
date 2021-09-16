@@ -40,9 +40,9 @@ QuantumMeasurementOperatorProp[_[op_], "DiscreteOperator"] := op
 
 
 QuantumMeasurementOperatorProp[qmo_, "Type"] := Which[
-    qmo["Rank"] == 2,
+    qmo["OutputQudits"] == qmo["InputQudits"],
     "Projection",
-    qmo["Rank"] == 3,
+    qmo["OutputQudits"] == qmo["InputQudits"] + 1,
     "POVM",
     True,
     "Unknown"
@@ -52,7 +52,7 @@ QuantumMeasurementOperatorProp[qmo_, "ProjectionQ"] := qmo["Type"] === "Projecti
 
 QuantumMeasurementOperatorProp[qmo_, "POVMQ"] := qmo["Type"] === "POVM"
 
-QuantumMeasurementOperatorProp[qmo_, "POVMElements"] /; qmo["POVMQ"] := qmo["Tensor"]
+QuantumMeasurementOperatorProp[qmo_, "POVMElements"] := If[qmo["POVMQ"], qmo["Tensor"], projector /@ qmo["Matrix"]]
 
 QuantumMeasurementOperatorProp[qmo_, "OrderedPOVMElements"] /; qmo["POVMQ"] := qmo["OrderedTensor"]
 
