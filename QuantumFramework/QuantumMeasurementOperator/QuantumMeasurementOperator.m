@@ -6,7 +6,7 @@ PackageScope["QuantumMeasurementOperatorQ"]
 
 
 
-QuantumMeasurementOperatorQ[QuantumMeasurementOperator[op_]] := QuantumDiscreteOperatorQ[op]
+QuantumMeasurementOperatorQ[QuantumMeasurementOperator[op_]] := QuantumOperatorQ[op]
 
 QuantumMeasurementOperatorQ[___] := False
 
@@ -15,18 +15,18 @@ QuantumMeasurementOperatorQ[___] := False
 
 
 QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args__] :=
-    QuantumMeasurementOperator[QuantumDiscreteOperator[qmo["DiscreteOperator"], args]]
+    QuantumMeasurementOperator[QuantumOperator[qmo["Operator"], args]]
 
 
-QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumDiscreteOperatorQ], ___]] :=
-    Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumDiscreteOperator[args], QuantumDiscreteOperatorQ]]
+QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumOperatorQ], ___]] :=
+    Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumOperator[args], QuantumOperatorQ]]
 
 
 
 
 (* composition *)
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qds_ ? QuantumDiscreteStateQ] := Module[{
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qds_ ? QuantumStateQ] := Module[{
     matrix, values, projectors, probabilities, newStates, nonZeroProbabilities
 },
     matrix = qmo[{"OrderedMatrix", qds["Qudits"]}];
@@ -38,14 +38,14 @@ QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumDiscreteOper
     nonZeroProbabilities = Position[probabilities, 0];
     projectors = Delete[projectors, nonZeroProbabilities];
     probabilities = Delete[probabilities, nonZeroProbabilities];
-    newStates = MapThread[QuantumDiscreteState[ConjugateTranspose[#1] . qds["DensityMatrix"] . #1 / #2] &, {projectors, probabilities}];
+    newStates = MapThread[QuantumState[ConjugateTranspose[#1] . qds["DensityMatrix"] . #1 / #2] &, {projectors, probabilities}];
     values = If[qmo["ProjectionQ"], Eigenvalues[matrix], Range[First @ qmo["OutputDimensions"]]];
     values = Ket /@ Delete[values, nonZeroProbabilities];
     QuantumMeasurement[AssociationThread[values, probabilities], newStates]
 ]
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[op_ ? QuantumOperatorQ] :=
-    QuantumMeasurementOperator[qmo["DiscreteOperator"][op]]
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[op_ ? QuantumFrameworkOperatorQ] :=
+    QuantumMeasurementOperator[qmo["QuantumOperator"][op]]
 
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qm_QuantumMeasurement] := Module[{
@@ -65,4 +65,10 @@ QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumDiscreteOper
 
     QuantumMeasurement[AssociationThread[newValues, newProbabilities], newStates]
 ]
+
+
+(* equality *)
+
+QuantumMeasurementOperator /: (qmo1_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ) ==
+    (qmo2_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ) := qmo1["Matrix"] == qmo2["Matrix"]
 

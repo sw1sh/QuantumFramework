@@ -6,7 +6,7 @@ PackageScope["QuantumCircuitOperatorQ"]
 
 
 
-QuantumCircuitOperatorQ[QuantumCircuitOperator[operators_]] := VectorQ[operators, QuantumOperatorQ]
+QuantumCircuitOperatorQ[QuantumCircuitOperator[operators_]] := VectorQ[operators, QuantumFrameworkOperatorQ]
 
 QuantumCircuitOperatorQ[___] := False
 

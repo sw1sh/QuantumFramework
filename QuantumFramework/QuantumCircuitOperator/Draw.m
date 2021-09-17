@@ -125,7 +125,7 @@ drawWireGraphics[positionIndices_List, scaling_] := Module[{quditCount, lineList
 
 drawGateGraphics[gates_List] := Module[{
     width, height, orders, dimensions, lineScaling, scaling, graphicsList, index, positionIndices, gatePositionIndices, matrixRepresentation, k,
-    targetQuditsOrder, controlQuditsOrder, reducedMatrixRepresentation, controlQuditsOrderTop, controlQuditsOrderBottom, controlQuditsTopCoordinates, controlQuditsBottomCoordinates
+    targetQuditsOrder, controlQuditsOrder, controlQuditsOrderTop, controlQuditsOrderBottom, controlQuditsTopCoordinates, controlQuditsBottomCoordinates
 },
     width = 4;
     height = 3;
@@ -155,7 +155,7 @@ drawGateGraphics[gates_List] := Module[{
             ]
         ]
     ];
-    If[ QuantumDiscreteOperatorQ[gates[[i]]],
+    If[ QuantumOperatorQ[gates[[i]]],
         matrixRepresentation = gates[[i]]["MatrixRepresentation"];
         k = 1;
         While[matrixRepresentation[[1 ;; Times @@ dimensions[[;; k]], 1 ;; Times @@ dimensions[[;; k]]]] == IdentityMatrix[Times @@ dimensions[[;; k]]], k = k + 1];
@@ -196,11 +196,15 @@ drawGateGraphics[gates_List] := Module[{
                 drawNotGate[{-2 + 6 Max[gatePositionIndices], 5 First[targetQuditsOrder]}, scaling],
                 _,
                 If[ gates[[i]]["Arity"] == 1,
-                    drawUnaryGate[{-2 + 6 Max[gatePositionIndices], 5 First[targetQuditsOrder]}, scaling, gates[[i]]["Label"] /. None -> Subscript["U", index]],
+                    drawUnaryGate[
+                        {-2 + 6 Max[gatePositionIndices], 5 First[targetQuditsOrder]},
+                        scaling,
+                        gates[[i]]["Label"] /. {None -> Subscript["U", index], Composition -> SmallCircle}
+                    ],
                     drawBinaryGate[
                         {{-2 + 6 Max[gatePositionIndices], 5 Min[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], 5 Max[targetQuditsOrder]}},
                         scaling,
-                        gates[[i]]["Label"] /. None -> Subscript["U", index]
+                        gates[[i]]["Label"], {None -> Subscript["U", index], Composition -> SmallCircle}
                     ]
                 ]
             ]

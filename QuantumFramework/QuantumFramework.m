@@ -1,8 +1,8 @@
 Package["QuantumFramework`"]
 
-PackageScope["QuantumOperatorQ"]
+PackageScope["QuantumFrameworkOperatorQ"]
 
 
 
-QuantumOperatorQ[op_] := QuantumDiscreteOperatorQ[op] || QuantumMeasurementOperatorQ[op] || QuantumCircuitOperatorQ[op]
+QuantumFrameworkOperatorQ[op_] := QuantumOperatorQ[op] || QuantumMeasurementOperatorQ[op] || QuantumCircuitOperatorQ[op]
 

@@ -5,7 +5,7 @@ PackageScope["QuantumMeasurementOperatorProp"]
 
 
 $QuantumMeasurementOperatorProperties = {
-    "DiscreteOperator",
+    "QuantumOperator",
     "Operator", "Basis", "MatrixRepresentation", "POVMElements",
     "OrderedMatrixRepresentation", "OrderedPOVMElements",
     "Arity", "Dimensions", "Order", "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors",
@@ -14,13 +14,16 @@ $QuantumMeasurementOperatorProperties = {
 
 $QuantumMeasurementOperatorProperties = DeleteDuplicates @ Join[
     $QuantumMeasurementOperatorProperties,
-    QuantumDiscreteOperator["Properties"]
+    $QuantumOperatorProperties
 ]
 
 QuantumMeasurementOperator["Properties"] := $QuantumMeasurementOperatorProperties
 
+qmo_QuantumMeasurementOperator["ValidQ"] := QuantumMeasurementOperatorQ[qmo]
+
+
 QuantumMeasurementOperatorProp[qmo_, "Properties"] :=
-    DeleteDuplicates @ Join[QuantumMeasurementOperator["Properties"], qmo["DiscreteOperator"]["Properties"]]
+    DeleteDuplicates @ Join[QuantumMeasurementOperator["Properties"], qmo["QuantumOperator"]["Properties"]]
 
 
 QuantumMeasurementOperator::undefprop = "QuantumMeasurementOperator property `` is undefined for this operator";
@@ -36,7 +39,7 @@ QuantumMeasurementOperator::undefprop = "QuantumMeasurementOperator property `` 
 
 (* getters *)
 
-QuantumMeasurementOperatorProp[_[op_], "DiscreteOperator"] := op
+QuantumMeasurementOperatorProp[_[op_], "QuantumOperator"] := op
 
 
 QuantumMeasurementOperatorProp[qmo_, "Type"] := Which[
@@ -59,13 +62,13 @@ QuantumMeasurementOperatorProp[qmo_, "OrderedPOVMElements"] /; qmo["POVMQ"] := q
 QuantumMeasurementOperatorProp[qmo_, {"OrderedPOVMElements", arity_Integer}] /; qmo["POVMQ"] := qmo[{"OrderedTensor", arity}]
 
 QuantumMeasurementOperatorProp[qmo_, "Operators"] := If[qmo["POVMQ"],
-    AssociationThread[Ket /@ Range[0, Length[qmo["Tensor"]] - 1], QuantumDiscreteOperator[#, QuantumBasis["Output" -> qmo["Basis"]["Input"]], qmo["Order"]] & /@ qmo["Tensor"]],
-    AssociationThread[Ket /@ Eigenvalues[qmo["Matrix"]], QuantumDiscreteOperator[projector @ #, qmo["Basis"], qmo["Order"]] & /@ Eigenvectors[qmo["OrderedMatrix"]]]
+    AssociationThread[Ket /@ Range[0, Length[qmo["Tensor"]] - 1], QuantumOperator[#, QuantumBasis["Output" -> qmo["Basis"]["Input"]], qmo["Order"]] & /@ qmo["Tensor"]],
+    AssociationThread[Ket /@ Eigenvalues[qmo["Matrix"]], QuantumOperator[projector @ #, qmo["Basis"], qmo["Order"]] & /@ Eigenvectors[qmo["OrderedMatrix"]]]
 ]
 
 
 (* operator properties *)
 
 QuantumMeasurementOperatorProp[qmo_, args : PatternSequence[prop_String, ___] | PatternSequence[{prop_String, ___}, ___]] /;
-    MemberQ[Intersection[qmo["DiscreteOperator"]["Properties"], qmo["Properties"]], prop] := qmo["DiscreteOperator"][args]
+    MemberQ[Intersection[qmo["QuantumOperator"]["Properties"], qmo["Properties"]], prop] := qmo["QuantumOperator"][args]
 

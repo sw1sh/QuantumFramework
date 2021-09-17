@@ -36,10 +36,13 @@ QuantumBasis[<|
 
 (* state x state *)
 
-QuantumTensorProduct[qds1_ ? QuantumDiscreteStateQ, qds2_ ? QuantumDiscreteStateQ] /; qds1["Picture"] === qds2["Picture"] :=
-QuantumDiscreteState[
+QuantumTensorProduct[qds1_ ? QuantumStateQ, qds2_ ? QuantumStateQ] /; qds1["Picture"] === qds2["Picture"] :=
+QuantumState[
     If[qds1["StateType"] === qds2["StateType"] === "Vector",
-        Flatten[KroneckerProduct[qds1["StateVector"], qds2["StateVector"]]],
+        Flatten[KroneckerProduct[
+            ArrayReshape[qds1["StateVector"], qds1["MatrixNameDimensions"]],
+            ArrayReshape[qds2["StateVector"], qds2["MatrixNameDimensions"]]
+        ]],
         KroneckerProduct[qds1["DensityMatrix"], qds2["DensityMatrix"]]
     ],
     QuantumTensorProduct[qds1["Basis"], qds2["Basis"]]
@@ -48,12 +51,12 @@ QuantumDiscreteState[
 
 (* operator x operator *)
 
-QuantumTensorProduct[qdo1_ ? QuantumDiscreteOperatorQ, qdo2_ ? QuantumDiscreteOperatorQ] :=
-    QuantumDiscreteOperator[QuantumTensorProduct[qdo1["State"], qdo2["State"]], Join[qdo1["Order"], qdo2["Order"] + Max[qdo1["TotalOrder"]]]]
+QuantumTensorProduct[qdo1_ ? QuantumOperatorQ, qdo2_ ? QuantumOperatorQ] :=
+    QuantumOperator[QuantumTensorProduct[qdo1["State"], qdo2["State"]], Join[qdo1["Order"], qdo2["Order"] + Max[qdo1["TotalOrder"]]]]
 
 
 QuantumTensorProduct[qmo1_ ? QuantumMeasurementOperatorQ, qmo2_ ? QuantumMeasurementOperatorQ] :=
-    QuantumMeasurementOperator[QuantumTensorProduct[qmo1["DiscreteOperator"], qmo2["DiscreteOperator"]]]
+    QuantumMeasurementOperator[QuantumTensorProduct[qmo1["Operator"], qmo2["Operator"]]]
 
 
 

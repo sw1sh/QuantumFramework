@@ -96,7 +96,7 @@ identityMatrix[0] := {{}}
 identityMatrix[n_] := IdentityMatrix[n]
 
 
-normalizeMatrix[matrix_] := matrix / Tr[matrix] (*SparseArray[{i_, i_} -> 1 / Tr[matrix], Dimensions[matrix], 1]*)
+normalizeMatrix[matrix_] := Enclose[matrix / ConfirmBy[Tr[matrix], # != 0 &]] (*SparseArray[{i_, i_} -> 1 / Tr[matrix], Dimensions[matrix], 1]*)
 
 
 kroneckerProduct[ts___] := Fold[If[ArrayQ[#1] && ArrayQ[#2], KroneckerProduct[##], Times[##]] &, {ts}]

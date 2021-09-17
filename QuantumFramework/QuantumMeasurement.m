@@ -3,8 +3,8 @@ Package["QuantumFramework`"]
 PackageExport["QuantumMeasurement"]
 
 
-QuantumMeasurementQ[QuantumMeasurement[weights_Association, possibleStates_]] :=
-  VectorQ[Values[weights], NumericQ] && VectorQ[possibleStates, QuantumDiscreteStateQ]
+QuantumMeasurementQ[QuantumMeasurement[ev_Association, possibleStates_]] :=
+  VectorQ[Values[ev], NumericQ] && VectorQ[possibleStates, QuantumStateQ] && Length[ev] == Length[possibleStates] && Length[ev] > 0
 
 QuantumMeasurementQ[___] := False
 
@@ -16,7 +16,8 @@ $QuantumMeasurementProperties = {
     "Distribution",
     "Outcomes", "Probabilities",
     "Mean", "States", "StateAssociation",
-    "Entropy", "NEntropy", "SimulatedMeasurement", "SimulatedStateMeasurement", "MeanState"
+    "Entropy",
+    "PostMeasurementState"
 };
 
 QuantumMeasurement["Properties"] := $QuantumMeasurementProperties
@@ -36,10 +37,10 @@ QuantumMeasurement::undefprop = "QuantumMeasurement property `` is undefined for
 
 QuantumMeasurementProp[_, "Properties"] := QuantumMeasurement["Properties"]
 
-QuantumMeasurementProp[_[weights_, _], "Weights"] := weights
+QuantumMeasurementProp[_[ev_, _], "Eigenvalues"] := ev
 QuantumMeasurementProp[_[_, states_], "States"] := states
 
-QuantumMeasurementProp[qm_, "Distribution"] := CategoricalDistribution[qm["Weights"]]
+QuantumMeasurementProp[qm_, "Distribution"] := CategoricalDistribution[qm["Eigenvalues"]]
 
 QuantumMeasurementProp[qm_, "DistributionInformation", args___] := Information[qm["Distribution"], args]
 
@@ -51,15 +52,13 @@ QuantumMeasurementProp[qm_, args :
 
 QuantumMeasurementProp[qm_, "Outcomes"] := qm["DistributionInformation", "Categories"]
 
-QuantumMeasurementProp[qm_, "NEntropy"] := N @ qm["Entropy"]
-
 QuantumMeasurementProp[qm_, "ProbabilitiesList"] := Normal @ qm["ProbabilityArray"]
 
 QuantumMeasurementProp[qm_, "SimulatedMeasurement"] := RandomVariate[qm["Distribution"]]
 
 QuantumMeasurementProp[qm_, {"SimulatedMeasurement", n_Integer}] := RandomVariate[qm["Distribution"], n]
 
-QuantumMeasurementProp[qm_, "Mean"] := Total @ KeyValueMap[Times, qm["Probabilities"]]
+QuantumMeasurementProp[qm_, "Mean"] := Mean @ Values @ qm["Eigenvalues"]
 
 QuantumMeasurementProp[qm_, "StateAssociation"] := AssociationThread[qm["Outcomes"], qm["States"]]
 
@@ -77,6 +76,10 @@ QuantumMeasurementProp[qm_, {"SimulatedStateMeasurement", n_}] := Part[qm["State
 
 QuantumMeasurementProp[qm_, "MeanState"] := qm["Mean"] /. qm["StateAssociation"]
 
+QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumState[
+    Mean[MapThread[Times, {Values @ qm["Eigenvalues"], #["State"] & /@ qm["States"]}]],
+    First[qm["States"]]["Basis"]
+]
 
 QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement ? QuantumMeasurementQ, format_] := Module[{icon},
     icon = (*# /. Line[{a_, Offset[b_, c_]}] :> Sequence[] & @*)
@@ -90,7 +93,7 @@ QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement ? QuantumMeasurementQ, for
             {
                 BoxForm`SummaryItem[{"Measurement Outcomes: ", Length[qm["Probabilities"]]}]
             }, {
-                BoxForm`SummaryItem[{"Entropy: ", qm["NEntropy"]}]
+                BoxForm`SummaryItem[{"Entropy: ", N @ qm["Entropy"]}]
             }
         },
         {{}},

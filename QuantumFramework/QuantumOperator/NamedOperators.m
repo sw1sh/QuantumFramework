@@ -16,33 +16,33 @@ controlledZGate = ReplacePart[
 ];
 
 
-QuantumDiscreteOperator[{"XRotation", angle_}, args___] := QuantumDiscreteOperator[
+QuantumOperator[{"XRotation", angle_}, args___] := QuantumOperator[
     {{Cos[angle / 2], I Sin[angle / 2]}, {I Sin[angle / 2], Cos[angle / 2]}},
     "Label" -> StringTemplate["X(``)"][angle],
     args
 ]
 
-QuantumDiscreteOperator[{"YRotation", angle_}, args___] := QuantumDiscreteOperator[
+QuantumOperator[{"YRotation", angle_}, args___] := QuantumOperator[
     {{Cos[angle / 2], - Sin[angle / 2]}, {Sin[angle / 2], Cos[angle / 2]}},
     "Label" -> StringTemplate["Y(``)"][angle],
     args
 ]
 
-QuantumDiscreteOperator[{"ZRotation", angle_}, args___] := QuantumDiscreteOperator[
+QuantumOperator[{"ZRotation", angle_}, args___] := QuantumOperator[
     SparseArray[{{1, 1} -> 1, {2, 2} -> Exp[I angle]}],
     "Label" -> StringTemplate["Z(``)"][angle],
     args
 ]
 
 
-QuantumDiscreteOperator["S", args___] := QuantumDiscreteOperator[{"ZRotation", Pi / 2}, "Label" -> "S", args]
+QuantumOperator["S", args___] := QuantumOperator[{"ZRotation", Pi / 2}, "Label" -> "S", args]
 
-QuantumDiscreteOperator["T", args___] := QuantumDiscreteOperator[{"ZRotation", Pi / 4}, "Label" -> "T", args]
+QuantumOperator["T", args___] := QuantumOperator[{"ZRotation", Pi / 4}, "Label" -> "T", args]
 
 
-QuantumDiscreteOperator["CNOT", args___] := QuantumDiscreteOperator[{"CNOT", 2}, args]
+QuantumOperator["CNOT", args___] := QuantumOperator[{"CNOT", 2}, args]
 
-QuantumDiscreteOperator[{"CNOT", dimension_Integer}, args___] := QuantumDiscreteOperator[
+QuantumOperator[{"CNOT", dimension_Integer}, args___] := QuantumOperator[
     SparseArray[{i_, j_} :> 
         If[ IntegerDigits[j - 1, dimension, 2] == {
                 First[IntegerDigits[i - 1, dimension, 2]],
@@ -59,9 +59,9 @@ QuantumDiscreteOperator[{"CNOT", dimension_Integer}, args___] := QuantumDiscrete
 ]
 
 
-QuantumDiscreteOperator["CPHASE", args___] := QuantumDiscreteOperator[{"CPHASE", 2}, args]
+QuantumOperator["CPHASE", args___] := QuantumOperator[{"CPHASE", 2}, args]
 
-QuantumDiscreteOperator[{"CPHASE", dimension_Integer}, args___] := QuantumDiscreteOperator[
+QuantumOperator[{"CPHASE", dimension_Integer}, args___] := QuantumOperator[
     SparseArray[{i_, j_} :>  Which[
             (i == j && First[IntegerDigits[i - 1, dimension, 2]] == 0),
             1,
@@ -93,16 +93,16 @@ controlledMatrix[matrix_ ? MatrixQ, dimension_Integer] := ReplacePart[
     ]
 ]
 
-QuantumDiscreteOperator[name : "CX" | "CY" | "CZ", args___] := QuantumDiscreteOperator[{name, 2}, args]
+QuantumOperator[name : "CX" | "CY" | "CZ", args___] := QuantumOperator[{name, 2}, args]
 
-QuantumDiscreteOperator[{"CX", dimension_Integer}, args___] := QuantumDiscreteOperator[
+QuantumOperator[{"CX", dimension_Integer}, args___] := QuantumOperator[
     controlledMatrix[SparseArray[({i_, j_}  /; Mod[i - 1, dimension, 1] == j) -> 1, {dimension, dimension}], dimension],
     dimension,
     "Label" -> "CX",
     args
 ]
 
-QuantumDiscreteOperator[{"CY", dimension_Integer}, args___] := QuantumDiscreteOperator[
+QuantumOperator[{"CY", dimension_Integer}, args___] := QuantumOperator[
     (* TODO: generalize for arbitrary dimension *)
     controlledMatrix[SparseArray[{{1, 2} -> -I, {2, 1} -> I}], dimension],
     dimension,
@@ -110,7 +110,7 @@ QuantumDiscreteOperator[{"CY", dimension_Integer}, args___] := QuantumDiscreteOp
     args
 ]
 
-QuantumDiscreteOperator[{"CZ", dimension_Integer}, args___] := QuantumDiscreteOperator[
+QuantumOperator[{"CZ", dimension_Integer}, args___] := QuantumOperator[
     controlledMatrix[SparseArray[{_, j_} :> Exp[(2 Pi I j / dimension) + I Pi], {dimension, dimension}], dimension],
     dimension,
     "Label" -> "CZ",
@@ -118,16 +118,16 @@ QuantumDiscreteOperator[{"CZ", dimension_Integer}, args___] := QuantumDiscreteOp
 ]
 
 
-QuantumDiscreteOperator[{"ControlledU", arg_, dimension_Integer : 2}, args___] :=
-    QuantumDiscreteOperator[{"ControlledU", QuantumDiscreteOperator[arg, dimension]}, args]
+QuantumOperator[{"ControlledU", arg_, dimension_Integer : 2}, args___] :=
+    QuantumOperator[{"ControlledU", QuantumOperator[arg, dimension]}, args]
 
-QuantumDiscreteOperator[{"ControlledU", qdo_ ? QuantumDiscreteOperatorQ}, args___] :=
-    QuantumDiscreteOperator[controlledMatrix[qdo["MatrixRepresentation"], qdo["InputDimension"]], qdo["InputDimension"], args]
+QuantumOperator[{"ControlledU", qo_ ? QuantumOperatorQ}, args___] :=
+    QuantumOperator[controlledMatrix[qo["MatrixRepresentation"], qo["InputDimension"]], qo["InputDimension"], args]
 
 
-QuantumDiscreteOperator["Fourier", args___] := QuantumDiscreteOperator[{"Fourier", 2}, args]
+QuantumOperator["Fourier", args___] := QuantumOperator[{"Fourier", 2}, args]
 
-QuantumDiscreteOperator[{"Fourier", dimension_Integer}, args___, order_ ? orderQ] := QuantumDiscreteOperator[
+QuantumOperator[{"Fourier", dimension_Integer}, args___, order_ ? orderQ] := QuantumOperator[
     SparseArray[
         ({i_, j_} :>  Exp[2 Pi I (i - 1) (j - 1) / (dimension ^ Length[order])] / Sqrt[dimension ^ Length[order]]),
         {dimension ^ Length[order], dimension ^ Length[order]}
@@ -138,9 +138,9 @@ QuantumDiscreteOperator[{"Fourier", dimension_Integer}, args___, order_ ? orderQ
     order
 ]
 
-QuantumDiscreteOperator["InverseFourier", args___] := QuantumDiscreteOperator[{"InverseFourier", 2}, args]
+QuantumOperator["InverseFourier", args___] := QuantumOperator[{"InverseFourier", 2}, args]
 
-QuantumDiscreteOperator[{"InverseFourier", dimension_Integer}, args___, order_?orderQ] := QuantumDiscreteOperator[
+QuantumOperator[{"InverseFourier", dimension_Integer}, args___, order_?orderQ] := QuantumOperator[
      SparseArray[
         ({i_, j_} :> Exp[-2 Pi I (i - 1) (j - 1) / (dimension ^ Length[order])] / Sqrt[dimension ^ Length[order]]),
         {dimension ^ Length[order], dimension ^ Length[order]}
@@ -159,20 +159,20 @@ swapMatrix[dimension_] := SparseArray[# -> 1 & /@
     }]
 ]
 
-QuantumDiscreteOperator["SWAP", args___] := QuantumDiscreteOperator[{"SWAP", 2}, args]
+QuantumOperator["SWAP", args___] := QuantumOperator[{"SWAP", 2}, args]
 
-QuantumDiscreteOperator[{"SWAP", dimension_Integer}, args___] :=
-    QuantumDiscreteOperator[swapMatrix[dimension], dimension, "Label" -> "SWAP", args]
+QuantumOperator[{"SWAP", dimension_Integer}, args___] :=
+    QuantumOperator[swapMatrix[dimension], dimension, "Label" -> "SWAP", args]
 
-QuantumDiscreteOperator["RootSWAP", args___] := QuantumDiscreteOperator[{"RootSWAP", 2}, args]
+QuantumOperator["RootSWAP", args___] := QuantumOperator[{"RootSWAP", 2}, args]
 
-QuantumDiscreteOperator[{"RootSWAP", dimension_Integer}, args___] :=
-    QuantumDiscreteOperator[MatrixPower[swapMatrix[dimension], 1 / 2], dimension, "Label" -> "RootSWAP", args]
+QuantumOperator[{"RootSWAP", dimension_Integer}, args___] :=
+    QuantumOperator[MatrixPower[swapMatrix[dimension], 1 / 2], dimension, "Label" -> "RootSWAP", args]
 
 
-QuantumDiscreteOperator["SUM", args___] := QuantumDiscreteOperator[{"SUM", 2}, args]
+QuantumOperator["SUM", args___] := QuantumOperator[{"SUM", 2}, args]
 
-QuantumDiscreteOperator[{"SUM", dimension_Integer}, args___] := QuantumDiscreteOperator[
+QuantumOperator[{"SUM", dimension_Integer}, args___] := QuantumOperator[
     SparseArray[{input_, output_} :>
         With[{
             i1 = First[IntegerDigits[input - 1, dimension, 2]],
@@ -190,12 +190,12 @@ QuantumDiscreteOperator[{"SUM", dimension_Integer}, args___] := QuantumDiscreteO
 ]
 
 
-QuantumDiscreteOperator[name : "PauliX" | "PauliY" | "PauliZ", args___] := QuantumDiscreteOperator[{name, 2}, args]
+QuantumOperator[name : "PauliX" | "PauliY" | "PauliZ", args___] := QuantumOperator[{name, 2}, args]
 
-QuantumDiscreteOperator[{"PauliX", dimension_Integer}, args___] := With[{
+QuantumOperator[{"PauliX", dimension_Integer}, args___] := With[{
     s = (dimension - 1) / 2
 },
-    QuantumDiscreteOperator[
+    QuantumOperator[
         SparseArray[
             {a_, b_} :> (KroneckerDelta[a, b + 1] + KroneckerDelta[a + 1, b]) Sqrt[(s + 1) (a + b - 1) - a b],
             {dimension, dimension}
@@ -206,10 +206,10 @@ QuantumDiscreteOperator[{"PauliX", dimension_Integer}, args___] := With[{
     ]
 ]
 
-QuantumDiscreteOperator[{"PauliY", dimension_Integer}, args___] := With[{
+QuantumOperator[{"PauliY", dimension_Integer}, args___] := With[{
     s = (dimension - 1) / 2
 },
-    QuantumDiscreteOperator[
+    QuantumOperator[
         SparseArray[
             {a_, b_} :> I (KroneckerDelta[a, b + 1] -  KroneckerDelta[a + 1, b]) Sqrt[(s + 1) (a + b - 1) - a b],
             {dimension, dimension}
@@ -220,10 +220,10 @@ QuantumDiscreteOperator[{"PauliY", dimension_Integer}, args___] := With[{
     ]
 ]
 
-QuantumDiscreteOperator[{"PauliZ", dimension_Integer}, args___] := With[{
+QuantumOperator[{"PauliZ", dimension_Integer}, args___] := With[{
     s = (dimension - 1) / 2
 },
-    QuantumDiscreteOperator[
+    QuantumOperator[
         SparseArray[
             {a_, b_} :> 2 (s + 1 - a) KroneckerDelta[a, b],
             {dimension, dimension}
@@ -235,9 +235,9 @@ QuantumDiscreteOperator[{"PauliZ", dimension_Integer}, args___] := With[{
 ]
 
 
-QuantumDiscreteOperator["RootNOT", args___] := QuantumDiscreteOperator[{"RootNOT", 2}, args]
+QuantumOperator["RootNOT", args___] := QuantumOperator[{"RootNOT", 2}, args]
 
-QuantumDiscreteOperator[{"RootNOT", dimension_Integer}, args___] := QuantumDiscreteOperator[
+QuantumOperator[{"RootNOT", dimension_Integer}, args___] := QuantumOperator[
     MatrixPower[
         SparseArray[({i_, j_} /; Mod[i - 1, dimension, 1] == j) -> 1, {dimension, dimension}],
         1 / 2
@@ -248,15 +248,15 @@ QuantumDiscreteOperator[{"RootNOT", dimension_Integer}, args___] := QuantumDiscr
 ]
 
 
-QuantumDiscreteOperator["Hadamard", args___] := QuantumDiscreteOperator[HadamardMatrix[2], "Label" -> "H", args]
+QuantumOperator["Hadamard", args___] := QuantumOperator[HadamardMatrix[2], "Label" -> "H", args]
 
-QuantumDiscreteOperator[{"Hadamard", qudits_Integer ? Positive}, args___] :=
-    QuantumDiscreteOperator[QuantumTensorProduct[Table[QuantumDiscreteOperator["Hadamard", args], qudits]]]
+QuantumOperator[{"Hadamard", qudits_Integer ? Positive}, args___] :=
+    QuantumOperator[QuantumTensorProduct[Table[QuantumOperator["Hadamard", args], qudits]]]
 
 
-QuantumDiscreteOperator["Toffoli", args___, order_?orderQ] := QuantumDiscreteOperator[{"Toffoli", Length[order]}, args, order]
+QuantumOperator["Toffoli", args___, order_?orderQ] := QuantumOperator[{"Toffoli", Length[order]}, args, order]
 
-QuantumDiscreteOperator[{"Toffoli", arity_Integer}, args___] := QuantumDiscreteOperator[
+QuantumOperator[{"Toffoli", arity_Integer}, args___] := QuantumOperator[
     SparseArray[{i_, j_} :>
         If[ (i == j && i < (2 ^ arity) - 1) || (i == (2 ^ arity) - 1 &&
             j == 2 ^ arity) || (j == (2 ^ arity) - 1 && i == 2 ^ arity),
@@ -268,7 +268,7 @@ QuantumDiscreteOperator[{"Toffoli", arity_Integer}, args___] := QuantumDiscreteO
 ]
 
 
-QuantumDiscreteOperator["CSWAP", args___] := QuantumDiscreteOperator[
+QuantumOperator["CSWAP", args___] := QuantumOperator[
     SparseArray[
         {
             {1, 1} -> 1, {2, 2} -> 1, {3, 3} -> 1, {4, 4} -> 1,
@@ -281,9 +281,9 @@ QuantumDiscreteOperator["CSWAP", args___] := QuantumDiscreteOperator[
 ]
 
 
-QuantumDiscreteOperator[name : "XX" | "YY" | "ZZ", args___] := QuantumDiscreteOperator[{name, 0}, args]
+QuantumOperator[name : "XX" | "YY" | "ZZ", args___] := QuantumOperator[{name, 0}, args]
 
-QuantumDiscreteOperator[{"XX", angle_}, args___] := QuantumDiscreteOperator[
+QuantumOperator[{"XX", angle_}, args___] := QuantumOperator[
     SparseArray[{
         {1, 1} -> Cos[angle], {2, 2} -> Cos[angle], {3, 3} -> Cos[angle], {4, 4} -> Cos[angle],
         {4, 1} -> -I Sin[angle], {3, 2} -> -I Sin[angle], {2, 3} -> -I Sin[angle], {1, 4} -> -I Sin[angle]
@@ -294,7 +294,7 @@ QuantumDiscreteOperator[{"XX", angle_}, args___] := QuantumDiscreteOperator[
     args
 ]
 
-QuantumDiscreteOperator[{"YY", angle_}, args___] := QuantumDiscreteOperator[
+QuantumOperator[{"YY", angle_}, args___] := QuantumOperator[
     SparseArray[{
         {1, 1} -> Cos[angle], {2, 2} -> Cos[angle], {3, 3} -> Cos[angle], {4, 4} -> Cos[angle],
         {4, 1} -> I Sin[angle], {3, 2} -> -I Sin[angle], {2, 3} -> -I Sin[angle], {1, 4} -> I Sin[angle]
@@ -305,7 +305,7 @@ QuantumDiscreteOperator[{"YY", angle_}, args___] := QuantumDiscreteOperator[
     args
 ]
 
-QuantumDiscreteOperator[{"ZZ", angle_}, args___] := QuantumDiscreteOperator[
+QuantumOperator[{"ZZ", angle_}, args___] := QuantumOperator[
     SparseArray[{
         {1, 1} -> Exp[I angle / 2], {2, 2} -> Exp[-I angle / 2],
         {3, 3} -> Exp[-I angle / 2], {4, 4} ->  Exp[I angle / 2]
@@ -317,8 +317,8 @@ QuantumDiscreteOperator[{"ZZ", angle_}, args___] := QuantumDiscreteOperator[
 ]
 
 
-QuantumDiscreteOperator["Deutsch", args___] := QuantumDiscreteOperator[{"Deutsch", 0}, args]
-QuantumDiscreteOperator[{"Deutsch", angle_}, args___] := QuantumDiscreteOperator[
+QuantumOperator["Deutsch", args___] := QuantumOperator[{"Deutsch", 0}, args]
+QuantumOperator[{"Deutsch", angle_}, args___] := QuantumOperator[
     SparseArray[{
         {1, 1} -> 1, {2, 2} -> 1, {3, 3} -> 1, {4, 4} -> 1, {5, 5} -> 1, {6, 6} -> 1,
         {7, 7} -> I Cos[angle], {7, 8} ->  Sin[angle], {8, 7} -> Sin[angle], {8, 8} -> I Cos[angle]
@@ -329,17 +329,17 @@ QuantumDiscreteOperator[{"Deutsch", angle_}, args___] := QuantumDiscreteOperator
 ]
 
 
-QuantumDiscreteOperator["RandomUnitary", args___] := QuantumDiscreteOperator[{"RandomUnitary", 2}, args]
+QuantumOperator["RandomUnitary", args___] := QuantumOperator[{"RandomUnitary", 2}, args]
 
-QuantumDiscreteOperator[{"RandomUnitary", dimension_Integer}, args___, order_ ? orderQ] :=
-    QuantumDiscreteOperator[RandomVariate @ CircularUnitaryMatrixDistribution[dimension ^ Length[order]], dimension, args, order]
+QuantumOperator[{"RandomUnitary", dimension_Integer}, args___, order_ ? orderQ] :=
+    QuantumOperator[RandomVariate @ CircularUnitaryMatrixDistribution[dimension ^ Length[order]], dimension, args, order]
 
 
 (*  default orders for operators that use it  *)
 
-QuantumDiscreteOperator[name : {"Fourier" | "InverseFourier" | "RandomUnitary", ___},
-    PatternSequence[args___, order : (_ ? orderQ) : {1}]] := QuantumDiscreteOperator[name, args, order]
+QuantumOperator[name : {"Fourier" | "InverseFourier" | "RandomUnitary", ___},
+    PatternSequence[args___, order : (_ ? orderQ) : {1}]] := QuantumOperator[name, args, order]
 
-QuantumDiscreteOperator[name : "Toffoli", PatternSequence[args___, order : (_ ? orderQ) : {1, 2, 3}]] :=
-    QuantumDiscreteOperator[name, args, order]
+QuantumOperator[name : "Toffoli", PatternSequence[args___, order : (_ ? orderQ) : {1, 2, 3}]] :=
+    QuantumOperator[name, args, order]
 
