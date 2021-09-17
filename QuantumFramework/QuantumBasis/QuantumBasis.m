@@ -33,7 +33,7 @@ QuantumBasis::dependentElements = "elements should be linearly independent";
 
 
 
-$QuantumBasisDataKeys = {"Input", "Output", "Picture"}
+$QuantumBasisDataKeys = {"Input", "Output", "Picture", "Label"}
 
 
 quantumBasisQ[QuantumBasis[data_Association]] := Enclose[
@@ -102,7 +102,7 @@ QuantumBasis[elements_ /; VectorQ[elements, TensorQ], args___] := QuantumBasis[
 
 (* defaults *)
 QuantumBasis[data_Association ? (Keys /* Not @* ContainsExactly[$QuantumBasisDataKeys]), args___] :=
-    QuantumBasis[<|<|"Input" -> <|$BasisNameIdentity -> 1|>, "Output" -> <|$BasisNameIdentity -> 1|>, "Picture" -> "Schrodinger"|>, data|>, args]
+    QuantumBasis[<|<|"Input" -> <|$BasisNameIdentity -> 1|>, "Output" -> <|$BasisNameIdentity -> 1|>, "Picture" -> "Schrodinger", "Label" -> None|>, data|>, args]
 
 
 (* multiplicity *)

@@ -32,7 +32,7 @@ QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumDiscreteOper
     matrix = qmo[{"OrderedMatrix", qds["Qudits"]}];
     projectors = If[qmo["ProjectionQ"],
         projector /@ Eigenvectors[matrix],
-        qmo[{"OrderedTensor", qds["Qudits"]}]
+        MatrixPower[#, 1 / 2] & /@ qmo[{"OrderedTensor", qds["Qudits"]}]
     ];
     probabilities = N @ Re @ Tr[qds["DensityMatrix"] . #] & /@ projectors;
     nonZeroProbabilities = Position[probabilities, 0];
@@ -44,8 +44,8 @@ QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumDiscreteOper
     QuantumMeasurement[AssociationThread[values, probabilities], newStates]
 ]
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qdo_ ? QuantumDiscreteOperatorQ] :=
-    QuantumMeasurementOperator[qmo["DiscreteOperator"][qdo]]
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[op_ ? QuantumOperatorQ] :=
+    QuantumMeasurementOperator[qmo["DiscreteOperator"][op]]
 
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qm_QuantumMeasurement] := Module[{

@@ -18,23 +18,26 @@ controlledZGate = ReplacePart[
 
 QuantumDiscreteOperator[{"XRotation", angle_}, args___] := QuantumDiscreteOperator[
     {{Cos[angle / 2], I Sin[angle / 2]}, {I Sin[angle / 2], Cos[angle / 2]}},
+    "Label" -> StringTemplate["X(``)"][angle],
     args
 ]
 
 QuantumDiscreteOperator[{"YRotation", angle_}, args___] := QuantumDiscreteOperator[
     {{Cos[angle / 2], - Sin[angle / 2]}, {Sin[angle / 2], Cos[angle / 2]}},
+    "Label" -> StringTemplate["Y(``)"][angle],
     args
 ]
 
 QuantumDiscreteOperator[{"ZRotation", angle_}, args___] := QuantumDiscreteOperator[
     SparseArray[{{1, 1} -> 1, {2, 2} -> Exp[I angle]}],
+    "Label" -> StringTemplate["Z(``)"][angle],
     args
 ]
 
 
-QuantumDiscreteOperator["S", args___] := QuantumDiscreteOperator[{"ZRotation", Pi / 2}, args]
+QuantumDiscreteOperator["S", args___] := QuantumDiscreteOperator[{"ZRotation", Pi / 2}, "Label" -> "S", args]
 
-QuantumDiscreteOperator["T", args___] := QuantumDiscreteOperator[{"ZRotation", Pi / 4}, args]
+QuantumDiscreteOperator["T", args___] := QuantumDiscreteOperator[{"ZRotation", Pi / 4}, "Label" -> "T", args]
 
 
 QuantumDiscreteOperator["CNOT", args___] := QuantumDiscreteOperator[{"CNOT", 2}, args]
@@ -51,6 +54,7 @@ QuantumDiscreteOperator[{"CNOT", dimension_Integer}, args___] := QuantumDiscrete
         {dimension ^ 2, dimension ^ 2}
     ],
     dimension,
+    "Label" -> "CNOT",
     args
 ]
 
@@ -71,6 +75,7 @@ QuantumDiscreteOperator[{"CPHASE", dimension_Integer}, args___] := QuantumDiscre
         {dimension ^ 2, dimension ^ 2}
     ],
     dimension,
+    "Label" -> "CPHASE",
     args
 ]
 
@@ -93,6 +98,7 @@ QuantumDiscreteOperator[name : "CX" | "CY" | "CZ", args___] := QuantumDiscreteOp
 QuantumDiscreteOperator[{"CX", dimension_Integer}, args___] := QuantumDiscreteOperator[
     controlledMatrix[SparseArray[({i_, j_}  /; Mod[i - 1, dimension, 1] == j) -> 1, {dimension, dimension}], dimension],
     dimension,
+    "Label" -> "CX",
     args
 ]
 
@@ -100,12 +106,14 @@ QuantumDiscreteOperator[{"CY", dimension_Integer}, args___] := QuantumDiscreteOp
     (* TODO: generalize for arbitrary dimension *)
     controlledMatrix[SparseArray[{{1, 2} -> -I, {2, 1} -> I}], dimension],
     dimension,
+    "Label" -> "CY",
     args
 ]
 
 QuantumDiscreteOperator[{"CZ", dimension_Integer}, args___] := QuantumDiscreteOperator[
     controlledMatrix[SparseArray[{_, j_} :> Exp[(2 Pi I j / dimension) + I Pi], {dimension, dimension}], dimension],
     dimension,
+    "Label" -> "CZ",
     args
 ]
 
@@ -125,6 +133,7 @@ QuantumDiscreteOperator[{"Fourier", dimension_Integer}, args___, order_ ? orderQ
         {dimension ^ Length[order], dimension ^ Length[order]}
     ],
     dimension,
+    "Label" -> "QFT",
     args,
     order
 ]
@@ -137,6 +146,7 @@ QuantumDiscreteOperator[{"InverseFourier", dimension_Integer}, args___, order_?o
         {dimension ^ Length[order], dimension ^ Length[order]}
     ],
     dimension,
+    "Label" -> Superscript["QFT", "\[Dagger]"],
     args,
     order
 ]
@@ -152,12 +162,12 @@ swapMatrix[dimension_] := SparseArray[# -> 1 & /@
 QuantumDiscreteOperator["SWAP", args___] := QuantumDiscreteOperator[{"SWAP", 2}, args]
 
 QuantumDiscreteOperator[{"SWAP", dimension_Integer}, args___] :=
-    QuantumDiscreteOperator[swapMatrix[dimension], dimension, args]
+    QuantumDiscreteOperator[swapMatrix[dimension], dimension, "Label" -> "SWAP", args]
 
 QuantumDiscreteOperator["RootSWAP", args___] := QuantumDiscreteOperator[{"RootSWAP", 2}, args]
 
 QuantumDiscreteOperator[{"RootSWAP", dimension_Integer}, args___] :=
-    QuantumDiscreteOperator[MatrixPower[swapMatrix[dimension], 1 / 2], dimension, args]
+    QuantumDiscreteOperator[MatrixPower[swapMatrix[dimension], 1 / 2], dimension, "Label" -> "RootSWAP", args]
 
 
 QuantumDiscreteOperator["SUM", args___] := QuantumDiscreteOperator[{"SUM", 2}, args]
@@ -175,6 +185,7 @@ QuantumDiscreteOperator[{"SUM", dimension_Integer}, args___] := QuantumDiscreteO
         {dimension ^ 2, dimension ^ 2}
     ],
     dimension,
+    "Label" -> "SUM",
     args
 ]
 
@@ -190,6 +201,7 @@ QuantumDiscreteOperator[{"PauliX", dimension_Integer}, args___] := With[{
             {dimension, dimension}
         ],
         dimension,
+        "Label" -> "X",
         args
     ]
 ]
@@ -203,6 +215,7 @@ QuantumDiscreteOperator[{"PauliY", dimension_Integer}, args___] := With[{
             {dimension, dimension}
         ],
         dimension,
+        "Label" -> "Y",
         args
     ]
 ]
@@ -216,6 +229,7 @@ QuantumDiscreteOperator[{"PauliZ", dimension_Integer}, args___] := With[{
             {dimension, dimension}
         ],
         dimension,
+        "Label" -> "Z",
         args
     ]
 ]
@@ -229,14 +243,15 @@ QuantumDiscreteOperator[{"RootNOT", dimension_Integer}, args___] := QuantumDiscr
         1 / 2
     ],
     dimension,
+    "Label" -> "RootNOT",
     args
 ]
 
 
-QuantumDiscreteOperator["Hadamard", args___] := QuantumDiscreteOperator[HadamardMatrix[2], args]
+QuantumDiscreteOperator["Hadamard", args___] := QuantumDiscreteOperator[HadamardMatrix[2], "Label" -> "H", args]
 
 QuantumDiscreteOperator[{"Hadamard", qudits_Integer ? Positive}, args___] :=
-    QuantumTensorProduct[Table[QuantumDiscreteOperator["Hadamard", args], qudits]]
+    QuantumDiscreteOperator[QuantumTensorProduct[Table[QuantumDiscreteOperator["Hadamard", args], qudits]]]
 
 
 QuantumDiscreteOperator["Toffoli", args___, order_?orderQ] := QuantumDiscreteOperator[{"Toffoli", Length[order]}, args, order]
@@ -261,6 +276,7 @@ QuantumDiscreteOperator["CSWAP", args___] := QuantumDiscreteOperator[
         },
         {8, 8}
     ],
+    "Label" -> "CSWAP",
     args
 ]
 
@@ -274,6 +290,7 @@ QuantumDiscreteOperator[{"XX", angle_}, args___] := QuantumDiscreteOperator[
     },
         {4, 4}
     ],
+    "Label" -> "XX",
     args
 ]
 
@@ -284,6 +301,7 @@ QuantumDiscreteOperator[{"YY", angle_}, args___] := QuantumDiscreteOperator[
     },
         {4, 4}
     ],
+    "Label" -> "YY",
     args
 ]
 
@@ -294,6 +312,7 @@ QuantumDiscreteOperator[{"ZZ", angle_}, args___] := QuantumDiscreteOperator[
     },
         {4, 4}
     ],
+    "Label" -> "ZZ",
     args
 ]
 

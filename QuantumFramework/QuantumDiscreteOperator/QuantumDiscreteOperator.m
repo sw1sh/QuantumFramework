@@ -6,9 +6,11 @@ PackageScope["QuantumDiscreteOperatorQ"]
 
 
 
+QuantumDiscreteOperator::invalidOrder = "order should be a list of distinct input qudit positions"
+
 QuantumDiscreteOperatorQ[QuantumDiscreteOperator[qds_, order_]] :=
     QuantumDiscreteStateQ[qds] &&
-    orderQ[order]
+    (orderQ[order] (*&& ContainsAll[Range[qds["InputQudits"]], order]*) || (Message[QuantumDiscreteOperator::invalidOrder]; False))
 
 QuantumDiscreteOperatorQ[___] := False
 
@@ -126,8 +128,11 @@ QuantumDiscreteOperator[qdo_ ? QuantumDiscreteOperatorQ, qb_ ? QuantumBasisQ] :=
 
 (* composition *)
 
+QuantumDiscreteOperator::incompatiblePictures = "Pictures `` and `` are incompatible with this operation"
+
 (qdo_QuantumDiscreteOperator ? QuantumDiscreteOperatorQ)[qds_ ? QuantumDiscreteStateQ] /;
-qdo["Picture"] === qdo["Picture"] && qds["Picture"] =!= "Heisenberg" := With[{
+qdo["Picture"] === qdo["Picture"] && (
+    qds["Picture"] =!= "Heisenberg" || Message[QuantumDiscreteOperator::incompatiblePictures, qdo["Picture"], op["Picture"]]) := With[{
     matrix = qdo[{"OrderedMatrixRepresentation", qds["OutputQudits"]}]
 },
     If[ qds["StateType"] === "Vector",
@@ -136,11 +141,10 @@ qdo["Picture"] === qdo["Picture"] && qds["Picture"] =!= "Heisenberg" := With[{
     ]
 ]
 
-(qdo_QuantumDiscreteOperator ? QuantumDiscreteOperatorQ)[op_ ? QuantumDiscreteOperatorQ] /;
-qdo["Picture"] === op["Picture"] && MemberQ[{"Heisenberg", "Interaction"}, op["Picture"]] :=
+(qdo_QuantumDiscreteOperator ? QuantumDiscreteOperatorQ)[op_ ? QuantumOperatorQ] /; qdo["Picture"] === op["Picture"] :=
     QuantumDiscreteOperator[
-        qdo[{"OrderedMatrixRepresentation", op["OutputQudits"]}] . op["OrderedMatrixRepresentation"],
+        qdo[{"OrderedMatrixRepresentation", Max[op["InputQudits"], qdo["MaxArity"]]}] . op["OrderedMatrixRepresentation"],
         QuantumBasis[op["InputBasis"], "Output" -> qdo["Output"]],
-        op["Order"]
+        Join[op["Order"], Complement[Range[Max[op["InputQudits"], qdo["MaxArity"]]], op["Order"]]]
     ]
 
