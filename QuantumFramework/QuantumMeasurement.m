@@ -15,8 +15,7 @@ qb_QuantumMeasurement["ValidQ"] := QuantumMeasurementQ[qb]
 $QuantumMeasurementProperties = {
     "Distribution",
     "Outcomes", "Probabilities",
-    "ProbabilityTable", "ProbabilityArray", "ProbabilitiesList", "ProbabilityPlot", "TopProbabilities",
-    "Mean", "States", "StateAssociation", "StateProbabilities", "StateProbabilityTable", "TopStateProbabilities",
+    "Mean", "States", "StateAssociation",
     "Entropy", "NEntropy", "SimulatedMeasurement", "SimulatedStateMeasurement", "MeanState"
 };
 
@@ -62,15 +61,15 @@ QuantumMeasurementProp[qm_, {"SimulatedMeasurement", n_Integer}] := RandomVariat
 
 QuantumMeasurementProp[qm_, "Mean"] := Total @ KeyValueMap[Times, qm["Probabilities"]]
 
-QuantumMeasurementProp[qm_, "StateAssociation"] := AssociationThread[qm["Categories"], qm["States"]]
+QuantumMeasurementProp[qm_, "StateAssociation"] := AssociationThread[qm["Outcomes"], qm["States"]]
 
 QuantumMeasurementProp[qm_, "StateProbabilities"] := Association @ Thread[qm["States"] -> qm["ProbabilityArray"]]
 
 QuantumMeasurementProp[qm_, "StateProbabilityTable"] := Dataset[qm["StateProbabilities"]]
 
-QuantumMeasurementProp[qm_, "TopStateProbabilities"] := KeyMap[qm["StateAssociation"], qm["TopProbabilities"]]
+QuantumMeasurementProp[qm_, "TopStateProbabilities"] := KeyMap[qm["StateAssociation"], Association @ qm["TopProbabilities"]]
 
-QuantumMeasurementProp[qm_, "TopStateProbabilities" -> n_Integer] := KeyMap[qm["StateAssociation"], qm["TopProbabilities" -> n]]
+QuantumMeasurementProp[qm_, "TopStateProbabilities" -> n_Integer] := KeyMap[qm["StateAssociation"], Association @ qm["TopProbabilities" -> n]]
 
 QuantumMeasurementProp[qm_, "SimulatedStateMeasurement"] := qm["StateAssociation"][qm["SimulatedMeasurement"]]
 

@@ -85,8 +85,8 @@ QuantumDiscreteState[qds_ ? QuantumDiscreteStateQ, newBasis_ ? QuantumBasisQ] /;
     qds["BasisElementDimension"] === newBasis["BasisElementDimension"] :=
 Module[{
     state = qds["State"],
-    matrixRepresentation = Transpose @ qds["Basis"]["MatrixRepresentation"],
-    newMatrixRepresentation = newBasis["MatrixRepresentation"]
+    matrixRepresentation = qds["Basis"]["OutputMatrix"],
+    newMatrixRepresentation = newBasis["Matrix"]
 },
     Switch[qds["StateType"],
     "Vector",

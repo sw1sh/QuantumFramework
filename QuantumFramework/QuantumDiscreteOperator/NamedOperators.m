@@ -22,7 +22,7 @@ QuantumDiscreteOperator[{"XRotation", angle_}, args___] := QuantumDiscreteOperat
 ]
 
 QuantumDiscreteOperator[{"YRotation", angle_}, args___] := QuantumDiscreteOperator[
-    {{Cos[angle / 2], Sin[angle / 2]}, {-Sin[angle / 2], Cos[angle / 2]}},
+    {{Cos[angle / 2], - Sin[angle / 2]}, {Sin[angle / 2], Cos[angle / 2]}},
     args
 ]
 

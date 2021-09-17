@@ -29,16 +29,14 @@ qds_QuantumDiscreteState["ValidQ"] := QuantumDiscreteStateQ[qds]
 QuantumDiscreteState::undefprop = "property `` is undefined for this state";
 
 (qds_QuantumDiscreteState[prop_ ? propQ, args___]) /; QuantumDiscreteStateQ[qds] := With[{
-    result = QuantumDiscreteStateProp[qds, prop, args]
-    },
-    (QuantumDiscreteStateProp[qds, prop, args] = result) /; !MatchQ[result, _QuantumDiscreteStateProp] || Message[QuantumDiscreteState::undefprop, prop]
+    result = Check[QuantumDiscreteStateProp[qds, prop, args], $Failed]
+},
+    (QuantumDiscreteStateProp[qds, prop, args] = result) /;
+        !FailureQ[Unevaluated @ result] && (!MatchQ[Unevaluated @ result, _QuantumDiscreteStateProp] || Message[QuantumDiscreteState::undefprop, prop])
 ]
 
 
-QuantumDiscreteStateProp[qds_, "Properties"] := Complement[
-    QuantumDiscreteState["Properties"],
-    Switch[qds["StateType"], "Matrix", {"Amplitudes", "StateVector", "NormalizedAmplitudes", "NormalizedStateVector"}, _, {}]
-]
+QuantumDiscreteStateProp[_, "Properties"] := QuantumDiscreteState["Properties"]
 
 
 (* getters *)
@@ -60,11 +58,26 @@ QuantumDiscreteStateProp[qds_, "StateType"] := Which[
 ]
 
 
-(* amplitudes are only defined for a state vector *)
+(* amplitudes are only defined for pure states *)
 
-QuantumDiscreteStateProp[qds_, "Amplitudes"] /; qds["StateType"] === "Vector" := Association @ Thread[qds["BasisElementNames"] -> qds["State"]]
+QuantumDiscreteState::notpure = "is not a pure state";
 
-QuantumDiscreteStateProp[qds_, "StateVector"] /; qds["StateType"] === "Vector" := qds["State"]
+QuantumDiscreteStateProp[qds_, "Amplitudes"] := Module[{result},
+    result = Enclose @ Association @ Thread[qds["BasisElementNames"] -> ConfirmBy[qds["StateVector"], VectorQ]];
+    result /; !FailureQ[result]
+]
+
+QuantumDiscreteStateProp[qds_, "StateVector"] := Module[{result},
+    result = Enclose @ Which[
+        qds["StateType"] === "Vector",
+        qds["State"],
+        qds["PureStateQ"],
+        First @ Pick[qds["Eigenvectors"], ConfirmBy[Thread[Chop[qds["Eigenvalues"]] != 0], Apply[Or]]],
+        True,
+        Message[QuantumDiscreteState::notpure]; $Failed
+    ];
+    result /; !FailureQ[result]
+]
 
 
 (* normalization *)
@@ -73,13 +86,13 @@ QuantumDiscreteStateProp[qds_, "NormalizedState"] := With[{state = qds["State"]}
     Switch[qds["StateType"], "Vector", Normalize[state], "Matrix", normalizeMatrix[state], _, state]
 ]
 
-QuantumDiscreteStateProp[qds_, "NormalizedAmplitudes"] /; qds["StateType"] === "Vector" := With[{amplitudes = qds["Amplitudes"]},
+QuantumDiscreteStateProp[qds_, "NormalizedAmplitudes"] := With[{amplitudes = qds["Amplitudes"]},
     amplitudes / Norm[Values[amplitudes]]
 ]
 
-QuantumDiscreteStateProp[qds_, "NormalizedStateVector"] /; qds["StateType"] === "Vector" := qds["NormalizedState"]
+QuantumDiscreteStateProp[qds_, "NormalizedStateVector"] := qds["NormalizedState"]
 
-QuantumDiscreteStateProp[qds_, "NormalizedDensityMatrix"]:= normalizeMatrix @ qds["DensityMatrix"]
+QuantumDiscreteStateProp[qds_, "NormalizedDensityMatrix"] := normalizeMatrix @ qds["DensityMatrix"]
 
 QuantumDiscreteStateProp[qds_, "NormalizedMatrixRepresentation" | "NormalizedMatrix"] := normalizeMatrix @ qds["Matrix"]
 
@@ -209,11 +222,10 @@ QuantumDiscreteStateProp[qds_, "BlochPlot"] /; qds["Dimension"] == 2 := Module[{
     ];
     referenceStates = Graphics3D[{
         Opacity[0.4], Sphere[], Black, Thick, Opacity[1.0],
-        Line[{{0, 1, 0}, {0, -1, 0}}], Line[{{0, 0, 1}, {0, 0, -1}}], 
-        Line[{{1, 0, 0}, {-1, 0, 0}}], Text[Ket[0], {0, 0, 1.3}], 
-        Text[Ket[1], {0, 0, -1.3}], Text[Ket["R"], {0, 1.3, 0}], 
-        Text[Ket["L"], {0, -1.3, 0}], Text[Ket["+"], {1.6, -0.25, 0}], 
-        Text[Ket["-"], {-1.5, 0.3, 0}]
+        Line[{{0, 1, 0}, {0, -1, 0}}], Line[{{0, 0, 1}, {0, 0, -1}}], Line[{{1, 0, 0}, {-1, 0, 0}}],
+        Text[Ket[0], {0, 0, 1.3}],  Text[Ket[1], {0, 0, -1.3}],
+        Text[Ket["R"], {0, 1.3, 0}], Text[Ket["L"], {0, -1.3, 0}],
+        Text[Ket["+"], {1.3, 0, 0}], Text[Ket["-"], {-1.3, 0, 0}]
     },
         Boxed -> False,
         Axes -> False,
@@ -226,7 +238,8 @@ QuantumDiscreteStateProp[qds_, "BlochPlot"] /; qds["Dimension"] == 2 := Module[{
             Boxed -> False,
             PlotRange -> {{-1.7, 1.7}, {-1.7, 1.7}, {-1.7, 1.7}}
         ]}],
-        PlotRange -> All
+        PlotRange -> All,
+        ViewPoint -> {1, 1, 1}
     ]
 ]
 

@@ -20,6 +20,8 @@ $QuantumBasisProperties = {
      "NameDimensions", "Dimensions", "Dimension",
      "MatrixNameDimensions", "MatrixElementDimensions",
      "TensorDimensions", "MatrixDimensions",
+     "InputTensor", "InputMatrix",
+     "OutputTensor", "OutputMatrix",
      "TensorRepresentation", "Tensor", "MatrixRepresentation", "Matrix",
      "Qudits", "InputQudits", "OutputQudits", "InputBasis", "OutputBasis",
      "Picture"
@@ -147,6 +149,14 @@ QuantumBasisProp[qb_, "OrthogonalBasisElements"] := ArrayReshape[#, qb["BasisEle
     Orthogonalize[Flatten[#] & /@ qb["BasisElements"]]
 )
 
+
+QuantumBasisProp[qb_, "InputTensor"] := Transpose[qb["InputBasisElements"], Cycles[{Reverse @ RotateLeft @ Range[qb["InputRank"] + 1]}]]
+
+QuantumBasisProp[qb_, "OutputTensor"] := Transpose[qb["OutputBasisElements"], Cycles[{Reverse @ RotateLeft @ Range[qb["OutputRank"] + 1]}]]
+
+QuantumBasisProp[qb_, "InputMatrix"] := ArrayReshape[qb["InputTensor"], {qb["InputBasisElementDimension"], qb["InputSize"]}]
+
+QuantumBasisProp[qb_, "OutputMatrix"] := ArrayReshape[qb["OutputTensor"], {qb["OutputBasisElementDimension"], qb["OutputSize"]}]
 
 QuantumBasisProp[qb_, "TensorRepresentation" | "Tensor"] := ArrayReshape[qb["BasisElements"], qb["TensorDimensions"]]
 

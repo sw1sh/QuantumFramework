@@ -58,6 +58,11 @@ QuantumMeasurementOperatorProp[qmo_, "OrderedPOVMElements"] /; qmo["POVMQ"] := q
 
 QuantumMeasurementOperatorProp[qmo_, {"OrderedPOVMElements", arity_Integer}] /; qmo["POVMQ"] := qmo[{"OrderedTensor", arity}]
 
+QuantumMeasurementOperatorProp[qmo_, "Operators"] := If[qmo["POVMQ"],
+    AssociationThread[Ket /@ Range[0, Length[qmo["Tensor"]] - 1], QuantumDiscreteOperator[#, QuantumBasis["Output" -> qmo["Basis"]["Input"]], qmo["Order"]] & /@ qmo["Tensor"]],
+    AssociationThread[Ket /@ Eigenvalues[qmo["Matrix"]], QuantumDiscreteOperator[projector @ #, qmo["Basis"], qmo["Order"]] & /@ Eigenvectors[qmo["OrderedMatrix"]]]
+]
+
 
 (* operator properties *)
 
