@@ -1,13 +1,5 @@
 Package["QuantumFramework`"]
 
-PackageScope["$BasisNameZero"]
-PackageScope["$BasisNameIdentity"]
-PackageScope["basisElementNameLength"]
-PackageScope["simplifyBasisElementName"]
-PackageScope["normalBasisElementName"]
-PackageScope["prettyBasisElementName"]
-PackageScope["basisElementQudits"]
-PackageScope["basisElementNamesDimensions"]
 PackageScope["symbolicTensorQ"]
 PackageScope["basisMultiplicity"]
 PackageScope["nameQ"]
@@ -23,43 +15,6 @@ PackageScope["projector"]
 PackageScope["OrderedMatrixRepresentation"]
 
 
-
-(* basis names *)
-
-$BasisNameZero = CircleTimes[]
-
-$BasisNameIdentity = \[FormalCapitalI]
-
-BasisNameHeadQ = MatchQ[_TensorProduct | _CircleTimes | _List];
-
-
-basisElementNameLength[name_ ? BasisNameHeadQ] := Length @ name
-
-basisElementNameLength[_] := 1
-
-
-simplifyBasisElementName[name_] := With[{
-    noIdentities = DeleteCases[name, $BasisNameIdentity]
-},
-    If[ basisElementNameLength[noIdentities] == 1 && BasisNameHeadQ[noIdentities],
-        First[noIdentities, $BasisNameIdentity],
-        noIdentities
-    ]
-]
-
-
-normalBasisElementName[name_ ? BasisNameHeadQ] := List @@ name
-
-normalBasisElementName[name_] := {name}
-
-
-prettyBasisElementName[name_] := simplifyBasisElementName[CircleTimes @@ normalBasisElementName[name]]
-
-
-basisElementQudits[name_] := basisElementNameLength @ DeleteCases[$BasisNameIdentity] @ normalBasisElementName @ name
-
-
-basisElementNamesDimensions[names_] := CountDistinct /@ Transpose[normalBasisElementName /@ names]
 
 
 (* *)
@@ -96,7 +51,7 @@ identityMatrix[0] := {{}}
 identityMatrix[n_] := IdentityMatrix[n]
 
 
-normalizeMatrix[matrix_] := Enclose[matrix / ConfirmBy[Tr[matrix], # != 0 &]] (*SparseArray[{i_, i_} -> 1 / Tr[matrix], Dimensions[matrix], 1]*)
+normalizeMatrix[matrix_] := Enclose[ConfirmQuiet[matrix / Tr[matrix], Power::infy]] (*SparseArray[{i_, i_} -> 1 / Tr[matrix], Dimensions[matrix], 1]*)
 
 
 kroneckerProduct[ts___] := Fold[If[ArrayQ[#1] && ArrayQ[#2], KroneckerProduct[##], Times[##]] &, {ts}]

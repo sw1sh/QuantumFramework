@@ -38,34 +38,14 @@ $QuantumBasisDataKeys = {"Input", "Output", "Picture", "Label"}
 
 quantumBasisQ[QuantumBasis[data_Association]] := Enclose[
 Module[{
-    inputElements, outputElements, picture, inputNameLengths, outputNameLengths, inputNumericElements, outputNumericElements
 },
     ConfirmAssert[ContainsExactly[Keys[data], $QuantumBasisDataKeys], Message[QuantumBasis::wrongData]];
 
-    inputElements = data["Input"];
-    outputElements = data["Output"];
-    picture = data["Picture"];
+    ConfirmAssert[QuditBasisQ[data["Input"]]];
+    ConfirmAssert[QuditBasisQ[data["Output"]]];
 
-    ConfirmAssert[MemberQ[$QuantumBasisPictures, picture], Message[QuantumBasis::picture]];
+    ConfirmAssert[MemberQ[$QuantumBasisPictures, data["Picture"]], Message[QuantumBasis::picture]];
     (*ConfirmAssert[Length[inputElements] + Length[outputElements] > 0, Message[QuantumBasis::zeroDimension]];*)
-
-    inputNameLengths = basisElementNameLength /@ Keys[inputElements];
-    outputNameLengths = basisElementNameLength /@ Keys[outputElements];
-
-    ConfirmAssert[Equal @@ inputNameLengths && Equal @@ outputNameLengths, Message[QuantumBasis::inconsistentNames]];
-
-    inputNumericElements = Select[inputElements, TensorQ[#, NumericQ] &];
-    outputNumericElements = Select[outputElements, TensorQ[#, NumericQ] &];
-
-    ConfirmAssert[
-        Equal @@ Dimensions /@ inputNumericElements && Equal @@ Dimensions /@ outputNumericElements,
-        Message[QuantumBasis::inconsistentElements]
-    ];
-    ConfirmAssert[
-        (Length[inputNumericElements] === 0 || ResourceFunction["LinearlyIndependent"] @ Values[Flatten /@ inputNumericElements]) &&
-        (Length[outputNumericElements] === 0 || ResourceFunction["LinearlyIndependent"] @ Values[Flatten /@ outputNumericElements]),
-        Message[QuantumBasis::dependentElements]
-    ];
 
     True
 ],
@@ -93,16 +73,22 @@ QuantumBasis[data_Association, args__] := Fold[QuantumBasis, QuantumBasis[data],
 
 (* construction *)
 
-QuantumBasis[elements_Association ? (Not @* KeyExistsQ["Output"]), args___] := QuantumBasis[<|"Output" -> elements|>, args]
+QuantumBasis[elements_Association ? (Not @* KeyExistsQ["Output"]), args___] := QuantumBasis[<|"Output" -> QuditBasis[elements]|>, args]
 
 QuantumBasis[elements_ /; VectorQ[elements, TensorQ], args___] := QuantumBasis[
-    AssociationThread[Ket[#] & /@ Range[0, Length[elements] - 1], elements],
+    AssociationThread[Range[0, Length[elements] - 1], elements],
     args
 ]
 
+
 (* defaults *)
 QuantumBasis[data_Association ? (Keys /* Not @* ContainsExactly[$QuantumBasisDataKeys]), args___] :=
-    QuantumBasis[<|<|"Input" -> <|$BasisNameIdentity -> 1|>, "Output" -> <|$BasisNameIdentity -> 1|>, "Picture" -> "Schrodinger", "Label" -> None|>, data|>, args]
+    QuantumBasis[<|<|"Input" -> QuditBasis[], "Output" -> QuditBasis[], "Picture" -> "Schrodinger", "Label" -> None|>, data|>, args]
+
+
+QuantumBasis[data_Association] /; AssociationQ[data["Input"]] := QuantumBasis[MapAt[QuditBasis, data, "Input"]]
+
+QuantumBasis[data_Association] /; AssociationQ[data["Output"]] := QuantumBasis[MapAt[QuditBasis, data, "Output"]]
 
 
 (* multiplicity *)
@@ -110,8 +96,8 @@ QuantumBasis[data_Association ? (Keys /* Not @* ContainsExactly[$QuantumBasisDat
 QuantumBasis[qb_ ? QuantumBasisQ, 1, args___] := QuantumBasis[qb, args]
 
 QuantumBasis[qb_ ? QuantumBasisQ, multiplicity_Integer, args___] := QuantumBasis[qb,
-    "Input" -> multiplyElements[qb["Input"], multiplicity],
-    "Output" -> multiplyElements[qb["Output"], multiplicity],
+    "Input" -> QuditBasis[qb["Input"], multiplicity],
+    "Output" -> QuditBasis[qb["Output"], multiplicity],
     args
 ]
 

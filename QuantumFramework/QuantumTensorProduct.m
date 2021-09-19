@@ -2,14 +2,6 @@ Package["QuantumFramework`"]
 
 PackageExport["QuantumTensorProduct"]
 
-PackageScope["multiplyElements"]
-
-
-
-multiplyElements[elements_Association, multiplicity_Integer] := AssociationThread[
-    QuantumTensorProduct @@@ Tuples[Keys[elements], multiplicity],
-    kroneckerProduct @@@ Tuples[Values[elements], multiplicity]
-]
 
 
 QuantumTensorProduct[args_List] := Fold[QuantumTensorProduct, args]
@@ -58,12 +50,4 @@ QuantumTensorProduct[qdo1_ ? QuantumOperatorQ, qdo2_ ? QuantumOperatorQ] :=
 QuantumTensorProduct[qmo1_ ? QuantumMeasurementOperatorQ, qmo2_ ? QuantumMeasurementOperatorQ] :=
     QuantumMeasurementOperator[QuantumTensorProduct[qmo1["Operator"], qmo2["Operator"]]]
 
-
-
-(* name x name *)
-
-QuantumTensorProduct[name1_, name2_] := If[name1 === $BasisNameZero || name2 === $BasisNameZero,
-    $BasisNameZero,
-    Join[normalBasisElementName[name1], normalBasisElementName[name2]](* /. {} -> $BasisNameIdentity*)
-]
 

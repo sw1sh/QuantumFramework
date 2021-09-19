@@ -5,7 +5,7 @@ PackageScope["QuantumBasisProp"]
 
 
 $QuantumBasisProperties = {
-     "InputElements", "OutputElements", "BasisElementAssociation", "Association", "Elements",
+     "BasisElementAssociation", "Association", "Elements",
      "InputBasisElementNames", "OutputBasisElementNames", "BasisElementNames",
      "NormalBasisElementNames",
      "InputBasisElements", "OutputBasisElements", "BasisElements",
@@ -51,21 +51,18 @@ QuantumBasisProp[QuantumBasis[data_Association], key_] /; KeyExistsQ[data, key] 
 
 (* computed *)
 
-QuantumBasisProp[qb_, "InputElements"] := qb["Input"](* /. <||> -> <|$BasisNameZero -> 0|>*)
 
-QuantumBasisProp[qb_, "OutputElements"] := qb["Output"](* /. <||> -> <|$BasisNameZero -> 0|>*)
+QuantumBasisProp[qb_, "InputBasisElementNames"] := qb["Input"]["Names"]
 
-QuantumBasisProp[qb_, "InputBasisElementNames"] := simplifyBasisElementName /@ Keys @ qb["InputElements"]
+QuantumBasisProp[qb_, "OutputBasisElementNames"] := qb["Output"]["Names"]
 
-QuantumBasisProp[qb_, "OutputBasisElementNames"] := simplifyBasisElementName /@ Keys @ qb["OutputElements"]
+QuantumBasisProp[qb_, "InputBasisElements"] := qb["Input"]["Elements"]
 
-QuantumBasisProp[qb_, "InputBasisElements"] := Values @ qb["InputElements"]
-
-QuantumBasisProp[qb_, "OutputBasisElements"] := Values @ qb["OutputElements"]
+QuantumBasisProp[qb_, "OutputBasisElements"] := qb["Output"]["Elements"]
 
 
-QuantumBasisProp[qb_, "BasisElementNames"] := prettyBasisElementName @* simplifyBasisElementName /@
-    QuantumTensorProduct @@@ Tuples[{qb["OutputBasisElementNames"], qb["InputBasisElementNames"] /. Ket -> Bra}]
+QuantumBasisProp[qb_, "BasisElementNames"] :=
+    QuantumTensorProduct @@@ Tuples[{qb["OutputBasisElementNames"], #["Dual"] & /@ qb["InputBasisElementNames"]}]
 
 QuantumBasisProp[qb_, "BasisElements"] := kroneckerProduct @@@ Tuples[{qb["OutputBasisElements"], qb["InputBasisElements"]}]
 
@@ -76,12 +73,12 @@ QuantumBasisProp[qb_, "BasisElementAssociation" | "Association" | "Elements"] :=
 ]
 
 
-QuantumBasisProp[qb_, "NormalBasisElementNames"] := normalBasisElementName /@ qb["BasisElementNames"]
+QuantumBasisProp[qb_, "NormalBasisElementNames"] := Normal /@ qb["BasisElementNames"]
 
 
-QuantumBasisProp[qb_, "InputSize"] := Length[qb["InputElements"]]
+QuantumBasisProp[qb_, "InputSize"] := Length[qb["Input"]]
 
-QuantumBasisProp[qb_, "OutputSize"] := Length[qb["OutputElements"]]
+QuantumBasisProp[qb_, "OutputSize"] := Length[qb["Output"]]
 
 QuantumBasisProp[qb_, "Size"] := qb["InputSize"] + qb["OutputSize"]
 
@@ -110,16 +107,16 @@ QuantumBasisProp[qb_, "Rank"] := Length[qb["BasisElementDimensions"]]
 QuantumBasisProp[qb_, "Type"] := Switch[qb["Rank"], 0, "Scalar", 1, "Vector", 2, "Matrix", _, "Tensor"]
 
 
-QuantumBasisProp[qb_, "InputQudits"] := basisElementQudits @ First[qb["InputBasisElementNames"], $BasisNameZero]
+QuantumBasisProp[qb_, "InputQudits"] := qb["Input"]["Qudits"]
 
-QuantumBasisProp[qb_, "OutputQudits"] := basisElementQudits @ First[qb["OutputBasisElementNames"], $BasisNameZero]
+QuantumBasisProp[qb_, "OutputQudits"] := qb["Output"]["Qudits"]
 
 QuantumBasisProp[qb_, "Qudits"] := qb["InputQudits"] + qb["OutputQudits"]
 
 
-QuantumBasisProp[qb_, "InputNameDimensions" | "InputDimensions"] := basisElementNamesDimensions @ qb["InputBasisElementNames"]
+QuantumBasisProp[qb_, "InputNameDimensions" | "InputDimensions"] := qb["Input"]["Dimensions"]
 
-QuantumBasisProp[qb_, "OutputNameDimensions" | "OutputDimensions"] := basisElementNamesDimensions @ qb["OutputBasisElementNames"]
+QuantumBasisProp[qb_, "OutputNameDimensions" | "OutputDimensions"] := qb["Output"]["Dimensions"]
 
 QuantumBasisProp[qb_, "NameDimensions" | "Dimensions"] := DeleteCases[Join[qb["OutputNameDimensions"], qb["InputNameDimensions"]], 1]
 
@@ -140,9 +137,9 @@ QuantumBasisProp[qb_, "TensorDimensions"] := Join[qb["Dimensions"], qb["BasisEle
 QuantumBasisProp[qb_, "MatrixDimensions"] := {qb["Dimension"], qb["BasisElementDimension"]}
 
 
-QuantumBasisProp[qb_, "InputBasis"] := QuantumBasis[qb, "Output" -> <|$BasisNameIdentity -> 1|>]
+QuantumBasisProp[qb_, "InputBasis"] := QuantumBasis[qb, "Output" -> QuditBasis[]]
 
-QuantumBasisProp[qb_, "OutputBasis"] := QuantumBasis[qb, "Input" -> <|$BasisNameIdentity -> 1|>]
+QuantumBasisProp[qb_, "OutputBasis"] := QuantumBasis[qb, "Input" -> QuditBasis[]]
 
 
 QuantumBasisProp[qb_, "OrthogonalBasisElements"] := ArrayReshape[#, qb["BasisElementDimensions"]] & /@ (
