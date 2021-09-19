@@ -124,7 +124,7 @@ drawWireGraphics[positionIndices_List, scaling_] := Module[{quditCount, lineList
 
 
 drawGateGraphics[gates_List] := Module[{
-    width, height, orders, dimensions, lineScaling, scaling, graphicsList, index, positionIndices, gatePositionIndices, matrixRepresentation, k,
+    width, height, orders, dimensions, lineScaling, scaling, graphicsList, index, positionIndices, gatePositionIndices,
     targetQuditsOrder, controlQuditsOrder, controlQuditsOrderTop, controlQuditsOrderBottom, controlQuditsTopCoordinates, controlQuditsBottomCoordinates
 },
     width = 4;
@@ -156,16 +156,10 @@ drawGateGraphics[gates_List] := Module[{
         ]
     ];
     If[ QuantumOperatorQ[gates[[i]]],
-        matrixRepresentation = gates[[i]]["MatrixRepresentation"];
-        k = 1;
-        While[matrixRepresentation[[1 ;; Times @@ dimensions[[;; k]], 1 ;; Times @@ dimensions[[;; k]]]] == IdentityMatrix[Times @@ dimensions[[;; k]]], k = k + 1];
-        targetQuditsOrder = If[ k > 1,
-            Take[orders[[i]], - (gates[[i]]["InputQudits"] - k + 1)],
-            orders[[i]]
-        ];
-        controlQuditsOrder = Complement[orders[[i]], targetQuditsOrder];
 
-        If[ Length[controlQuditsOrder] > 0,
+        If[ MatchQ[gates[[i]]["Label"], "CX" | "CY" | "CZ" | "CNOT" | "CPHASE" | "CSWAP" | "Controlled"[_]],
+            targetQuditsOrder = Most[orders[[i]]];
+            controlQuditsOrder = Complement[orders[[i]], targetQuditsOrder];
             controlQuditsOrderTop = {};
             controlQuditsOrderBottom = {};
             Do[ Which[
@@ -182,29 +176,31 @@ drawGateGraphics[gates_List] := Module[{
             ];
             If[ Length[controlQuditsOrderBottom] > 0,
                 AppendTo[graphicsList, drawControlGateBottom[controlQuditsBottomCoordinates, controlQuditsOrderBottom, targetQuditsOrder]]
-            ]
+            ],
+
+            targetQuditsOrder = orders[[i]]
         ];
         AppendTo[
             graphicsList,
             Switch[
-                gates[[i]]["Label"],
+                gates[[i]]["Label"] /. "Controlled"[x_] :> x,
                 "SWAP",
                 drawSwapGate[{-2 + 6 Max[gatePositionIndices], 5 First[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], 5 Last[targetQuditsOrder]}, scaling],
                 "RootSWAP",
                 drawRootSwapGate[{-2 + 6 Max[gatePositionIndices], 5 First[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], 5 Last[targetQuditsOrder]}, scaling],
-                "NOT" | "CNOT",
+                "NOT" | "X",
                 drawNotGate[{-2 + 6 Max[gatePositionIndices], 5 First[targetQuditsOrder]}, scaling],
                 _,
                 If[ gates[[i]]["Arity"] == 1,
                     drawUnaryGate[
                         {-2 + 6 Max[gatePositionIndices], 5 First[targetQuditsOrder]},
                         scaling,
-                        gates[[i]]["Label"] /. {None -> Subscript["U", index], Composition -> SmallCircle}
+                        gates[[i]]["Label"] /. {None -> Subscript["U", index], Composition -> SmallCircle, "Controlled"[x_] :> x}
                     ],
                     drawBinaryGate[
                         {{-2 + 6 Max[gatePositionIndices], 5 Min[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], 5 Max[targetQuditsOrder]}},
                         scaling,
-                        gates[[i]]["Label"], {None -> Subscript["U", index], Composition -> SmallCircle}
+                        gates[[i]]["Label"] /. {None -> Subscript["U", index], Composition -> SmallCircle, "Controlled"[x_] :> x}
                     ]
                 ]
             ]

@@ -4,7 +4,7 @@ PackageExport["QuantumMeasurement"]
 
 
 QuantumMeasurementQ[QuantumMeasurement[ev_Association, possibleStates_]] :=
-  VectorQ[Values[ev], NumericQ] && VectorQ[possibleStates, QuantumStateQ] && Length[ev] == Length[possibleStates] && Length[ev] > 0
+  (*VectorQ[Values[ev], NumericQ] && *)VectorQ[possibleStates, QuantumStateQ] && Length[ev] == Length[possibleStates] && Length[ev] > 0
 
 QuantumMeasurementQ[___] := False
 
@@ -37,10 +37,12 @@ QuantumMeasurement::undefprop = "QuantumMeasurement property `` is undefined for
 
 QuantumMeasurementProp[_, "Properties"] := QuantumMeasurement["Properties"]
 
-QuantumMeasurementProp[_[ev_, _], "Eigenvalues"] := ev
+QuantumMeasurementProp[_[weights_, _], "Weights"] := weights
 QuantumMeasurementProp[_[_, states_], "States"] := states
 
-QuantumMeasurementProp[qm_, "Distribution"] := CategoricalDistribution[qm["Eigenvalues"]]
+QuantumMeasurementProp[qm_, "Eigenvalues"] := Keys @ qm["Weights"]
+
+QuantumMeasurementProp[qm_, "Distribution"] := CategoricalDistribution[qm["Weights"]]
 
 QuantumMeasurementProp[qm_, "DistributionInformation", args___] := Information[qm["Distribution"], args]
 
@@ -58,7 +60,7 @@ QuantumMeasurementProp[qm_, "SimulatedMeasurement"] := RandomVariate[qm["Distrib
 
 QuantumMeasurementProp[qm_, {"SimulatedMeasurement", n_Integer}] := RandomVariate[qm["Distribution"], n]
 
-QuantumMeasurementProp[qm_, "Mean"] := Mean @ Values @ qm["Eigenvalues"]
+QuantumMeasurementProp[qm_, "Mean"] := qm["Eigenvalues"] . qm["ProbabilitiesList"]
 
 QuantumMeasurementProp[qm_, "StateAssociation"] := AssociationThread[qm["Outcomes"], qm["States"]]
 
@@ -93,7 +95,7 @@ QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement ? QuantumMeasurementQ, for
             {
                 BoxForm`SummaryItem[{"Measurement Outcomes: ", Length[qm["Probabilities"]]}]
             }, {
-                BoxForm`SummaryItem[{"Entropy: ", N @ qm["Entropy"]}]
+                BoxForm`SummaryItem[{"Entropy: ", Enclose[N @ ConfirmQuiet[qm["Entropy"]], $Failed &]}]
             }
         },
         {{}},

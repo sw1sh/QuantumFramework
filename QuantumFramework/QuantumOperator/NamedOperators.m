@@ -18,19 +18,19 @@ controlledZGate = ReplacePart[
 
 QuantumOperator[{"XRotation", angle_}, args___] := QuantumOperator[
     {{Cos[angle / 2], I Sin[angle / 2]}, {I Sin[angle / 2], Cos[angle / 2]}},
-    "Label" -> StringTemplate["X(``)"][angle],
+    "Label" -> Row[{"X", "(", angle, ")"}],
     args
 ]
 
 QuantumOperator[{"YRotation", angle_}, args___] := QuantumOperator[
     {{Cos[angle / 2], - Sin[angle / 2]}, {Sin[angle / 2], Cos[angle / 2]}},
-    "Label" -> StringTemplate["Y(``)"][angle],
+    "Label" -> Row[{"Y", "(", angle, ")"}],
     args
 ]
 
 QuantumOperator[{"ZRotation", angle_}, args___] := QuantumOperator[
     SparseArray[{{1, 1} -> 1, {2, 2} -> Exp[I angle]}],
-    "Label" -> StringTemplate["Z(``)"][angle],
+    "Label" -> Row[{"Z", "(", angle, ")"}],
     args
 ]
 
@@ -54,7 +54,7 @@ QuantumOperator[{"CNOT", dimension_Integer}, args___] := QuantumOperator[
         {dimension ^ 2, dimension ^ 2}
     ],
     dimension,
-    "Label" -> "CNOT",
+    "Label" -> "Controlled"["NOT"],
     args
 ]
 
@@ -75,7 +75,7 @@ QuantumOperator[{"CPHASE", dimension_Integer}, args___] := QuantumOperator[
         {dimension ^ 2, dimension ^ 2}
     ],
     dimension,
-    "Label" -> "CPHASE",
+    "Label" -> "Controlled"["PHASE"],
     args
 ]
 
@@ -95,34 +95,18 @@ controlledMatrix[matrix_ ? MatrixQ, dimension_Integer] := ReplacePart[
 
 QuantumOperator[name : "CX" | "CY" | "CZ", args___] := QuantumOperator[{name, 2}, args]
 
-QuantumOperator[{"CX", dimension_Integer}, args___] := QuantumOperator[
-    controlledMatrix[SparseArray[({i_, j_}  /; Mod[i - 1, dimension, 1] == j) -> 1, {dimension, dimension}], dimension],
-    dimension,
-    "Label" -> "CX",
-    args
-]
+QuantumOperator[{"CX", dimension_Integer}, args___] := QuantumOperator[{"ControlledU", {"PauliX", dimension}}, args]
 
-QuantumOperator[{"CY", dimension_Integer}, args___] := QuantumOperator[
-    (* TODO: generalize for arbitrary dimension *)
-    controlledMatrix[SparseArray[{{1, 2} -> -I, {2, 1} -> I}], dimension],
-    dimension,
-    "Label" -> "CY",
-    args
-]
+QuantumOperator[{"CY", dimension_Integer}, args___] := QuantumOperator[{"ControlledU", {"PauliY", dimension}}, args]
 
-QuantumOperator[{"CZ", dimension_Integer}, args___] := QuantumOperator[
-    controlledMatrix[SparseArray[{_, j_} :> Exp[(2 Pi I j / dimension) + I Pi], {dimension, dimension}], dimension],
-    dimension,
-    "Label" -> "CZ",
-    args
-]
+QuantumOperator[{"CZ", dimension_Integer}, args___] := QuantumOperator[{"ControlledU", {"PauliZ", dimension}}, args]
 
 
-QuantumOperator[{"ControlledU", arg_, dimension_Integer : 2}, args___] :=
-    QuantumOperator[{"ControlledU", QuantumOperator[arg, dimension]}, args]
+QuantumOperator[{"ControlledU", params___}, args___] :=
+    QuantumOperator[{"ControlledU", QuantumOperator[params]}, args]
 
 QuantumOperator[{"ControlledU", qo_ ? QuantumOperatorQ}, args___] :=
-    QuantumOperator[controlledMatrix[qo["MatrixRepresentation"], qo["InputDimension"]], qo["InputDimension"], args]
+    QuantumOperator[controlledMatrix[qo["MatrixRepresentation"], qo["InputDimension"]], qo["InputDimension"], "Label" -> "Controlled"[qo["Label"]], args]
 
 
 QuantumOperator["Fourier", args___] := QuantumOperator[{"Fourier", 2}, args]
@@ -276,7 +260,7 @@ QuantumOperator["CSWAP", args___] := QuantumOperator[
         },
         {8, 8}
     ],
-    "Label" -> "CSWAP",
+    "Label" -> "Controlled"["SWAP"],
     args
 ]
 

@@ -89,8 +89,8 @@ QuantumStateProp[qs_, "NormalizedState"] := With[{state = qs["State"]},
     Switch[qs["StateType"], "Vector", Normalize[state], "Matrix", normalizeMatrix[state], _, state]
 ]
 
-QuantumStateProp[qs_, "NormalizedAmplitudes"] := With[{amplitudes = qs["Amplitudes"]},
-    amplitudes / Norm[Values[amplitudes]]
+QuantumStateProp[qs_, "NormalizedAmplitudes"] := Enclose @ With[{amplitudes = qs["Amplitudes"]},
+    ConfirmQuiet[amplitudes / Norm[Values[amplitudes]], Power::infy]
 ]
 
 QuantumStateProp[qs_, "NormalizedStateVector"] := qs["NormalizedState"]

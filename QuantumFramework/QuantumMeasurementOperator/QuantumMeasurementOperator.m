@@ -34,13 +34,13 @@ QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumOperatorQ], 
         projector /@ Eigenvectors[matrix],
         MatrixPower[#, 1 / 2] & /@ qmo[{"OrderedTensor", qds["Qudits"]}]
     ];
-    probabilities = N @ Re @ Tr[qds["DensityMatrix"] . #] & /@ projectors;
+    probabilities = Re @ Tr[qds["NormalizedDensityMatrix"] . #] & /@ projectors;
     nonZeroProbabilities = Position[probabilities, 0];
     projectors = Delete[projectors, nonZeroProbabilities];
     probabilities = Delete[probabilities, nonZeroProbabilities];
-    newStates = MapThread[QuantumState[ConjugateTranspose[#1] . qds["DensityMatrix"] . #1 / #2] &, {projectors, probabilities}];
+    newStates = MapThread[QuantumState[ConjugateTranspose[#1] . qds["NormalizedDensityMatrix"] . #1 / #2] &, {projectors, probabilities}];
     values = If[qmo["ProjectionQ"], Eigenvalues[matrix], Range[First @ qmo["OutputDimensions"]]];
-    values = Ket /@ Delete[values, nonZeroProbabilities];
+    values = Delete[values, nonZeroProbabilities];
     QuantumMeasurement[AssociationThread[values, probabilities], newStates]
 ]
 

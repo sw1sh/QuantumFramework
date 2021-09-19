@@ -22,7 +22,8 @@ QuantumBasis[<|
         QuantumTensorProduct @@@ Tuples[{qb1["OutputBasisElementNames"], qb2["OutputBasisElementNames"]}],
         kroneckerProduct @@@ Tuples[{qb1["OutputBasisElements"], qb2["OutputBasisElements"]}]
     ],
-    "Picture" -> qb1["Picture"]
+    "Picture" -> qb1["Picture"],
+    "Label" -> Flatten @ CircleTimes[qb1["Label"], qb2["Label"]]
 |>]
 
 
