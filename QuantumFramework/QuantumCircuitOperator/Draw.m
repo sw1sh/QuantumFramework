@@ -129,7 +129,7 @@ drawGateGraphics[gates_List] := Module[{
 },
     width = 4;
     height = 3;
-    orders = #["Order"]& /@ gates;
+    orders = #["TotalOrder"]& /@ gates;
     dimensions = First[gates]["InputDimensions"];
     lineScaling = Max[2, 0.1 Max[Flatten[orders]] Length[gates]] + 0.2;
     scaling = Max[1, 0.1 Max[Flatten[orders]] Length[gates]] + 0.1;

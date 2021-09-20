@@ -75,10 +75,6 @@ QuantumBasis[data_Association, args__] := Fold[QuantumBasis, QuantumBasis[data],
 
 QuantumBasis[elements_Association ? (Not @* KeyExistsQ["Output"]), args___] := QuantumBasis[<|"Output" -> QuditBasis[elements]|>, args]
 
-QuantumBasis[elements_ /; VectorQ[elements, TensorQ], args___] := QuantumBasis[
-    AssociationThread[Range[0, Length[elements] - 1], elements],
-    args
-]
 
 
 (* defaults *)
@@ -101,15 +97,9 @@ QuantumBasis[qb_ ? QuantumBasisQ, multiplicity_Integer, args___] := QuantumBasis
     args
 ]
 
+QuantumBasis[param : (_ ? nameQ) | _Integer, args___] := QuantumBasis[<|"Output" -> QuditBasis[param]|>, args]
 
-(* tensor product of multiple parameter basis *)
-QuantumBasis[{name_String, params_List}, args___] := QuantumTensorProduct @@ (QuantumBasis[{name, #}, args] & /@ params)
-
-QuantumBasis[params_List, args___] := QuantumTensorProduct @@ (QuantumBasis[#, args] & /@ params)
-
-
-QuantumBasis[name : _String | {_String, Except[_List]}, multiplicity_Integer ? Positive, args___] :=
-    QuantumBasis[QuantumBasis[name, args], multiplicity, args]
+QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) | _Rule) ...] := QuantumBasis["Computational", args]
 
 
 qb_QuantumBasis /; System`Private`HoldNotValidQ[qb] && quantumBasisQ[Unevaluated @ qb] := System`Private`HoldSetValid[qb]

@@ -79,7 +79,7 @@ QuantumMeasurementProp[qm_, {"SimulatedStateMeasurement", n_}] := Part[qm["State
 QuantumMeasurementProp[qm_, "MeanState"] := qm["Mean"] /. qm["StateAssociation"]
 
 QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumState[
-    Mean[MapThread[Times, {Values @ qm["Eigenvalues"], #["State"] & /@ qm["States"]}]],
+    Mean[MapThread[Times, {qm["Eigenvalues"], #["State"] & /@ qm["States"]}]],
     First[qm["States"]]["Basis"]
 ]
 

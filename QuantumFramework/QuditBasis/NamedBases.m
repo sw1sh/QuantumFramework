@@ -2,21 +2,19 @@ Package["QuantumFramework`"]
 
 
 
-QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) | _Rule) ...] := QuantumBasis["Computational", args]
+QuditBasis[dimension_Integer, args___] := QuditBasis[{"Computational", dimension}, args]
 
-QuantumBasis[dimension_Integer, args___] := QuantumBasis[{"Computational", dimension}, args]
+QuditBasis["Computational", args___] := QuditBasis[{"Computational", 2}, args]
 
-QuantumBasis["Computational", args___] := QuantumBasis[{"Computational", 2}, args]
-
-QuantumBasis[{"Computational", dimension_Integer}, args___] := QuantumBasis[identityMatrix[dimension] /. {{}} -> {}, args]
+QuditBasis[{"Computational", dimension_Integer}, args___] := QuditBasis[identityMatrix[dimension] /. {{}} -> {}, args]
 
 
-QuantumBasis["Bell", args___] := QuantumBasis[
+QuditBasis["Bell", args___] := QuditBasis[
     AssociationThread[{
-            Ket[Superscript["\[CapitalPsi]", "+"]],
-            Ket[Superscript["\[CapitalPhi]", "+"]],
-            Ket[Superscript["\[CapitalPsi]", "-"]],
-            Ket[Superscript["\[CapitalPhi]", "-"]]
+            Superscript["\[CapitalPsi]", "+"],
+            Superscript["\[CapitalPhi]", "+"],
+            Superscript["\[CapitalPsi]", "-"],
+            Superscript["\[CapitalPhi]", "-"]
         },
         (1 / Sqrt[2]) {{1, 0, 0, 1}, {0, 1, 1, 0}, {1, 0, 0, -1}, {0, 1, -1, 0}}
     ],
@@ -24,30 +22,30 @@ QuantumBasis["Bell", args___] := QuantumBasis[
 ]
 
 
-QuantumBasis["PauliX", args___] := QuantumBasis[
+QuditBasis["PauliX", args___] := QuditBasis[
     AssociationThread[{
-            Ket[Subscript["\[Psi]", "x+"]],
-            Ket[Subscript["\[Psi]", "x-"]]
+            Subscript["\[Psi]", "x+"],
+            Subscript["\[Psi]", "x-"]
         },
         (1 / Sqrt[2]) {{1, 1}, {1, -1}}
     ],
     args
 ]
 
-QuantumBasis["PauliY", args___] := QuantumBasis[
+QuditBasis["PauliY", args___] := QuditBasis[
     AssociationThread[{
-            Ket[Subscript["\[Psi]", "y+"]],
-            Ket[Subscript["\[Psi]", "y-"]]
+            Subscript["\[Psi]", "y+"],
+            Subscript["\[Psi]", "y-"]
         },
         (1 / Sqrt[2]) {{1, I}, {1, -I}}
     ],
     args
 ]
 
-QuantumBasis["PauliZ", args___] := QuantumBasis[
+QuditBasis["PauliZ", args___] := QuditBasis[
     AssociationThread[{
-            Ket[Subscript["\[Psi]", "z+"]],
-            Ket[Subscript["\[Psi]", "z-"]]
+            Subscript["\[Psi]", "z+"],
+            Subscript["\[Psi]", "z-"]
         },
         IdentityMatrix[2]
     ],
@@ -55,11 +53,11 @@ QuantumBasis["PauliZ", args___] := QuantumBasis[
 ]
 
 
-QuantumBasis["Fourier"] := QuantumBasis[{"Fourier", 2}]
+QuditBasis["Fourier"] := QuditBasis[{"Fourier", 2}]
 
-QuantumBasis[{"Fourier", dimension_Integer ? Positive}, args___] := QuantumBasis[
+QuditBasis[{"Fourier", dimension_Integer ? Positive}, args___] := QuditBasis[
     AssociationThread[
-        Ket[Subscript["F", #]] & /@ Range[dimension],
+        Subscript["F", #] & /@ Range[dimension],
         ConjugateTranspose @ Partition[
             (1 / Sqrt[dimension]) (
                 Exp[(2 Pi I (#[[2]] #[[1]])) / dimension] & /@
@@ -72,22 +70,22 @@ QuantumBasis[{"Fourier", dimension_Integer ? Positive}, args___] := QuantumBasis
 ]
 
 
-QuantumBasis["Identity"] := QuantumBasis[{"Identity", 2}]
+QuditBasis["Identity"] := QuditBasis[{"Identity", 2}]
 
-QuantumBasis[{"Identity", dimension_Integer ? Positive}, args___] := QuantumBasis[
+QuditBasis[{"Identity", dimension_Integer ? Positive}, args___] := QuditBasis[
     AssociationThread[
-        Ket[Subscript["I", #]] & /@ Range[dimension ^ 2],
+        Subscript["I", #] & /@ Range[dimension ^ 2],
         Partition[#, dimension] & /@ IdentityMatrix[dimension ^ 2]
     ],
     args
 ]
 
 
-QuantumBasis["Schwinger"] := QuantumBasis[{"Schwinger", 2}]
+QuditBasis["Schwinger"] := QuditBasis[{"Schwinger", 2}]
 
-QuantumBasis[{"Schwinger", dimension_Integer ? Positive}, args___] := QuantumBasis[
+QuditBasis[{"Schwinger", dimension_Integer ? Positive}, args___] := QuditBasis[
     AssociationThread[
-        Ket[Subscript["S", ToString[#]]] & /@ Tuples[Range[0, dimension - 1], 2],
+        Subscript["S", ToString[#]] & /@ Tuples[Range[0, dimension - 1], 2],
         Flatten /@ (
             MatrixPower[RotateLeft[IdentityMatrix[dimension]], #[[1]]] .
             MatrixPower[((Exp[I 2 Pi / dimension]) ^ #) & /@ Range[0, dimension - 1] IdentityMatrix[dimension], #[[2]]]
@@ -95,16 +93,16 @@ QuantumBasis[{"Schwinger", dimension_Integer ? Positive}, args___] := QuantumBas
     args
 ]
 
-QuantumBasis["Pauli", args___] := QuantumBasis[
-    AssociationThread[{Ket[Subscript["\[Sigma]", "0"]],
-        Ket[Subscript["\[Sigma]", "1"]], Ket[Subscript["\[Sigma]", "2"]],
-        Ket[Subscript["\[Sigma]", "3"]]},
+QuditBasis["Pauli", args___] := QuditBasis[
+    AssociationThread[{Subscript["\[Sigma]", "0"],
+        Subscript["\[Sigma]", "1"], Subscript["\[Sigma]", "2"],
+        Subscript["\[Sigma]", "3"]},
         {{{1, 0}, {0, 1}}, {{0, 1}, {1, 0}}, {{0, -I}, {I, 0}}, {{1, 0}, {0, -1}}}
     ],
     args
 ]
 
-QuantumBasis["Dirac", args___] := Module[{
+QuditBasis["Dirac", args___] := Module[{
     pauliBasis1, pauliBasis2, pauliBasis3, pauliBasis4,
     gamma1, gamma2, gamma3, gamma4
 },
@@ -116,8 +114,8 @@ QuantumBasis["Dirac", args___] := Module[{
     gamma2 = KroneckerProduct[pauliBasis3, pauliBasis2];
     gamma3 = KroneckerProduct[pauliBasis3, pauliBasis3];
     gamma4 = KroneckerProduct[pauliBasis3, pauliBasis4];
-    QuantumBasis[AssociationThread[
-        Ket[Subscript["\[Epsilon]", ToString[#]]] & /@ Range[0, 15],
+    QuditBasis[AssociationThread[
+        Subscript["\[Epsilon]", ToString[#]] & /@ Range[0, 15],
         {
             IdentityMatrix[4],
             KroneckerProduct[pauliBasis4, pauliBasis1],
@@ -133,17 +131,15 @@ QuantumBasis["Dirac", args___] := Module[{
 ]
 
 
-QuantumBasis["Wigner", args___] := QuantumBasis[{"Wigner", 2}, args]
+QuditBasis["Wigner", args___] := QuditBasis[{"Wigner", 2}, args]
 
-QuantumBasis[{"Wigner", dimension_Integer}, args___] := QuantumBasis[{"Wigner", QuantumBasis[dimension]}, args]
+QuditBasis[{"Wigner", dimension_Integer}, args___] := QuditBasis[{"Wigner", QuditBasis[dimension]}, args]
 
-QuantumBasis[{"Wigner", qb_QuantumBasis}] := QuantumBasis[{"Wigner", qb}, "PhaseSpace"]
-
-QuantumBasis[{"Wigner", qb_QuantumBasis /; QuantumBasisQ[qb]}, args___] := Module[{
+QuditBasis[{"Wigner", qb_QuditBasis /; QuditBasisQ[qb]}, args___] := Module[{
     dimension, positionBasis, momentumBasis, kernelElement
 },
         dimension = First @ qb["Dimensions"];
-        positionBasis = {#} & /@ Normal[qb["BasisElementAssociation"]];
+        positionBasis = {#} & /@ Normal[qb["Association"]];
         momentumBasis = With[{dimension = #},
             {(dimension + 1) ->
                 (1 / Sqrt[Length[positionBasis]]) *
@@ -171,8 +167,8 @@ QuantumBasis[{"Wigner", qb_QuantumBasis /; QuantumBasisQ[qb]}, args___] := Modul
                 Inverse[Transpose[Normalize[#] & /@ Values[eigensystem]]]
         ];
 
-        QuantumBasis[AssociationThread[
-            Ket[Subscript["W", ToString[#]]] & /@ Tuples[Range[0, dimension - 1], 2],
+        QuditBasis[AssociationThread[
+            Subscript["W", ToString[#]] & /@ Tuples[Range[0, dimension - 1], 2],
 
             Flatten[
                 Table[

@@ -22,10 +22,6 @@ QuantumMeasurementOperator["Properties"] := $QuantumMeasurementOperatorPropertie
 qmo_QuantumMeasurementOperator["ValidQ"] := QuantumMeasurementOperatorQ[qmo]
 
 
-QuantumMeasurementOperatorProp[qmo_, "Properties"] :=
-    DeleteDuplicates @ Join[QuantumMeasurementOperator["Properties"], qmo["QuantumOperator"]["Properties"]]
-
-
 QuantumMeasurementOperator::undefprop = "QuantumMeasurementOperator property `` is undefined for this operator";
 
 
@@ -33,8 +29,11 @@ QuantumMeasurementOperator::undefprop = "QuantumMeasurementOperator property `` 
     result = QuantumMeasurementOperatorProp[qmo, prop, args]
     },
     (QuantumMeasurementOperatorProp[qmo, prop, args] = result)
-        /; !MatchQ[result, _QuantumMeasurementOperatorProp] || Message[QuantumMeasurementOperator::undefprop, prop]
+        /; !FailureQ[Unevaluated @ result] && (!MatchQ[result, _QuantumMeasurementOperatorProp] || Message[QuantumMeasurementOperator::undefprop, prop])
 ]
+
+QuantumMeasurementOperatorProp[qmo_, "Properties"] :=
+    DeleteDuplicates @ Join[QuantumMeasurementOperator["Properties"], qmo["QuantumOperator"]["Properties"]]
 
 
 (* getters *)
@@ -57,13 +56,16 @@ QuantumMeasurementOperatorProp[qmo_, "POVMQ"] := qmo["Type"] === "POVM"
 
 QuantumMeasurementOperatorProp[qmo_, "POVMElements"] := If[qmo["POVMQ"], qmo["Tensor"], projector /@ qmo["Matrix"]]
 
-QuantumMeasurementOperatorProp[qmo_, "OrderedPOVMElements"] /; qmo["POVMQ"] := qmo["OrderedTensor"]
+QuantumMeasurementOperatorProp[qmo_, "OrderedPOVMElements"] := qmo[{"OrderedPOVMElements", qmo["MaxArity"]}]
 
-QuantumMeasurementOperatorProp[qmo_, {"OrderedPOVMElements", arity_Integer}] /; qmo["POVMQ"] := qmo[{"OrderedTensor", arity}]
+QuantumMeasurementOperatorProp[qmo_, {"OrderedPOVMElements", arity_Integer}] := If[qmo["POVMQ"],
+    qmo[{"OrderedTensor", arity}],
+    projector /@ qmo[{"OrderedMatrix", arity}]
+]
 
 QuantumMeasurementOperatorProp[qmo_, "Operators"] := If[qmo["POVMQ"],
-    AssociationThread[Ket /@ Range[0, Length[qmo["Tensor"]] - 1], QuantumOperator[#, QuantumBasis["Output" -> qmo["Basis"]["Input"]], qmo["Order"]] & /@ qmo["Tensor"]],
-    AssociationThread[Ket /@ Eigenvalues[qmo["Matrix"]], QuantumOperator[projector @ #, qmo["Basis"], qmo["Order"]] & /@ Eigenvectors[qmo["OrderedMatrix"]]]
+    AssociationThread[Range[0, Length[qmo["Tensor"]] - 1], QuantumOperator[#, QuantumBasis["Output" -> qmo["Basis"]["Input"]], qmo["Order"]] & /@ qmo["Tensor"]],
+    AssociationThread[Eigenvalues[qmo["Matrix"]], QuantumOperator[projector @ #, qmo["Basis"], qmo["Order"]] & /@ Eigenvectors[qmo["OrderedMatrix"]]]
 ]
 
 

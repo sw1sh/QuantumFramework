@@ -61,7 +61,7 @@ projector[v_] := (*ConjugateTranspose[{v}] . {v}*) KroneckerProduct[v, Conjugate
 
 
 OrderedMatrixRepresentation[matrix_ ? MatrixQ, quditCount_Integer ? Positive, order_ ? orderQ] := Enclose @ Module[{
-    dimension, arity,
+    dimension,
     subsystems, passiveSubsystems, ordering,
     passiveMatrixRepresentations, matrixShape,
     newMatrixRepresentation, tensorProductLevels
@@ -72,7 +72,6 @@ OrderedMatrixRepresentation[matrix_ ? MatrixQ, quditCount_Integer ? Positive, or
 
         kroneckerProduct @@ ReplacePart[Table[IdentityMatrix[dimension], quditCount], order -> matrix],
 
-        arity = Length[order];
         subsystems = Range[quditCount];
         passiveSubsystems = Complement[subsystems, order];
         ordering = Join[order, passiveSubsystems];

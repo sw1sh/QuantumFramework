@@ -4,7 +4,6 @@ PackageScope["QuantumOperatorProp"]
 
 
 
-
 $QuantumOperatorProperties = {
     "MatrixRepresentation", "Matrix",
     "TensorRepresentation", "Tensor",
@@ -14,12 +13,13 @@ $QuantumOperatorProperties = {
     "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors", "Projectors"
 };
 
-$QuantumOperatorProperties = DeleteDuplicates @ Join[$QuantumOperatorProperties, $QuantumStateProperties];
+QuantumOperator["Properties"] := DeleteDuplicates @ Join[$QuantumOperatorProperties, Complement[QuantumState["Properties"], {
+    "BlochCartesianCoordinates", "BlochSphericalCoordinates", "BlochPlot"
+}]];
 
-
-QuantumOperator["Properties"] := $QuantumOperatorProperties
-
-QuantumOperatorProp[qo_, "Properties"] := DeleteDuplicates @ Join[QuantumOperator["Properties"], qo["State"]["Properties"]]
+QuantumOperatorProp[qo_, "Properties"] := DeleteDuplicates @ Join[QuantumOperator["Properties"], Complement[qo["State"]["Properties"], {
+    "BlochCartesianCoordinates", "BlochSphericalCoordinates", "BlochPlot"
+}]]
 
 
 qo_QuantumOperator["ValidQ"] := QuantumOperatorQ[qo]
@@ -38,7 +38,8 @@ QuantumOperatorProp[QuantumOperator[_, order_], "Order"] := order
 (qo_QuantumOperator[prop_ ? propQ, args___]) /; QuantumOperatorQ[qo] := With[{
     result = QuantumOperatorProp[qo, prop, args]
     },
-    (QuantumOperatorProp[qo, prop, args] = result) /; !MatchQ[result, _QuantumOperatorProp] || Message[QuantumOperator::undefprop, prop]
+    (QuantumOperatorProp[qo, prop, args] = result) /; !FailureQ[Unevaluated @ result] &&
+        (!MatchQ[result, _QuantumOperatorProp] || Message[QuantumOperator::undefprop, prop])
 ]
 
 

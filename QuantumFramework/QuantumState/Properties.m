@@ -14,7 +14,8 @@ $QuantumStateProperties = {
      "Purity", "Type", "PureStateQ", "MixedStateQ",
      "BlochSphericalCoordinates", "BlochCartesianCoordinates",
      "BlochPlot",
-     "Operator",
+     "Projector", "NormalizedProjector",
+     "Operator", "NormalizedOperator",
      "Eigenvalues", "Eigenvectors", "Eigenstates"
 };
 
@@ -99,6 +100,9 @@ QuantumStateProp[qs_, "NormalizedDensityMatrix"] := Enclose @ Confirm[normalizeM
 
 QuantumStateProp[qs_, "NormalizedMatrixRepresentation" | "NormalizedMatrix"] := normalizeMatrix @ qs["Matrix"]
 
+QuantumStateProp[qs_, "Operator"] := qs["Projector"]["Amplitudes"]
+
+QuantumStateProp[qs_, "NormalizedOperator"] := qs["NormalizedProjector"]["Amplitudes"]
 
 (* density matrix *)
 
@@ -107,10 +111,9 @@ QuantumStateProp[qs_, "DensityMatrix"] /; qs["StateType"] === "Vector" :=
 
 QuantumStateProp[qs_, "DensityMatrix"] /; qs["StateType"] === "Matrix" := qs["State"]
 
-QuantumStateProp[qs_, "Operator"] := Association @ Thread[
-    Flatten[#, 1, CircleTimes] & /@ CircleTimes @@@ MapAt[ReplaceAll[Ket -> Bra], Tuples[qs["BasisElementNames"], 2], {All, 2}] ->
-    Flatten @ qs["DensityMatrix"]
-]
+QuantumStateProp[qs_, "Projector"] := QuantumState[Flatten @ qs["DensityMatrix"], QuantumBasis[qs["Basis"], "Input" -> qs["Output"]["Dual"]]]
+
+QuantumStateProp[qs_, "NormalizedProjector"] := QuantumState[Flatten @ qs["NormalizedDensityMatrix"], QuantumBasis[qs["Basis"], "Input" -> qs["Output"]["Dual"]]]
 
 QuantumStateProp[qs_, "MatrixRepresentation" | "Matrix"] := QuantumState[qs, QuantumBasis[qs["Dimension"]]]["DensityMatrix"]
 

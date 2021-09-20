@@ -37,7 +37,8 @@ QuantumBasis::undefprop = "QuantumBasis property `` is undefined for this basis"
 (qb_QuantumBasis[prop_ ? propQ, args___]) /; QuantumBasisQ[qb] := With[{
     result = QuantumBasisProp[qb, prop, args]
 },
-    (QuantumBasisProp[qb, prop, args] = result) /; !MatchQ[result, _QuantumBasisProp] || Message[QuantumBasis::undefprop, prop]
+    (QuantumBasisProp[qb, prop, args] = result) /; !FailureQ[Unevaluated @ result] &&
+    (!MatchQ[result, _QuantumBasisProp] || Message[QuantumBasis::undefprop, prop])
 ]
 
 
@@ -62,7 +63,7 @@ QuantumBasisProp[qb_, "OutputBasisElements"] := qb["Output"]["Elements"]
 
 
 QuantumBasisProp[qb_, "BasisElementNames"] :=
-    QuantumTensorProduct @@@ Tuples[{qb["OutputBasisElementNames"], #["Dual"] & /@ qb["InputBasisElementNames"]}]
+    QuantumTensorProduct @@@ Tuples[{qb["OutputBasisElementNames"], qb["InputBasisElementNames"]}]
 
 QuantumBasisProp[qb_, "BasisElements"] := kroneckerProduct @@@ Tuples[{qb["OutputBasisElements"], qb["InputBasisElements"]}]
 
@@ -141,6 +142,9 @@ QuantumBasisProp[qb_, "InputBasis"] := QuantumBasis[qb, "Output" -> QuditBasis[]
 
 QuantumBasisProp[qb_, "OutputBasis"] := QuantumBasis[qb, "Input" -> QuditBasis[]]
 
+QuantumBasisProp[qb_, {"Ordered", arity_Integer, order_ ? orderQ}] :=
+    QuantumBasis[qb, "Input" -> qb["Input"][{"Ordered", arity, order}], "Output" -> qb["Output"][{"Ordered", arity, order}]]
+
 
 QuantumBasisProp[qb_, "OrthogonalBasisElements"] := ArrayReshape[#, qb["BasisElementDimensions"]] & /@ (
     Orthogonalize[Flatten /@ qb["BasisElements"]]
@@ -162,13 +166,13 @@ QuantumBasisProp[qb_, "MatrixRepresentation" | "Matrix"] := ArrayReshape[qb["Bas
 
 QuantumBasisProp[qb_, "Projectors"] := projector /@ qb["Matrix"]
 
-QuantumBasisProp[qb_, "PureStates"] := QuantumDiscreteState[SparseArray[# -> 1, qb["OutputDimension"]], qb] & /@ Range[qb["OutputDimension"]]
+QuantumBasisProp[qb_, "PureStates"] := QuantumState[SparseArray[# -> 1, qb["OutputDimension"]], qb] & /@ Range[qb["OutputDimension"]]
 
-QuantumBasisProp[qb_, "PureEffects"] := QuantumDiscreteState[SparseArray[# -> 1, qb["InputDimension"]], qb] & /@ Range[qb["InputDimension"]]
+QuantumBasisProp[qb_, "PureEffects"] := QuantumState[SparseArray[# -> 1, qb["InputDimension"]], qb] & /@ Range[qb["InputDimension"]]
 
 QuantumBasisProp[qb_, "PureMaps" | "PureOperators"] :=
     Table[
-        QuantumDiscreteState[SparseArray[{i, j} -> 1, {qb["OutputDimension"], qb["InputDimension"]}], qb],
+        QuantumState[SparseArray[{i, j} -> 1, {qb["OutputDimension"], qb["InputDimension"]}], qb],
         {i, qb["OutputDimension"]}, {j, qb["InputDimension"]}
     ]
 

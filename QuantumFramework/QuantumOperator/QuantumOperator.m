@@ -66,9 +66,9 @@ QuantumOperator[matrix_ ? MatrixQ, args___, order : (_ ? orderQ) : {1}] := Modul
         ];
         basis = If[ IntegerQ[inputQudits],
             QuantumBasis[basis,
-                "Input" -> QuantumBasis[quditBasis, inputQudits]["Output"]],
+                "Input" -> QuantumBasis[quditBasis, inputQudits]["Output"]["Dual"]],
             QuantumBasis[basis,
-                "Input" -> QuantumTensorProduct[QuantumBasis[ConfirmBy[inputs / quditBasis["InputDimension"], IntegerQ]], quditBasis]["Output"]]
+                "Input" -> QuantumTensorProduct[QuantumBasis[ConfirmBy[inputs / quditBasis["InputDimension"], IntegerQ]], quditBasis]["Output"]["Dual"]]
         ];
         state = ConfirmBy[
             QuantumState[
@@ -115,7 +115,7 @@ QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ] := Module[{result},
                     }
                 ],
 
-                If[qb["Dimension"] === qo["Dimension"], qb, QuantumBasis[qb, "Input" -> qb["Output"]]]
+                If[qb["Dimension"] === qo["Dimension"], qb, QuantumBasis[qb, "Input" -> qb["Output"]["Dual"]]]
             ],
             QuantumStateQ,
             Message[QuantumOperator::invalidState]
@@ -144,16 +144,21 @@ qo["Picture"] === qo["Picture"] && (
     ]
 ]
 
-(qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumFrameworkOperatorQ] /; qo["Picture"] === op["Picture"] :=
+(qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumFrameworkOperatorQ] /; qo["Picture"] === op["Picture"] := With[{
+    arity = Max[qo["MaxArity"], op["MaxArity"]]
+},
     QuantumOperator[
-        qo[{"OrderedMatrixRepresentation", Max[op["InputQudits"], qo["MaxArity"]]}] . op["OrderedMatrixRepresentation"],
-        QuantumBasis[op["InputBasis"], "Label" -> qo["Label"] @* op["Label"], "Output" -> qo["Output"]],
+        qo[{"OrderedMatrix", arity}] . op[{"OrderedMatrix", arity}],
+        QuantumBasis[op["InputBasis"][{"Ordered", arity, op["Order"]}],
+            "Output" -> qo["Output"][{"Ordered", arity, qo["Order"]}],
+            "Label" -> qo["Label"] @* op["Label"]],
         Join[op["Order"], Complement[Range[Max[op["InputQudits"], qo["MaxArity"]]], op["Order"]]]
     ]
+]
 
 
 (* equality *)
 
 QuantumOperator /: (qo1_QuantumOperator ? QuantumOperatorQ) == (qo2_QuantumOperator ? QuantumOperatorQ) :=
-    qo1["Picture"] == qo2["Picture"] && qo1["Matrix"] == qo2["Matrix"]
+    qo1["Picture"] == qo2["Picture"] && qo1["OrderedMatrix"] == qo2["OrderedMatrix"]
 
