@@ -72,7 +72,7 @@ drawControlGateTop[coordinates_List, controlOrder_List, targetOrder_List] := Mod
     blackCircles = Graphics[Table[Disk[coordinates[[i]], blackCircleRadius], {i, Length[controlOrder]}]];
     lines = Graphics[
         Table[
-            Line[{coordinates[[i]], {First[coordinates[[i]]], Last[coordinates[[i]]] - 5 (controlOrder[[i]]-Max[targetOrder])}}],
+            Line[{coordinates[[i]], {First[coordinates[[i]]], Last[coordinates[[i]]] + 5 (controlOrder[[i]]-Max[targetOrder])}}],
             {i, Length[controlOrder]}
         ]
     ];
@@ -85,7 +85,7 @@ drawControlGateBottom[coordinates_List, controlOrder_List, targetOrder_List] := 
     blackCircles = Graphics[Table[Disk[coordinates[[i]], blackCircleRadius], {i, Length[controlOrder]}]];
     lines = Graphics[
         Table[
-            Line[{coordinates[[i]], {First[coordinates[[i]]], Last[coordinates[[i]]] + 5 (Min[targetOrder]-controlOrder[[i]])}}],
+            Line[{coordinates[[i]], {First[coordinates[[i]]], Last[coordinates[[i]]] - 5 (Min[targetOrder]-controlOrder[[i]])}}],
             {i, Length[controlOrder]}
         ]
     ];
@@ -115,8 +115,8 @@ drawWireGraphics[positionIndices_List, scaling_] := Module[{quditCount, lineList
     quditCount = Length[positionIndices];
     lineList = Table[
         Graphics[{
-            Text[Style[ToString[i], FontSize -> Scaled[0.1 / scaling]], {0, 5 i - 1}],
-            Line[{{0, 5 i}, {6 Max[positionIndices], 5 i}}]}
+            Text[Style[ToString[i], FontSize -> Scaled[0.1 / scaling]], {0, - 5 i - 1}],
+            Line[{{0, - 5 i}, {6 Max[positionIndices], - 5 i}}]}
         ],
         {i, Range[quditCount]}
     ]
@@ -129,7 +129,7 @@ drawGateGraphics[gates_List] := Module[{
 },
     width = 4;
     height = 3;
-    orders = #["TotalOrder"]& /@ gates;
+    orders = #["Order"]& /@ gates;
     dimensions = First[gates]["InputDimensions"];
     lineScaling = Max[2, 0.1 Max[Flatten[orders]] Length[gates]] + 0.2;
     scaling = Max[1, 0.1 Max[Flatten[orders]] Length[gates]] + 0.1;
@@ -138,16 +138,17 @@ drawGateGraphics[gates_List] := Module[{
     positionIndices = ConstantArray[1, Max[Flatten[orders]]];
     Do[
     gatePositionIndices = Table[positionIndices[[j]], {j, Min[orders[[i]]], Max[orders[[i]]]}];
-    Do[positionIndices[[j]] = positionIndices[[j]] + 1, {j, Min[orders[[i]]], Max[orders[[i]]]}];
+    (*Do[positionIndices[[j]] = positionIndices[[j]] + 1, {j, Min[orders[[i]]], Max[orders[[i]]]}];*)
+    positionIndices = positionIndices + 1;
     If[ QuantumMeasurementOperatorQ[gates[[i]]],
         Which[
             gates[[i]]["POVMQ"],
-            AppendTo[graphicsList, drawMeasurementGate[{-2 + 6 Max[gatePositionIndices], 5 Min[orders[[i]]]}, orders[[i]], scaling, "POVM"]],
+            AppendTo[graphicsList, drawMeasurementGate[{-2 + 6 Max[gatePositionIndices], - 5 Min[orders[[i]]]}, orders[[i]], scaling, "POVM"]],
             True,
             AppendTo[
                 graphicsList,
                 drawMeasurementGate[
-                    {-2 + 6 Max[gatePositionIndices], 5 First[orders[[i]]]},
+                    {-2 + 6 Max[gatePositionIndices], - 5 First[orders[[i]]]},
                     orders[[i]],
                     scaling,
                     gates[[i]]["Label"] /. None -> "M"
@@ -158,7 +159,7 @@ drawGateGraphics[gates_List] := Module[{
     If[ QuantumOperatorQ[gates[[i]]],
 
         If[ MatchQ[gates[[i]]["Label"], "CX" | "CY" | "CZ" | "CNOT" | "CPHASE" | "CSWAP" | "Controlled"[_]],
-            targetQuditsOrder = Most[orders[[i]]];
+            targetQuditsOrder = Rest[orders[[i]]];
             controlQuditsOrder = Complement[orders[[i]], targetQuditsOrder];
             controlQuditsOrderTop = {};
             controlQuditsOrderBottom = {};
@@ -169,13 +170,13 @@ drawGateGraphics[gates_List] := Module[{
                 AppendTo[controlQuditsOrderBottom, controlQuditsOrder[[j]]]],
                 {j, Length[controlQuditsOrder]}
             ];
-            controlQuditsTopCoordinates = Table[{-2 + 6 Max[gatePositionIndices], 5 controlQuditsOrderTop[[j]]}, {j, Length[controlQuditsOrderTop]}];
-            controlQuditsBottomCoordinates = Table[{-2 + 6 Max[gatePositionIndices], 5 controlQuditsOrderBottom[[j]]}, {j, Length[controlQuditsOrderBottom]}];
+            controlQuditsTopCoordinates = Table[{-2 + 6 Max[gatePositionIndices], - 5 controlQuditsOrderTop[[j]]}, {j, Length[controlQuditsOrderTop]}];
+            controlQuditsBottomCoordinates = Table[{-2 + 6 Max[gatePositionIndices], - 5 controlQuditsOrderBottom[[j]]}, {j, Length[controlQuditsOrderBottom]}];
             If[ Length[controlQuditsOrderTop] > 0,
-                AppendTo[graphicsList, drawControlGateTop[controlQuditsTopCoordinates, controlQuditsOrderTop, targetQuditsOrder]]
+                AppendTo[graphicsList, drawControlGateBottom[controlQuditsTopCoordinates, controlQuditsOrderTop, targetQuditsOrder]]
             ];
             If[ Length[controlQuditsOrderBottom] > 0,
-                AppendTo[graphicsList, drawControlGateBottom[controlQuditsBottomCoordinates, controlQuditsOrderBottom, targetQuditsOrder]]
+                AppendTo[graphicsList, drawControlGateTop[controlQuditsBottomCoordinates, controlQuditsOrderBottom, targetQuditsOrder]]
             ],
 
             targetQuditsOrder = orders[[i]]
@@ -185,20 +186,20 @@ drawGateGraphics[gates_List] := Module[{
             Switch[
                 gates[[i]]["Label"] /. "Controlled"[x_] :> x,
                 "SWAP",
-                drawSwapGate[{-2 + 6 Max[gatePositionIndices], 5 First[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], 5 Last[targetQuditsOrder]}, scaling],
+                drawSwapGate[{-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], - 5 Last[targetQuditsOrder]}, scaling],
                 "RootSWAP",
-                drawRootSwapGate[{-2 + 6 Max[gatePositionIndices], 5 First[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], 5 Last[targetQuditsOrder]}, scaling],
+                drawRootSwapGate[{-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], - 5 Last[targetQuditsOrder]}, scaling],
                 "NOT" | "X",
-                drawNotGate[{-2 + 6 Max[gatePositionIndices], 5 First[targetQuditsOrder]}, scaling],
+                drawNotGate[{-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]}, scaling],
                 _,
                 If[ gates[[i]]["Arity"] == 1,
                     drawUnaryGate[
-                        {-2 + 6 Max[gatePositionIndices], 5 First[targetQuditsOrder]},
+                        {-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]},
                         scaling,
                         gates[[i]]["Label"] /. {None -> Subscript["U", index], Composition -> SmallCircle, "Controlled"[x_] :> x}
                     ],
                     drawBinaryGate[
-                        {{-2 + 6 Max[gatePositionIndices], 5 Min[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], 5 Max[targetQuditsOrder]}},
+                        {{-2 + 6 Max[gatePositionIndices], - 5 Min[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], - 5 Max[targetQuditsOrder]}},
                         scaling,
                         gates[[i]]["Label"] /. {None -> Subscript["U", index], Composition -> SmallCircle, "Controlled"[x_] :> x}
                     ]

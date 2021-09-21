@@ -6,7 +6,7 @@ QuditBasis[dimension_Integer, args___] := QuditBasis[{"Computational", dimension
 
 QuditBasis["Computational", args___] := QuditBasis[{"Computational", 2}, args]
 
-QuditBasis[{"Computational", dimension_Integer}, args___] := QuditBasis[identityMatrix[dimension] /. {{}} -> {}, args]
+QuditBasis[{"Computational", dimension_Integer}, args___] := QuditBasis[Range[dimension] - 1, identityMatrix[dimension] /. {{}} -> {}, args]
 
 
 QuditBasis["Bell", args___] := QuditBasis[

@@ -20,6 +20,8 @@ QuantumOperatorQ[___] := False
 QuantumOperator[qs_QuantumState ? QuantumStateQ] :=
     QuantumOperator[qs, {1}]
 
+(*QuantumOperator[arg_, multiplicity_Integer, args___, order : (_ ? orderQ) : {1}] :=
+    QuantumOperator[QuantumTensorProduct[Table[QuantumOperator[arg, args], multiplicity]], order]*)
 
 QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, args___, order : (_ ? orderQ) : {1}] := Module[{
     dimensions = TensorDimensions[tensor],
@@ -55,34 +57,35 @@ QuantumOperator::invalidState = "invalid state specification";
 QuantumOperator[matrix_ ? MatrixQ, args___, order : (_ ? orderQ) : {1}] := Module[{
     result
 },
-    result = Enclose[Module[{outputs, inputs, quditBasis, outputQudits, inputQudits, basis, state},
-        {outputs, inputs} = Dimensions[matrix];
-        quditBasis = QuantumBasis[args];
-        (* if no inputs assume same input/output basis *)
-        {outputQudits, inputQudits} = Log[quditBasis["MatrixNameDimensions"] /. {x_, 1} :> {x, x}, {outputs, inputs}];
-        basis = If[ IntegerQ[outputQudits],
-            QuantumBasis[quditBasis, outputQudits],
-            QuantumTensorProduct[QuantumBasis[ConfirmBy[outputs / quditBasis["OutputDimension"], IntegerQ]], quditBasis]
+    result = Enclose @ Module[{newMatrix = matrix, outputs, inputs,
+        basis, newOutputQuditBasis, newInputQuditBasis, state},
+        {outputs, inputs} = Dimensions[newMatrix];
+        basis = QuantumBasis[args];
+        If[basis["InputDimension"] == 1,
+            basis = QuantumBasis[basis, "Input" -> basis["Output"]]
         ];
-        basis = If[ IntegerQ[inputQudits],
-            QuantumBasis[basis,
-                "Input" -> QuantumBasis[quditBasis, inputQudits]["Output"]["Dual"]],
-            QuantumBasis[basis,
-                "Input" -> QuantumTensorProduct[QuantumBasis[ConfirmBy[inputs / quditBasis["InputDimension"], IntegerQ]], quditBasis]["Output"]["Dual"]]
+
+        newOutputQuditBasis = QuantumTensorProduct[basis["Output"], QuditBasis[Ceiling[outputs / basis["OutputDimension"]] /. 1 -> Sequence[]]];
+        newInputQuditBasis = QuantumTensorProduct[basis["Input"], QuditBasis[Ceiling[inputs / basis["InputDimension"]] /. 1 -> Sequence[]]];
+
+        newMatrix = KroneckerProduct[
+            newMatrix,
+            IdentityMatrix[Max[Ceiling[outputs / newOutputQuditBasis["Dimension"]], Ceiling[inputs / newInputQuditBasis["Dimension"]]]][[
+                ;; Ceiling[outputs / newOutputQuditBasis["Dimension"]], ;; Ceiling[inputs / newInputQuditBasis["Dimension"]]
+            ]]
         ];
+        basis = QuantumBasis[basis, "Output" -> newOutputQuditBasis, "Input" -> newInputQuditBasis["Dual"]];
         state = ConfirmBy[
             QuantumState[
-                Flatten[matrix],
+                Flatten[newMatrix],
                 basis
             ],
             QuantumStateQ,
             Message[QuantumOperator::invalidState]
         ];
         QuantumOperator[state, order]
-    ],
-        $Failed &
     ];
-    result /; !FailureQ[result]
+    result /; !FailureQ[Unevaluted @ result]
 ]
 
 
@@ -144,15 +147,19 @@ qo["Picture"] === qo["Picture"] && (
     ]
 ]
 
-(qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumFrameworkOperatorQ] /; qo["Picture"] === op["Picture"] := With[{
-    arity = Max[qo["MaxArity"], op["MaxArity"]]
+(qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumFrameworkOperatorQ] /; qo["Picture"] === op["Picture"] := Module[{
+    arity = Max[qo["MaxArity"], op["MaxArity"]], ordered1, ordered2
 },
+    ordered1 = op[{"Ordered", arity}];
+    ordered2 = qo[{"Ordered", arity}];
     QuantumOperator[
-        qo[{"OrderedMatrix", arity}] . op[{"OrderedMatrix", arity}],
-        QuantumBasis[op["InputBasis"][{"Ordered", arity, op["Order"]}],
-            "Output" -> qo["Output"][{"Ordered", arity, qo["Order"]}],
-            "Label" -> qo["Label"] @* op["Label"]],
-        Join[op["Order"], Complement[Range[Max[op["InputQudits"], qo["MaxArity"]]], op["Order"]]]
+        ordered2["Matrix"] . ordered1["Matrix"],
+        QuantumBasis[
+            ordered1["InputBasis"],
+            "Output" -> ordered2["Output"],
+            "Label" -> qo["Label"] @* op["Label"]
+        ],
+        ordered1["Order"]
     ]
 ]
 

@@ -59,34 +59,3 @@ kroneckerProduct[ts___] := Fold[If[ArrayQ[#1] && ArrayQ[#2], KroneckerProduct[##
 
 projector[v_] := (*ConjugateTranspose[{v}] . {v}*) KroneckerProduct[v, Conjugate[v]]
 
-
-OrderedMatrixRepresentation[matrix_ ? MatrixQ, quditCount_Integer ? Positive, order_ ? orderQ] := Enclose @ Module[{
-    dimension,
-    subsystems, passiveSubsystems, ordering,
-    passiveMatrixRepresentations, matrixShape,
-    newMatrixRepresentation, tensorProductLevels
-},
-    dimension = ConfirmBy[Length[matrix] ^ (1 / Length[order]), IntegerQ];
-
-    If[ Length[order] == 1,
-
-        kroneckerProduct @@ ReplacePart[Table[IdentityMatrix[dimension], quditCount], order -> matrix],
-
-        subsystems = Range[quditCount];
-        passiveSubsystems = Complement[subsystems, order];
-        ordering = Join[order, passiveSubsystems];
-        passiveMatrixRepresentations = Table[IdentityMatrix[dimension], Length[passiveSubsystems]];
-        matrixShape = ConstantArray[dimension, 2 quditCount];
-        newMatrixRepresentation = kroneckerProduct @@ Join[{matrix}, passiveMatrixRepresentations];
-        newMatrixRepresentation = ArrayReshape[newMatrixRepresentation, matrixShape];
-        tensorProductLevels = InversePermutation[Ordering[ordering]];
-        tensorProductLevels = Join[tensorProductLevels, tensorProductLevels + quditCount];
-        newMatrixRepresentation = Transpose[newMatrixRepresentation, tensorProductLevels];
-        ArrayReshape[
-            Flatten[newMatrixRepresentation],
-            {dimension ^ quditCount, dimension ^ quditCount}
-        ]
-
-    ]
-]
-

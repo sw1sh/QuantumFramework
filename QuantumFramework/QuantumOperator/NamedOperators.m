@@ -15,22 +15,26 @@ controlledZGate = ReplacePart[
     ]
 ];
 
+QuantumOperator["Identity", args___] := QuantumOperator[{"Identity", 2}, args]
+
+QuantumOperator[{"Identity", dimension_Integer}, args___] := QuantumOperator[IdentityMatrix[dimension], dimension, args]
+
 
 QuantumOperator[{"XRotation", angle_}, args___] := QuantumOperator[
     {{Cos[angle / 2], I Sin[angle / 2]}, {I Sin[angle / 2], Cos[angle / 2]}},
-    "Label" -> Row[{"X", "(", angle, ")"}],
+    "Label" -> Superscript["X", angle],
     args
 ]
 
 QuantumOperator[{"YRotation", angle_}, args___] := QuantumOperator[
     {{Cos[angle / 2], - Sin[angle / 2]}, {Sin[angle / 2], Cos[angle / 2]}},
-    "Label" -> Row[{"Y", "(", angle, ")"}],
+    "Label" -> Superscript["Y", angle],
     args
 ]
 
 QuantumOperator[{"ZRotation", angle_}, args___] := QuantumOperator[
     SparseArray[{{1, 1} -> 1, {2, 2} -> Exp[I angle]}],
-    "Label" -> Row[{"Z", "(", angle, ")"}],
+    "Label" -> Superscript["Z", angle],
     args
 ]
 
@@ -100,6 +104,8 @@ QuantumOperator[{"CX", dimension_Integer}, args___] := QuantumOperator[{"Control
 QuantumOperator[{"CY", dimension_Integer}, args___] := QuantumOperator[{"ControlledU", {"PauliY", dimension}}, args]
 
 QuantumOperator[{"CZ", dimension_Integer}, args___] := QuantumOperator[{"ControlledU", {"PauliZ", dimension}}, args]
+
+QuantumOperator["CH", args___] := QuantumOperator[{"ControlledU", QuantumOperator["Hadamard"]}, args]
 
 
 QuantumOperator[{"ControlledU", params___}, args___] :=
@@ -232,9 +238,9 @@ QuantumOperator[{"RootNOT", dimension_Integer}, args___] := QuantumOperator[
 ]
 
 
-QuantumOperator["Hadamard", args___] := QuantumOperator[HadamardMatrix[2], "Label" -> "H", args]
+QuantumOperator["Hadamard" | "H", args___] := QuantumOperator[HadamardMatrix[2], "Label" -> "H", args]
 
-QuantumOperator[{"Hadamard", qudits_Integer ? Positive}, args___] :=
+QuantumOperator[{"Hadamard" | "H", qudits_Integer ? Positive}, args___] :=
     QuantumOperator[QuantumTensorProduct[Table[QuantumOperator["Hadamard", args], qudits]]]
 
 

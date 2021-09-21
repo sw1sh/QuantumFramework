@@ -142,9 +142,6 @@ QuantumBasisProp[qb_, "InputBasis"] := QuantumBasis[qb, "Output" -> QuditBasis[]
 
 QuantumBasisProp[qb_, "OutputBasis"] := QuantumBasis[qb, "Input" -> QuditBasis[]]
 
-QuantumBasisProp[qb_, {"Ordered", arity_Integer, order_ ? orderQ}] :=
-    QuantumBasis[qb, "Input" -> qb["Input"][{"Ordered", arity, order}], "Output" -> qb["Output"][{"Ordered", arity, order}]]
-
 
 QuantumBasisProp[qb_, "OrthogonalBasisElements"] := ArrayReshape[#, qb["BasisElementDimensions"]] & /@ (
     Orthogonalize[Flatten /@ qb["BasisElements"]]
@@ -175,4 +172,14 @@ QuantumBasisProp[qb_, "PureMaps" | "PureOperators"] :=
         QuantumState[SparseArray[{i, j} -> 1, {qb["OutputDimension"], qb["InputDimension"]}], qb],
         {i, qb["OutputDimension"]}, {j, qb["InputDimension"]}
     ]
+
+QuantumBasisProp[qb_, "Transpose"] := QuantumBasis[qb,
+    "Input" -> qb["Output"], "Output" -> qb["Input"],
+    "Label" -> Superscript[qb["Label"], "\[Dagger]"]
+]
+
+QuantumBasisProp[qb_, "Adjoint"] := QuantumBasis[qb,
+    "Input" -> qb["Output"]["Dual"], "Output" -> qb["Input"]["Dual"],
+    "Label" -> Superscript[qb["Label"], "\[Dagger]"]
+]
 
