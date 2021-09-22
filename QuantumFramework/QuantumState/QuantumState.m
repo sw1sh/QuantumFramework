@@ -91,15 +91,15 @@ Module[{
     Switch[qs["StateType"],
     "Vector",
     QuantumState[
-        PseudoInverse[newMatrixRepresentation] . (matrixRepresentation . state),
+        newMatrixRepresentation . (PseudoInverse[matrixRepresentation] . state),
         newBasis
     ],
     "Matrix",
     QuantumState[
-        PseudoInverse[newMatrixRepresentation] . (matrixRepresentation . state . PseudoInverse[matrixRepresentation]) . newMatrixRepresentation,
+        newMatrixRepresentation . (PseudoInverse[matrixRepresentation] . state . matrixRepresentation) . PseudoInverse[newMatrixRepresentation],
         newBasis]
-   ]
-  ]
+    ]
+]
 
 
 (* renew basis *)
@@ -118,3 +118,8 @@ QuantumState[qs_ ? QuantumStateQ, args___] := With[{
 QuantumState /: (qs1_QuantumState ? QuantumStateQ) == (qs2_QuantumState ? QuantumStateQ) :=
     qs1["Picture"] == qs2["Picture"] && qs1["Matrix"] == qs2["Matrix"]
 
+
+(* composition *)
+
+(qs1_QuantumState ? QuantumStateQ)[(qs2_QuantumState ? QuantumStateQ)] /; qs1["InputDimension"] == qs2["OutputDimension"] :=
+    QuantumState[Flatten[qs1["StateMatrix"] . qs2["StateMatrix"]], QuantumBasis[<|"Input" -> qs2["Input"], "Output" -> qs1["Output"], "Label" -> qs1["Label"] @* qs2["Label"]|>]]

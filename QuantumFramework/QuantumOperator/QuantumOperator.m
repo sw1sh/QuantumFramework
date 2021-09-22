@@ -33,7 +33,7 @@ QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, args___, order : (_
     newTensor = Transpose[tensor, Join[Complement[Range[rank], targetOrder], targetOrder]];
     QuantumOperator[
         ArrayReshape[newTensor, Times @@@ TakeDrop[TensorDimensions[newTensor], rank - Length[targetOrder]]],
-        args,
+        QuantumBasis[args, "Input" -> QuditBasis[dimensions[[- Length[order] ;;]]], "Output" -> QuditBasis[dimensions[[;; - Length[order] - 1]]]],
         order
     ]
 ]
@@ -60,7 +60,7 @@ QuantumOperator[matrix_ ? MatrixQ, args___, order : (_ ? orderQ) : {1}] := Modul
     result = Enclose @ Module[{newMatrix = matrix, outputs, inputs,
         basis, newOutputQuditBasis, newInputQuditBasis, state},
         {outputs, inputs} = Dimensions[newMatrix];
-        basis = QuantumBasis[args];
+        basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ];
         If[basis["InputDimension"] == 1,
             basis = QuantumBasis[basis, "Input" -> basis["Output"]]
         ];
@@ -153,13 +153,16 @@ qo["Picture"] === qo["Picture"] && (
     ordered1 = op[{"Ordered", arity}];
     ordered2 = qo[{"Ordered", arity}];
     QuantumOperator[
-        ordered2["Matrix"] . ordered1["Matrix"],
+        QuantumOperator[
+            ordered2["Matrix"] . ordered1["Matrix"],
+            QuantumBasis[<|"Input" -> QuditBasis[ordered1["InputDimension"]], "Output" -> QuditBasis[ordered2["OutputDimension"]]|>],
+            Union[ordered1["TotalOrder"], ordered2["TotalOrder"]]
+        ],
         QuantumBasis[
             ordered1["InputBasis"],
             "Output" -> ordered2["Output"],
             "Label" -> qo["Label"] @* op["Label"]
-        ],
-        ordered1["Order"]
+        ]
     ]
 ]
 

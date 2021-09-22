@@ -31,7 +31,7 @@ QuantumCircuitOperatorProp[QuantumCircuitOperator[operators_], "Operators"] := o
 
 QuantumCircuitOperatorProp[qco_, "Diagram"] := Show[drawGateGraphics[qco["Operators"]]]
 
-QuantumCircuitOperatorProp[qco_, "CircuitOperator"] := Fold[Construct, qco["Operators"]]
+QuantumCircuitOperatorProp[qco_, "CircuitOperator"] := Fold[ReverseApplied[Construct], qco["Operators"]]
 
 QuantumCircuitOperatorProp[qco_, "Gates"] := Length @ qco["Operators"]
 

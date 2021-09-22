@@ -24,6 +24,7 @@ $QuantumBasisProperties = {
      "OutputTensor", "OutputMatrix",
      "TensorRepresentation", "Tensor", "MatrixRepresentation", "Matrix",
      "Qudits", "InputQudits", "OutputQudits", "InputBasis", "OutputBasis",
+     "Dual", "Transpose", "ConjugateTranspose",
      "Picture"
 };
 
@@ -173,12 +174,14 @@ QuantumBasisProp[qb_, "PureMaps" | "PureOperators"] :=
         {i, qb["OutputDimension"]}, {j, qb["InputDimension"]}
     ]
 
+QuantumBasisProp[qb_, "Dual"] := QuantumBasis[qb, "Input" -> qb["Input"]["Dual"], "Output" -> qb["Output"]["Dual"]]
+
 QuantumBasisProp[qb_, "Transpose"] := QuantumBasis[qb,
     "Input" -> qb["Output"], "Output" -> qb["Input"],
-    "Label" -> Superscript[qb["Label"], "\[Dagger]"]
+    "Label" -> Superscript[qb["Label"], "T"]
 ]
 
-QuantumBasisProp[qb_, "Adjoint"] := QuantumBasis[qb,
+QuantumBasisProp[qb_, "Dagger" | "ConjugateTranspose"] := QuantumBasis[qb,
     "Input" -> qb["Output"]["Dual"], "Output" -> qb["Input"]["Dual"],
     "Label" -> Superscript[qb["Label"], "\[Dagger]"]
 ]

@@ -20,7 +20,7 @@ QuantumState /: MakeBoxes[qs_QuantumState /; Quiet @ QuantumStateQ[Unevaluated @
             BoxForm`SummaryItem[{"Qudits: ", qs["Qudits"]}]
         },
         {
-            BoxForm`SummaryItem[{"Type: ", qs["Type"]}],
+            BoxForm`SummaryItem[{"Type: ", Quiet @ qs["Type"]}],
             BoxForm`SummaryItem[{"Dimension: ", qs["Dimension"]}]
         },
         {
@@ -35,7 +35,8 @@ QuantumState /: MakeBoxes[qs_QuantumState /; Quiet @ QuantumStateQ[Unevaluated @
             BoxForm`SummaryItem[{"Von Neumann Entropy: ", Enclose[ConfirmQuiet[N @ qs["VonNeumannEntropy"]], $Failed &]}]
         },
         {
-            BoxForm`SummaryItem[{"Dimensions: ", MapAt[Style[#, Bold] &, qs["Dimensions"], {;; qs["InputQudits"]}]}]
+            BoxForm`SummaryItem[{"Dimensions: ",
+                If[qs["InputQudits"] > 0, MapAt[Style[#, Bold] &, qs["Dimensions"], {;; qs["InputQudits"]}], qs["Dimensions"]]}]
         }
     },
     format,

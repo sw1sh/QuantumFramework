@@ -16,7 +16,10 @@ $QuantumStateProperties = {
      "BlochPlot",
      "Projector", "NormalizedProjector",
      "Operator", "NormalizedOperator",
-     "Eigenvalues", "Eigenvectors", "Eigenstates"
+     "Eigenvalues", "Eigenvectors", "Eigenstates",
+     "Computational",
+     "RawTensor", "RawMatrix",
+     "StateTensor", "StateMatrix"
 };
 
 $QuantumStateProperties =  DeleteDuplicates @ Join[$QuantumStateProperties, QuantumBasis["Properties"]];
@@ -76,7 +79,7 @@ QuantumStateProp[qs_, "StateVector"] := Module[{result},
         qs["StateType"] === "Vector",
         qs["State"],
         qs["PureStateQ"],
-        First @ Pick[qs["Eigenvectors"], ConfirmBy[Thread[Chop[qs["Eigenvalues"]] != 0], Apply[Or]]],
+        First @ Pick[qs["Eigenvectors"], ConfirmBy[Thread[Chop[qs["Eigenvalues"]] =!= 0], Apply[Or]]],
         True,
         Message[QuantumState::notpure]; $Failed
     ];
@@ -115,12 +118,11 @@ QuantumStateProp[qs_, "Projector"] := QuantumState[Flatten @ qs["DensityMatrix"]
 
 QuantumStateProp[qs_, "NormalizedProjector"] := QuantumState[Flatten @ qs["NormalizedDensityMatrix"], QuantumBasis[qs["Basis"], "Input" -> qs["Output"]["Dual"]]]
 
-QuantumStateProp[qs_, "MatrixRepresentation" | "Matrix"] := QuantumState[qs, QuantumBasis[qs["Dimension"]]]["DensityMatrix"]
-
+QuantumStateProp[qs_, "MatrixRepresentation" | "Matrix"] := qs["Computational"]["DensityMatrix"]
 
 QuantumStateProp[qs_, "Eigenvalues"] := Eigenvalues[qs["DensityMatrix"]]
 
-QuantumStateProp[qs_, "Eigenvectors"] := Eigenvectors[qs["DensityMatrix"]]
+QuantumStateProp[qs_, "Eigenvectors"] := Normalize /@ Eigenvectors[qs["DensityMatrix"]]
 
 QuantumStateProp[qs_, "Eigenstates"] := QuantumState[#, qs["Basis"]] & /@ qs["Eigenvectors"]
 
@@ -160,6 +162,41 @@ QuantumStateProp[qs_, "PureStateQ"] := qs["Type"] === "Pure"
 
 QuantumStateProp[qs_, "MixedStateQ"] := qs["Type"] === "Mixed"
 
+
+(* transforms *)
+
+QuantumStateProp[qs_, "Computational"] := QuantumState[qs, QuantumBasis[<|
+    "Input" -> If[qs["InputDimension"] === 1, QuditBasis[], QuditBasis[qs["InputDimensions"]]],
+    "Output" -> QuditBasis[qs["OutputDimensions"]]
+|>]
+]
+
+QuantumStateProp[qs_, "Normalized"] := QuantumState[If[qs["StateType"] === "Vector", qs["NormalizedStateVector"], qs["NormalizedStateMatrix"]], qs["Basis"]]
+
+QuantumStateProp[qs_, "Pure"] := If[qs["PureStateQ"],
+    qs,
+    QuantumState[Flatten @ qs["DensityMatrix"], QuantumTensorProduct[qs["Basis"]["Dual"], qs["Basis"]]]
+]
+
+QuantumStateProp[qs_, "Transpose"] := QuantumState[Flatten @ Transpose[qs["StateMatrix"]], qs["Basis"]["Transpose"]]
+
+QuantumStateProp[qs_, "Conjugate" | "Dual"] := QuantumState[Flatten @ Conjugate[qs["StateMatrix"]], qs["Basis"]["Dual"]]
+
+QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := QuantumState[Flatten @ ConjugateTranspose[qs["StateMatrix"]], qs["Basis"]["ConjugateTranspose"]]
+
+
+
+QuantumStateProp[qs_, "RawTensor"] := If[
+    qs["PureStateQ"],
+    ArrayReshape[qs["StateVector"], qs["Dimensions"]],
+    ArrayReshape[qs["DensityMatrix"], Join[qs["Dimensions"], qs["Dimensions"]]]
+]
+
+QuantumStateProp[qs_, "RawMatrix"] := If[qs["PureStateQ"], ArrayReshape[qs["StateVector"], qs["MatrixNameDimensions"]], qs["DensityMatrix"]]
+
+QuantumStateProp[qs_, "StateTensor"] := qs["Computational"]["Pure"]["RawTensor"]
+
+QuantumStateProp[qs_, "StateMatrix"] := qs["Computational"]["Pure"]["RawMatrix"]
 
 (* block sphere*)
 

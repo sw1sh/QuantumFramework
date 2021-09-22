@@ -7,11 +7,14 @@ PackageScope["QuantumOperatorProp"]
 $QuantumOperatorProperties = {
     "MatrixRepresentation", "Matrix",
     "TensorRepresentation", "Tensor",
+    "Ordered",
     "OrderedMatrixRepresentation", "OrderedMatrix",
     "OrderedTensorRepresentation", "OrderedTensor",
     "Arity", "MaxArity", "Order", "TotalOrder",
     "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors", "Projectors",
-    "ConjugateTranspose"
+    "ConjugateTranspose",
+    "QuantumOperator", "Operator",
+    "Computational"
 };
 
 QuantumOperator["Properties"] := DeleteDuplicates @ Join[$QuantumOperatorProperties, Complement[QuantumState["Properties"], {
@@ -61,15 +64,14 @@ QuantumOperatorProp[qo_, "TensorRepresentation" | "Tensor"] := Switch[
     $Failed
 ]
 
-QuantumOperatorProp[qo_, "MatrixRepresentation" | "Matrix"] := Switch[
-    qo["StateType"],
-    "Vector",
-    ArrayReshape[qo["StateVector"], qo["MatrixNameDimensions"]],
-    "Matrix",
-    $Failed
-]
 
-QuantumOperatorProp[qo_, "Operator"] := Association @ Thread[qo["BasisElementNames"] -> Flatten[qo["MatrixRepresentation"]]]
+QuantumOperatorProp[qo_, "MatrixRepresentation" | "Matrix"] := qo["StateMatrix"]
+
+QuantumOperatorProp[qo_, "Operator"] := Association @ Thread[qo["BasisElementNames"] -> Flatten[qo["RawMatrix"]]]
+
+QuantumOperatorProp[qo_, "QuantumOperator"] := qo
+
+QuantumOperatorProp[qo_, "Computational"] := QuantumOperator[qo["State"]["Computational"], qo["Order"]]
 
 
 QuantumOperatorProp[qo_, "OrderedMatrixRepresentation" | "OrderedMatrix"] := qo[{"OrderedMatrix", qo["MaxArity"]}]
@@ -77,10 +79,10 @@ QuantumOperatorProp[qo_, "OrderedMatrixRepresentation" | "OrderedMatrix"] := qo[
 QuantumOperatorProp[qo_, "OrderedTensorRepresentation" | "OrderedTensor"] := qo[{"OrderedTensor", qo["MaxArity"]}]
 
 QuantumOperatorProp[qo_, {"OrderedMatrixRepresentation" | "OrderedMatrix", arity_Integer}] :=
-    With[{ordered = qo[{"Ordered", arity}]}, ArrayReshape[ordered["Tensor"], ordered["MatrixNameDimensions"]]]
+    With[{ordered = qo[{"Ordered", arity}]["Computational"]}, ArrayReshape[ordered["Tensor"], ordered["MatrixNameDimensions"]]]
 
 QuantumOperatorProp[qo_, {"OrderedTensorRepresentation" | "OrderedTensor", arity_Integer}] :=
-    qo[{"Ordered", arity}]["Tensor"]
+    qo[{"Ordered", arity}]["Computational"]["Tensor"]
 
 
 QuantumOperatorProp[qo_, {"PermuteInput", perm_Cycles}] := QuantumOperator[
@@ -108,7 +110,7 @@ QuantumOperatorProp[qo_, {"Ordered", qudits_Integer}] := If[qo["InputDimension"]
             ],
             qo
         ][{
-            "PermuteInput", InversePermutation @ FindPermutation[Join[qo["Order"], Complement[Range[arity], qo["Order"]]]]
+            "PermuteInput", FindPermutation[Join[qo["Order"], Complement[Range[arity], qo["Order"]]]]
         }]
     ]
 ]
@@ -125,7 +127,7 @@ QuantumOperatorProp[qo_, "Eigenvectors"] := Eigenvectors[qo["Matrix"]]
 
 QuantumOperatorProp[qo_, "Projectors"] := projector /@ qo["Eigenvectors"]
 
-QuantumOperatorProp[qo_, "ConjugateTranspose"] := QuantumOperator[ConjugateTranspose[qo["Matrix"]], qo["Order"]]
+QuantumOperatorProp[qo_, "Dagger" | "ConjugateTranspose"] := QuantumOperator[ConjugateTranspose[qo["Matrix"]], qo["Basis"]["Dagger"], qo["Order"]]
 
 
 (* state properties *)

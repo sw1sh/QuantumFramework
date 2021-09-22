@@ -29,17 +29,22 @@ QuantumBasis[<|
 
 (* state x state *)
 
-QuantumTensorProduct[qds1_QuantumState, qds2_QuantumState] := Enclose[
-    ConfirmAssert[ConfirmBy[qds1, QuantumStateQ]["Picture"] === ConfirmBy[qds2, QuantumStateQ]["Picture"]];
-    QuantumState[
-        If[qds1["StateType"] === qds2["StateType"] === "Vector",
+QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] := Enclose[
+    ConfirmAssert[ConfirmBy[qs1, QuantumStateQ]["Picture"] === ConfirmBy[qs2, QuantumStateQ]["Picture"]];
+    QuantumState[QuantumState[
+        If[qs1["StateType"] === qs2["StateType"] === "Vector",
             Flatten[KroneckerProduct[
-                ArrayReshape[qds1["StateVector"], qds1["MatrixNameDimensions"]],
-                ArrayReshape[qds2["StateVector"], qds2["MatrixNameDimensions"]]
+                qs1["StateMatrix"],
+                qs2["StateMatrix"]
             ]],
-            KroneckerProduct[qds1["DensityMatrix"], qds2["DensityMatrix"]]
+            KroneckerProduct[qs1["Matrix"], qs2["Matrix"]]
         ],
-        QuantumTensorProduct[qds1["Basis"], qds2["Basis"]]
+        QuantumBasis[<|
+            "Input" -> QuditBasis[Join[qs1["InputDimensions"], qs2["InputDimensions"]]],
+            "Output" -> QuditBasis[Join[qs1["OutputDimensions"], qs2["OutputDimensions"]]]
+        |>]
+    ],
+        QuantumTensorProduct[qs1["Basis"], qs2["Basis"]]
     ]
 ]
 
@@ -51,7 +56,7 @@ QuantumTensorProduct[qdo1_QuantumOperator, qdo2_QuantumOperator] :=
 
 
 QuantumTensorProduct[qmo1_QuantumMeasurementOperator, qmo2_QuantumMeasurementOperator] :=
-    QuantumMeasurementOperator[QuantumTensorProduct[qmo1["Operator"], qmo2["Operator"]]]
+    QuantumMeasurementOperator[QuantumTensorProduct[qmo1["QuantumOperator"], qmo2["QuantumOperator"]], Union[qmo1["Order"], qmo2["Order"]]]
 
 
 QuantumTensorProduct[_, _] := Failure[QuantumTensorProduct, "Undefined"]

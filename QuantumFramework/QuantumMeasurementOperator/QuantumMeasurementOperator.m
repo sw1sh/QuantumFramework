@@ -22,31 +22,54 @@ QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumOperatorQ], 
     Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumOperator[args], QuantumOperatorQ]]
 
 
+(* mutation *)
 
+QuantumMeasurementOperator[op_ ? QuantumFrameworkOperatorQ, order_ ? orderQ] := QuantumMeasurementOperator[Head[op][op, order]]
 
 (* composition *)
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qs_ ? QuantumStateQ] := Enclose @ Module[{
-    matrix, values, projectors, probabilities, newStates, nonZeroProbabilities
+    matrix, densityMatrix, partialTrace, values, projectors, probabilities, newStates, zeroProbabilities
 },
     ConfirmAssert[Divisible[qs["OutputDimension"], qmo["InputDimension"]], "Operator dimension is not a multiple of state dimension"];
-    matrix = qmo[{"OrderedMatrix", qs["Qudits"]}];
+
+
+    (*matrix = qmo["Matrix"];*)
+
+    partialTrace = ResourceFunction["MatrixPartialTrace"][#, Except[qmo["Order"]], qs["OutputDimensions"]] &;
+
+    matrix = partialTrace[qmo[{"OrderedMatrix", qs["OutputQudits"]}]];
+
+    densityMatrix = partialTrace[qs["Computational"]["NormalizedDensityMatrix"]];
+
     projectors = If[qmo["ProjectionQ"],
-        projector /@ Eigenvectors[matrix],
-        MatrixPower[#, 1 / 2] & /@ qmo[{"OrderedTensor", qs["Qudits"]}]
+        projector @* Normalize /@ Eigenvectors[matrix],
+        MatrixPower[#, 1 / 2] & /@ qmo["Tensor"]
     ];
-    probabilities = Re @ Tr[qs["NormalizedDensityMatrix"] . #] & /@ projectors;
-    nonZeroProbabilities = Position[probabilities, 0];
-    projectors = Delete[projectors, nonZeroProbabilities];
-    probabilities = Delete[probabilities, nonZeroProbabilities];
-    newStates = MapThread[QuantumState[ConjugateTranspose[#1] . qs["NormalizedDensityMatrix"] . #1 / #2] &, {projectors, probabilities}];
-    values = If[qmo["ProjectionQ"], Eigenvalues[matrix], Range[First @ qmo["OutputDimensions"]]];
-    values = Catenate @ KeyValueMap[With[{v = #1, m = #2}, If[m > 1, Superscript[v, #] & /@ Range[m], {v}]] &, Counts[Delete[values, nonZeroProbabilities]]];
+
+    probabilities = Re @ Tr[densityMatrix . #] & /@ projectors;
+
+    zeroProbabilities = Position[probabilities, 0];
+    projectors = Delete[projectors, zeroProbabilities];
+    probabilities = Delete[probabilities, zeroProbabilities];
+    newStates = MapThread[
+        QuantumState[
+            ConjugateTranspose[#1] . densityMatrix . #1 / #2,
+            QuantumBasis["Input" -> QuditBasis[], "Output" -> QuditBasis[qs["OutputDimensions"][[qmo["Order"]]] ]]
+        ] &,
+        {projectors, probabilities}
+    ];
+    values = If[qmo["ProjectionQ"], QuditBasis[qs["OutputDimensions"][[qmo["Order"]]]]["Names"] (*Eigenvalues[matrix]*), Range[First @ qmo["OutputDimensions"]]];
+    values = Delete[values, zeroProbabilities];
+    (*values = Catenate @ KeyValueMap[With[{v = #1, m = #2}, If[m > 1, Superscript[v, #] & /@ Range[m], {v}]] &, Counts[Delete[values, zeroProbabilities]]];*)
     QuantumMeasurement[AssociationThread[values, probabilities], newStates]
 ]
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[op_ ? QuantumFrameworkOperatorQ] :=
-    QuantumMeasurementOperator[qmo["QuantumOperator"][op]]
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[op_ ? QuantumFrameworkOperatorQ] := With[{
+    newOp = qmo["QuantumOperator"][op["QuantumOperator"]]
+},
+    QuantumMeasurementOperator[newOp, If[QuantumMeasurementOperatorQ[op], Union[qmo["Order"], op["Order"]], qmo["Order"]]]
+]
 
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qm_QuantumMeasurement] := Module[{

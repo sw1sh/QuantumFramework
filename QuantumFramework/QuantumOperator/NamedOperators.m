@@ -107,6 +107,10 @@ QuantumOperator[{"CZ", dimension_Integer}, args___] := QuantumOperator[{"Control
 
 QuantumOperator["CH", args___] := QuantumOperator[{"ControlledU", QuantumOperator["Hadamard"]}, args]
 
+QuantumOperator["CT", args___] := QuantumOperator[{"ControlledU", QuantumOperator["T"]}, args]
+
+QuantumOperator["CS", args___] := QuantumOperator[{"ControlledU", QuantumOperator["S"]}, args]
+
 
 QuantumOperator[{"ControlledU", params___}, args___] :=
     QuantumOperator[{"ControlledU", QuantumOperator[params]}, args]
@@ -130,7 +134,7 @@ QuantumOperator[{"Fourier", dimension_Integer}, args___, order_ ? orderQ] := Qua
 
 QuantumOperator["InverseFourier", args___] := QuantumOperator[{"InverseFourier", 2}, args]
 
-QuantumOperator[{"InverseFourier", dimension_Integer}, args___, order_?orderQ] := QuantumOperator[
+QuantumOperator[{"InverseFourier", dimension_Integer}, args___, order_ ? orderQ] := QuantumOperator[
      SparseArray[
         ({i_, j_} :> Exp[-2 Pi I (i - 1) (j - 1) / (dimension ^ Length[order])] / Sqrt[dimension ^ Length[order]]),
         {dimension ^ Length[order], dimension ^ Length[order]}
@@ -244,7 +248,7 @@ QuantumOperator[{"Hadamard" | "H", qudits_Integer ? Positive}, args___] :=
     QuantumOperator[QuantumTensorProduct[Table[QuantumOperator["Hadamard", args], qudits]]]
 
 
-QuantumOperator["Toffoli", args___, order_?orderQ] := QuantumOperator[{"Toffoli", Length[order]}, args, order]
+QuantumOperator["Toffoli", args___, order_ ? orderQ] := QuantumOperator[{"Toffoli", Length[order]}, args, order]
 
 QuantumOperator[{"Toffoli", arity_Integer}, args___] := QuantumOperator[
     SparseArray[{i_, j_} :>
@@ -254,6 +258,7 @@ QuantumOperator[{"Toffoli", arity_Integer}, args___] := QuantumOperator[
             0
         ], {2 ^ arity, 2 ^ arity}
     ],
+    2, 3,
     args
 ]
 

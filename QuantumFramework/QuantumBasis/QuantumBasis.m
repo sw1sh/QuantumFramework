@@ -75,6 +75,7 @@ QuantumBasis[data_Association, args__] := Fold[QuantumBasis, QuantumBasis[data],
 
 QuantumBasis[elements_Association ? (Not @* KeyExistsQ["Output"]), args___] := QuantumBasis[<|"Output" -> QuditBasis[elements]|>, args]
 
+QuantumBasis[dimensions_List, args___] := QuantumBasis[<|"Output" -> QuditBasis[dimensions]|>, args]
 
 
 (* defaults *)
