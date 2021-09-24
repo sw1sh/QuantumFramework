@@ -34,15 +34,12 @@ QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] := Enclose[
     QuantumState[QuantumState[
         If[qs1["StateType"] === qs2["StateType"] === "Vector",
             Flatten[KroneckerProduct[
-                qs1["StateMatrix"],
-                qs2["StateMatrix"]
+                qs1["Matrix"],
+                qs2["Matrix"]
             ]],
-            KroneckerProduct[qs1["Matrix"], qs2["Matrix"]]
+            KroneckerProduct[qs1["MatrixRepresentation"], qs2["MatrixRepresentation"]]
         ],
-        QuantumBasis[<|
-            "Input" -> QuditBasis[Join[qs1["InputDimensions"], qs2["InputDimensions"]]],
-            "Output" -> QuditBasis[Join[qs1["OutputDimensions"], qs2["OutputDimensions"]]]
-        |>]
+        QuantumBasis[Join[qs1["OutputDimensions"], qs2["OutputDimensions"]], Join[qs1["InputDimensions"], qs2["InputDimensions"]]]
     ],
         QuantumTensorProduct[qs1["Basis"], qs2["Basis"]]
     ]

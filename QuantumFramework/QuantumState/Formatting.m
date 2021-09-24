@@ -5,7 +5,7 @@ Package["QuantumFramework`"]
 QuantumState /: MakeBoxes[qs_QuantumState /; Quiet @ QuantumStateQ[Unevaluated @ qs], format_] := With[{
     icon = MatrixPlot[
         Check[
-            Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], qs["Matrix"], {2}],
+            Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], qs["MatrixRepresentation"], {2}],
             RandomReal[{0, 1}, {qs["Dimension"], qs["Dimension"]}]
         ],
         ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},
@@ -36,7 +36,7 @@ QuantumState /: MakeBoxes[qs_QuantumState /; Quiet @ QuantumStateQ[Unevaluated @
         },
         {
             BoxForm`SummaryItem[{"Dimensions: ",
-                If[qs["InputQudits"] > 0, MapAt[Style[#, Bold] &, qs["Dimensions"], {;; qs["InputQudits"]}], qs["Dimensions"]]}]
+                If[qs["InputQudits"] > 0, MapAt[Style[#, Bold] &, qs["Dimensions"], {- qs["InputQudits"] ;; }], qs["Dimensions"]]}]
         }
     },
     format,

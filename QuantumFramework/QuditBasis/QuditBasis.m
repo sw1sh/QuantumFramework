@@ -7,7 +7,15 @@ PackageScope["QuditBasisQ"]
 
 
 
-QuditBasis["Properties"] = {"Association", "Names", "Elements", "Qudits", "Dimensions", "Dual"}
+QuditBasis["Properties"] = {
+    "Association", "Names", "Elements",
+    "Size", "Qudits",
+    "Dimensions", "NameRank", "NameTensor",
+    "ElementDimensions", "ElementDimension", "Rank",
+    "MatrixDimensions", "TensorDimensions",
+    "Matrix", "Tensor",
+    "Dual", "Reverse"
+}
 
 
 
@@ -23,6 +31,7 @@ quditBasisQ[QuditBasis[names_List, elements_List]] := Enclose[
 Module[{
     elementQudits, numericElements
 },
+    ConfirmAssert[Length[names] == Length[elements]];
     ConfirmAssert[AllTrue[names, MatchQ[_QuditBasisName]]];
     elementQudits = #["Qudits"] & /@ names;
 
@@ -84,25 +93,48 @@ QuditBasisProp[_, "Properties"] := QuditBasis["Properties"]
 
 QuditBasisProp[QuditBasis[names_, elements_], "Association"] := AssociationThread[names, elements]
 
-QuditBasisProp[QuditBasis[names_, _], "Names"] := names
+QuditBasisProp[QuditBasis[names_, _], "Names"] := names(*Sort[names]*)
 
-QuditBasisProp[QuditBasis[_, elements_], "Elements"] := elements
+QuditBasisProp[QuditBasis[names_, elements_], "Elements"] := elements(*[[Ordering[names]]]*)
+
+QuditBasisProp[qb_, "Size"] := Length[qb["Names"]]
 
 QuditBasisProp[qb_, "Qudits"] := If[Length[qb["Names"]] > 0, First[qb["Names"]]["Qudits"], 0]
 
 QuditBasisProp[qb_, "Dimensions"] := CountDistinct /@ Transpose[Normal /@ qb["Names"]]
 
+QuditBasisProp[qb_, "NameRank"] := Length @ qb["Dimensions"]
+
+QuditBasisProp[qb_, "ElementDimensions"] := Dimensions @ First[MaximalBy[qb["Elements"], ArrayDepth], 0]
+
+QuditBasisProp[qb_, "ElementDimension"] := Times @@ qb["ElementDimensions"]
+
+QuditBasisProp[qb_, "Rank"] := Length @ qb["ElementDimensions"]
+
+QuditBasisProp[qb_, "NameTensor"] := ArrayReshape[qb["Names"], qb["Dimensions"]]
+
 QuditBasisProp[qb_, "Dimension"] := Times @@ qb["Dimensions"]
 
-QuditBasisProp[qb_, "Rank"] := Length @ qb["Dimensions"]
+QuditBasisProp[qb_, "MatrixDimensions"] := {qb["ElementDimension"], qb["Dimension"]}
+
+QuditBasisProp[qb_, "TensorDimensions"] := Join[qb["ElementDimensions"], qb["Dimensions"]]
+
+QuditBasisProp[qb_, "Tensor"] := ArrayReshape[Transpose[qb["Elements"], Cycles[{RotateRight @ Range[qb["Rank"] + 1, 1 , -1]}]], qb["TensorDimensions"]]
+
+QuditBasisProp[qb_, "Matrix"] := ArrayReshape[qb["Tensor"], qb["MatrixDimensions"]]
 
 QuditBasisProp[qb_, "Dual"] := QuditBasis[#["Dual"] & /@ qb["Names"], qb["Elements"]]
 
+QuditBasisProp[qb_, "DualQ"] := AllTrue[qb["Names"], #["DualQ"] &]
+
 QuditBasisProp[qb_, "Reverse"] := QuditBasis[Reverse @ qb["Names"], Reverse @ qb["Elements"]]
+
+QuditBasisProp[qb_, "Canonical"] := With[{ordering = Ordering[qb["Names"]]}, QuditBasis[qb["Names"][[ordering]], qb["Elements"][[ordering]]]]
+
 
 QuditBasisProp[qb_, {"Permute", perm_Cycles}] := Enclose @ QuditBasis[
     #[{"Permute", perm}] & /@ qb["Names"],
-    Transpose[If[TensorRank[#] === qb["Rank"], #, Confirm @ ArrayReshape[#, qb["Dimensions"]]], perm] & /@ qb["Elements"]
+    ArrayReshape[Transpose[If[TensorRank[#] === qb["NameRank"], #, Confirm @ ArrayReshape[#, qb["Dimensions"]]], perm], qb["ElementDimensions"]] & /@ qb["Elements"]
 ]
 
 QuditBasisProp[qb_, {"Ordered", qudits_Integer, order_ ? orderQ}] := If[qb["Dimension"] <= 1, qb,
@@ -141,5 +173,5 @@ QuditBasis[name : _String | {_String, Except[_List]} | _Integer, multiplicity_In
 
 
 QuditBasis /: MakeBoxes[qb_QuditBasis /; QuditBasisQ[Unevaluated @ qb], format_] :=
-    ToBoxes[qb["Association"], format]
+    With[{boxes = ToBoxes[qb["Association"], format]}, InterpretationBox[boxes, qb]]
 

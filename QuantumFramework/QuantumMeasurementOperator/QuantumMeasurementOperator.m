@@ -31,12 +31,14 @@ QuantumMeasurementOperator[op_ ? QuantumFrameworkOperatorQ, order_ ? orderQ] := 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qs_ ? QuantumStateQ] := Enclose @ Module[{
     matrix, densityMatrix, partialTrace, values, projectors, probabilities, newStates, zeroProbabilities
 },
-    ConfirmAssert[Divisible[qs["OutputDimension"], qmo["InputDimension"]], "Operator dimension is not a multiple of state dimension"];
+    ConfirmAssert[qmo["Arity"] <= qs["OutputQudits"], "Operator's arity should be less or equal to number of state's output qudits"];
+    ConfirmAssert[qs["OutputDimensions"][[ qmo["Order"] ]] == qmo["InputDimensions"][[ qmo["Order"] ]],
+        "Operator's input dimensions should be equal state's output dimensions for a given order"];
 
 
     (*matrix = qmo["Matrix"];*)
 
-    partialTrace = ResourceFunction["MatrixPartialTrace"][#, Except[qmo["Order"]], qs["OutputDimensions"]] &;
+    partialTrace = ResourceFunction["MatrixPartialTrace"][#, Except[qmo["Order"]], qs["OutputDimension"]] &;
 
     matrix = partialTrace[qmo[{"OrderedMatrix", qs["OutputQudits"]}]];
 

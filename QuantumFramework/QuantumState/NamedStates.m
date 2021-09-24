@@ -2,8 +2,10 @@ Package["QuantumFramework`"]
 
 
 
-QuantumState[name_ ? nameQ, args : PatternSequence[] | Except[PatternSequence[_Integer ? Positive, ___]]] := QuantumState[name, 2, args]
+(*QuantumState[name_ ? nameQ, args : PatternSequence[] | Except[PatternSequence[_Integer ? Positive, ___]]] := QuantumState[name, 2, args]*)
 
+QuantumState[name_ ? nameQ, basisName : Except[Alternatives @@ $QuantumBasisPictures, _ ? nameQ]] :=
+    QuantumState[QuantumState[name], QuantumBasis[basisName]]
 
 QuantumState["Plus", args___] := QuantumState[Normalize @ {1, 1}, args]
 
@@ -28,7 +30,7 @@ QuantumState[{name : "Plus" | "Minus" | "Left" | "Right" | "PsiPlus" | "PsiMinus
 
 QuantumState[{"BasisState", basisElement_List}, args___] := QuantumState[{"BasisState", basisElement}, 2, args]
 
-QuantumState[{"BasisState", basisElement_List}, dimension_Integer ? Positive, args___] := QuantumState[
+QuantumState[{"BasisState", basisElement_List}, dimension : (_Integer ? Positive) : 2, args___] := QuantumState[
     With[{elementPosition = FromDigits[basisElement, dimension] + 1, basisSize = Length[basisElement]},
         SparseArray[{elementPosition} -> 1, {dimension ^ basisSize}]
     ],
@@ -39,37 +41,37 @@ QuantumState[{"BasisState", basisElement_List}, dimension_Integer ? Positive, ar
 
 QuantumState[{"Register", subsystemCount_Integer}, args___] := QuantumState[{"Register", subsystemCount, 0}, args]
 
-QuantumState[{"Register", subsystemCount_Integer, state_Integer ? NonNegative}, dimension_Integer ? Positive, args___] :=
+QuantumState[{"Register", subsystemCount_Integer, state_Integer ? NonNegative}, dimension : (_Integer ? Positive) : 2, args___] :=
     QuantumState[SparseArray[{{state + 1} -> 1}, {dimension ^ subsystemCount}], dimension, args]
 
 
 QuantumState["UniformSuperposition", args___] := QuantumState[{"UniformSuperposition", 1}, args]
 
-QuantumState[{"UniformSuperposition", subsystemCount_Integer}, dimension_Integer ? Positive, args___] :=
+QuantumState[{"UniformSuperposition", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
     QuantumState[ConstantArray[1, dimension ^ subsystemCount], dimension, args]
 
 
 QuantumState["UniformMixture", args___] := QuantumState[{"UniformMixture", 1}, args]
 
-QuantumState[{"UniformMixture", subsystemCount_Integer}, dimension_Integer ? Positive, args___] :=
+QuantumState[{"UniformMixture", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
     QuantumState[IdentityMatrix[dimension ^ subsystemCount], dimension, args]
 
 
 QuantumState["RandomPure", args___] :=  QuantumState[{"RandomPure", 1}, args]
 
-QuantumState[{"RandomPure", subsystemCount_Integer}, dimension_Integer ? Positive, args___] :=
+QuantumState[{"RandomPure", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
     QuantumState[RandomComplex[{-1 - I, 1 + I}, dimension ^ subsystemCount], dimension, args]
 
 
 QuantumState["GHZ", args___] := QuantumState[{"GHZ", 3}, args]
 
-QuantumState[{"GHZ", subsystemCount_Integer}, dimension_Integer ? Positive, args___] :=
+QuantumState[{"GHZ", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
     QuantumState[SparseArray[{{1} -> 1, {dimension ^ subsystemCount} -> 1}, {dimension ^ subsystemCount}], dimension, args]
 
 
 QuantumState["W", args___] := QuantumState[{"W", 3}, args]
 
-QuantumState[{"W", subsystemCount_Integer}, dimension_Integer ? Positive, args___] :=
+QuantumState[{"W", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
     QuantumState[SparseArray[{element_} /; IntegerQ[Log[dimension, element - 1]] -> 1, {dimension ^ subsystemCount}], dimension, args]
 
 
@@ -95,7 +97,7 @@ QuantumState[{"Graph", graph_ ? GraphQ}, args___] := Module[{
 
     QuantumState[
         Fold[
-            OrderedMatrixRepresentation[controlledZGate, quditCount, #2] . #1 &,
+            QuantumOperator["CZ", #2][{"OrderedMatrix", quditCount}] . #1 &,
             uniformSuperposition,
             entanglements
         ],

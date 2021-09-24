@@ -64,7 +64,9 @@ QuantumBasisQ[___] := False
 
 QuantumBasis[qb_QuantumBasis] := qb
 
-QuantumBasis[QuantumBasis[data_Association], picture_String] := QuantumBasis[<|data, "Picture" -> picture|>]
+QuantumBasis[picture : Alternatives @@ $QuantumBasisPictures] := QuantumBasis["Computational", picture]
+
+QuantumBasis[QuantumBasis[data_Association], picture : Alternatives @@ $QuantumBasisPictures] := QuantumBasis[<|data, "Picture" -> picture|>]
 
 QuantumBasis[QuantumBasis[data_Association], rules : _Rule ..] := QuantumBasis[<|data, rules|>]
 
@@ -76,6 +78,9 @@ QuantumBasis[data_Association, args__] := Fold[QuantumBasis, QuantumBasis[data],
 QuantumBasis[elements_Association ? (Not @* KeyExistsQ["Output"]), args___] := QuantumBasis[<|"Output" -> QuditBasis[elements]|>, args]
 
 QuantumBasis[dimensions_List, args___] := QuantumBasis[<|"Output" -> QuditBasis[dimensions]|>, args]
+
+QuantumBasis[outputDimensions_List, inputDimensions_List, args___] :=
+    QuantumBasis[<|"Output" -> QuditBasis[outputDimensions], "Input" -> QuditBasis[inputDimensions]|>, args]
 
 
 (* defaults *)

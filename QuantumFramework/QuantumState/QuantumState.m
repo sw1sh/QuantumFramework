@@ -41,9 +41,9 @@ QuantumState[state_ ? AssociationQ, basisArgs___] /; VectorQ[Values[state]] := E
     basis = ConfirmBy[QuantumBasis[basisArgs], QuantumBasisQ], multiplicity},
     multiplicity = basisMultiplicity[Length[state], basis["Dimension"]];
     basis = ConfirmBy[QuantumBasis[basis, multiplicity], QuantumBasisQ];
-    ConfirmAssert[ContainsOnly[normalBasisElementName /@ Keys[state], basis["NormalBasisElementNames"]]];
+    ConfirmAssert[ContainsOnly[QuditBasisName /@ Keys[state], basis["BasisElementNames"]], "Association keys and basis names don't match"];
     QuantumState[
-        Values @ KeyMap[normalBasisElementName, state][[Key /@ basis["NormalBasisElementNames"]]] /. _Missing -> 0,
+        Values @ KeyMap[QuditBasisName, state][[Key /@ basis["BasisElementNames"]]] /. _Missing -> 0,
         basis
     ]
 ]
@@ -63,6 +63,8 @@ QuantumState["Eigenvalues" -> eigenvalues_ ? VectorQ, basisArgs___] := With[{
 
 (* expand basis *)
 
+QuantumState[state_, args : Except[_ ? QuantumBasisQ]] := Enclose @ QuantumState[state, ConfirmBy[QuantumBasis[args], QuantumBasisQ]]
+
 QuantumState[state_ ? stateQ, basis_ ? QuantumBasisQ] := QuantumState[
     state,
     QuantumTensorProduct[basis, QuantumBasis[Max[2, Length[state] - basis["Dimension"]]]]
@@ -79,32 +81,37 @@ QuantumState[state_ ? stateQ, basis_ ? QuantumBasisQ] := QuantumState[
 
 (* Mutation *)
 
+QuantumState[qs_ ? QuantumStateQ, args : Except[_ ? QuantumBasisQ, _ ? nameQ]] := 
+    Enclose @ QuantumState[qs, ConfirmBy[QuantumBasis[args], QuantumBasisQ]]
+
+QuantumState[qs_ ? QuantumStateQ, args : Except[_ ? QuantumBasisQ]] :=
+    Enclose @ QuantumState[qs, ConfirmBy[QuantumBasis[qs["Basis"], args], QuantumBasisQ]]
+
+
 (* change of basis *)
 
-QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /;
-    qs["BasisElementDimension"] === newBasis["BasisElementDimension"] :=
-Module[{
-    state = qs["State"],
-    matrixRepresentation = qs["Basis"]["Matrix"],
-    newMatrixRepresentation = newBasis["Matrix"]
-},
-    Switch[qs["StateType"],
+QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["BasisElementDimension"] === newBasis["BasisElementDimension"] := Switch[
+    qs["StateType"],
     "Vector",
     QuantumState[
-        newMatrixRepresentation . (PseudoInverse[matrixRepresentation] . state),
+        Flatten[
+            PseudoInverse[newBasis["OutputMatrix"]] . (qs["OutputMatrix"] . qs["StateMatrix"] . PseudoInverse[qs["InputMatrix"]]) . newBasis["InputMatrix"]
+        ],
         newBasis
     ],
     "Matrix",
     QuantumState[
-        newMatrixRepresentation . (PseudoInverse[matrixRepresentation] . state . matrixRepresentation) . PseudoInverse[newMatrixRepresentation],
-        newBasis]
+        PseudoInverse[newBasis["OutputMatrix"]] . (qs["OutputMatrix"] . qs["DensityMatrix"] . PseudoInverse[qs["InputMatrix"]]) . newBasis["InputMatrix"],
+        newBasis
     ]
 ]
 
 
 (* renew basis *)
 
-QuantumState[qs_ ? QuantumStateQ, args___] := With[{
+QuantumState[qs_ ? QuantumStateQ] := qs["Computational"]
+
+QuantumState[qs_ ? QuantumStateQ, args__] := With[{
     newBasis = QuantumBasis[qs["Basis"], args]},
     If[ qs["Basis"] === newBasis,
         qs,
@@ -116,10 +123,13 @@ QuantumState[qs_ ? QuantumStateQ, args___] := With[{
 (* equality *)
 
 QuantumState /: (qs1_QuantumState ? QuantumStateQ) == (qs2_QuantumState ? QuantumStateQ) :=
-    qs1["Picture"] == qs2["Picture"] && qs1["Matrix"] == qs2["Matrix"]
+    qs1["Picture"] == qs2["Picture"] && qs1["MatrixRepresentation"] == qs2["MatrixRepresentation"]
 
 
 (* composition *)
 
 (qs1_QuantumState ? QuantumStateQ)[(qs2_QuantumState ? QuantumStateQ)] /; qs1["InputDimension"] == qs2["OutputDimension"] :=
-    QuantumState[Flatten[qs1["StateMatrix"] . qs2["StateMatrix"]], QuantumBasis[<|"Input" -> qs2["Input"], "Output" -> qs1["Output"], "Label" -> qs1["Label"] @* qs2["Label"]|>]]
+    QuantumState[
+        QuantumState[Flatten[qs1["MatrixRepresentation"] . qs2["MatrixRepresentation"]], QuantumBasis[{qs1["OutputDimension"], qs2["InputDimension"]}]],
+        QuantumBasis[<|"Input" -> qs2["Input"], "Output" -> qs1["Output"], "Label" -> qs1["Label"] @* qs2["Label"]|>]
+    ]

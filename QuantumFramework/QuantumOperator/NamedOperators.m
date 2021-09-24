@@ -15,6 +15,11 @@ controlledZGate = ReplacePart[
     ]
 ];
 
+
+QuantumOperator[name_ ? nameQ, basisName : Except[Alternatives @@ $QuantumBasisPictures, _ ? nameQ]] :=
+    QuantumOperator[QuantumOperator[name], QuantumBasis[basisName]]
+
+
 QuantumOperator["Identity", args___] := QuantumOperator[{"Identity", 2}, args]
 
 QuantumOperator[{"Identity", dimension_Integer}, args___] := QuantumOperator[IdentityMatrix[dimension], dimension, args]
@@ -184,9 +189,9 @@ QuantumOperator[{"SUM", dimension_Integer}, args___] := QuantumOperator[
 ]
 
 
-QuantumOperator[name : "PauliX" | "PauliY" | "PauliZ", args___] := QuantumOperator[{name, 2}, args]
+QuantumOperator[name : "X" | "Y" | "Z" | "PauliX" | "PauliY" | "PauliZ", args___] := QuantumOperator[{name, 2}, args]
 
-QuantumOperator[{"PauliX", dimension_Integer}, args___] := With[{
+QuantumOperator[{"PauliX" | "X", dimension_Integer}, args___] := With[{
     s = (dimension - 1) / 2
 },
     QuantumOperator[
@@ -200,7 +205,7 @@ QuantumOperator[{"PauliX", dimension_Integer}, args___] := With[{
     ]
 ]
 
-QuantumOperator[{"PauliY", dimension_Integer}, args___] := With[{
+QuantumOperator[{"PauliY" | "Y", dimension_Integer}, args___] := With[{
     s = (dimension - 1) / 2
 },
     QuantumOperator[
@@ -214,7 +219,7 @@ QuantumOperator[{"PauliY", dimension_Integer}, args___] := With[{
     ]
 ]
 
-QuantumOperator[{"PauliZ", dimension_Integer}, args___] := With[{
+QuantumOperator[{"PauliZ" | "Z", dimension_Integer}, args___] := With[{
     s = (dimension - 1) / 2
 },
     QuantumOperator[

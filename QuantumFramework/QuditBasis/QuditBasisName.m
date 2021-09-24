@@ -42,6 +42,7 @@ QuditBasisName[] := QuditBasisName[$QuditIdentity]
 
 QuditBasisName[{}] := QuditBasisName[$QuditZero]
 
+QuditBasisName[name_] := QuditBasisName[name, "Dual" -> False]
 
 _QuditBasisName["Properties"] := QuditBasisName["Properties"]
 
@@ -75,13 +76,18 @@ groupQuditBasisName[qbn_QuditBasisName] := QuditBasisName[##, "Dual" -> qbn["Dua
             QuditBasisName[Flatten[#["Name"] & /@ qbns], "Dual" -> First[qbns]["DualQ"]]
 ]
 
-qbn_QuditBasisName[{"Permute", perm_Cycles}] := groupQuditBasisName @ QuditBasisName @ Permute[splitQuditBasisName[qbn], perm]
-
-
 qbn_QuditBasisName["Group"] := groupQuditBasisName @ qbn
 
+qbn_QuditBasisName[{"Permute", perm_Cycles}] := (QuditBasisName @@ Permute[Normal[qbn], perm])["Group"]
 
-QuantumTensorProduct[qbn1_QuditBasisName, qbn2_QuditBasisName] := (*groupQuditBasisName @ QuditBasisName @ splitQuditBasisName @ *)Which[
+qbn_QuditBasisName["Take", arg_] := (QuditBasisName @@ Take[Normal[qbn], arg])["Group"]
+
+qbn_QuditBasisName["Drop", arg_] := (QuditBasisName @@ Drop[Normal[qbn], arg])["Group"]
+
+qbn_QuditBasisName["Delete", arg_] := (QuditBasisName @@ Delete[Normal[qbn], arg])["Group"]
+
+
+QuantumTensorProduct[qbn1_QuditBasisName, qbn2_QuditBasisName] := Which[
     qbn1["Name"] === $QuditZero || qbn2["Name"] === $QuditZero,
     QuditBasisName[$QuditZero],
     qbn1["Name"] === $QuditIdentity,
@@ -92,13 +98,17 @@ QuantumTensorProduct[qbn1_QuditBasisName, qbn2_QuditBasisName] := (*groupQuditBa
     QuditBasisName[Flatten @ {qbn1["Name"], qbn2["Name"]}],
     True,
     QuditBasisName[qbn1, qbn2]
+]["Group"]
+
+
+QuditBasisName /: MakeBoxes[qbn : QuditBasisName[name_, OptionsPattern[]], format_] := With[{
+    boxes = Switch[name, $QuditZero, "\[EmptySet]", $QuditIdentity, "\[ScriptOne]", _,
+            TemplateBox[{RowBox[Riffle[ToBoxes[#, format] & /@ {##}, "\[InvisibleSpace]"]]}, If[qbn["DualQ"], "Bra", "Ket"]] & @@
+                If[qbn["Qudits"] > 1, name, {name}]]
+},
+    InterpretationBox[boxes, qbn]
 ]
 
-
-QuditBasisName /: MakeBoxes[qbn : QuditBasisName[name_, OptionsPattern[]], format_] :=
-    Switch[name, $QuditZero, "\[EmptySet]", $QuditIdentity, "\[ScriptOne]", _,
-        TemplateBox[{RowBox[Riffle[ToBoxes[#, format] & /@ {##}, "\[InvisibleSpace]"]]}, If[qbn["DualQ"], "Bra", "Ket"]] & @@ If[qbn["Qudits"] > 1, name, {name}]]
-
 QuditBasisName /: MakeBoxes[qbn : QuditBasisName[names__, OptionsPattern[]], format_] :=
-    ToBoxes[Row @ If[qbn["DualQ"], Map[#["Dual"] &], Identity] @ {names}, format]
+    ToBoxes[Interpretation[Row @ If[qbn["DualQ"], Map[#["Dual"] &], Identity] @ {names}, qbn], format]
 
