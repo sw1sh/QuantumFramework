@@ -70,7 +70,7 @@ splitQuditBasisName[qbn : QuditBasisName[names___, OptionsPattern[]]] :=
 QuditBasisName /: Normal[qbn_QuditBasisName] := splitQuditBasisName @ qbn
 
 
-groupQuditBasisName[qbn_QuditBasisName] := QuditBasisName[##, "Dual" -> qbn["DualQ"]] & @@
+groupQuditBasisName[qbn_QuditBasisName] := QuditBasisName @@
     SequenceReplace[Normal[qbn],
         qbns : {Repeated[_QuditBasisName, {2, Infinity}]} /; Equal @@ (#["DualQ"] & /@ qbns) :>
             QuditBasisName[Flatten[#["Name"] & /@ qbns], "Dual" -> First[qbns]["DualQ"]]
@@ -95,7 +95,7 @@ QuantumTensorProduct[qbn1_QuditBasisName, qbn2_QuditBasisName] := Which[
     qbn2["Name"] === $QuditIdentity,
     qbn1,
     qbn1["DualQ"] === qbn2["DualQ"],
-    QuditBasisName[Flatten @ {qbn1["Name"], qbn2["Name"]}],
+    QuditBasisName[Flatten @ {qbn1["Name"], qbn2["Name"]}, "Dual" -> qbn1["DualQ"]],
     True,
     QuditBasisName[qbn1, qbn2]
 ]["Group"]
