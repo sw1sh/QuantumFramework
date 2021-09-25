@@ -74,13 +74,16 @@ QuditBasis[qb_QuditBasis] := qb
 ]*)
 
 QuditBasis[assoc_Association, args___] := QuditBasis[Keys[assoc],
-    Association @ KeyValueMap[If[MatchQ[#1, _QuditBasisName], #1["Name"] -> If[#1["DualQ"], Conjugate[#2], #2], #1 -> #2] &, assoc], args]
+    KeyMap[{If[MatchQ[#, _QuditBasisName], #["Name"], #], 1} &, assoc], args]
 
 QuditBasis[names_List, elements_List, args___] :=
     QuditBasis[AssociationThread[names, elements], args]
 
 QuditBasis[names_List, elements_Association] /; Not @ AllTrue[names, MatchQ[_QuditBasisName]] :=
     QuditBasis[Map[QuditBasisName, names], elements]
+
+QuditBasis[names_List, elements_Association] /; Not @ AllTrue[Keys[elements], MatchQ[{_, _Integer ? Positive}]] :=
+    QuditBasis[names, KeyMap[{#, 1} &, elements]]
 
 qb_QuditBasis /; System`Private`HoldNotValidQ[qb] && quditBasisQ[Unevaluated @ qb] := System`Private`HoldSetValid[qb]
 
@@ -108,7 +111,7 @@ QuditBasisProp[qb_, "NameRank"] := Length @ qb["Dimensions"]
 QuditBasisProp[qb_, "NameTensor"] := ArrayReshape[qb["Names"], qb["Dimensions"]]
 
 QuditBasisProp[qb_, "Elements"] := With[{elements = qb["BasisElements"]},
-    TensorProduct @@@ Map[If[#["DualQ"], Conjugate, Identity] @ elements[#["Name"]] &, Normal /@ qb["Names"], {2}]
+    TensorProduct @@@ Map[MapIndexed[Lookup[elements, Key[{#1["Name"], First[#2]}], 1] &], Normal /@ qb["Names"]]
 ]
 
 QuditBasisProp[qb_, "Association"] := AssociationThread[qb["Names"], qb["Elements"]]
@@ -139,12 +142,12 @@ QuditBasisProp[qb_, "DualQ"] := AllTrue[qb["Names"], #["DualQ"] &]
 
 QuditBasisProp[qb_, "Reverse"] := QuditBasis[Reverse @ qb["Names"], qb["BasisElements"]]
 
-QuditBasisProp[qb_, "Canonical"] := With[{ordering = Ordering[qb["Names"]]}, QuditBasis[qb["Names"][[ordering]], qb["BasisElements"]]]
+QuditBasisProp[qb_, "Canonical"] := QuditBasis[Sort @ qb["Names"], qb["BasisElements"]]
 
 
 QuditBasisProp[qb_, {"Permute", perm_Cycles}] := Enclose @ QuditBasis[
     #[{"Permute", perm}] & /@ qb["Names"],
-    qb["BasisElements"]
+    KeyMap[MapAt[PermutationList[perm, qb["Rank"]][[#]] &, 2]] @ qb["BasisElements"]
 ]
 
 QuditBasisProp[qb_, {"Ordered", qudits_Integer, order_ ? orderQ}] := If[qb["Dimension"] <= 1, qb,
@@ -156,19 +159,7 @@ QuditBasisProp[qb_, {"Ordered", qudits_Integer, order_ ? orderQ}] := If[qb["Dime
 
 QuditBasisProp[qb_, "RemoveIdentities"] := QuditBasis[
     (QuditBasisName @@ Delete[Normal[#], Position[qb["Dimensions"], 1]])["Group"] & /@ qb["Names"],
-    qb["BasisElements"]
-]
-
-
-QuantumTensorProduct[qb1_QuditBasis, qb2_QuditBasis] := Enclose @ QuditBasis[
-    QuantumTensorProduct @@@ Tuples[{ConfirmBy[qb1, QuditBasisQ]["Names"], ConfirmBy[qb2, QuditBasisQ]["Names"]}],
-    Association[qb1["BasisElements"], qb2["BasisElements"]]
-]["RemoveIdentities"]
-
-
-QuantumPartialTrace[qb_QuditBasis, qudits_List] := QuditBasis[
-    DeleteDuplicates[#["Delete", List /@ qudits] & /@ qb["Names"]],
-    qb["BasisElements"]
+    Select[qb["BasisElements"], TensorRank[#] > 0 &]
 ]
 
 

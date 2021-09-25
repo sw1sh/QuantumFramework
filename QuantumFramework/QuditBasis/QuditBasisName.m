@@ -42,7 +42,7 @@ QuditBasisName[] := QuditBasisName[$QuditIdentity]
 
 QuditBasisName[{}] := QuditBasisName[$QuditZero]
 
-QuditBasisName[name_] := QuditBasisName[name, "Dual" -> False]
+QuditBasisName[name_] := QuditBasisName[name, Sequence @@ Options[QuditBasisName]]
 
 _QuditBasisName["Properties"] := QuditBasisName["Properties"]
 

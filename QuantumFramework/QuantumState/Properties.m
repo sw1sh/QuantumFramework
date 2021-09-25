@@ -165,7 +165,7 @@ QuantumStateProp[qs_, "MixedStateQ"] := qs["Type"] === "Mixed"
 
 QuantumStateProp[qs_, "Computational"] := QuantumState[qs, QuantumBasis[
     "Output" -> QuditBasis[DeleteCases[qs["OutputDimensions"], 1]],
-    "Input" -> QuditBasis[DeleteCases[qs["InputDimensions"], 1]]
+    "Input" -> QuditBasis[DeleteCases[qs["InputDimensions"], 1]]["Dual"]
 ]
 ]
 
