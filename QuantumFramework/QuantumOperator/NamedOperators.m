@@ -247,10 +247,10 @@ QuantumOperator[{"RootNOT", dimension_Integer}, args___] := QuantumOperator[
 ]
 
 
-QuantumOperator["Hadamard" | "H", args___] := QuantumOperator[HadamardMatrix[2], "Label" -> "H", args]
+QuantumOperator["Hadamard" | "H", args___] := QuantumOperator[HadamardMatrix[2], args]
 
 QuantumOperator[{"Hadamard" | "H", qudits_Integer ? Positive}, args___] :=
-    QuantumOperator[QuantumTensorProduct[Table[QuantumOperator["Hadamard", args], qudits]]]
+    QuantumOperator[QuantumTensorProduct[Table[QuantumOperator["Hadamard", args], qudits]], "Label" -> If[qudits > 1, Superscript["H", CircleTimes[qudits]], "H"]]
 
 
 QuantumOperator["Toffoli", args___, order_ ? orderQ] := QuantumOperator[{"Toffoli", Length[order]}, args, order]

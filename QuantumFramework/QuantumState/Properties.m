@@ -108,7 +108,7 @@ QuantumStateProp[qs_, "NormalizedOperator"] := qs["NormalizedProjector"]["Amplit
 (* density matrix *)
 
 QuantumStateProp[qs_, "DensityMatrix"] /; qs["StateType"] === "Vector" :=
-    With[{state = qs["StateVector"]}, ConjugateTranspose[{state}] . {state}]
+    With[{state = qs["StateVector"]}, KroneckerProduct[state, Conjugate[state]]]
 
 QuantumStateProp[qs_, "DensityMatrix"] /; qs["StateType"] === "Matrix" := qs["State"]
 
@@ -164,8 +164,8 @@ QuantumStateProp[qs_, "MixedStateQ"] := qs["Type"] === "Mixed"
 (* transforms *)
 
 QuantumStateProp[qs_, "Computational"] := QuantumState[qs, QuantumBasis[
-    "Output" -> If[qs["OutputDimension"] === 1, QuditBasis[], QuditBasis[qs["OutputDimensions"]]],
-    "Input" -> If[qs["InputDimension"] === 1, QuditBasis[], QuditBasis[qs["InputDimensions"]]]
+    "Output" -> QuditBasis[DeleteCases[qs["OutputDimensions"], 1]],
+    "Input" -> QuditBasis[DeleteCases[qs["InputDimensions"], 1]]
 ]
 ]
 
@@ -208,40 +208,34 @@ QuantumStateProp[qs_, "MatrixRepresentation"] := qs["Computational"]["DensityMat
 
 QuantumStateProp[qs_, "TensorRepresentation"] := qs["Computational"]["StateTensor"]
 
+
 (* block sphere*)
 
-QuantumStateProp[qs_, "BlochSphericalCoordinates"] /; qs["Dimension"] == 2 := With[{state = qs["Computational"]["NormalizedState"]},
-    Switch[
-        qs["StateType"],
+QuantumStateProp[qs_, "BlochSphericalCoordinates"] /; qs["Dimension"] == 2 := With[{state = qs["StateVector"], matrix = qs["DensityMatrix"]},
+    If[
+        qs["PureStateQ"],
 
-        "Vector",
         With[{
             alpha = state[[1]], beta = state[[2]]
         },
             {1, 2 ArcCos[Abs[alpha]], Arg[beta] - Arg[alpha]}
         ],
 
-        "Matrix",
         With[{
-            u = Re[state[[1, 2]]], v = Im[state[[2, 1]]], w = state[[1, 1]] - state[[2, 2]]
+            u = Re[matrix[[1, 2]]], v = Im[matrix[[2, 1]]], w = matrix[[1, 1]] - matrix[[2, 2]]
         },
             If[ u == v == w == 0,
                 {0, 0, 0},
                 Map[Abs, CoordinateTransformData["Cartesian" -> "Spherical", "Mapping", {u, v, w}]]
             ]
-        ],
-
-        (* unimplemented*)
-        True,
-        $Failed
+        ]
     ]
 ]
 
-QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 :=  With[{state = qs["Computational"]["NormalizedState"]},
-    Switch[
-        qs["StateType"],
+QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 :=  With[{state = qs["StateVector"], matrix = qs["DensityMatrix"]},
+    If[
+        qs["PureStateQ"],
 
-        "Vector",
         Module[{
             alpha = state[[1]], beta = state[[2]], theta, phi
         },
@@ -249,16 +243,11 @@ QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 :=  W
             {Sin[theta] Cos[phi], Sin[theta] Sin[phi], Cos[theta]}
         ],
 
-        "Matrix",
         With[{
-            u = Re[state[[1, 2]]], v = Im[state[[2, 1]]], w = state[[1, 1]] - state[[2, 2]]
+            u = Re[matrix[[1, 2]]], v = Im[matrix[[2, 1]]], w = matrix[[1, 1]] - matrix[[2, 2]]
         },
             {u, v, w}
-        ],
-
-        (* unimplemented*)
-        True,
-        $Failed
+        ]
     ]
 ]
 

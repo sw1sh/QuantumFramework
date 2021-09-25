@@ -5,7 +5,7 @@ Package["QuantumFramework`"]
 QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; QuantumMeasurementOperatorQ[Unevaluated @ qmo], format_] := With[{
     icon = MatrixPlot[
         Enclose[
-            Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], Confirm[Transpose @ qmo["OrderedMatrix"]], {2}],
+            Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], Confirm[qmo["OrderedMatrixRepresentation"]], {2}],
             RandomReal[{0, 1}, {qmo["Dimension"], qmo["Dimension"]}] &
         ],
         ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},

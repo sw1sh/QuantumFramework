@@ -6,7 +6,7 @@ PackageScope["QuantumBasisProp"]
 
 $QuantumBasisProperties = {
      "BasisElementAssociation", "Association", "Elements",
-     "InputBasisElementNames", "OutputBasisElementNames", "BasisElementNames",
+     "InputBasisElementNames", "OutputBasisElementNames", "BasisElementNames", "Names",
      "NormalBasisElementNames",
      "InputBasisElements", "OutputBasisElements", "BasisElements",
      "InputBasisElementDimensions", "OutputBasisElementDimensions", "BasisElementDimensions", "BasisElementDimension",
@@ -63,10 +63,10 @@ QuantumBasisProp[qb_, "InputBasisElements"] := qb["Input"]["Elements"]
 QuantumBasisProp[qb_, "OutputBasisElements"] := qb["Output"]["Elements"]
 
 
-QuantumBasisProp[qb_, "BasisElementNames"] :=
+QuantumBasisProp[qb_, "BasisElementNames" | "Names"] :=
     QuantumTensorProduct @@@ Tuples[{qb["OutputBasisElementNames"], qb["InputBasisElementNames"]}]
 
-QuantumBasisProp[qb_, "BasisElements"] := TensorProduct @@@ Tuples[{qb["OutputBasisElements"], qb["InputBasisElements"]}]
+QuantumBasisProp[qb_, "BasisElements" | "Elements"] := TensorProduct @@@ Tuples[{qb["OutputBasisElements"], qb["InputBasisElements"]}]
 
 
 QuantumBasisProp[qb_, "BasisElementAssociation" | "Association" | "Elements"] := AssociationThread[

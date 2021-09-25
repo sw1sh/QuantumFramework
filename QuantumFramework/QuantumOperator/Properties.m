@@ -148,7 +148,7 @@ QuantumOperatorProp[qo_, "Eigenvalues"] := Eigenvalues[qo["MatrixRepresentation"
 
 QuantumOperatorProp[qo_, "Eigenvectors"] := Eigenvectors[qo["MatrixRepresentation"]]
 
-QuantumOperatorProp[qo_, "Projectors"] := projector /@ qo["Eigenvectors"]
+QuantumOperatorProp[qo_, "Projectors"] := projector @* Normalize /@ qo["Eigenvectors"]
 
 QuantumOperatorProp[qo_, "Dagger" | "ConjugateTranspose"] := QuantumOperator[ConjugateTranspose[qo["Matrix"]], qo["Basis"]["Dagger"], qo["Order"]]
 

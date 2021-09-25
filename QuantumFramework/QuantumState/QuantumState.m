@@ -101,7 +101,7 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["BasisElement
     ],
     "Matrix",
     QuantumState[
-        PseudoInverse[newBasis["OutputMatrix"]] . (qs["OutputMatrix"] . qs["DensityMatrix"] . PseudoInverse[qs["InputMatrix"]]) . newBasis["InputMatrix"],
+        PseudoInverse[newBasis["Matrix"]] . (qs["Basis"]["Matrix"] . qs["DensityMatrix"] . PseudoInverse[qs["Basis"]["Matrix"]]) . newBasis["Matrix"],
         newBasis
     ]
 ]

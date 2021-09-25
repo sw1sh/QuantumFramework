@@ -38,7 +38,7 @@ QuantumMeasurement::undefprop = "QuantumMeasurement property `` is undefined for
 QuantumMeasurementProp[_, "Properties"] := QuantumMeasurement["Properties"]
 
 QuantumMeasurementProp[_[weights_, _], "Weights"] := weights
-QuantumMeasurementProp[_[_, states_], "States"] := states
+QuantumMeasurementProp[_[weights_, states_], "States"] := states[[Ordering[Keys[weights]]]]
 
 QuantumMeasurementProp[qm_, "Eigenvalues"] := Keys @ qm["Weights"]
 
