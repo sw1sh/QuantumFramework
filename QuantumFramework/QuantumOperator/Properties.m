@@ -139,14 +139,14 @@ QuantumOperatorProp[qo_, {"Ordered", qudits_Integer}] := If[qo["InputDimension"]
 ]
 
 
-QuantumOperatorProp[qo_, "HermitianQ"] := HermitianMatrixQ[qo["MatrixRepresentation"]]
+QuantumOperatorProp[qo_, "HermitianQ"] := HermitianMatrixQ[qo["Matrix"]]
 
-QuantumOperatorProp[qo_, "UnitaryQ"] := UnitaryMatrixQ[qo["MatrixRepresentation"]]
+QuantumOperatorProp[qo_, "UnitaryQ"] := UnitaryMatrixQ[qo["Matrix"]]
 
 
-QuantumOperatorProp[qo_, "Eigenvalues"] := Eigenvalues[qo["MatrixRepresentation"]]
+QuantumOperatorProp[qo_, "Eigenvalues"] := Eigenvalues[qo["Matrix"]]
 
-QuantumOperatorProp[qo_, "Eigenvectors"] := Eigenvectors[qo["MatrixRepresentation"]]
+QuantumOperatorProp[qo_, "Eigenvectors"] := Eigenvectors[qo["Matrix"]]
 
 QuantumOperatorProp[qo_, "Projectors"] := projector @* Normalize /@ qo["Eigenvectors"]
 

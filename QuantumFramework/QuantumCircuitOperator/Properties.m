@@ -47,38 +47,6 @@ QuantumCircuitOperatorProp[qco_, "OrderedMatrix" | "OrderedMatrixRepresentation"
 
 QuantumCircuitOperatorProp[qco_, {"OrderedMatrix" | "OrderedMatrixRepresentation", quditCount_}] := qco["CircuitOperator"][{"OrderedMatrix", quditCount}]
 
-(*QuantumCircuitOperatorProp[qco_, {"OrderedMatrix" | "OrderedMatrixRepresentation", quditCount_}] := Module[{
-    dimensionCount = qco["InputDimension"],
-    orders = qco["Orders"],
-    orderedMatrixRepresentations = #[{"OrderedMatrixRepresentation", quditCount}] & /@ qco["Operators"],
-    minimumOrders, maximumOrders
-},
-    minimumOrders = Min /@ orders;
-    maximumOrders = Max /@ orders;
-    Do[
-        If[ maximumOrders[[i]] < quditCount,
-            orderedMatrixRepresentations[[i]] = KroneckerProduct[
-                orderedMatrixRepresentations[[i]],
-                IdentityMatrix[(quditCount - maximumOrders[[i]]) dimensionCount]
-            ];
-            If[ minimumOrders[[i]] > 1,
-                orderedMatrixRepresentations[[i]] = KroneckerProduct[
-                    IdentityMatrix[dimensionCount (minimumOrders[[i]] - 1)],
-                    orderedMatrixRepresentations[[i]]
-                ]
-            ],
-            If[ Length[orders[[i]]] == 1 && quditCount > 1,
-                orderedMatrixRepresentations[[i]] = KroneckerProduct[
-                    IdentityMatrix[dimensionCount (quditCount - 1)],
-                    orderedMatrixRepresentations[[i]]
-                ]
-            ]
-        ],
-        {i, Length[orders]}
-    ];
-    Dot @@ orderedMatrixRepresentations
-]*)
-
 QuantumCircuitOperatorProp[qco_, "HermitianQ"] := HermitianMatrixQ[qco["OrderedMatrixRepresentation"]]
 
 QuantumCircuitOperatorProp[qco_, "UnitaryQ"] := UnitaryMatrixQ[qco["OrderedMatrixRepresentation"]]

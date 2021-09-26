@@ -6,7 +6,7 @@ PackageScope["QuantumStateProp"]
 
 $QuantumStateProperties = {
      "StateType", "State", "Basis",
-     "Amplitudes", "StateVector", "DensityMatrix",
+     "Amplitudes", "Weights", "Probabilities", "StateVector", "DensityMatrix",
      "NormalizedState", "NormalizedAmplitudes", "NormalizedStateVector", "NormalizedDensityMatrix",
      "Entropy", "VonNeumannEntropy",
      "Purity", "Type", "PureStateQ", "MixedStateQ",
@@ -20,9 +20,7 @@ $QuantumStateProperties = {
      "Tensor", "Matrix", "Vector"
 };
 
-$QuantumStateProperties =  DeleteDuplicates @ Join[$QuantumStateProperties, QuantumBasis["Properties"]];
-
-QuantumState["Properties"] := $QuantumStateProperties
+QuantumState["Properties"] := DeleteDuplicates @ Join[$QuantumStateProperties, QuantumBasis["Properties"]]
 
 
 qs_QuantumState["ValidQ"] := QuantumStateQ[qs]
@@ -83,6 +81,12 @@ QuantumStateProp[qs_, "StateVector"] := Module[{result},
     ];
     result /; !FailureQ[result]
 ]
+
+QuantumStateProp[qs_, "Weights"] := If[qs["PureStateQ"], Abs[qs["StateVector"]] ^ 2, qs["Eigenvalues"]]
+
+QuantumStateProp[qs_, "Probabilities"] := Normalize[qs["Weights"], Total]
+
+QuantumStateProp[qs_, "Formula"] := Total @ KeyValueMap[Times, qs["NormalizedAmplitudes"]]
 
 
 (* normalization *)
@@ -173,7 +177,7 @@ QuantumStateProp[qs_, "Normalized"] := QuantumState[If[qs["StateType"] === "Vect
 
 QuantumStateProp[qs_, "Pure"] := If[qs["PureStateQ"],
     qs,
-    QuantumState[Flatten @ qs["DensityMatrix"], QuantumTensorProduct[qs["Basis"]["Dual"], qs["Basis"]]]
+    QuantumState[Flatten @ qs["DensityMatrix"], QuantumTensorProduct[qs["Basis"], qs["Basis"]["Dual"]]]
 ]
 
 QuantumStateProp[qs_, "Transpose"] := QuantumState[Flatten @ Transpose[qs["StateMatrix"]], qs["Basis"]["Transpose"]]

@@ -61,4 +61,6 @@ QuantumTensorProduct[qmo1_QuantumMeasurementOperator, qmo2_QuantumMeasurementOpe
     QuantumMeasurementOperator[QuantumTensorProduct[qmo1["QuantumOperator"], qmo2["QuantumOperator"]], Union[qmo1["Order"], qmo2["Order"]]]
 
 
+QuantumTensorProduct[qm1_QuantumMeasurement, qm2_QuantumMeasurement] := QuantumMeasurement @ QuantumTensorProduct[qm1["State"], qm2["State"]]
+
 QuantumTensorProduct[_, _] := Failure[QuantumTensorProduct, "Undefined"]

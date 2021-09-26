@@ -47,6 +47,8 @@ QuantumMeasurementOperator[{"RandomHermitian", dimension_Integer : 2}, args___, 
         order
     ]
 
-QuantumMeasurementOperator[{qb_ ? QuantumBasisQ, eigenvalues_List}, args___] :=
+QuantumMeasurementOperator[{qb_ ? QuantumBasisQ, eigenvalues_ ? VectorQ}, args___] :=
  QuantumMeasurementOperator[eigenvalues . qb["Projectors"], qb, args]
+
+QuantumMeasurementOperator[qb_ ? QuantumBasisQ, args___] := QuantumMeasurementOperator[{qb, Range[qb["Dimension"]] - 1}, args]
 

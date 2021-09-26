@@ -9,7 +9,8 @@ $QuantumMeasurementOperatorProperties = {
     "Operator", "Basis", "MatrixRepresentation", "POVMElements",
     "OrderedMatrixRepresentation", "OrderedPOVMElements",
     "Arity", "Dimensions", "Order", "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors",
-    "ProjectionQ", "POVMQ"
+    "ProjectionQ", "POVMQ",
+    "SuperOperator"
 };
 
 $QuantumMeasurementOperatorProperties = DeleteDuplicates @ Join[
@@ -54,7 +55,9 @@ QuantumMeasurementOperatorProp[qmo_, "ProjectionQ"] := qmo["Type"] === "Projecti
 
 QuantumMeasurementOperatorProp[qmo_, "POVMQ"] := qmo["Type"] === "POVM"
 
-QuantumMeasurementOperatorProp[qmo_, "POVMElements"] := If[qmo["POVMQ"], qmo["Tensor"], projector /@ qmo["Matrix"]]
+QuantumMeasurementOperatorProp[qmo_, "POVMElements"] := If[qmo["POVMQ"], qmo["Tensor"], qmo["Projectors"]]
+
+QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | {"Ordered", _}] := QuantumMeasurementOperator[qmo["QuantumOperator"][prop], qmo["Order"]]
 
 QuantumMeasurementOperatorProp[qmo_, "OrderedPOVMElements"] := qmo[{"OrderedPOVMElements", qmo["MaxArity"]}]
 
@@ -66,6 +69,25 @@ QuantumMeasurementOperatorProp[qmo_, {"OrderedPOVMElements", arity_Integer}] := 
 QuantumMeasurementOperatorProp[qmo_, "Operators"] := If[qmo["POVMQ"],
     AssociationThread[Range[0, Length[qmo["Tensor"]] - 1], QuantumOperator[#, QuantumBasis["Output" -> qmo["Basis"]["Input"]], qmo["Order"]] & /@ qmo["Tensor"]],
     AssociationThread[Eigenvalues[qmo["Matrix"]], QuantumOperator[projector @ #, qmo["Basis"], qmo["Order"]] & /@ Eigenvectors[qmo["OrderedMatrix"]]]
+]
+
+QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := If[
+    qmo["POVMQ"],
+
+    qmo["QuantumOperator"],
+
+    QuantumOperator[QuantumOperator[
+        qmo["Projectors"],
+        QuantumBasis[
+            qmo["Basis"],
+            "Output" -> QuantumTensorProduct[
+                QuditBasis[Thread[Superscript[qmo["Eigenvalues"], Range[Length @ qmo["Eigenvalues"]]]], qmo["Eigenvectors"]],
+                qmo["Output"]
+            ]
+        ]
+    ],
+        Range[qmo["Arity"]]
+    ]
 ]
 
 

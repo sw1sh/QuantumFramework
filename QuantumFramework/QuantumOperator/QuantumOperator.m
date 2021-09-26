@@ -26,23 +26,41 @@ QuantumOperator[qs_QuantumState ? QuantumStateQ] :=
 QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, args___, order : (_ ? orderQ) : {1}] := Module[{
     dimensions = TensorDimensions[tensor],
     rank,
-    targetOrder, newTensor
+    targetOrder, newTensor,
+    basis,
+    inputDimension, outputDimension
 },
     rank = Max[Length[dimensions], Max[order]];
     targetOrder = Reverse[rank - order + 1];
     newTensor = Transpose[tensor, Join[Complement[Range[rank], targetOrder], targetOrder]];
+    {outputDimension, inputDimension} = Times @@@ TakeDrop[TensorDimensions[newTensor], rank - Length[targetOrder]];
+    basis = QuantumBasis[args];
+    If[ basis["OutputDimension"] != outputDimension,
+        basis = QuantumBasis[basis, "Output" -> QuditBasis[dimensions[[;; - Length[order] - 1]]]]
+    ];
+    If[ basis["InputDimension"] != inputDimension,
+        basis = QuantumBasis[basis, "Input" -> QuditBasis[dimensions[[- Length[order] ;;]]]]
+    ];
     QuantumOperator[
         ArrayReshape[newTensor, Times @@@ TakeDrop[TensorDimensions[newTensor], rank - Length[targetOrder]]],
-        QuantumBasis[args, "Input" -> QuditBasis[dimensions[[- Length[order] ;;]]], "Output" -> QuditBasis[dimensions[[;; - Length[order] - 1]]]],
+        basis,
         order
     ]
 ]
 
 QuantumOperator[assoc_Association, args___, order : (_ ? orderQ) : {1}] := Enclose @ Module[{
-    quditBasis = QuditBasis[QuditBasisName /@ Keys[assoc], IdentityMatrix[Length[assoc]], args],
+    quditBasis,
     basis,
     tensorDimensions
 },
+    quditBasis = QuditBasis[
+        QuditBasisName /@ Keys[assoc],
+        Association @ Catenate @ MapIndexed[
+            With[{counts = #1, i = First[#2]}, MapIndexed[{#1, i} -> UnitVector[Max[counts], First[#2]] &, Keys @ counts]] &,
+            Counts /@ Transpose[ConfirmBy[Keys[assoc], MatrixQ]]
+        ],
+        args
+    ];
     ConfirmAssert[Length[assoc] > 0 && Equal @@ TensorDimensions /@ assoc];
     ConfirmAssert[EvenQ @ quditBasis["Qudits"]];
     basis = QuantumBasis[
@@ -137,30 +155,35 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 (qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] /;
 qo["Picture"] === qo["Picture"] && (
     qs["Picture"] =!= "Heisenberg" || Message[QuantumOperator::incompatiblePictures, qo["Picture"], qs["Picture"]]) := Enclose @ With[{
-    matrix = qo[{"OrderedMatrixRepresentation", qs["OutputQudits"]}]
+    ordered = qo[{"Ordered", qs["OutputQudits"]}]
 },
-    ConfirmAssert[Dimensions[matrix][[-1]] == qs["Dimension"], "Operator input dimension should be equal state output dimension"];
+    ConfirmAssert[ordered["InputDimension"] == qs["OutputDimension"], "Operator input dimension should be equal to state output dimension"];
     QuantumState[
         QuantumState[
             If[ qs["StateType"] === "Vector",
-                matrix . qs["VectorRepresentation"],
-                matrix . qs["MatrixReprsentation"] . ConjugateTranspose[matrix]
+                Flatten[ordered["MatrixRepresentation"] . qs["PureMatrix"]],
+                ordered["MatrixRepresentation"] . qs["MatrixRepresentation"] . ConjugateTranspose[ordered["MatrixRepresentation"]]
             ],
-            QuantumBasis[qs["Dimensions"]]
+            QuantumBasis["Output" -> QuditBasis[ordered["OutputDimensions"]], "Input" -> QuditBasis[qs["InputDimensions"]]]
         ],
-        QuantumBasis[qs["Basis"], "Label" -> qo["Label"] @* qs["Label"]]
+       QuantumBasis[
+            "Output" -> ordered["Output"],
+            "Input" -> qs["Input"],
+            "Label" -> ordered["Label"] @* qs["Label"]
+        ]
     ]
 ]
 
-(qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumFrameworkOperatorQ] /; qo["Picture"] === op["Picture"] := Module[{
+(qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumFrameworkOperatorQ] /; qo["Picture"] === op["Picture"] := Enclose @ Module[{
     arity = Max[qo["MaxArity"], op["MaxArity"]], ordered1, ordered2
 },
     ordered1 = op[{"Ordered", arity}];
     ordered2 = qo[{"Ordered", arity}];
+    ConfirmAssert[ordered2["InputDimension"] == ordered1["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
     QuantumOperator[
         QuantumOperator[
             ordered2["MatrixRepresentation"] . ordered1["MatrixRepresentation"],
-            QuantumBasis[<|"Output" -> QuditBasis[ordered2["OutputDimensions"]], "Input" -> QuditBasis[ordered1["InputDimensions"]]|>],
+            QuantumBasis["Output" -> QuditBasis[ordered2["OutputDimensions"]], "Input" -> QuditBasis[ordered1["InputDimensions"]]],
             Union[ordered1["TotalOrder"], ordered2["TotalOrder"]]
         ],
         QuantumBasis[

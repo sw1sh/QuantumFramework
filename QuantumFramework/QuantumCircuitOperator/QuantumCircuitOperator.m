@@ -13,6 +13,8 @@ QuantumCircuitOperatorQ[___] := False
 
 QuantumCircuitOperator[operators_, args__] := QuantumCircuitOperator[MapAt[Head[#][#, args] &, operators, 1]]
 
+QuantumCircuitOperator[op_ ? QuantumFrameworkOperatorQ] := QuantumCircuitOperator[{op}]
+
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[arg_ ? QuantumOperatorQ] := Head[arg][qco["CircuitOperator"][arg]]
 

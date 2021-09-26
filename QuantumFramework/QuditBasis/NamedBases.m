@@ -1,6 +1,7 @@
 Package["QuantumFramework`"]
 
 
+QuditBasis[1, args___] := QuditBasis[args]
 
 QuditBasis[dimension_Integer, args___] := QuditBasis[{"Computational", dimension}, args]
 
