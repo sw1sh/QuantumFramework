@@ -81,7 +81,7 @@ QuantumState[state_ ? stateQ, basis_ ? QuantumBasisQ] := QuantumState[
 
 (* Mutation *)
 
-QuantumState[qs_ ? QuantumStateQ, args : Except[_ ? QuantumBasisQ, _ ? nameQ]] := 
+QuantumState[qs_ ? QuantumStateQ, args : Except[_ ? QuantumBasisQ, _ ? nameQ]] :=
     Enclose @ QuantumState[qs, ConfirmBy[QuantumBasis[args], QuantumBasisQ]]
 
 QuantumState[qs_ ? QuantumStateQ, args : Except[_ ? QuantumBasisQ]] :=
@@ -111,19 +111,53 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["BasisElement
 
 QuantumState[qs_ ? QuantumStateQ] := qs["Computational"]
 
-QuantumState[qs_ ? QuantumStateQ, args__] := With[{
+(*QuantumState[qs_ ? QuantumStateQ, args__] := With[{
     newBasis = QuantumBasis[qs["Basis"], args]},
     If[ qs["Basis"] === newBasis,
         qs,
         QuantumState[qs["State"], newBasis]
     ]
 ]
-
+*)
 
 (* equality *)
 
 QuantumState /: (qs1_QuantumState ? QuantumStateQ) == (qs2_QuantumState ? QuantumStateQ) :=
     qs1["Picture"] == qs2["Picture"] && qs1["MatrixRepresentation"] == qs2["MatrixRepresentation"]
+
+(* addition *)
+
+QuantumState /: (qs1_QuantumState ? QuantumStateQ) + (qs2_QuantumState ? QuantumStateQ) /; qs1["Dimension"] == qs2["Dimension"] :=
+    QuantumState[
+        QuantumState[
+            If[ qs1["StateType"] === qs2["StateType"] === "Vector",
+                qs1["VectorRepresentation"] + qs2["VectorRepresentation"],
+                qs1["MatrixRepresentation"] + qs2["MatrixRepresentation"]
+            ],
+            QuantumBasis[qs1["Dimensions"]]
+        ],
+        qs1["Basis"]
+    ]
+
+(* multiplication *)
+
+QuantumState /: (qs1_QuantumState ? QuantumStateQ) * (qs2_QuantumState ? QuantumStateQ) /; qs1["Dimension"] == qs2["Dimension"] :=
+    QuantumState[
+        QuantumState[
+            If[ qs1["StateType"] === qs2["StateType"] === "Vector",
+                qs1["VectorRepresentation"] * qs2["VectorRepresentation"],
+                qs1["MatrixRepresentation"] * ArrayReshape[qs2["MatrixRepresentation"], Dimensions @ qs1["MatrixRepresentation"]]
+            ],
+            QuantumBasis[qs1["Dimensions"]]
+        ],
+        qs1["Basis"]
+    ]
+
+QuantumState /: (x : (_ ? NumericQ) | _Symbol) * (qs_QuantumState ? QuantumStateQ) :=
+    QuantumState[
+        x qs["State"],
+        qs["Basis"]
+    ]
 
 
 (* composition *)

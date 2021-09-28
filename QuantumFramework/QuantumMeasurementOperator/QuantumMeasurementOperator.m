@@ -24,25 +24,43 @@ QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumOperatorQ], 
 
 (* mutation *)
 
+QuantumMeasurementOperator[op_ ? QuantumMeasurementOperatorQ, qb_ ? QuantumBasisQ] :=
+    QuantumMeasurementOperator[QuantumOperator[op["QuantumOperator"], qb]]
+
 QuantumMeasurementOperator[op_ ? QuantumFrameworkOperatorQ, order_ ? orderQ] := QuantumMeasurementOperator[Head[op][op, order]]
 
 (* composition *)
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qs_ ? QuantumStateQ] := Enclose[
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qs_ ? QuantumStateQ] := Enclose @ Module[{ordered},
     ConfirmAssert[qs["OutputQudits"] >= qmo["Arity"], "Not enough output qudits"];
-    ConfirmAssert[qmo["InputDimensions"][[qmo["Order"]]] == qs["OutputDimensions"][[qmo["Order"]]], "Operator and state dimensions don't match"];
-    QuantumTensorProduct @@ (
+
+    ordered = qmo[{"Ordered", qs["OutputQudits"]}];
+    ConfirmAssert[ordered["InputDimensions"][[ordered["Order"]]] == qs["OutputDimensions"][[ordered["Order"]]],
+        "Operator and state dimensions don't match"
+    ];
+(*    (
         With[{
-            operatorTraceQudits = DeleteCases[Range[Max[qmo["MaxArity"], qs["OutputQudits"]]], #],
             stateTraceQudits = DeleteCases[Range[qs["OutputQudits"]], #]
         },
-            QuantumMeasurement @
-                QuantumPartialTrace[
-                    QuantumPartialTrace[qmo[{"Ordered", qs["OutputQudits"]}], operatorTraceQudits]["SuperOperator"][QuantumPartialTrace[qs, stateTraceQudits]],
-                    {2}
-                ]
+            ordered["SuperOperator"][QuantumPartialTrace[qs, stateTraceQudits]]
         ] & /@ qmo["Order"]
-    )
+    )*)
+    (*With[{
+        operatorTraceQudits = Complement[Range[ordered["MaxArity"]], qmo["Order"]],
+        stateTraceQudits = Complement[Range[qs["OutputQudits"]], qmo["Order"]]
+    },
+        QuantumMeasurement @
+            QuantumPartialTrace[
+                QuantumPartialTrace[ordered, operatorTraceQudits]["SuperOperator"][QuantumPartialTrace[qs, stateTraceQudits]],
+                1 + Range[qmo["Arity"]]
+            ]
+    ]*)
+    With[{
+        stateTraceQudits = Complement[Range[qs["OutputQudits"]], qmo["Order"]]
+    },
+        QuantumMeasurement @
+            ordered["SuperOperator"][qs]
+    ]
 ]
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[op_ ? QuantumFrameworkOperatorQ] := With[{

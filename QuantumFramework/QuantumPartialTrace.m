@@ -26,6 +26,8 @@ QuantumPartialTrace[qb_QuantumBasis, qudits : {{_Integer, _Integer} ..}] := Encl
     ]
 ]
 
+QuantumPartialTrace[qb_QuantumBasis, qudits : {_Integer ..}] := QuantumBasis[qb, "Output" -> QuantumPartialTrace[qb["Output"], qudits]]
+
 QuantumPartialTrace[qs_QuantumState, qudits : {_Integer ..}] :=
     QuantumState[
         ResourceFunction["MatrixPartialTrace"][qs["DensityMatrix"], qudits, qs["Dimensions"]],
@@ -42,9 +44,11 @@ QuantumPartialTrace[qo_QuantumOperator, qudits : {{_Integer, _Integer} ..}] :=
 
 QuantumPartialTrace[op_ ? QuantumFrameworkOperatorQ, qudits : {{_Integer, _Integer} ..}] :=
     Head[op][
-        QuantumPartialTrace[op[If[QuantumCircuitOperatorQ[op], "CircuitOperator", "QuantumOperator"]], qudits], 
-        DeleteCases[op["Order"], Alternatives @@ qudits[[All, -1]]]
+        QuantumPartialTrace[op[If[QuantumCircuitOperatorQ[op], "CircuitOperator", "QuantumOperator"]], qudits],
+        op["Order"] /. q_Integer :> q - Count[qudits[[All, -1]], _ ? (LessThan[q])]
     ]
 
 QuantumPartialTrace[op_ ? QuantumFrameworkOperatorQ, qudits : {_Integer ..}] := QuantumPartialTrace[op, {#, #} & /@ qudits]
+
+QuantumPartialTrace[qm_ ? QuantumMeasurementQ, qudits_] := QuantumMeasurement[QuantumPartialTrace[qm["State"], qudits]]
 

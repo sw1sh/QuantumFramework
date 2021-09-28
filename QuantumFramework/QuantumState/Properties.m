@@ -82,9 +82,9 @@ QuantumStateProp[qs_, "StateVector"] := Module[{result},
     result /; !FailureQ[result]
 ]
 
-QuantumStateProp[qs_, "Weights"] := If[qs["PureStateQ"], Abs[qs["StateVector"]] ^ 2, qs["Eigenvalues"]]
+QuantumStateProp[qs_, "Weights"] := If[qs["PureStateQ"], Abs[qs["StateVector"]] ^ 2, Inverse[qs["Eigenvectors"]] . qs["Eigenvalues"]]
 
-QuantumStateProp[qs_, "Probabilities"] := Normalize[qs["Weights"], Total]
+QuantumStateProp[qs_, "Probabilities"] := Re @ Normalize[qs["Weights"], Total]
 
 QuantumStateProp[qs_, "Formula"] := Total @ KeyValueMap[Times, qs["NormalizedAmplitudes"]]
 
@@ -122,9 +122,13 @@ QuantumStateProp[qs_, "NormalizedProjector"] := QuantumState[Flatten @ qs["Norma
 
 QuantumStateProp[qs_, "MatrixRepresentation" | "Matrix"] := qs["Computational"]["DensityMatrix"]
 
+QuantumStateProp[qs_, "MatrixDimensions"] := {qs["Dimension"], qs["Dimension"]}
+
 QuantumStateProp[qs_, "Eigenvalues"] := Eigenvalues[qs["DensityMatrix"]]
 
-QuantumStateProp[qs_, "Eigenvectors"] := Normalize /@ Eigenvectors[qs["DensityMatrix"]]
+QuantumStateProp[qs_, "Eigenvectors"] := Eigenvectors[qs["DensityMatrix"]]
+
+QuantumStateProp[qs_, "NormalizedEigenvectors"] := Normalize /@ qs["Eigenvectors"]
 
 QuantumStateProp[qs_, "Eigenstates"] := QuantumState[#, qs["Basis"]] & /@ qs["Eigenvectors"]
 

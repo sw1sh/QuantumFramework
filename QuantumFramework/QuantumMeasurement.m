@@ -2,6 +2,8 @@ Package["QuantumFramework`"]
 
 PackageExport["QuantumMeasurement"]
 
+PackageScope["QuantumMeasurementQ"]
+
 
 QuantumMeasurementQ[QuantumMeasurement[qs_QuantumState ? QuantumStateQ]] := True(*TrueQ[qs["PureStateQ"]]*)
 
@@ -35,17 +37,22 @@ QuantumMeasurement::undefprop = "QuantumMeasurement property `` is undefined for
     ] /; !MatchQ[result, _QuantumMeasurementProp] || Message[QuantumMeasurement::undefprop, prop]
 ]
 
+QuantumMeasurement[qm_QuantumMeasurement, args___] := QuantumMeasurement[QuantumState[qm["State"], args]]
+
+
 QuantumMeasurementProp[_, "Properties"] := QuantumMeasurement["Properties"]
 
-QuantumMeasurementProp[QuantumMeasurement[state_], "State" | "PostMeasurementState"] := state
+QuantumMeasurementProp[QuantumMeasurement[state_], "State"] := state
 
-QuantumMeasurementProp[qm_, "States"] := Map[QuantumState, qm["PureMaps"], {2}]
+QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumPartialTrace[qm["State"], 1 + Range[qm["OutputQudits"] - 1]]
 
-QuantumMeasurementProp[qm_, "ProbabilitiesList"] := qm["State"]["Probabilities"]
+QuantumMeasurementProp[qm_, "States"] := QuantumState[Flatten @ #, QuantumPartialTrace[qm["Basis"], {1}]] & /@ qm["State"]["Tensor"]
 
-QuantumMeasurementProp[qm_, "Eigenvalues"] := qm["BasisElementNames"]
+QuantumMeasurementProp[qm_, "ProbabilitiesList"] := qm["PostMeasurementState"]["Probabilities"]
 
-QuantumMeasurementProp[qm_, "Distribution"] := CategoricalDistribution[#["Formula"] & /@ Catenate[qm["States"]], Simplify @ qm["ProbabilitiesList"]]
+QuantumMeasurementProp[qm_, "Eigenvalues"] := qm["PostMeasurementState"]["BasisElementNames"]
+
+QuantumMeasurementProp[qm_, "Distribution"] := CategoricalDistribution[qm["Eigenvalues"], N @ qm["ProbabilitiesList"]]
 
 QuantumMeasurementProp[qm_, "DistributionInformation", args___] := Information[qm["Distribution"], args]
 
@@ -65,7 +72,7 @@ QuantumMeasurementProp[qm_, "Mean"] := qm["Eigenvalues"] . qm["ProbabilitiesList
 
 QuantumMeasurementProp[qm_, "StateAssociation"] := AssociationThread[qm["Outcomes"], Flatten @ qm["States"]]
 
-QuantumMeasurementProp[qm_, "StateAmplitudes"] := #["Amplitudes"] & /@ qm["StateAssociation"]
+QuantumMeasurementProp[qm_, "StateAmplitudes"] := Map[Simplify, #["Amplitudes"]] & /@ qm["StateAssociation"]
 
 QuantumMeasurementProp[qm_, "StateProbabilities"] := Association @ Thread[qm["States"] -> qm["ProbabilityArray"]]
 
@@ -101,11 +108,13 @@ QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement ? QuantumMeasurementQ, for
         {
             {
                 BoxForm`SummaryItem[{"Measurement Outcomes: ", Length[qm["Probabilities"]]}]
-            }, {
+            }
+        },
+        {
+            {
                 BoxForm`SummaryItem[{"Entropy: ", Enclose[N @ ConfirmQuiet[qm["Entropy"]], $Failed &]}]
             }
         },
-        {{}},
         format,
         "Interpretable" -> Automatic
     ]

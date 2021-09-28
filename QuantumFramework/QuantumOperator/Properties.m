@@ -146,7 +146,7 @@ QuantumOperatorProp[qo_, "UnitaryQ"] := UnitaryMatrixQ[qo["Matrix"]]
 
 QuantumOperatorProp[qo_, "Eigenvalues"] := Eigenvalues[qo["Matrix"]]
 
-QuantumOperatorProp[qo_, "Eigenvectors"] := Eigenvectors[qo["Matrix"]]
+QuantumOperatorProp[qo_, "Eigenvectors"] := Normalize /@ Eigenvectors[qo["Matrix"]]
 
 QuantumOperatorProp[qo_, "Projectors"] := projector @* Normalize /@ qo["Eigenvectors"]
 
