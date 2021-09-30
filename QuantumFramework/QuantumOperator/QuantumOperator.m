@@ -118,10 +118,10 @@ QuantumOperator[matrix_ ? MatrixQ, args___, order : (_ ? orderQ) : {1}] := Modul
 QuantumOperator[qo_ ? QuantumOperatorQ, order_ ? orderQ] :=
     QuantumOperator[qo["State"], order]
 
-QuantumOperator[qo_ ? QuantumOperatorQ, args__, order_ ? orderQ] := Enclose @
+QuantumOperator[qo_ ? QuantumOperatorQ, args : Except[_ ? QuantumBasisQ], order_ ? orderQ] := Enclose @
     QuantumOperator[qo, ConfirmBy[QuantumBasis[qo["Basis"], args], QuantumBasisQ], order]
 
-QuantumOperator[qo_ ? QuantumOperatorQ, args__] := Enclose @
+QuantumOperator[qo_ ? QuantumOperatorQ, args : Except[_ ? QuantumBasisQ]] := Enclose @
     QuantumOperator[qo, ConfirmBy[QuantumBasis[qo["Basis"], args], QuantumBasisQ]]
 
 

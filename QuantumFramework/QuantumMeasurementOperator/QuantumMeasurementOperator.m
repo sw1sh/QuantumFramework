@@ -44,10 +44,13 @@ QuantumMeasurementOperator[op_ ? QuantumOperatorQ, args__] :=
 ]
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[op_ ? QuantumOperatorQ] := With[{
-    newOp = qmo["SuperOperator"] @ op
+    newOp = qmo["SuperOperator"][{"Ordered", Min[op["InputOrder"], qmo["InputOrder"]], Max[op["InputOrder"], qmo["InputOrder"]]}] @ op
 },
-    QuantumMeasurementOperator[newOp]
+    QuantumMeasurementOperator[newOp, qmo["Order"]]
 ]
+
+(*(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[op_ ? QuantumMeasurementOperatorQ] /; qmo["Type"] === op["Type"] === "Projection" :=
+    QuantumTensorProduct[qmo, op]*)
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[op_ ? QuantumMeasurementOperatorQ] := Module[{
     order, ordered1, ordered2
@@ -58,7 +61,16 @@ QuantumMeasurementOperator[op_ ? QuantumOperatorQ, args__] :=
 
     ordered1 = QuantumOperator[
         QuantumTensorProduct[
-            QuantumOperator[{"Identity", Take[ordered2["OutputDimensions"], Max[ordered2["OutputQudits"] - ordered1["InputQudits"], 0]]}],
+            QuantumOperator[
+                QuantumOperator[{"Identity", Take[ordered2["OutputDimensions"], Max[ordered2["OutputQudits"] - ordered1["InputQudits"], 0]]}],
+                With[{qb = QuantumPartialTrace[
+                        ordered2["Output"],
+                        Complement[Range[ordered2["OutputQudits"]], Range[Max[ordered2["OutputQudits"] - ordered1["InputQudits"], 0]]
+                    ]
+                ]},
+                    QuantumBasis[qb, qb]
+                ]
+            ],
             ordered1
         ],
         ordered2["OutputOrder"]
@@ -67,9 +79,14 @@ QuantumMeasurementOperator[op_ ? QuantumOperatorQ, args__] :=
         ordered1 @ ordered2 //
             (* order results *)
             (#[{"PermuteOutput", InversePermutation @ FindPermutation[Ordering @ {First[op["Order"]], First[qmo["Order"]]}]}] &) //
-            (* curry two measured results into one *)
+            (* uncurry two measured results into one *)
             (QuantumTensorProduct[
-                QuantumOperator[{"Curry", #["OutputDimensions"][[;; 2]]}, #["OutputOrder"][[;; 2]]],
+                QuantumOperator[
+                    QuantumOperator[{"Uncurry", #["OutputDimensions"][[;; 2]]}, #["OutputOrder"][[;; 2]]],
+                    With[{qb = QuantumPartialTrace[#["Output"], Drop[Range[#["OutputQudits"]], 2]]},
+                        QuantumBasis[qb["Uncurry"], qb]
+                    ]
+                ],
                 QuantumOperator[{"Identity", #["OutputDimensions"][[3 ;;]]}, #["OutputOrder"][[3 ;;]] ]
             ] @ # &),
         Union[qmo["Order"], op["Order"]]

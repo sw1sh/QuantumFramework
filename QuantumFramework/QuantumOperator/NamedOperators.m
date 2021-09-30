@@ -6,7 +6,7 @@ PackageScope["controlledZGate"]
 
 
 ResourceFunction["AddCodeCompletion"]["QuantumOperator"][{
-    "Identity", "Permutation", "Curry",
+    "Identity", "Permutation", "Uncurry",
     "Fourier", "InverseFourier",
     "XRotation", "YRotation", "ZRotation",
     "SUM", "RootNot",
@@ -363,8 +363,8 @@ QuantumOperator[{"Permutation", dims_List, perm_Cycles}, order_ ? orderQ] := Qua
 ]
 
 
-QuantumOperator[{"Curry", dims_List}] := QuantumOperator[{"Curry", dims}, Range[Length[dims]]]
+QuantumOperator[{"Uncurry", dims_List}] := QuantumOperator[{"Curry", dims}, Range[Length[dims]]]
 
-QuantumOperator[{"Curry", dims_List}, order_ ? orderQ] :=
+QuantumOperator[{"Uncurry", dims_List}, order_ ? orderQ] :=
     QuantumOperator[IdentityMatrix[Times @@ dims], QuantumBasis[QuditBasis[Times @@ dims], QuditBasis[dims]], order]
 

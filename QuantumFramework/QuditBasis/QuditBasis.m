@@ -106,7 +106,7 @@ QuditBasisProp[QuditBasis[_, elements_], "BasisElements"] := elements
 
 QuditBasisProp[qb_, "Dimensions"] := CountDistinct /@ Transpose[Normal /@ qb["Names"]]
 
-QuditBasisProp[qb_, "NameRank"] := Length @ qb["Dimensions"]
+QuditBasisProp[qb_, "NameRank"] := Count[qb["Dimensions"], Except[1]]
 
 QuditBasisProp[qb_, "NameTensor"] := ArrayReshape[qb["Names"], qb["Dimensions"]]
 
@@ -143,6 +143,8 @@ QuditBasisProp[qb_, "DualQ"] := AllTrue[qb["Names"], #["DualQ"] &]
 QuditBasisProp[qb_, "Reverse"] := QuditBasis[Reverse @ qb["Names"], qb["BasisElements"]]
 
 QuditBasisProp[qb_, "Canonical"] := QuditBasis[Sort @ qb["Names"], qb["BasisElements"]]
+
+QuditBasisProp[qb_, "Uncurry"] := QuditBasis[KeyMap[QuditBasisName @* Row @* Map[#["Name"] &] @* Normal] @ qb["Association"]]
 
 
 QuditBasisProp[qb_, {"Permute", perm_Cycles}] := Enclose @ QuditBasis[

@@ -110,26 +110,45 @@ drawMeasurementGate[coordinates_List, order_List, scaling_, name_] := Module[{wi
     Show[semiCircle, arrow, frame]
 ]
 
+drawMeasurement[coordinates_, sourceQudit_] := Module[{width = 4},
+    Graphics[{
+        Thick,
+        Line[{coordinates + {.125, width / 2}, coordinates + {.125, 5 sourceQudit - 1}}],
+        Line[{coordinates + {-.125, width / 2}, coordinates + {-.125, 5 sourceQudit - 1}}],
+        Polygon[coordinates + {0, 5 sourceQudit - 1.5} + # & /@ {{-.75, 0}, {.75, 0}, {0, 1.25}}]
+    }
+    ]
+]
+
 
 drawWireGraphics[positionIndices_List, scaling_] := Module[{quditCount, lineList},
     quditCount = Length[positionIndices];
     lineList = Table[
         Graphics[{
             Text[Style[ToString[i], FontSize -> Scaled[0.1 / scaling]], {0, - 5 i - 1}],
-            Line[{{0, - 5 i}, {6 Max[positionIndices], - 5 i}}]}
+            Line[{{0, - 5 i}, {6 Max[positionIndices], - 5 i}}]
+            }
         ],
         {i, Range[quditCount]}
     ]
 ]
 
+drawMeasurementWire[positionIndices_List, scaling_] := Graphics[{
+    Text[Style["0", FontSize -> Scaled[0.1 / scaling]], {0, - 1.25}],
+    Thick,
+    Line[{{0, -.125}, {6 Max[positionIndices], -.125}}],
+    Line[{{0, 0.125}, {6 Max[positionIndices], .125}}]
+}]
+
 
 drawGateGraphics[gates_List] := Module[{
     width, height, orders, dimensions, lineScaling, scaling, graphicsList, index, positionIndices, gatePositionIndices,
-    targetQuditsOrder, controlQuditsOrder, controlQuditsOrderTop, controlQuditsOrderBottom, controlQuditsTopCoordinates, controlQuditsBottomCoordinates
+    targetQuditsOrder, controlQuditsOrder, controlQuditsOrderTop, controlQuditsOrderBottom, controlQuditsTopCoordinates, controlQuditsBottomCoordinates,
+    includeMeasurement = False
 },
     width = 4;
     height = 3;
-    orders = #["Order"]& /@ gates;
+    orders = #["InputOrder"]& /@ gates;
     dimensions = First[gates]["InputDimensions"];
     lineScaling = Max[2, 0.1 Max[Flatten[orders]] Length[gates]] + 0.2;
     scaling = Max[1, 0.1 Max[Flatten[orders]] Length[gates]] + 0.1;
@@ -138,8 +157,9 @@ drawGateGraphics[gates_List] := Module[{
     positionIndices = ConstantArray[1, Max[Flatten[orders]]];
     Do[
     gatePositionIndices = Table[positionIndices[[j]], {j, Min[orders[[i]]], Max[orders[[i]]]}];
-    positionIndices[[ Range[Min[orders[[i]]], Max[orders[[i]]]] ]] = Max[positionIndices[[ Range[Min[orders[[i]]], Max[orders[[i]]]] ]]] + 1;
+
     If[ QuantumMeasurementOperatorQ[gates[[i]]],
+        includeMeasurement = True;
         Which[
             gates[[i]]["POVMQ"],
             AppendTo[graphicsList, drawMeasurementGate[{-2 + 6 Max[gatePositionIndices], - 5 Max[orders[[i]]]}, orders[[i]], scaling, "POVM"]],
@@ -153,7 +173,9 @@ drawGateGraphics[gates_List] := Module[{
                     gates[[i]]["Label"] /. None -> "M"
                 ]
             ]
-        ]
+        ];
+        AppendTo[graphicsList, drawMeasurement[{-2 + 6 Max[gatePositionIndices], - 5 Max[orders[[i]]]}, First[orders[[i]]]]];
+        positionIndices = positionIndices + 1;
     ];
     If[ QuantumOperatorQ[gates[[i]]],
 
@@ -205,6 +227,7 @@ drawGateGraphics[gates_List] := Module[{
                 ]
             ]
         ];
+        positionIndices[[ Range[Min[orders[[i]]], Max[orders[[i]]]] ]] = Max[positionIndices[[ Range[Min[orders[[i]]], Max[orders[[i]]]] ]]] + 1;
         index = index + 1
     ],
         {i, Length[gates]}
@@ -214,6 +237,9 @@ drawGateGraphics[gates_List] := Module[{
         Max[orders[[i]]]}]
     *)
     PrependTo[graphicsList, drawWireGraphics[positionIndices, lineScaling]];
+    If[ TrueQ[includeMeasurement],
+        PrependTo[graphicsList, drawMeasurementWire[positionIndices, lineScaling]]
+    ];
     graphicsList
 ]
 

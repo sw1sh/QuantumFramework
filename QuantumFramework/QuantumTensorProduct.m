@@ -11,7 +11,7 @@ QuantumTensorProduct[args___] := QuantumTensorProduct[{args}]
 
 QuantumTensorProduct[qb1_QuditBasis, qb2_QuditBasis] := Enclose @ QuditBasis[
     QuantumTensorProduct @@@ Tuples[{ConfirmBy[qb1, QuditBasisQ]["Names"], ConfirmBy[qb2, QuditBasisQ]["Names"]}],
-    Association[qb1["BasisElements"], KeyMap[MapAt[# + qb1["Rank"] &, 2]] @ qb2["BasisElements"]]
+    Association[qb1["BasisElements"], KeyMap[MapAt[# + qb1["NameRank"] &, 2]] @ qb2["BasisElements"]]
 ]["RemoveIdentities"]
 
 
@@ -21,11 +21,11 @@ QuantumTensorProduct[qb1_QuantumBasis, qb2_QuantumBasis] /; qb1["Picture"] === q
 QuantumBasis[
     "Output" -> QuditBasis[
         QuantumTensorProduct @@@ Tuples[{qb1["OutputBasisElementNames"], qb2["OutputBasisElementNames"]}],
-        Association[qb1["Output"]["BasisElements"], KeyMap[MapAt[# + qb1["OutputRank"] &, 2]] @ qb2["Output"]["BasisElements"]]
+        Association[qb1["Output"]["BasisElements"], KeyMap[MapAt[# + qb1["Output"]["NameRank"] &, 2]] @ qb2["Output"]["BasisElements"]]
     ],
     "Input" -> QuditBasis[
         QuantumTensorProduct @@@ Tuples[{qb1["InputBasisElementNames"], qb2["InputBasisElementNames"]}],
-        Association[qb1["Input"]["BasisElements"], KeyMap[MapAt[# + qb1["InputRank"] &, 2]] @ qb2["Input"]["BasisElements"]]
+        Association[qb1["Input"]["BasisElements"], KeyMap[MapAt[# + qb1["Input"]["NameRank"] &, 2]] @ qb2["Input"]["BasisElements"]]
     ],
     "Picture" -> qb1["Picture"],
     "Label" -> Flatten @ CircleTimes[qb1["Label"], qb2["Label"]] /. None -> Sequence[]
