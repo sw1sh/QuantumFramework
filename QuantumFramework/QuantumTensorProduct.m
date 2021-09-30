@@ -28,7 +28,7 @@ QuantumBasis[
         Association[qb1["Input"]["BasisElements"], KeyMap[MapAt[# + qb1["InputRank"] &, 2]] @ qb2["Input"]["BasisElements"]]
     ],
     "Picture" -> qb1["Picture"],
-    "Label" -> Flatten @ CircleTimes[qb1["Label"], qb2["Label"]]
+    "Label" -> Flatten @ CircleTimes[qb1["Label"], qb2["Label"]] /. None -> Sequence[]
 ]
 
 
@@ -39,8 +39,8 @@ QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] := Enclose[
     QuantumState[QuantumState[
         If[qs1["StateType"] === qs2["StateType"] === "Vector",
             Flatten[KroneckerProduct[
-                qs1["Matrix"],
-                qs2["Matrix"]
+                qs1["PureMatrix"],
+                qs2["PureMatrix"]
             ]],
             KroneckerProduct[qs1["MatrixRepresentation"], qs2["MatrixRepresentation"]]
         ],
@@ -54,7 +54,12 @@ QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] := Enclose[
 (* operator x operator *)
 
 QuantumTensorProduct[qdo1_QuantumOperator, qdo2_QuantumOperator] :=
-    QuantumOperator[QuantumTensorProduct[qdo1["State"], qdo2["State"]], Join[qdo1["Order"], qdo2["Order"] + Max[qdo1["TotalOrder"]]]]
+    QuantumOperator[QuantumTensorProduct[qdo1["State"], qdo2["State"]],
+        If[ IntersectingQ[qdo1["InputOrder"], qdo2["InputOrder"]],
+            Join[qdo1["Order"], Max[qdo1["Order"]] + qdo2["QuditOrder"]],
+            Join[qdo1["Order"], qdo2["Order"]]
+        ]
+    ]
 
 
 QuantumTensorProduct[qmo1_QuantumMeasurementOperator, qmo2_QuantumMeasurementOperator] :=

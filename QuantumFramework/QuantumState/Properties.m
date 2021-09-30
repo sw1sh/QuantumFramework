@@ -17,10 +17,10 @@ $QuantumStateProperties = {
      "Eigenvalues", "Eigenvectors", "Eigenstates",
      "Computational",
      "StateTensor", "StateMatrix",
-     "Tensor", "Matrix", "Vector"
+     "Tensor", "Matrix"
 };
 
-QuantumState["Properties"] := DeleteDuplicates @ Join[$QuantumStateProperties, QuantumBasis["Properties"]]
+QuantumState["Properties"] := QuantumState["Properties"] = DeleteDuplicates @ Join[$QuantumStateProperties, QuantumBasis["Properties"]]
 
 
 qs_QuantumState["ValidQ"] := QuantumStateQ[qs]
@@ -39,7 +39,8 @@ QuantumState::failprop = "property `` failed with ``"
 ]
 
 
-QuantumStateProp[_, "Properties"] := QuantumState["Properties"]
+QuantumStateProp[qs_, "Properties"] :=
+    If[qs["Dimension"] == 2, QuantumState["Properties"], DeleteCases[QuantumState["Properties"], _ ? (StringStartsQ["Bloch"])]]
 
 
 (* getters *)
@@ -297,5 +298,5 @@ QuantumStateProp[qs_, "BlochPlot"] /; qs["Dimension"] == 2 := Module[{
 (* basis properties *)
 
 QuantumStateProp[qs_, prop_ ? propQ, args___] /;
-    MatchQ[prop, Alternatives @@ Intersection[qs["Basis"]["Properties"], qs["Properties"]]] := qs["Basis"][prop, args]
+    MatchQ[prop, Alternatives @@ Intersection[QuantumBasis["Properties"], QuantumState["Properties"]]] := qs["Basis"][prop, args]
 

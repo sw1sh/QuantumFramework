@@ -24,49 +24,56 @@ QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumOperatorQ], 
 
 (* mutation *)
 
-QuantumMeasurementOperator[op_ ? QuantumMeasurementOperatorQ, qb_ ? QuantumBasisQ] :=
-    QuantumMeasurementOperator[QuantumOperator[op["QuantumOperator"], qb]]
+QuantumMeasurementOperator[op_ ? QuantumMeasurementOperatorQ, args__] :=
+    QuantumMeasurementOperator[QuantumOperator[op["QuantumOperator"], args]]
 
-QuantumMeasurementOperator[op_ ? QuantumFrameworkOperatorQ, order_ ? orderQ] := QuantumMeasurementOperator[Head[op][op, order]]
+QuantumMeasurementOperator[op_ ? QuantumOperatorQ, args__] :=
+    QuantumMeasurementOperator[QuantumOperator[op, args]]
+
 
 (* composition *)
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qs_ ? QuantumStateQ] := Enclose @ Module[{ordered},
     ConfirmAssert[qs["OutputQudits"] >= qmo["Arity"], "Not enough output qudits"];
 
-    ordered = qmo[{"Ordered", qs["OutputQudits"]}];
+    ordered = qmo[{"Ordered", 1, Max[qmo["MaxArity"], qs["OutputQudits"]]}];
     ConfirmAssert[ordered["InputDimensions"][[ordered["Order"]]] == qs["OutputDimensions"][[ordered["Order"]]],
         "Operator and state dimensions don't match"
     ];
-(*    (
-        With[{
-            stateTraceQudits = DeleteCases[Range[qs["OutputQudits"]], #]
-        },
-            ordered["SuperOperator"][QuantumPartialTrace[qs, stateTraceQudits]]
-        ] & /@ qmo["Order"]
-    )*)
-    (*With[{
-        operatorTraceQudits = Complement[Range[ordered["MaxArity"]], qmo["Order"]],
-        stateTraceQudits = Complement[Range[qs["OutputQudits"]], qmo["Order"]]
-    },
-        QuantumMeasurement @
-            QuantumPartialTrace[
-                QuantumPartialTrace[ordered, operatorTraceQudits]["SuperOperator"][QuantumPartialTrace[qs, stateTraceQudits]],
-                1 + Range[qmo["Arity"]]
-            ]
-    ]*)
-    With[{
-        stateTraceQudits = Complement[Range[qs["OutputQudits"]], qmo["Order"]]
-    },
-        QuantumMeasurement @
-            ordered["SuperOperator"][qs]
-    ]
+    QuantumMeasurement @ ordered["SuperOperator"][{"Ordered", 1, qs["OutputQudits"]}][qs]
 ]
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[op_ ? QuantumFrameworkOperatorQ] := With[{
-    newOp = qmo["QuantumOperator"][op["QuantumOperator"]]
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[op_ ? QuantumOperatorQ] := With[{
+    newOp = qmo["SuperOperator"] @ op
 },
-    QuantumMeasurementOperator[newOp, If[QuantumMeasurementOperatorQ[op], Union[qmo["Order"], op["Order"]], qmo["Order"]]]
+    QuantumMeasurementOperator[newOp]
+]
+
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[op_ ? QuantumMeasurementOperatorQ] := Module[{
+    order, ordered1, ordered2
+},
+    order = {"Ordered", Min[op["InputOrder"], qmo["InputOrder"]], Max[op["InputOrder"], qmo["InputOrder"]]};
+    ordered1 = qmo["SuperOperator"][order];
+    ordered2 = op["SuperOperator"][order];
+
+    ordered1 = QuantumOperator[
+        QuantumTensorProduct[
+            QuantumOperator[{"Identity", Take[ordered2["OutputDimensions"], Max[ordered2["OutputQudits"] - ordered1["InputQudits"], 0]]}],
+            ordered1
+        ],
+        ordered2["OutputOrder"]
+    ];
+    QuantumMeasurementOperator[
+        ordered1 @ ordered2 //
+            (* order results *)
+            (#[{"PermuteOutput", InversePermutation @ FindPermutation[Ordering @ {First[op["Order"]], First[qmo["Order"]]}]}] &) //
+            (* curry two measured results into one *)
+            (QuantumTensorProduct[
+                QuantumOperator[{"Curry", #["OutputDimensions"][[;; 2]]}, #["OutputOrder"][[;; 2]]],
+                QuantumOperator[{"Identity", #["OutputDimensions"][[3 ;;]]}, #["OutputOrder"][[3 ;;]] ]
+            ] @ # &),
+        Union[qmo["Order"], op["Order"]]
+    ]
 ]
 
 
@@ -76,5 +83,5 @@ QuantumMeasurementOperator[op_ ? QuantumFrameworkOperatorQ, order_ ? orderQ] := 
 (* equality *)
 
 QuantumMeasurementOperator /: (qmo1_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ) ==
-    (qmo2_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ) := qmo1["Matrix"] == qmo2["Matrix"]
+    (qmo2_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ) := qmo1["MatrixRepresentation"] == qmo2["MatrixRepresentation"]
 

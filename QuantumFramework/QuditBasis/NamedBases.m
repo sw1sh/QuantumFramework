@@ -1,6 +1,15 @@
 Package["QuantumFramework`"]
 
 
+
+ResourceFunction["AddCodeCompletion"]["QuditBasis"][{
+    "Computational",
+    "PauliX", "PauliY", "PauliZ",
+    "Fourier",
+    "Identity",
+    "Schwinger", "Pauli", "Dirac", "Wigner"
+}]
+
 QuditBasis[1, args___] := QuditBasis[args]
 
 QuditBasis[dimension_Integer, args___] := QuditBasis[{"Computational", dimension}, args]

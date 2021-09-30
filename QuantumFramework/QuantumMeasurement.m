@@ -22,7 +22,7 @@ $QuantumMeasurementProperties = {
 };
 
 
-QuantumMeasurement["Properties"] := DeleteDuplicates @ Join[$QuantumMeasurementProperties, QuantumState["Properties"]]
+QuantumMeasurement["Properties"] := QuantumMeasurement["Properties"] = DeleteDuplicates @ Join[$QuantumMeasurementProperties, QuantumState["Properties"]]
 
 
 QuantumMeasurement::undefprop = "QuantumMeasurement property `` is undefined for this basis";
@@ -40,7 +40,7 @@ QuantumMeasurement::undefprop = "QuantumMeasurement property `` is undefined for
 QuantumMeasurement[qm_QuantumMeasurement, args___] := QuantumMeasurement[QuantumState[qm["State"], args]]
 
 
-QuantumMeasurementProp[_, "Properties"] := QuantumMeasurement["Properties"]
+QuantumMeasurementProp[qm_, "Properties"] := DeleteDuplicates @ Join[$QuantumMeasurementProperties, qm["State"]["Properties"]]
 
 QuantumMeasurementProp[QuantumMeasurement[state_], "State"] := state
 
@@ -74,7 +74,7 @@ QuantumMeasurementProp[qm_, "StateAssociation"] := AssociationThread[qm["Outcome
 
 QuantumMeasurementProp[qm_, "StateAmplitudes"] := Map[Simplify, #["Amplitudes"]] & /@ qm["StateAssociation"]
 
-QuantumMeasurementProp[qm_, "StateProbabilities"] := Association @ Thread[qm["States"] -> qm["ProbabilityArray"]]
+QuantumMeasurementProp[qm_, "StateProbabilities"] := Merge[Thread[qm["States"] -> qm["ProbabilityArray"]], Total]
 
 QuantumMeasurementProp[qm_, "StateProbabilityTable"] := Dataset[qm["StateProbabilities"]]
 

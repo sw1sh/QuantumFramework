@@ -164,6 +164,9 @@ QuantumState /: (x : (_ ? NumericQ) | _Symbol) * (qs_QuantumState ? QuantumState
 
 (qs1_QuantumState ? QuantumStateQ)[(qs2_QuantumState ? QuantumStateQ)] /; qs1["InputDimension"] == qs2["OutputDimension"] :=
     QuantumState[
-        QuantumState[Flatten[qs1["MatrixRepresentation"] . qs2["MatrixRepresentation"]], QuantumBasis[{qs1["OutputDimension"], qs2["InputDimension"]}]],
-        QuantumBasis[<|"Input" -> qs2["Input"], "Output" -> qs1["Output"], "Label" -> qs1["Label"] @* qs2["Label"]|>]
+        QuantumState[
+            Flatten[qs1["PureMatrix"] . qs2["PureMatrix"]],
+            QuantumBasis["Output" -> QuditBasis[qs1["OutputDimensions"]], "Input" -> QuditBasis[qs2["InputDimensions"]]]
+        ],
+        QuantumBasis["Output" -> qs1["Output"], "Input" -> qs2["Input"], "Label" -> qs1["Label"] @* qs2["Label"]]
     ]

@@ -7,7 +7,7 @@ PackageScope["basisQuditsSummaryItem"]
 
 basisDimensionSummaryItem[o_] := If[o["InputDimension"] === o["OutputDimension"],
     {"Dimension: ", o["InputDimension"]},
-    {"Dimensions: ", o["Dimensions"]}
+    {"Dimensions: ", If[o["InputQudits"] > 0, MapAt[Style[#, Bold] &, o["Dimensions"], {- o["InputQudits"] ;; }], o["Dimensions"]]}
 ]
 
 basisQuditsSummaryItem[o_] := {"Qudits: ", If[o["InputQudits"] === o["OutputQudits"], o["InputQudits"], {o["OutputQudits"], o["InputQudits"]}]}

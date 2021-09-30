@@ -2,6 +2,19 @@ Package["QuantumFramework`"]
 
 
 
+ResourceFunction["AddCodeCompletion"]["QuantumState"][{
+    "Plus", "Minus", "Left", "Right",
+    "PsiPlus", "PsiMinus", "PhiPlus", "PhiMinus",
+    "BasisState", "Register",
+    "UniformSuperposition",
+    "UniformMixture",
+    "RandomPure",
+    "GHZ",
+    "W",
+    "Werner",
+    "Graph"
+}]
+
 (*QuantumState[name_ ? nameQ, args : PatternSequence[] | Except[PatternSequence[_Integer ? Positive, ___]]] := QuantumState[name, 2, args]*)
 
 QuantumState[name_ ? nameQ, basisName : Except[Alternatives @@ $QuantumBasisPictures, _ ? nameQ]] :=

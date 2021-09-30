@@ -26,14 +26,11 @@ QuantumOperator[qs_QuantumState ? QuantumStateQ] :=
 QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, args___, order : (_ ? orderQ) : {1}] := Module[{
     dimensions = TensorDimensions[tensor],
     rank,
-    targetOrder, newTensor,
     basis,
     inputDimension, outputDimension
 },
-    rank = Max[Length[dimensions], Max[order]];
-    targetOrder = Reverse[rank - order + 1];
-    newTensor = Transpose[tensor, Join[Complement[Range[rank], targetOrder], targetOrder]];
-    {outputDimension, inputDimension} = Times @@@ TakeDrop[TensorDimensions[newTensor], rank - Length[targetOrder]];
+    rank = Max[Length[dimensions], Max[order] - Min[order] + 1];
+    {outputDimension, inputDimension} = Times @@@ TakeDrop[TensorDimensions[tensor], rank - Length[order]];
     basis = QuantumBasis[args];
     If[ basis["OutputDimension"] != outputDimension,
         basis = QuantumBasis[basis, "Output" -> QuditBasis[dimensions[[;; - Length[order] - 1]]]]
@@ -42,7 +39,7 @@ QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, args___, order : (_
         basis = QuantumBasis[basis, "Input" -> QuditBasis[dimensions[[- Length[order] ;;]]]]
     ];
     QuantumOperator[
-        ArrayReshape[newTensor, Times @@@ TakeDrop[TensorDimensions[newTensor], rank - Length[targetOrder]]],
+        ArrayReshape[tensor, Times @@@ TakeDrop[TensorDimensions[tensor], rank - Length[order]]],
         basis,
         order
     ]
@@ -132,7 +129,9 @@ QuantumOperator[qo_ ? QuantumOperatorQ, args__] := Enclose @
 
 QuantumOperator[qo_ ? QuantumOperatorQ] := qo["Computational"]
 
-QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ] := Enclose @ Module[{},
+QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ] := QuantumOperator[qo, qb, qo["Order"]]
+
+QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ, order_ ? orderQ] := Enclose @ Module[{},
     ConfirmAssert[qo["Dimension"] == qb["Dimension"] || qo["Dimension"] == qb["Dimension"] ^ 2 && qb["InputDimension"] == 1];
     QuantumOperator[
         ConfirmBy[
@@ -143,7 +142,7 @@ QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ] := Enclose @ Module
             QuantumStateQ,
             Message[QuantumOperator::invalidState]
         ],
-        qo["Order"]
+        order
     ]
 ]
 
@@ -166,31 +165,35 @@ qo["Picture"] === qo["Picture"] && (
             ],
             QuantumBasis["Output" -> QuditBasis[ordered["OutputDimensions"]], "Input" -> QuditBasis[qs["InputDimensions"]]]
         ],
-       QuantumBasis[
+        QuantumBasis[
             "Output" -> ordered["Output"],
             "Input" -> qs["Input"],
-            "Label" -> ordered["Label"] @* qs["Label"]
+            "Label" -> ordered["Label"] @* qs["Label"] /. None -> Sequence[]
         ]
     ]
 ]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumFrameworkOperatorQ] /; qo["Picture"] === op["Picture"] := Enclose @ Module[{
-    arity = Max[qo["MaxArity"], op["MaxArity"]], ordered1, ordered2
+    range, ordered1, ordered2
 },
-    ordered1 = op[{"Ordered", arity}];
-    ordered2 = qo[{"Ordered", arity}];
-    ConfirmAssert[ordered2["InputDimension"] == ordered1["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
+    range = {Min[qo["InputOrder"], op["OutputOrder"]], Max[qo["InputOrder"], op["OutputOrder"]]};
+    ordered1 = qo[{"Ordered", Splice @ range}];
+    ordered2 = If[op["OutputOrder"] == ordered1["InputOrder"], op,
+        op[{"Ordered", Min[op["Order"]] - Max[0, Min[op["OutputOrder"]] - Min[ordered1["Order"]]], Max[op["InputOrder"], ordered1["InputOrder"]]}]
+    ];
+    ConfirmAssert[ordered1["InputDimension"] == ordered2["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
     QuantumOperator[
         QuantumOperator[
-            ordered2["MatrixRepresentation"] . ordered1["MatrixRepresentation"],
-            QuantumBasis["Output" -> QuditBasis[ordered2["OutputDimensions"]], "Input" -> QuditBasis[ordered1["InputDimensions"]]],
-            Union[ordered1["TotalOrder"], ordered2["TotalOrder"]]
+            ordered1["MatrixRepresentation"] . ordered2["MatrixRepresentation"],
+            QuantumBasis["Output" -> QuditBasis[ordered1["OutputDimensions"]], "Input" -> QuditBasis[ordered2["InputDimensions"]]],
+            ordered2["InputOrder"]
         ],
         QuantumBasis[
-            "Output" -> ordered2["Output"],
-            "Input" -> ordered1["Input"],
-            "Label" -> qo["Label"] @* op["Label"]
-        ]
+            "Output" -> ordered1["Output"],
+            "Input" -> ordered2["Input"],
+            "Label" -> qo["Label"] @* op["Label"] /. None -> Sequence[]
+        ],
+        ordered2["Order"]
     ]
 ]
 

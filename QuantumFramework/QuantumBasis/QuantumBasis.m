@@ -77,10 +77,10 @@ QuantumBasis[data_Association, args__] := Fold[QuantumBasis, QuantumBasis[data],
 
 QuantumBasis[elements_Association ? (Not @* KeyExistsQ["Output"]), args___] := QuantumBasis[<|"Output" -> QuditBasis[elements]|>, args]
 
-QuantumBasis[dimensions_List, args___] := QuantumBasis[<|"Output" -> QuditBasis[dimensions]|>, args]
+QuantumBasis[output : _QuditBasis | _List, args___] := QuantumBasis["Output" -> QuditBasis[output], args]
 
-QuantumBasis[outputDimensions_List, inputDimensions_List, args___] :=
-    QuantumBasis[<|"Output" -> QuditBasis[outputDimensions], "Input" -> QuditBasis[inputDimensions]|>, args]
+QuantumBasis[output : _QuditBasis | _List, input : _QuditBasis | _List | _Integer, args___] :=
+    QuantumBasis["Output" -> QuditBasis[output], "Input" -> QuditBasis[input], args]
 
 
 (* defaults *)

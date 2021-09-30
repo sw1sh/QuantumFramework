@@ -5,6 +5,19 @@ PackageScope["controlledZGate"]
 
 
 
+ResourceFunction["AddCodeCompletion"]["QuantumOperator"][{
+    "Identity", "Permutation", "Curry",
+    "Fourier", "InverseFourier",
+    "XRotation", "YRotation", "ZRotation",
+    "SUM", "RootNot",
+    "X", "Y", "Z", "PauliX", "PauliY", "PauliZ", "H", "Hadamard",
+    "SWAP", "RootSWAP", "CSWAP",
+     "ControlledU", "CX", "CY", "CZ", "CH", "CT", "CS", "CPHASE", "CNOT",
+    "XX", "YY", "ZZ",
+    "Toffoli", "Deutsch", "RandomUnitary"
+}]
+
+
 pauliZGate = SparseArray[{j_, j_} :> Exp[(2 Pi I j / 2) + I Pi], {2, 2}];
 
 controlledZGate = ReplacePart[
@@ -23,6 +36,8 @@ QuantumOperator[name_ ? nameQ, basisName : Except[Alternatives @@ $QuantumBasisP
 QuantumOperator["Identity", args___] := QuantumOperator[{"Identity", 2}, args]
 
 QuantumOperator[{"Identity", dimension_Integer}, args___] := QuantumOperator[IdentityMatrix[dimension], dimension, args]
+
+QuantumOperator[{"Identity", dims_List}, args___] := QuantumOperator[{"Permutation", dims, Cycles[{{}}]}, args]
 
 
 QuantumOperator[{"XRotation", angle_}, args___] := QuantumOperator[
@@ -126,7 +141,7 @@ QuantumOperator[{"ControlledU", qo_ ? QuantumOperatorQ}, args___] :=
 
 QuantumOperator["Fourier", args___] := QuantumOperator[{"Fourier", 2}, args]
 
-QuantumOperator[{"Fourier", dimension_Integer}, args___, order_ ? orderQ] := QuantumOperator[
+QuantumOperator[{"Fourier", dimension_Integer}, args___, order : (_ ? orderQ) : {1}] := QuantumOperator[
     SparseArray[
         ({i_, j_} :>  Exp[2 Pi I (i - 1) (j - 1) / (dimension ^ Length[order])] / Sqrt[dimension ^ Length[order]]),
         {dimension ^ Length[order], dimension ^ Length[order]}
@@ -139,7 +154,7 @@ QuantumOperator[{"Fourier", dimension_Integer}, args___, order_ ? orderQ] := Qua
 
 QuantumOperator["InverseFourier", args___] := QuantumOperator[{"InverseFourier", 2}, args]
 
-QuantumOperator[{"InverseFourier", dimension_Integer}, args___, order_ ? orderQ] := QuantumOperator[
+QuantumOperator[{"InverseFourier", dimension_Integer}, args___, order : (_ ? orderQ) : {1}] := QuantumOperator[
      SparseArray[
         ({i_, j_} :> Exp[-2 Pi I (i - 1) (j - 1) / (dimension ^ Length[order])] / Sqrt[dimension ^ Length[order]]),
         {dimension ^ Length[order], dimension ^ Length[order]}
@@ -247,13 +262,13 @@ QuantumOperator[{"RootNOT", dimension_Integer}, args___] := QuantumOperator[
 ]
 
 
-QuantumOperator["Hadamard" | "H", args___] := QuantumOperator[HadamardMatrix[2], args]
+QuantumOperator["Hadamard" | "H", args___] := QuantumOperator[HadamardMatrix[2], "Label" -> "H", args]
 
 QuantumOperator[{"Hadamard" | "H", qudits_Integer ? Positive}, args___] :=
     QuantumOperator[QuantumTensorProduct[Table[QuantumOperator["Hadamard", args], qudits]], "Label" -> If[qudits > 1, Superscript["H", CircleTimes[qudits]], "H"]]
 
 
-QuantumOperator["Toffoli", args___, order_ ? orderQ] := QuantumOperator[{"Toffoli", Length[order]}, args, order]
+QuantumOperator["Toffoli", args___, order : (_ ? orderQ) : {1, 2, 3}] := QuantumOperator[{"Toffoli", Length[order]}, args, order]
 
 QuantumOperator[{"Toffoli", arity_Integer}, args___] := QuantumOperator[
     SparseArray[{i_, j_} :>
@@ -331,15 +346,25 @@ QuantumOperator[{"Deutsch", angle_}, args___] := QuantumOperator[
 
 QuantumOperator["RandomUnitary", args___] := QuantumOperator[{"RandomUnitary", 2}, args]
 
-QuantumOperator[{"RandomUnitary", dimension_Integer}, args___, order_ ? orderQ] :=
+QuantumOperator[{"RandomUnitary", dimension_Integer}, args___, order : (_ ? orderQ) : {1}] :=
     QuantumOperator[RandomVariate @ CircularUnitaryMatrixDistribution[dimension ^ Length[order]], dimension, args, order]
 
 
-(*  default orders for operators that use it  *)
+QuantumOperator[{"Permutation", perm_Cycles}, args___] := QuantumOperator[{"Permutation", 2, perm}, args]
 
-QuantumOperator[name : {"Fourier" | "InverseFourier" | "RandomUnitary", ___},
-    PatternSequence[args___, order : (_ ? orderQ) : {1}]] := QuantumOperator[name, args, order]
+QuantumOperator[{"Permutation", dim_Integer, perm_Cycles}, args___] := QuantumOperator[{"Permutation", Table[dim, PermutationMax[perm]], perm}, args]
 
-QuantumOperator[name : "Toffoli", PatternSequence[args___, order : (_ ? orderQ) : {1, 2, 3}]] :=
-    QuantumOperator[name, args, order]
+QuantumOperator[{"Permutation", dims_List, perm_Cycles}] := QuantumOperator[{"Permutation", dims, perm}, Range[Length[dims]]]
+
+QuantumOperator[{"Permutation", dims_List, perm_Cycles}, order_ ? orderQ] := QuantumOperator[
+    TensorTranspose[ArrayReshape[kroneckerProduct @@ IdentityMatrix /@ dims, Join[dims, dims]], perm],
+    QuantumBasis[QuditBasis[Permute[dims, perm]], QuditBasis[dims]],
+    order
+]
+
+
+QuantumOperator[{"Curry", dims_List}] := QuantumOperator[{"Curry", dims}, Range[Length[dims]]]
+
+QuantumOperator[{"Curry", dims_List}, order_ ? orderQ] :=
+    QuantumOperator[IdentityMatrix[Times @@ dims], QuantumBasis[QuditBasis[Times @@ dims], QuditBasis[dims]], order]
 

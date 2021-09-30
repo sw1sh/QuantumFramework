@@ -165,6 +165,8 @@ QuditBasisProp[qb_, "RemoveIdentities"] := QuditBasis[
 
 QuditBasis[_QuditBasis, 0] := QuditBasis[]
 
+QuditBasis[dimension_Integer, multiplicity_Integer ? Positive] := QuditBasis[QuditBasis[dimension], multiplicity]
+
 QuditBasis[qb_QuditBasis ? QuditBasisQ, multiplicity_Integer ? Positive] :=
     If[multiplicity > 1, QuantumTensorProduct[Table[qb, multiplicity]], qb]
 

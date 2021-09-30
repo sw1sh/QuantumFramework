@@ -30,6 +30,10 @@ QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; Quantu
         },
         {
             {
+                BoxForm`SummaryItem[{"Dimensions: ",
+                If[qmo["InputQudits"] > 0, MapAt[Style[#, Bold] &, qmo["Dimensions"], {- qmo["InputQudits"] ;; }], qmo["Dimensions"]]}]
+            },
+            {
                 BoxForm`SummaryItem[{"Hermitian: ", qmo["HermitianQ"]}]
             },
             {

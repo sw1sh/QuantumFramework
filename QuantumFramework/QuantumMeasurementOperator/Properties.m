@@ -45,10 +45,10 @@ QuantumMeasurementOperatorProp[_[op_], "QuantumOperator"] := op
 QuantumMeasurementOperatorProp[qmo_, "Type"] := Which[
     qmo["OutputQudits"] == qmo["InputQudits"],
     "Projection",
-    qmo["OutputQudits"] == qmo["InputQudits"] + 1,
+    qmo["OutputQudits"] > qmo["InputQudits"],
     "POVM",
     True,
-    "Unknown"
+    "Destructive"
 ]
 
 QuantumMeasurementOperatorProp[qmo_, "ProjectionQ"] := qmo["Type"] === "Projection"
@@ -57,13 +57,13 @@ QuantumMeasurementOperatorProp[qmo_, "POVMQ"] := qmo["Type"] === "POVM"
 
 QuantumMeasurementOperatorProp[qmo_, "POVMElements"] := If[qmo["POVMQ"], qmo["Tensor"], qmo["Projectors"]]
 
-QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | {"Ordered", _}] := QuantumMeasurementOperator[qmo["QuantumOperator"][prop], qmo["Order"]]
+QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | {"Ordered", __}] := QuantumMeasurementOperator[qmo["QuantumOperator"][prop], qmo["Order"]]
 
 QuantumMeasurementOperatorProp[qmo_, "OrderedPOVMElements"] := qmo[{"OrderedPOVMElements", qmo["MaxArity"]}]
 
-QuantumMeasurementOperatorProp[qmo_, {"OrderedPOVMElements", arity_Integer}] := If[qmo["POVMQ"],
-    qmo[{"OrderedTensor", arity}],
-    projector /@ qmo[{"OrderedMatrix", arity}]
+QuantumMeasurementOperatorProp[qmo_, {"OrderedPOVMElements", args___}] := If[qmo["POVMQ"],
+    qmo[{"OrderedTensor", args}],
+    projector /@ qmo[{"OrderedMatrix", args}]
 ]
 
 QuantumMeasurementOperatorProp[qmo_, "Operators"] := If[qmo["POVMQ"],
@@ -72,19 +72,24 @@ QuantumMeasurementOperatorProp[qmo_, "Operators"] := If[qmo["POVMQ"],
 ]
 
 QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
-    traceQudits = Complement[Range[qmo["MaxArity"]], qmo["Order"]],
+    trace = Complement[qmo["InputOrder"], qmo["Order"]],
+    traceQudits,
     ordered = qmo["Ordered"],
     tracedOperator
 },
-    tracedOperator = QuantumPartialTrace[ordered, traceQudits];
-    If[
-        tracedOperator["POVMQ"],
+    traceQudits = trace - Min[qmo["Order"]] + 1;
 
-        QuantumOperator[
-            Power[ArrayReshape[#, Table[tracedOperator["InputDimension"], 2]], 1 / 2] & /@ tracedOperator["Tensor"],
-            tracedOperator["Basis"]
+    If[
+        qmo["POVMQ"],
+
+        QuantumOperator[QuantumOperator[
+            ArrayReshape[#, {Times @@ Rest @ qmo["OutputDimensions"], qmo["InputDimension"]}] & /@ qmo["POVMElements"],
+            qmo["Basis"]
+        ],
+            qmo["Order"]
         ],
 
+        tracedOperator = QuantumPartialTrace[ordered, If[qmo["POVMQ"], {# + qmo["OutputQudits"] - qmo["InputQudits"], #} & /@ trace, trace]];
         QuantumOperator[
             QuantumOperator[
                 Map[kroneckerProduct @@ Prepend[IdentityMatrix /@ ordered["InputDimensions"][[traceQudits]], #] &, tracedOperator["Projectors"]],
@@ -98,17 +103,17 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
                             ],
                             tracedOperator["Eigenvectors"]
                         ],
-                        QuantumPartialTrace[ordered["Output"], ordered["Order"]],
+                        QuantumPartialTrace[ordered["Output"], ordered["QuditOrder"]],
                         tracedOperator["Output"]
                     ],
-                    "Input" -> QuantumTensorProduct[QuantumPartialTrace[ordered["Input"], ordered["Order"]], tracedOperator["Input"]]
+                    "Input" -> QuantumTensorProduct[QuantumPartialTrace[ordered["Input"], ordered["QuditOrder"]], tracedOperator["Input"]]
                 ]
             ][
-                {"PermuteOutput", InversePermutation @ FindPermutation[Prepend[1 + Join[qmo["Order"], traceQudits], 1]]}
+                {"PermuteOutput", InversePermutation @ FindPermutation[Prepend[1 + Join[qmo["QuditOrder"], traceQudits], 1]]}
             ][
-                {"PermuteInput", InversePermutation @ FindPermutation[Join[qmo["Order"], traceQudits]]}
+                {"PermuteInput", InversePermutation @ FindPermutation[Join[qmo["QuditOrder"], traceQudits]]}
             ],
-            Range[ordered["Arity"]]
+            qmo["Order"]
         ]
     ]
 ]
