@@ -177,10 +177,12 @@ qo["Picture"] === qo["Picture"] && (
     range, ordered1, ordered2
 },
     range = {Min[qo["InputOrder"], op["OutputOrder"]], Max[qo["InputOrder"], op["OutputOrder"]]};
-    ordered1 = qo[{"Ordered", Splice @ range}];
-    ordered2 = If[op["OutputOrder"] == ordered1["InputOrder"], op,
-        op[{"Ordered", Min[op["Order"]] - Max[0, Min[op["OutputOrder"]] - Min[ordered1["Order"]]], Max[op["InputOrder"], ordered1["InputOrder"]]}]
-    ];
+    ordered2 =
+        op[{"Ordered",
+            Min[op["InputOrder"]] - Max[0, Min[op["OutputOrder"]] - Min[qo["InputOrder"]]],
+            Max[op["InputOrder"]] + Max[0, Max[qo["InputOrder"]] - Max[op["OutputOrder"]]]
+            }];
+    ordered1 = qo[{"Ordered", Min[qo["InputOrder"], ordered2["OutputOrder"]], Max[qo["InputOrder"], ordered2["OutputOrder"]]}];
     ConfirmAssert[ordered1["InputDimension"] == ordered2["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
     QuantumOperator[
         QuantumOperator[

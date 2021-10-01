@@ -36,7 +36,7 @@ QuantumMeasurementOperator[op_ ? QuantumOperatorQ, args__] :=
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qs_ ? QuantumStateQ] := Enclose @ Module[{ordered},
     ConfirmAssert[qs["OutputQudits"] >= qmo["Arity"], "Not enough output qudits"];
 
-    ordered = qmo[{"Ordered", 1, Max[qmo["MaxArity"], qs["OutputQudits"]]}];
+    ordered = qmo[{"Ordered", 1, qs["OutputQudits"]}];
     ConfirmAssert[ordered["InputDimensions"][[ordered["Order"]]] == qs["OutputDimensions"][[ordered["Order"]]],
         "Operator and state dimensions don't match"
     ];
@@ -44,9 +44,9 @@ QuantumMeasurementOperator[op_ ? QuantumOperatorQ, args__] :=
 ]
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[op_ ? QuantumOperatorQ] := With[{
-    newOp = qmo["SuperOperator"][{"Ordered", Min[op["InputOrder"], qmo["InputOrder"]], Max[op["InputOrder"], qmo["InputOrder"]]}] @ op
+    newOp = qmo["SuperOperator"](*[{"Ordered", Min[op["InputOrder"], qmo["InputOrder"]], Max[op["InputOrder"], qmo["InputOrder"]]}]*)
 },
-    QuantumMeasurementOperator[newOp, qmo["Order"]]
+    QuantumMeasurementOperator[newOp @ op, qmo["Order"]]
 ]
 
 (*(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[op_ ? QuantumMeasurementOperatorQ] /; qmo["Type"] === op["Type"] === "Projection" :=
@@ -55,12 +55,14 @@ QuantumMeasurementOperator[op_ ? QuantumOperatorQ, args__] :=
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[op_ ? QuantumMeasurementOperatorQ] := Module[{
     order, ordered1, ordered2
 },
+    (* ordering will insert identities to fit operator into specified range *)
     order = {"Ordered", Min[op["InputOrder"], qmo["InputOrder"]], Max[op["InputOrder"], qmo["InputOrder"]]};
     ordered1 = qmo["SuperOperator"][order];
     ordered2 = op["SuperOperator"][order];
 
     ordered1 = QuantumOperator[
         QuantumTensorProduct[
+            (* put identities on the left of first operator for each unmatched output qudit of the second operator *)
             QuantumOperator[
                 QuantumOperator[{"Identity", Take[ordered2["OutputDimensions"], Max[ordered2["OutputQudits"] - ordered1["InputQudits"], 0]]}],
                 With[{qb = QuantumPartialTrace[
@@ -75,11 +77,12 @@ QuantumMeasurementOperator[op_ ? QuantumOperatorQ, args__] :=
         ],
         ordered2["OutputOrder"]
     ];
+
     QuantumMeasurementOperator[
         ordered1 @ ordered2 //
-            (* order results *)
+            (* permute two measured qudits based on given operator orders, left-most first *)
             (#[{"PermuteOutput", InversePermutation @ FindPermutation[Ordering @ {First[op["Order"]], First[qmo["Order"]]}]}] &) //
-            (* uncurry two measured results into one *)
+            (* uncurry two measured qudits into one *)
             (QuantumTensorProduct[
                 QuantumOperator[
                     QuantumOperator[{"Uncurry", #["OutputDimensions"][[;; 2]]}, #["OutputOrder"][[;; 2]]],

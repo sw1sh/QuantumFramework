@@ -134,7 +134,7 @@ drawWireGraphics[positionIndices_List, scaling_] := Module[{quditCount, lineList
 ]
 
 drawMeasurementWire[positionIndices_List, scaling_] := Graphics[{
-    Text[Style["0", FontSize -> Scaled[0.1 / scaling]], {0, - 1.25}],
+    Text[Style["c", FontSize -> Scaled[0.1 / scaling]], {0, - 1.25}],
     Thick,
     Line[{{0, -.125}, {6 Max[positionIndices], -.125}}],
     Line[{{0, 0.125}, {6 Max[positionIndices], .125}}]

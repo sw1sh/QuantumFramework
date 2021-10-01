@@ -55,11 +55,17 @@ QuantumOperatorProp[QuantumOperator[_, order_], "Order"] := order
 
 QuantumOperatorProp[qo_, "Arity"] := Length @ qo["Order"]
 
-QuantumOperatorProp[qo_, "MaxArity"] := Max[qo["InputQudits"], Max[qo["Order"]] - Min[qo["Order"]] + 1]
+QuantumOperatorProp[qo_, "Range"] := Max[qo["Order"]] - Min[qo["Order"]] + 1
 
-QuantumOperatorProp[qo_, "InputOrder"] := Join[qo["Order"], Complement[Range[Min[qo["Order"]], Min[qo["Order"]] + qo["MaxArity"] - 1], qo["Order"]]]
+QuantumOperatorProp[qo_, "MaxArity"] := Max[qo["InputQudits"], qo["Range"]]
 
-QuantumOperatorProp[qo_, "QuditOrder"] := qo["Order"] - Min[qo["Order"]] + 1
+QuantumOperatorProp[qo_, "QuditOrder"] := Range[qo["InputQudits"]]
+
+QuantumOperatorProp[qo_, "InputOrder"] := If[
+    qo["InputQudits"] > qo["Range"],
+    Range[qo["InputQudits"]] + Max[Max[qo["Order"]] - qo["InputQudits"], 0],
+    Take[qo["Order"], qo["InputQudits"]]
+]
 
 QuantumOperatorProp[qo_, "OutputOrder"] := Range[Max[qo["InputOrder"]] - qo["OutputQudits"] + 1, Max[qo["InputOrder"]]]
 
@@ -146,7 +152,7 @@ If[qo["InputDimension"] <= 1, qo,
             qo
         ][{
             "Permute",
-            InversePermutation @ FindPermutation[Join[qo["Order"], Complement[Range[from, to], qo["Order"]]]]
+            InversePermutation @ FindPermutation[Join[qo["InputOrder"], Complement[Range[from, to], qo["InputOrder"]]]]
         }],
         Range[from, to]
         ]
