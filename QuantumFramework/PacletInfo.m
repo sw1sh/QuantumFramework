@@ -1,14 +1,14 @@
 PacletObject[
   <|
-    "Name" -> "QuantumFramework",
+    "Name" -> "Wolfram__QuantumFramework",
     "Description" -> "Quantum Computing",
-    "Creator" -> "nikm",
+    "Creator" -> "Wolfram",
     "Version" -> "0.2",
-    "WolframVersion" -> "13+",
+    "WolframVersion" -> "12.3+",
     "Extensions" -> {
       {
         "Kernel",
-        "Root" -> "QuantumFramework",
+        "Root" -> ".",
         "Context" -> "QuantumFramework`",
         "Symbols" -> {
             "QuantumFramework`QuantumBasisName",
