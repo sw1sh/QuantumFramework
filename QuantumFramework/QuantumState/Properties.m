@@ -185,13 +185,46 @@ QuantumStateProp[qs_, "Pure"] := If[qs["PureStateQ"],
     QuantumState[Flatten @ qs["DensityMatrix"], QuantumTensorProduct[qs["Basis"], qs["Basis"]["Dual"]]]
 ]
 
-QuantumStateProp[qs_, "Transpose"] := QuantumState[Flatten @ Transpose[qs["StateMatrix"]], qs["Basis"]["Transpose"]]
+QuantumStateProp[qs_, "Mixed"] := Which[
+    qs["MixedStateQ"],
+    qs,
+    qs["PureStateQ"] && IntegerQ[Sqrt[qs["Dimension"]]],
+    QuantumState[ArrayReshape[qs["StateVector"], Table[Sqrt[qs["Dimension"]], 2]]],
+    True,
+    $Failed
+]
 
-QuantumStateProp[qs_, "Conjugate" | "Dual"] := QuantumState[Flatten @ Conjugate[qs["StateMatrix"]], qs["Basis"]["Dual"]]
+QuantumStateProp[qs_, "Transpose"] := QuantumState[If[qs["PureStateQ"], Flatten, Identity] @ Transpose[qs["StateMatrix"]], qs["Basis"]["Transpose"]]
 
-QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := QuantumState[Flatten @ ConjugateTranspose[qs["StateMatrix"]], qs["Basis"]["ConjugateTranspose"]]
+QuantumStateProp[qs_, {"Transpose", qudits : {_Integer...}}] := QuantumState[
+    ArrayReshape[
+        Transpose[ArrayReshape[qs["DensityMatrix"], Join[qs["Dimensions"], qs["Dimensions"]]], Cycles[{#, # + qs["Qudits"]} & /@ qudits]],
+        {qs["Dimension"], qs["Dimension"]}
+    ],
+    qs["Basis"]
+]
+
+QuantumStateProp[qs_, "Conjugate" | "Dual"] := QuantumState[If[qs["PureStateQ"], Flatten, Identity] @ Conjugate[qs["StateMatrix"]], qs["Basis"]["Dual"]]
+
+QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := QuantumState[
+    If[qs["PureStateQ"], Flatten, Identity] @ ConjugateTranspose[qs["StateMatrix"]],
+    qs["Basis"]["ConjugateTranspose"]
+]
 
 
+QuantumStateProp[qs_, {"Permute", perm_Cycles}] := QuantumState[
+    If[ qs["PureStateQ"],
+        Flatten @ Transpose[qs["StateTensor"], perm],
+        ArrayReshape[
+            Transpose[qs["StateTensor"], PermutationCycles[With[{list = PermutationList[perm, qs["Qudits"]]}, Join[list, list + qs["Qudits"]]]]],
+            Table[qs["Dimension"], 2]
+        ]
+    ],
+    qs["Basis"][{"Permute", perm}]
+]
+
+
+(* representations *)
 
 QuantumStateProp[qs_, "StateTensor"] := If[
     qs["PureStateQ"],

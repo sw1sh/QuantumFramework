@@ -31,12 +31,12 @@ QuantumBasis /: MakeBoxes[qb_QuantumBasis /; QuantumBasisQ[Unevaluated @ qb], fo
             BoxForm`SummaryItem[{"Rank: ", qb["Rank"]}]
         },
         {
-            BoxForm`SummaryItem[basisDimensionSummaryItem[qb]]
+            BoxForm`SummaryItem[{"Dimension: ", qb["Dimension"]}]
         }
     },
     {
         {
-            BoxForm`SummaryItem[basisQuditsSummaryItem[qb]]
+            BoxForm`SummaryItem[{"Qudits: ", {qb["OutputQudits"], qb["InputQudits"]}}]
         },
         {
             BoxForm`SummaryItem[{"Dimensions: ",

@@ -181,6 +181,14 @@ QuantumBasisProp[qb_, "Transpose"] := QuantumBasis[qb,
     "Label" -> Superscript[qb["Label"], "T"]
 ]
 
+QuantumBasisProp[qb_, {"Permute", perm_Cycles}] :=
+    QuantumBasis @@ QuantumTensorProduct[qb["Output"], qb["Input"]][{"Permute", perm}][
+        {"Split", toggleShift[PermutationList[perm, qb["Qudits"]], qb["OutputQudits"]]}
+    ]
+
+QuantumBasisProp[qb_, {"Split", n_Integer}] := QuantumBasis @@ QuantumTensorProduct[qb["Output"], qb["Input"]][{"Split", n}]
+
+
 QuantumBasisProp[qb_, "Dagger" | "ConjugateTranspose"] := QuantumBasis[qb,
     "Input" -> qb["Output"]["Dual"], "Output" -> qb["Input"]["Dual"],
     "Label" -> Superscript[qb["Label"], "\[Dagger]"]

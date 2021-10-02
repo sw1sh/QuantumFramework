@@ -59,8 +59,8 @@ qbn_QuditBasisName["Qudits"] := Length @ DeleteCases[QuditBasisName[$QuditIdenti
 qbn_QuditBasisName["Pretty"] := simplifyName[CircleTimes @@ Normal[qbn]]
 
 
-splitQuditBasisName[QuditBasisName[name_ ? nameHeadQ, args___]] :=
-    Catenate[If[nameLength[#] > 1, splitQuditBasisName, List] @ QuditBasisName[#, args] & /@ (List @@ name)]
+splitQuditBasisName[qbn : QuditBasisName[name_ ? nameHeadQ, ___]] :=
+    Catenate[If[nameLength[#] > 1, splitQuditBasisName, List] @ If[qbn["DualQ"], QuditBasisName[#]["DualQ"], QuditBasisName[#]] & /@ (List @@ name)]
 
 splitQuditBasisName[qbn : QuditBasisName[_, OptionsPattern[]]] := {qbn}
 
@@ -78,7 +78,8 @@ groupQuditBasisName[qbn_QuditBasisName] := QuditBasisName @@
 
 qbn_QuditBasisName["Group"] := groupQuditBasisName @ qbn
 
-qbn_QuditBasisName[{"Permute", perm_Cycles}] := (QuditBasisName @@ Permute[Normal[qbn], perm])["Group"]
+qbn_QuditBasisName[{"Permute", perm_Cycles, outputs_Integer : 0}] :=
+    (QuditBasisName @@ MapThread[If[#2, #1["Dual"], #1] &, {Permute[Normal[qbn], perm], toggleSwap[PermutationList[perm, qbn["Qudits"]], outputs]}])["Group"]
 
 qbn_QuditBasisName["Take", arg_] := (QuditBasisName @@ Take[Normal[qbn], arg])["Group"]
 

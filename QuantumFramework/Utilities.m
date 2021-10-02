@@ -7,12 +7,15 @@ PackageScope["propQ"]
 PackageScope["stateQ"]
 PackageScope["orderQ"]
 PackageScope["measurementReprQ"]
+
 PackageScope["normalizeMatrix"]
 PackageScope["tensorToVector"]
 PackageScope["identityMatrix"]
 PackageScope["kroneckerProduct"]
 PackageScope["projector"]
-PackageScope["OrderedMatrixRepresentation"]
+
+PackageScope["toggleSwap"]
+PackageScope["toggleShift"]
 
 
 
@@ -57,5 +60,12 @@ normalizeMatrix[matrix_] := Enclose[ConfirmQuiet[matrix / Tr[matrix], Power::inf
 kroneckerProduct[ts___] := Fold[If[ArrayQ[#1] && ArrayQ[#2], KroneckerProduct[##], Times[##]] &, {ts}]
 
 
-projector[v_] := (*ConjugateTranspose[{v}] . {v}*) KroneckerProduct[v, Conjugate[v]]
+projector[v_] := KroneckerProduct[v, Conjugate[v]]
+
+
+(* helpers *)
+
+toggleSwap[xs : {_Integer...}, n_Integer] := MapIndexed[(#1 > n) != (First[#2] > n) &, xs]
+
+toggleShift[xs : {_Integer...}, n_Integer] := n - Subtract @@ Total /@ TakeDrop[Boole @ toggleSwap[xs, n], n]
 

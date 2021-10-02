@@ -147,9 +147,9 @@ QuditBasisProp[qb_, "Canonical"] := QuditBasis[Sort @ qb["Names"], qb["BasisElem
 QuditBasisProp[qb_, "Uncurry"] := QuditBasis[KeyMap[QuditBasisName @* Row @* Map[#["Name"] &] @* Normal] @ qb["Association"]]
 
 
-QuditBasisProp[qb_, {"Permute", perm_Cycles}] := Enclose @ QuditBasis[
-    #[{"Permute", perm}] & /@ qb["Names"],
-    KeyMap[MapAt[PermutationList[perm, qb["Rank"]][[#]] &, 2]] @ qb["BasisElements"]
+QuditBasisProp[qb_, {"Permute", perm_Cycles, outputs_Integer : 0}] := Enclose @ QuditBasis[
+    #[{"Permute", perm, outputs}] & /@ qb["Names"],
+    KeyMap[MapAt[PermutationList[perm, qb["NameRank"]][[#]] &, 2]] @ qb["BasisElements"]
 ]
 
 QuditBasisProp[qb_, {"Ordered", qudits_Integer, order_ ? orderQ}] := If[qb["Dimension"] <= 1, qb,
@@ -163,6 +163,19 @@ QuditBasisProp[qb_, "RemoveIdentities"] := QuditBasis[
     (QuditBasisName @@ Delete[Normal[#], Position[qb["Dimensions"], 1]])["Group"] & /@ qb["Names"],
     Select[qb["BasisElements"], TensorRank[#] > 0 &]
 ]
+
+QuditBasisProp[qb_, {"Split", n_Integer ? NonNegative, m_ : None}] /; n <= qb["Qudits"] :=
+    MapThread[QuditBasis,
+        {DeleteDuplicates /@ Transpose[(QuditBasisName @@ #)["Group"] & /@
+            TakeDrop[
+                If[ IntegerQ[m],
+                    MapIndexed[If[Function[{from, to}, from <= First[#2] <= to] @@ If[n >= m, {m + 1, n}, {n + 1, m}], #1["Dual"], #1] &, Normal @ #],
+                    Normal @ #
+                ],
+                n
+            ] & /@ qb["Names"]],
+        {KeySelect[Last[#] <= n &] @ qb["BasisElements"], KeyMap[MapAt[# - n &, 2]] @ KeySelect[Last[#] > n &] @ qb["BasisElements"]}}
+    ]
 
 
 QuditBasis[_QuditBasis, 0] := QuditBasis[]

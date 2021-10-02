@@ -110,3 +110,12 @@ QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) |
 
 qb_QuantumBasis /; System`Private`HoldNotValidQ[qb] && quantumBasisQ[Unevaluated @ qb] := System`Private`HoldSetValid[qb]
 
+
+ResourceFunction["AddCodeCompletion"]["QuantumBasis"][{
+    "Computational",
+    "PauliX", "PauliY", "PauliZ",
+    "Fourier",
+    "Identity",
+    "Schwinger", "Pauli", "Dirac", "Wigner"
+}]
+
