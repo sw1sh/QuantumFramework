@@ -11,7 +11,7 @@ $QuantumOperatorProperties = {
     "Ordered",
     "OrderedMatrixRepresentation", "OrderedMatrix",
     "OrderedTensorRepresentation", "OrderedTensor",
-    "Arity", "MaxArity", "Order", "OutputOrder",
+    "Arity", "MaxArity", "Range", "Order", "QuditOrder", "InputOrder", "CircuitOrder", "InputQuditOrder", "OutputOrder",
     "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors", "Projectors",
     "ConjugateTranspose",
     "QuantumOperator", "Operator",
@@ -59,13 +59,13 @@ QuantumOperatorProp[qo_, "Range"] := Max[qo["Order"]] - Min[qo["Order"]] + 1
 
 QuantumOperatorProp[qo_, "MaxArity"] := Max[qo["InputQudits"], qo["Range"]]
 
-QuantumOperatorProp[qo_, "QuditOrder"] := Range[qo["InputQudits"]]
+QuantumOperatorProp[qo_, "QuditOrder"] := Range[qo["MaxArity"]]
 
-QuantumOperatorProp[qo_, "InputOrder"] := If[
-    qo["InputQudits"] > qo["Range"],
-    Range[qo["InputQudits"]] + Max[Max[qo["Order"]] - qo["InputQudits"], 0],
-    Take[qo["Order"], qo["InputQudits"]]
-]
+QuantumOperatorProp[qo_, "InputOrder"] := qo["QuditOrder"] + Min[qo["Order"]] - 1
+
+QuantumOperatorProp[qo_, "CircuitOrder"] :=  qo["QuditOrder"] + Max[Max[qo["Order"]] - qo["InputQudits"], 0]
+
+QuantumOperatorProp[qo_, "InputQuditOrder"] := qo["Order"] - Min[qo["InputOrder"]] + 1
 
 QuantumOperatorProp[qo_, "OutputOrder"] := Range[Max[qo["InputOrder"]] - qo["OutputQudits"] + 1, Max[qo["InputOrder"]]]
 
@@ -152,7 +152,7 @@ If[qo["InputDimension"] <= 1, qo,
             qo
         ][{
             "Permute",
-            InversePermutation @ FindPermutation[Join[qo["InputOrder"], Complement[Range[from, to], qo["InputOrder"]]]]
+            InversePermutation @ FindPermutation[Join[qo["Order"], Complement[Range[from, to], qo["Order"]]]]
         }],
         Range[from, to]
         ]
@@ -167,11 +167,12 @@ QuantumOperatorProp[qo_, "UnitaryQ"] := UnitaryMatrixQ[qo["Matrix"]]
 
 QuantumOperatorProp[qo_, "Eigenvalues"] := Sort @ Eigenvalues[qo["Matrix"]]
 
-QuantumOperatorProp[qo_, "Eigenvectors"] := Normalize /@ Eigenvectors[qo["Matrix"]][[ Ordering[Eigenvalues[qo["Matrix"]]] ]]
+QuantumOperatorProp[qo_, "Eigenvectors"] := Normalize /@ Eigenvectors[qo["Matrix"], ZeroTest -> (Chop[#1] == 0 &)][[ Ordering[Eigenvalues[qo["Matrix"]]] ]]
 
-QuantumOperatorProp[qo_, "Projectors"] := projector @* Normalize /@ qo["Eigenvectors"]
+QuantumOperatorProp[qo_, "Projectors"] := projector /@ qo["Eigenvectors"]
 
-QuantumOperatorProp[qo_, "Dagger" | "ConjugateTranspose"] := QuantumOperator[ConjugateTranspose[qo["Matrix"]], qo["Basis"]["Dagger"], qo["Order"]]
+QuantumOperatorProp[qo_, "Dagger" | "ConjugateTranspose"] := QuantumOperator[
+    ConjugateTranspose[qo["Matrix"]], qo["Basis"]["Dagger"], Take[qo["Order"], UpTo[qo["OutputQudits"]]]]
 
 QuantumOperatorProp[qo_, "Dual"] := QuantumOperator[Conjugate[qo["Matrix"]], qo["Basis"]["Dual"], qo["Order"]]
 

@@ -35,11 +35,11 @@ QuantumPartialTrace[qs_QuantumState, qudits : {_Integer ..}] :=
     ]
 
 QuantumPartialTrace[qs_QuantumState, qudits : {{_Integer, _Integer} ..}] :=
-    QuantumState[Flatten @ TensorContract[qs["Tensor"], MapAt[qs["Output"]["Rank"] + # &, qudits, {All, 2}]], QuantumPartialTrace[qs["Basis"], qudits]]
+    QuantumState[Flatten @ TensorContract[qs["Tensor"], MapAt[qs["Output"]["NameRank"] + # &, qudits, {All, 2}]], QuantumPartialTrace[qs["Basis"], qudits]]
 
 
 QuantumPartialTrace[qo_QuantumOperator, qudits : {{_Integer, _Integer} ..}] :=
-    QuantumOperator[QuantumPartialTrace[qo["State"], qudits - Min[qo["Order"]] + 1], DeleteCases[qo["InputOrder"], Alternatives @@ qudits[[All, -1]]]]
+    QuantumOperator[QuantumPartialTrace[qo["State"], qudits - Min[qo["InputOrder"]] + 1], DeleteCases[qo["InputOrder"], Alternatives @@ qudits[[All, -1]]]]
 
 
 QuantumPartialTrace[op_ ? QuantumFrameworkOperatorQ, qudits : {{_Integer, _Integer} ..}] :=

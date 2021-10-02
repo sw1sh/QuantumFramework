@@ -34,13 +34,15 @@ QuantumMeasurementOperator::undefprop = "QuantumMeasurementOperator property `` 
 ]
 
 QuantumMeasurementOperatorProp[qmo_, "Properties"] :=
-    DeleteDuplicates @ Join[QuantumMeasurementOperator["Properties"], qmo["QuantumOperator"]["Properties"]]
+    DeleteDuplicates @ Join[QuantumMeasurementOperator["Properties"], qmo["Operator"]["Properties"]]
 
 
 (* getters *)
 
-QuantumMeasurementOperatorProp[_[op_], "QuantumOperator"] := op
+QuantumMeasurementOperatorProp[_[op_], "Operator"] := op
 
+
+QuantumMeasurementOperatorProp[qmo_, "QuantumOperator"] := QuantumOperator[qmo["Operator"], qmo["CircuitOrder"]]
 
 QuantumMeasurementOperatorProp[qmo_, "Type"] := Which[
     qmo["OutputQudits"] == qmo["InputQudits"],
@@ -50,6 +52,8 @@ QuantumMeasurementOperatorProp[qmo_, "Type"] := Which[
     True,
     "Destructive"
 ]
+
+QuantumMeasurementOperatorProp[qo_, "InputOrder"] := qo["CircuitOrder"]
 
 QuantumMeasurementOperatorProp[qmo_, "ProjectionQ"] := qmo["Type"] === "Projection"
 
@@ -72,25 +76,26 @@ QuantumMeasurementOperatorProp[qmo_, "Operators"] := If[qmo["POVMQ"],
 ]
 
 QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
-    trace = Complement[qmo["InputOrder"], qmo["Order"]],
-    traceQudits,
     ordered = qmo["Ordered"],
+    trace,
+    traceQudits,
     tracedOperator
 },
-    traceQudits = trace - Min[qmo["Order"]] + 1;
+    trace = Complement[ordered["InputOrder"], qmo["Order"]];
+    traceQudits = trace - Min[ordered["InputOrder"]] + 1;
 
     If[
-        qmo["POVMQ"],
+        ordered["POVMQ"],
 
         QuantumOperator[QuantumOperator[
-            ArrayReshape[#, {Times @@ Rest @ qmo["OutputDimensions"], qmo["InputDimension"]}] & /@ qmo["POVMElements"],
-            qmo["Basis"]
+            ArrayReshape[#, {Times @@ Rest @ ordered["OutputDimensions"], ordered["InputDimension"]}] & /@ ordered["POVMElements"],
+            ordered["Basis"]
         ],
-            qmo["Order"]
+            ordered["CircuitOrder"]
         ],
 
-        tracedOperator = QuantumPartialTrace[ordered, If[qmo["POVMQ"], {# + qmo["OutputQudits"] - qmo["InputQudits"], #} & /@ trace, trace]];
-        QuantumOperator[
+        tracedOperator = QuantumPartialTrace[ordered, If[ordered["POVMQ"], {# + ordered["OutputQudits"] - ordered["InputQudits"], #} & /@ trace, trace]];
+        Simplify @ QuantumOperator[
             QuantumOperator[
                 Map[kroneckerProduct @@ Prepend[IdentityMatrix /@ ordered["InputDimensions"][[traceQudits]], #] &, tracedOperator["Projectors"]],
 
@@ -103,17 +108,17 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
                             ],
                             tracedOperator["Eigenvectors"]
                         ],
-                        QuantumPartialTrace[ordered["Output"], ordered["QuditOrder"]],
+                        QuantumPartialTrace[ordered["Output"], ordered["InputQuditOrder"]],
                         tracedOperator["Output"]
                     ],
-                    "Input" -> QuantumTensorProduct[QuantumPartialTrace[ordered["Input"], ordered["QuditOrder"]], tracedOperator["Input"]]
+                    "Input" -> QuantumTensorProduct[QuantumPartialTrace[ordered["Input"], ordered["InputQuditOrder"]], tracedOperator["Input"]]
                 ]
             ][
-                {"PermuteOutput", InversePermutation @ FindPermutation[Prepend[1 + Join[qmo["QuditOrder"], traceQudits], 1]]}
+                {"PermuteOutput", InversePermutation @ FindPermutation[Prepend[1 + Join[ordered["InputQuditOrder"], traceQudits], 1]]}
             ][
-                {"PermuteInput", InversePermutation @ FindPermutation[Join[qmo["QuditOrder"], traceQudits]]}
+                {"PermuteInput", InversePermutation @ FindPermutation[Join[ordered["InputQuditOrder"], traceQudits]]}
             ],
-            qmo["Order"]
+            ordered["CircuitOrder"]
         ]
     ]
 ]
@@ -122,5 +127,5 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
 (* operator properties *)
 
 QuantumMeasurementOperatorProp[qmo_, args : PatternSequence[prop_String, ___] | PatternSequence[{prop_String, ___}, ___]] /;
-    MemberQ[Intersection[qmo["QuantumOperator"]["Properties"], qmo["Properties"]], prop] := qmo["QuantumOperator"][args]
+    MemberQ[Intersection[qmo["Operator"]["Properties"], qmo["Properties"]], prop] := qmo["Operator"][args]
 

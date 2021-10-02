@@ -60,7 +60,7 @@ qbn_QuditBasisName["Pretty"] := simplifyName[CircleTimes @@ Normal[qbn]]
 
 
 splitQuditBasisName[qbn : QuditBasisName[name_ ? nameHeadQ, ___]] :=
-    Catenate[If[nameLength[#] > 1, splitQuditBasisName, List] @ If[qbn["DualQ"], QuditBasisName[#]["DualQ"], QuditBasisName[#]] & /@ (List @@ name)]
+    Catenate[If[nameLength[#] > 1, splitQuditBasisName, List] @ If[qbn["DualQ"], QuditBasisName[#]["Dual"], QuditBasisName[#]] & /@ (List @@ name)]
 
 splitQuditBasisName[qbn : QuditBasisName[_, OptionsPattern[]]] := {qbn}
 

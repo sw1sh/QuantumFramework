@@ -82,8 +82,8 @@ QuantumOperator[matrix_ ? MatrixQ, args___, order : (_ ? orderQ) : {1}] := Modul
         basis, newOutputQuditBasis, newInputQuditBasis, state},
         {outputs, inputs} = Dimensions[newMatrix];
         basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ, "Invalid basis"];
-        If[basis["InputDimension"] == 1,
-            basis = QuantumBasis[basis, "Input" -> basis["Output"]]
+        If[ basis["InputDimension"] == 1,
+            basis = QuantumBasis[basis, "Input" -> basis["Output"]["Dual"]]
         ];
 
         newOutputQuditBasis = QuantumTensorProduct[basis["Output"], QuditBasis[Ceiling[outputs / basis["OutputDimension"]] /. 1 -> Sequence[]]];
@@ -154,7 +154,7 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 (qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] /;
 qo["Picture"] === qo["Picture"] && (
     qs["Picture"] =!= "Heisenberg" || Message[QuantumOperator::incompatiblePictures, qo["Picture"], qs["Picture"]]) := Enclose @ With[{
-    ordered = qo[{"Ordered", qs["OutputQudits"]}]
+    ordered = qo[{"Ordered", 1, qs["OutputQudits"]}]
 },
     ConfirmAssert[ordered["InputDimension"] == qs["OutputDimension"], "Operator input dimension should be equal to state output dimension"];
     QuantumState[
@@ -174,9 +174,8 @@ qo["Picture"] === qo["Picture"] && (
 ]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumFrameworkOperatorQ] /; qo["Picture"] === op["Picture"] := Enclose @ Module[{
-    range, ordered1, ordered2
+    ordered1, ordered2
 },
-    range = {Min[qo["InputOrder"], op["OutputOrder"]], Max[qo["InputOrder"], op["OutputOrder"]]};
     ordered2 =
         op[{"Ordered",
             Min[op["InputOrder"]] - Max[0, Min[op["OutputOrder"]] - Min[qo["InputOrder"]]],

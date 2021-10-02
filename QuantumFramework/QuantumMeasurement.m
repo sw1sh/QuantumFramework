@@ -5,7 +5,7 @@ PackageExport["QuantumMeasurement"]
 PackageScope["QuantumMeasurementQ"]
 
 
-QuantumMeasurementQ[QuantumMeasurement[qs_QuantumState ? QuantumStateQ]] := True(*TrueQ[qs["PureStateQ"]]*)
+QuantumMeasurementQ[QuantumMeasurement[qs_QuantumState ? QuantumStateQ]] := qs["OutputQudits"] <= qs["InputQudits"]
 
 QuantumMeasurementQ[___] := False
 
@@ -44,9 +44,10 @@ QuantumMeasurementProp[qm_, "Properties"] := DeleteDuplicates @ Join[$QuantumMea
 
 QuantumMeasurementProp[QuantumMeasurement[state_], "State"] := state
 
-QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumPartialTrace[qm["State"], 1 + Range[qm["OutputQudits"] - 1]]
+QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumPartialTrace[qm["State"]["Transpose"], Range[qm["InputQudits"]]]["Transpose"]
 
-QuantumMeasurementProp[qm_, "States"] := QuantumState[Flatten @ #, QuantumPartialTrace[qm["Basis"], {1}]] & /@ qm["State"]["Tensor"]
+QuantumMeasurementProp[qm_, "States"] :=
+    QuantumState[#, qm["InputBasis"]] & /@ qm["State"]["StateMatrix"]
 
 QuantumMeasurementProp[qm_, "ProbabilitiesList"] := qm["PostMeasurementState"]["Probabilities"]
 

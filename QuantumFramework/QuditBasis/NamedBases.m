@@ -95,7 +95,7 @@ QuditBasis["Schwinger"] := QuditBasis[{"Schwinger", 2}]
 
 QuditBasis[{"Schwinger", dimension_Integer ? Positive}, args___] := QuditBasis[
     AssociationThread[
-        Subscript["S", ToString[#]] & /@ Tuples[Range[0, dimension - 1], 2],
+        Subscript["S", Row[#]] & /@ Tuples[Range[0, dimension - 1], 2],
         Flatten /@ (
             MatrixPower[RotateLeft[IdentityMatrix[dimension]], #[[1]]] .
             MatrixPower[((Exp[I 2 Pi / dimension]) ^ #) & /@ Range[0, dimension - 1] IdentityMatrix[dimension], #[[2]]]
@@ -125,7 +125,7 @@ QuditBasis["Dirac", args___] := Module[{
     gamma3 = KroneckerProduct[pauliBasis3, pauliBasis3];
     gamma4 = KroneckerProduct[pauliBasis3, pauliBasis4];
     QuditBasis[AssociationThread[
-        Subscript["\[Epsilon]", ToString[#]] & /@ Range[0, 15],
+        Subscript["\[Epsilon]", #] & /@ Range[0, 15],
         {
             IdentityMatrix[4],
             KroneckerProduct[pauliBasis4, pauliBasis1],
@@ -178,7 +178,7 @@ QuditBasis[{"Wigner", qb_QuditBasis /; QuditBasisQ[qb]}, args___] := Module[{
         ];
 
         QuditBasis[AssociationThread[
-            Subscript["W", ToString[#]] & /@ Tuples[Range[0, dimension - 1], 2],
+            Subscript["W", Row[#]] & /@ Tuples[Range[0, dimension - 1], 2],
 
             Flatten[
                 Table[

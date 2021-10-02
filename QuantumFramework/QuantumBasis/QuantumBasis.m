@@ -111,6 +111,14 @@ QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) |
 qb_QuantumBasis /; System`Private`HoldNotValidQ[qb] && quantumBasisQ[Unevaluated @ qb] := System`Private`HoldSetValid[qb]
 
 
+(* equality *)
+
+QuantumBasis /: (qb1_QuantumBasis ? QuantumBasisQ) ==
+    (qb2_QuantumBasis ? QuantumBasisQ) := qb1["MatrixRepresentation"] == qb2["MatrixRepresentation"]
+
+
+
+
 ResourceFunction["AddCodeCompletion"]["QuantumBasis"][{
     "Computational",
     "PauliX", "PauliY", "PauliZ",

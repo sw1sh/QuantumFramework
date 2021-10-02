@@ -83,7 +83,7 @@ QuantumStateProp[qs_, "StateVector"] := Module[{result},
     result /; !FailureQ[result]
 ]
 
-QuantumStateProp[qs_, "Weights"] := If[qs["PureStateQ"], Abs[qs["StateVector"]] ^ 2, Inverse[qs["Eigenvectors"]] . qs["Eigenvalues"]]
+QuantumStateProp[qs_, "Weights"] := If[qs["PureStateQ"], Abs[qs["StateVector"]] ^ 2, PseudoInverse[qs["Eigenvectors"]] . qs["Eigenvalues"]]
 
 QuantumStateProp[qs_, "Probabilities"] := Re @ Normalize[qs["Weights"], Total]
 
@@ -127,7 +127,8 @@ QuantumStateProp[qs_, "MatrixDimensions"] := {qs["Dimension"], qs["Dimension"]}
 
 QuantumStateProp[qs_, "Eigenvalues"] := Eigenvalues[qs["DensityMatrix"]]
 
-QuantumStateProp[qs_, "Eigenvectors"] := Eigenvectors[qs["DensityMatrix"]]
+QuantumStateProp[qs_, "Eigenvectors"] :=
+    Eigenvectors[#, ZeroTest -> If[Precision[#] === MachinePrecision, Chop[#1] == 0 &, Automatic]] & @ qs["DensityMatrix"]
 
 QuantumStateProp[qs_, "NormalizedEigenvectors"] := Normalize /@ qs["Eigenvectors"]
 
@@ -223,6 +224,8 @@ QuantumStateProp[qs_, {"Permute", perm_Cycles}] := QuantumState[
     qs["Basis"][{"Permute", perm}]
 ]
 
+QuantumStateProp[qs_, {"Split", n_Integer : 0}] := QuantumState[qs["State"], qs["Basis"][{"Split", n}]]
+
 
 (* representations *)
 
@@ -253,7 +256,7 @@ QuantumStateProp[qs_, "TensorRepresentation"] := qs["Computational"]["StateTenso
 
 (* block sphere*)
 
-QuantumStateProp[qs_, "BlochSphericalCoordinates"] /; qs["Dimension"] == 2 := With[{state = qs["StateVector"], matrix = qs["DensityMatrix"]},
+QuantumStateProp[qs_, "BlochSphericalCoordinates"] /; qs["Dimension"] == 2 := With[{state = qs["NormalizedStateVector"], matrix = qs["NormalizedDensityMatrix"]},
     If[
         qs["PureStateQ"],
 
@@ -274,7 +277,7 @@ QuantumStateProp[qs_, "BlochSphericalCoordinates"] /; qs["Dimension"] == 2 := Wi
     ]
 ]
 
-QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 :=  With[{state = qs["StateVector"], matrix = qs["DensityMatrix"]},
+QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 :=  With[{state = qs["NormalizedStateVector"], matrix = qs["NormalizedDensityMatrix"]},
     If[
         qs["PureStateQ"],
 
