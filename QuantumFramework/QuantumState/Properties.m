@@ -139,12 +139,12 @@ QuantumStateProp[qs_, "Eigenstates"] := QuantumState[#, qs["Basis"]] & /@ qs["Ei
 
 QuantumStateProp[qs_, "VonNeumannEntropy" | "Entropy", logBase_ ? NumericQ] := With[{
     matrix = qs["NormalizedDensityMatrix"]
-},  Simplify @ If[
-        qs["Type"] === "Pure",
+},  If[
+        qs["PureStateQ"],
         0,
         (* - Total @ Map[# Log[logBase, #] &, Select[Re @ Eigenvalues@qs[DensityMatrix"], Positive]] *)
 
-        Enclose[- Tr[matrix . ConfirmBy[MatrixLog[matrix], MatrixQ]] / Log[logBase], $Failed &]
+        Chop @ Simplify @ Enclose[- Tr[matrix . ConfirmBy[MatrixLog[matrix], MatrixQ]] / Log[logBase], $Failed &]
     ]
 ]
 

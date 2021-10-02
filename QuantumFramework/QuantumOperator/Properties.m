@@ -167,7 +167,8 @@ QuantumOperatorProp[qo_, "UnitaryQ"] := UnitaryMatrixQ[qo["Matrix"]]
 
 QuantumOperatorProp[qo_, "Eigenvalues"] := Sort @ Eigenvalues[qo["Matrix"]]
 
-QuantumOperatorProp[qo_, "Eigenvectors"] := Normalize /@ Eigenvectors[qo["Matrix"], ZeroTest -> (Chop[#1] == 0 &)][[ Ordering[Eigenvalues[qo["Matrix"]]] ]]
+QuantumOperatorProp[qo_, "Eigenvectors"] :=
+    Normalize /@ (Eigenvectors[#, ZeroTest -> If[Precision[#] === MachinePrecision, Chop[#1] == 0 &, Automatic]] & @ qo["Matrix"])[[ Ordering[Eigenvalues[qo["Matrix"]]] ]]
 
 QuantumOperatorProp[qo_, "Projectors"] := projector /@ qo["Eigenvectors"]
 
