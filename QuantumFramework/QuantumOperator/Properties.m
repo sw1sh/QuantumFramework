@@ -82,7 +82,7 @@ QuantumOperatorProp[qo_, "Operator"] := qo["Amplitudes"]
 
 QuantumOperatorProp[qo_, "QuantumOperator"] := qo
 
-QuantumOperatorProp[qo_, "Computational"] := QuantumOperator[qo["State"]["Computational"], qo["Order"]]
+QuantumOperatorProp[qo_, name : "Computational" | "SchmidtBasis" | "SpectralBasis"] := QuantumOperator[qo["State"][name], qo["Order"]]
 
 
 QuantumOperatorProp[qo_, prop : "OrderedMatrixRepresentation" | "OrderedMatrix"] := qo[{prop, qo["MaxArity"]}]
@@ -167,8 +167,7 @@ QuantumOperatorProp[qo_, "UnitaryQ"] := UnitaryMatrixQ[qo["Matrix"]]
 
 QuantumOperatorProp[qo_, "Eigenvalues"] := Sort @ Eigenvalues[qo["Matrix"]]
 
-QuantumOperatorProp[qo_, "Eigenvectors"] :=
-    Normalize /@ (Eigenvectors[#, ZeroTest -> If[Precision[#] === MachinePrecision, Chop[#1] == 0 &, Automatic]] & @ qo["Matrix"])[[ Ordering[Eigenvalues[qo["Matrix"]]] ]]
+QuantumOperatorProp[qo_, "Eigenvectors"] := eigenvectors[qo["Matrix"], "Sort" -> True]
 
 QuantumOperatorProp[qo_, "Projectors"] := projector /@ qo["Eigenvectors"]
 

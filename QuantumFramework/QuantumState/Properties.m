@@ -15,7 +15,7 @@ $QuantumStateProperties = {
      "Projector", "NormalizedProjector",
      "Operator", "NormalizedOperator",
      "Eigenvalues", "Eigenvectors", "Eigenstates",
-     "Computational",
+     "Computational", "SchmidtBasis", "SpectralBasis",
      "StateTensor", "StateMatrix",
      "Tensor", "Matrix"
 };
@@ -127,8 +127,7 @@ QuantumStateProp[qs_, "MatrixDimensions"] := {qs["Dimension"], qs["Dimension"]}
 
 QuantumStateProp[qs_, "Eigenvalues"] := Eigenvalues[qs["DensityMatrix"]]
 
-QuantumStateProp[qs_, "Eigenvectors"] :=
-    Eigenvectors[#, ZeroTest -> If[Precision[#] === MachinePrecision, Chop[#1] == 0 &, Automatic]] & @ qs["DensityMatrix"]
+QuantumStateProp[qs_, "Eigenvectors"] := eigenvectors[qs["DensityMatrix"]]
 
 QuantumStateProp[qs_, "NormalizedEigenvectors"] := Normalize /@ qs["Eigenvectors"]
 
@@ -178,6 +177,34 @@ QuantumStateProp[qs_, "Computational"] := QuantumState[qs, QuantumBasis[
     "Input" -> QuditBasis[DeleteCases[qs["InputDimensions"], 1]]["Dual"]
 ]
 ]
+
+QuantumStateProp[qs_, "SchmidtBasis"] := Module[{
+    uMatrix, alphaValues, wMatrix
+},
+
+    {uMatrix, alphaValues, wMatrix} = SingularValueDecomposition[qs["Matrix"]];
+
+    QuantumState[Diagonal @ alphaValues,
+        QuantumBasis[
+            QuditBasis[Association @ MapIndexed[Subscript["u", First @ #2] -> #1 &, Transpose[uMatrix]]],
+            QuditBasis[Association @ MapIndexed[Subscript["v", First @ #2] -> #1 &, Transpose[wMatrix]]]["Dual"]
+        ]
+    ]
+]
+
+QuantumStateProp[qs_, "SpectralBasis"] := QuantumState[
+    qs["Eigenvalues"],
+    QuantumBasis[Association @ Catenate @ MapIndexed[
+            If[ qs["InputDimension"] == 1,
+                Subscript["s", First @ #2],
+                QuditBasisName[QuditBasisName[Subscript["s", First @ #2]], QuditBasisName[Subscript["s", Last @ #2]]["Dual"]]
+            ] -> #1 &,
+            Partition[qs["Eigenvectors"], qs["InputDimension"]],
+            {2}
+        ]
+    ]
+]
+
 
 QuantumStateProp[qs_, "Normalized"] := QuantumState[If[qs["StateType"] === "Vector", qs["NormalizedStateVector"], qs["NormalizedStateMatrix"]], qs["Basis"]]
 

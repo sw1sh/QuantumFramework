@@ -13,6 +13,7 @@ PackageScope["tensorToVector"]
 PackageScope["identityMatrix"]
 PackageScope["kroneckerProduct"]
 PackageScope["projector"]
+PackageScope["eigenvectors"]
 
 PackageScope["toggleSwap"]
 PackageScope["toggleShift"]
@@ -61,6 +62,15 @@ kroneckerProduct[ts___] := Fold[If[ArrayQ[#1] && ArrayQ[#2], KroneckerProduct[##
 
 
 projector[v_] := KroneckerProduct[v, Conjugate[v]]
+
+
+Options[eigenvectors] = {"Sort" -> False, "Normalize" -> True}
+
+eigenvectors[matrix_, OptionsPattern[]] :=
+    If[TrueQ[OptionValue["Normalize"]], Normalize, Identity] /@
+        Eigenvectors[#, ZeroTest -> If[Precision[#] === MachinePrecision, Chop[#1] == 0 &, Automatic]][[
+            If[TrueQ[OptionValue["Sort"]], Ordering[Eigenvalues[matrix]], All]
+        ]] & @ matrix
 
 
 (* helpers *)

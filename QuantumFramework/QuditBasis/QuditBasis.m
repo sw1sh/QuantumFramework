@@ -111,7 +111,10 @@ QuditBasisProp[qb_, "NameRank"] := Count[qb["Dimensions"], Except[1]]
 QuditBasisProp[qb_, "NameTensor"] := ArrayReshape[qb["Names"], qb["Dimensions"]]
 
 QuditBasisProp[qb_, "Elements"] := With[{elements = qb["BasisElements"]},
-    TensorProduct @@@ Map[MapIndexed[Lookup[elements, Key[{#1["Name"], First[#2]}], 1] &], Normal /@ qb["Names"]]
+    If[ ContainsAll[Keys[elements][[All, 1]], #["Name"] & /@ qb["Names"]],
+        Lookup[KeyMap[First, elements], Key[#["Name"]] & /@ qb["Names"]],
+        TensorProduct @@@ Map[MapIndexed[Lookup[elements, Key[{#1["Name"], First[#2]}], 1] &], Normal /@ qb["Names"]]
+    ]
 ]
 
 QuditBasisProp[qb_, "Association"] := AssociationThread[qb["Names"], qb["Elements"]]

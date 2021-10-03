@@ -104,8 +104,10 @@ QuantumTensorProduct[qbn1_QuditBasisName, qbn2_QuditBasisName] := Which[
 
 QuditBasisName /: MakeBoxes[qbn : QuditBasisName[name_, OptionsPattern[]], format_] := With[{
     boxes = Switch[name, $QuditZero, "\[EmptySet]", $QuditIdentity, "\[ScriptOne]", _,
-            TemplateBox[{RowBox[Riffle[ToBoxes[#, format] & /@ {##}, "\[InvisibleSpace]"]]}, If[qbn["DualQ"], "Bra", "Ket"]] & @@
-                If[qbn["Qudits"] > 1, name, {name}]]
+            If[ FreeQ[qbn["Name"], _QuditBasisName],
+                TemplateBox[{RowBox[Riffle[ToBoxes[#, format] & /@ {##}, "\[InvisibleSpace]"]]}, If[qbn["DualQ"], "Bra", "Ket"]],
+                RowBox[ToBoxes[#, format] & /@ {##}]
+            ] & @@ If[qbn["Qudits"] > 1, name, {name}]]
 },
     InterpretationBox[boxes, qbn]
 ]
