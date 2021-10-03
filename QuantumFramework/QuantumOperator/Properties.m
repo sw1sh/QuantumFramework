@@ -102,7 +102,8 @@ QuantumOperatorProp[qo_, {"OrderedTensorRepresentation", arity_Integer}] :=
     qo[{"Ordered", arity}]["TensorRepresentation"]
 
 
-QuantumOperatorProp[qo_, {"PermuteInput", perm_Cycles}] :=
+QuantumOperatorProp[qo_, {"PermuteInput", perm_Cycles}] := If[perm === Cycles[{}],
+    qo,
     QuantumOperator[
         QuantumState[
             qo["State"] @ QuantumOperator[{"Permutation", qo["InputDimensions"], InversePermutation @ perm}]["State"],
@@ -110,8 +111,10 @@ QuantumOperatorProp[qo_, {"PermuteInput", perm_Cycles}] :=
         ],
         Permute[qo["InputOrder"], InversePermutation @ perm]
     ]
+]
 
-QuantumOperatorProp[qo_, {"PermuteOutput", perm_Cycles}] :=
+QuantumOperatorProp[qo_, {"PermuteOutput", perm_Cycles}] := If[perm === Cycles[{}],
+    qo,
     QuantumOperator[
         QuantumState[
             QuantumOperator[{"Permutation", qo["OutputDimensions"], perm}]["State"] @ qo["State"],
@@ -119,7 +122,7 @@ QuantumOperatorProp[qo_, {"PermuteOutput", perm_Cycles}] :=
         ],
         qo["InputOrder"]
     ]
-
+]
 
 QuantumOperatorProp[qo_, {"Permute", perm_Cycles}] := With[{shift = Max[qo["OutputQudits"] - qo["InputQudits"], 0]},
 qo[

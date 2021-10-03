@@ -143,7 +143,7 @@ QuantumStateProp[qs_, "VonNeumannEntropy" | "Entropy", logBase_ ? NumericQ] := W
         0,
         (* - Total @ Map[# Log[logBase, #] &, Select[Re @ Eigenvalues@qs[DensityMatrix"], Positive]] *)
 
-        Chop @ Simplify @ Enclose[- Tr[matrix . ConfirmBy[MatrixLog[matrix], MatrixQ]] / Log[logBase], $Failed &]
+        Enclose[TimeConstrained[Chop @ Simplify @ - Tr[matrix . ConfirmBy[MatrixLog[matrix], MatrixQ]] / Log[logBase], 1], $Failed &]
     ]
 ]
 
@@ -154,7 +154,7 @@ QuantumStateProp[qs_, {"VonNeumannEntropy" | "Entropy", logBase_}] := qs["VonNeu
 
 (* purity *)
 
-QuantumStateProp[qs_, "Purity"] := Enclose @ Abs[Tr[MatrixPower[ConfirmBy[qs["NormalizedDensityMatrix"], MatrixQ], 2]]]
+QuantumStateProp[qs_, "Purity"] := Enclose @ TimeConstrained[Abs[Tr[MatrixPower[ConfirmBy[qs["NormalizedDensityMatrix"], MatrixQ], 2]]], 1]
 
 QuantumStateProp[qs_, "Type"] := Which[
     qs["StateType"] === "Vector" || TrueQ[qs["Purity"] == 1],
