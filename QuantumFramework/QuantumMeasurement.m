@@ -5,7 +5,7 @@ PackageExport["QuantumMeasurement"]
 PackageScope["QuantumMeasurementQ"]
 
 
-QuantumMeasurementQ[QuantumMeasurement[qs_QuantumState ? QuantumStateQ]] := qs["OutputQudits"] <= qs["InputQudits"]
+QuantumMeasurementQ[QuantumMeasurement[qs_QuantumState ? QuantumStateQ, _ ? orderQ]] := qs["OutputQudits"] <= qs["InputQudits"]
 
 QuantumMeasurementQ[___] := False
 
@@ -42,9 +42,14 @@ QuantumMeasurement[qm_QuantumMeasurement, args___] := QuantumMeasurement[Quantum
 
 QuantumMeasurementProp[qm_, "Properties"] := DeleteDuplicates @ Join[$QuantumMeasurementProperties, qm["State"]["Properties"]]
 
-QuantumMeasurementProp[QuantumMeasurement[state_], "State"] := state
+QuantumMeasurementProp[QuantumMeasurement[state_, _], "State"] := state
 
-QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumPartialTrace[qm["State"]["Transpose"], Range[qm["InputQudits"]]]["Transpose"]
+QuantumMeasurementProp[QuantumMeasurement[_, order_], "Order"] := order
+
+QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumState[
+    QuantumPartialTrace[qm["State"]["Transpose"], Range[qm["InputQudits"]]]["Transpose"],
+    QuantumBasis @ QuantumPartialTrace[qm["Input"], Complement[Range[qm["InputQudits"]], qm["Order"]]]
+]
 
 QuantumMeasurementProp[qm_, "States"] :=
     QuantumState[#, qm["InputBasis"]] & /@ qm["State"]["StateMatrix"]
@@ -107,6 +112,9 @@ QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement ? QuantumMeasurementQ, for
     BoxForm`ArrangeSummaryBox["QuantumMeasurement", qm,
         icon,
         {
+            {
+                BoxForm`SummaryItem[{"Measured Qudits: ", qm["Order"]}]
+            },
             {
                 BoxForm`SummaryItem[{"Measurement Outcomes: ", Length[qm["Probabilities"]]}]
             }

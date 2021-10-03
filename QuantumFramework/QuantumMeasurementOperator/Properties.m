@@ -55,6 +55,10 @@ QuantumMeasurementOperatorProp[qmo_, "Type"] := Which[
 
 QuantumMeasurementOperatorProp[qo_, "InputOrder"] := qo["CircuitOrder"]
 
+QuantumMeasurementOperatorProp[qo_, "InputQuditOrder"] := qo["Order"] - Min[qo["InputOrder"]] + 1
+
+QuantumMeasurementOperatorProp[qo_, "OutputOrder"] := Range[Max[qo["InputOrder"]] - qo["OutputQudits"] + 1, Max[qo["InputOrder"]]]
+
 QuantumMeasurementOperatorProp[qmo_, "ProjectionQ"] := qmo["Type"] === "Projection"
 
 QuantumMeasurementOperatorProp[qmo_, "POVMQ"] := qmo["Type"] === "POVM"
@@ -114,9 +118,9 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
                     "Input" -> QuantumTensorProduct[QuantumPartialTrace[ordered["Input"], ordered["InputQuditOrder"]], tracedOperator["Input"]]
                 ]
             ][
-                {"PermuteOutput", InversePermutation @ FindPermutation[Prepend[1 + Join[ordered["InputQuditOrder"], traceQudits], 1]]}
+                {"PermuteOutput", InversePermutation @ FindPermutation[Prepend[1 + Join[traceQudits, ordered["InputQuditOrder"]], 1]]}
             ][
-                {"PermuteInput", InversePermutation @ FindPermutation[Join[ordered["InputQuditOrder"], traceQudits]]}
+                {"PermuteInput", InversePermutation @ FindPermutation[Join[traceQudits, ordered["InputQuditOrder"]]]}
             ],
             ordered["CircuitOrder"]
         ]

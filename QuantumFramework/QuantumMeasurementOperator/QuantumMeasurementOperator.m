@@ -41,14 +41,17 @@ QuantumMeasurementOperator[op_ ? QuantumOperatorQ, args__] :=
 },
     ConfirmAssert[qs["OutputQudits"] >= qmo["Arity"], "Not enough output qudits"];
 
-    QuantumMeasurement @ qmo["SuperOperator"][{"Ordered", 1, qs["OutputQudits"]}][qs]
+    QuantumMeasurement[qmo["SuperOperator"][{"Ordered", 1, qs["OutputQudits"]}][qs]
         [{"Permute", FindPermutation[
             Join[
                 Range[qudits],
                 qudits + qs["OutputQudits"] + Range[qs["InputQudits"]],
                 qudits + Range[qs["OutputQudits"]]
             ]]}]
-        [{"Split", qudits + qs["InputQudits"]}]
+        [{"Split", qudits + qs["InputQudits"]}],
+
+        qmo["Order"]
+    ]
 ]
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[op_ ? QuantumOperatorQ] := With[{
