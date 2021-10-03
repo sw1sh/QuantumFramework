@@ -5,7 +5,7 @@ PackageScope["QuantumCircuitOperatorProp"]
 
 
 $QuantumCircuitOperatorProperties = {
-     "Operators", "Diagram", "Gates", "CircuitOperator"
+     "Operators", "Diagram", "Gates", "Orders", "CircuitOperator"
 };
 
 $QuantumCircuitOperatorProperties = DeleteDuplicates @ Join[$QuantumCircuitOperatorProperties, $QuantumMeasurementOperatorProperties];
@@ -35,21 +35,7 @@ QuantumCircuitOperatorProp[qco_, "CircuitOperator"] := Fold[ReverseApplied[Const
 
 QuantumCircuitOperatorProp[qco_, "Gates"] := Length @ qco["Operators"]
 
-QuantumCircuitOperatorProp[qco_, "Orders"] := #["Order"] & /@ qco["Operators"]
-
-QuantumCircuitOperatorProp[qco_, "Arity"] := Length[Union @@ qco["Orders"]]
-
-QuantumCircuitOperatorProp[qco_, "InputDimension"] := Max[#["InputDimension"] & /@ qco["Operators"]]
-
-QuantumCircuitOperatorProp[qco_, "Qudits"] := Max[Flatten[qco["Orders"]]]
-
-QuantumCircuitOperatorProp[qco_, "OrderedMatrix" | "OrderedMatrixRepresentation"] := qco[{"OrderedMatrix", qco["Qudits"]}]
-
-QuantumCircuitOperatorProp[qco_, {"OrderedMatrix" | "OrderedMatrixRepresentation", quditCount_}] := qco["CircuitOperator"][{"OrderedMatrix", quditCount}]
-
-QuantumCircuitOperatorProp[qco_, "HermitianQ"] := HermitianMatrixQ[qco["OrderedMatrixRepresentation"]]
-
-QuantumCircuitOperatorProp[qco_, "UnitaryQ"] := UnitaryMatrixQ[qco["OrderedMatrixRepresentation"]]
+QuantumCircuitOperatorProp[qco_, "Orders" | "OperatorOrders"] := #["Order"] & /@ qco["Operators"]
 
 
 (* operator properties *)

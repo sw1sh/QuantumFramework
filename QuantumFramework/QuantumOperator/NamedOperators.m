@@ -291,6 +291,7 @@ QuantumOperator["CSWAP", args___] := QuantumOperator[
         },
         {8, 8}
     ],
+    2, 3,
     "Label" -> "Controlled"["SWAP"],
     args
 ]
@@ -340,6 +341,7 @@ QuantumOperator[{"Deutsch", angle_}, args___] := QuantumOperator[
     },
         {8, 8}
     ],
+    2, 3,
     args
 ]
 
