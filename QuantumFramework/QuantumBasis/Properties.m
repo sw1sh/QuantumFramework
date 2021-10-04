@@ -194,3 +194,7 @@ QuantumBasisProp[qb_, "Dagger" | "ConjugateTranspose"] := QuantumBasis[qb,
     "Label" -> Superscript[qb["Label"], "\[Dagger]"]
 ]
 
+QuantumBasisProp[qb_, {"PermuteInput", perm_Cycles}] := QuantumBasis[qb, "Input" -> qb["Input"][{"Permute", perm}]]
+
+QuantumBasisProp[qb_, {"PermuteOutput", perm_Cycles}] := QuantumBasis[qb, "Output" -> qb["Output"][{"Permute", perm}]]
+

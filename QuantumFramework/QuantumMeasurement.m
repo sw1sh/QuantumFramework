@@ -13,6 +13,32 @@ QuantumMeasurementQ[___] := False
 qb_QuantumMeasurement["ValidQ"] := QuantumMeasurementQ[qb]
 
 
+(* constructors *)
+
+QuantumMeasurement[proba_Association, states : {_QuantumState..}] /;
+    Length[proba] == Length[states] && Equal @@ Map[#["Dimensions"] &, states] && AllTrue[states, #["PureStateQ"] &] :=
+QuantumMeasurement[
+    QuantumState[
+        QuantumState[
+            Flatten @ kroneckerProduct[Map[#["Computational"]["StateVector"] &, states], Sqrt @ Values[proba]],
+            QuantumTensorProduct[
+
+                QuantumBasis[QuditBasis @ Prepend[First[states]["Dimensions"], Length[states]]],
+                QuantumBasis[Keys[proba]]
+            ]
+        ],
+        QuantumTensorProduct[
+            QuantumBasis[QuditBasis[Length[states]]],
+            First[states]["Basis"][{"Split", First[states]["Qudits"]}],
+            QuantumBasis[Keys[proba]]
+        ][{"Split", 1}]
+    ](*[{"PermuteInput", Cycles[{Range[1 + First[states]["Qudits"]]}]}]*),
+    {First[states]["Qudits"] + 1}
+]
+
+
+(* properties *)
+
 $QuantumMeasurementProperties = {
     "Distribution",
     "Outcomes", "Probabilities",
@@ -46,19 +72,22 @@ QuantumMeasurementProp[QuantumMeasurement[state_, _], "State"] := state
 
 QuantumMeasurementProp[QuantumMeasurement[_, order_], "Order"] := order
 
-QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumState[
-    QuantumPartialTrace[qm["State"]["Transpose"], Range[qm["InputQudits"]]]["Transpose"],
-    QuantumBasis @ QuantumPartialTrace[qm["Input"], Complement[Range[qm["InputQudits"]], qm["Order"]]]
+QuantumMeasurementProp[qm_, "EigenState"] := QuantumPartialTrace[qm["State"]["Transpose"], Range[qm["InputQudits"]]]["Transpose"]
+
+QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumPartialTrace[
+    qm["State"][{"Split", qm["Qudits"]}],
+    Join[Range[qm["OutputQudits"]], qm["OutputQudits"] + Complement[Range[qm["InputQudits"]], qm["Order"]]]
 ]
 
 QuantumMeasurementProp[qm_, "States"] :=
-    QuantumState[#, qm["InputBasis"]] & /@ qm["State"]["StateMatrix"]
+    QuantumState[#, qm["InputBasis"]["Transpose"]] & /@ qm["State"]["StateMatrix"]
+
 
 QuantumMeasurementProp[qm_, "ProbabilitiesList"] := qm["PostMeasurementState"]["Probabilities"]
 
-QuantumMeasurementProp[qm_, "Eigenvalues"] := qm["PostMeasurementState"]["BasisElementNames"]
+QuantumMeasurementProp[qm_, "Eigenvalues"] := qm["EigenState"]["BasisElementNames"]
 
-QuantumMeasurementProp[qm_, "Distribution"] := CategoricalDistribution[qm["Eigenvalues"], N @ qm["ProbabilitiesList"]]
+QuantumMeasurementProp[qm_, "Distribution"] := CategoricalDistribution[qm["PostMeasurementState"]["BasisElementNames"], qm["ProbabilitiesList"]]
 
 QuantumMeasurementProp[qm_, "DistributionInformation", args___] := Information[qm["Distribution"], args]
 
@@ -76,7 +105,7 @@ QuantumMeasurementProp[qm_, {"SimulatedMeasurement", n_Integer}] := RandomVariat
 
 QuantumMeasurementProp[qm_, "Mean"] := qm["Eigenvalues"] . qm["ProbabilitiesList"]
 
-QuantumMeasurementProp[qm_, "StateAssociation"] := AssociationThread[qm["Outcomes"], Flatten @ qm["States"]]
+QuantumMeasurementProp[qm_, "StateAssociation"] := AssociationThread[qm["Outcomes"], qm["States"]]
 
 QuantumMeasurementProp[qm_, "StateAmplitudes"] := Map[Simplify, #["Amplitudes"]] & /@ qm["StateAssociation"]
 

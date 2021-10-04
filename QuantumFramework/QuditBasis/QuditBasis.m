@@ -76,6 +76,8 @@ QuditBasis[qb_QuditBasis] := qb
 QuditBasis[assoc_Association, args___] := QuditBasis[Keys[assoc],
     KeyMap[{If[MatchQ[#, _QuditBasisName], #["Name"], #], 1} &, assoc], args]
 
+QuditBasis[names : {Except[_Integer]..}] := QuditBasis[names, IdentityMatrix[Length[names]]]
+
 QuditBasis[names_List, elements_List, args___] :=
     QuditBasis[AssociationThread[names, elements], args]
 

@@ -85,7 +85,7 @@ QuantumStateProp[qs_, "StateVector"] := Module[{result},
 
 QuantumStateProp[qs_, "Weights"] := If[qs["PureStateQ"], Abs[qs["StateVector"]] ^ 2, PseudoInverse[qs["Eigenvectors"]] . qs["Eigenvalues"]]
 
-QuantumStateProp[qs_, "Probabilities"] := Re @ Normalize[qs["Weights"], Total]
+QuantumStateProp[qs_, "Probabilities"] := qs["Weights"] / Total[qs["Weights"]]
 
 QuantumStateProp[qs_, "Formula"] := Total @ KeyValueMap[Times, qs["NormalizedAmplitudes"]]
 
@@ -249,6 +249,22 @@ QuantumStateProp[qs_, {"Permute", perm_Cycles}] := QuantumState[
         ]
     ],
     qs["Basis"][{"Permute", perm}]
+]
+
+QuantumStateProp[qs_, {"PermuteInput", perm_Cycles}] := If[perm === Cycles[{}],
+    qs,
+    QuantumState[
+        qs @ QuantumOperator[{"Permutation", Permute[qs["InputDimensions"], perm], InversePermutation @ perm}]["State"],
+        qs["Basis"][{"PermuteInput", perm}]
+    ]
+]
+
+QuantumStateProp[qs_, {"PermuteOutput", perm_Cycles}] := If[perm === Cycles[{}],
+    qs,
+    QuantumState[
+        QuantumOperator[{"Permutation", qs["OutputDimensions"], perm}]["State"] @ qs,
+        qs["Basis"][{"PermuteOutput", perm}]
+    ]
 ]
 
 QuantumStateProp[qs_, {"Split", n_Integer : 0}] := QuantumState[qs["State"], qs["Basis"][{"Split", n}]]

@@ -102,26 +102,14 @@ QuantumOperatorProp[qo_, {"OrderedTensorRepresentation", arity_Integer}] :=
     qo[{"Ordered", arity}]["TensorRepresentation"]
 
 
-QuantumOperatorProp[qo_, {"PermuteInput", perm_Cycles}] := If[perm === Cycles[{}],
-    qo,
-    QuantumOperator[
-        QuantumState[
-            qo["State"] @ QuantumOperator[{"Permutation", qo["InputDimensions"], InversePermutation @ perm}]["State"],
-            QuantumBasis[qo["Basis"], "Input" -> qo["Input"][{"Permute", InversePermutation @ perm}]]
-        ],
-        Permute[qo["InputOrder"], InversePermutation @ perm]
-    ]
+QuantumOperatorProp[qo_, {"PermuteInput", perm_Cycles}] := QuantumOperator[
+    qo["State"][{"PermuteInput", perm}],
+    Permute[qo["InputOrder"], perm]
 ]
 
-QuantumOperatorProp[qo_, {"PermuteOutput", perm_Cycles}] := If[perm === Cycles[{}],
-    qo,
-    QuantumOperator[
-        QuantumState[
-            QuantumOperator[{"Permutation", qo["OutputDimensions"], perm}]["State"] @ qo["State"],
-            QuantumBasis[qo["Basis"], "Output" -> qo["Output"][{"Permute", perm}]]
-        ],
-        qo["InputOrder"]
-    ]
+QuantumOperatorProp[qo_, {"PermuteOutput", perm_Cycles}] := QuantumOperator[
+    qo["State"][{"PermuteOutput", perm}],
+    qo["InputOrder"]
 ]
 
 QuantumOperatorProp[qo_, {"Permute", perm_Cycles}] := With[{shift = Max[qo["OutputQudits"] - qo["InputQudits"], 0]},
@@ -168,9 +156,9 @@ QuantumOperatorProp[qo_, "HermitianQ"] := HermitianMatrixQ[qo["Matrix"]]
 
 QuantumOperatorProp[qo_, "UnitaryQ"] := UnitaryMatrixQ[qo["Matrix"]]
 
-QuantumOperatorProp[qo_, "Eigenvalues"] := Sort @ Eigenvalues[qo["Matrix"]]
+QuantumOperatorProp[qo_, "Eigenvalues"] := Eigenvalues[qo["Matrix"]]
 
-QuantumOperatorProp[qo_, "Eigenvectors"] := eigenvectors[qo["Matrix"], "Sort" -> True]
+QuantumOperatorProp[qo_, "Eigenvectors"] := eigenvectors[qo["Matrix"], "Sort" -> False]
 
 QuantumOperatorProp[qo_, "Projectors"] := projector /@ qo["Eigenvectors"]
 

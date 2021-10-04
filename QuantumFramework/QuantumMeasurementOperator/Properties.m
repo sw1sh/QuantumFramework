@@ -83,7 +83,8 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
     ordered = qmo["Ordered"],
     trace,
     traceQudits,
-    tracedOperator
+    tracedOperator,
+    eigenBasis, outputBasis, inputBasis, operator
 },
     trace = Complement[ordered["InputOrder"], qmo["Order"]];
     traceQudits = trace - Min[ordered["InputOrder"]] + 1;
@@ -98,26 +99,50 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
             ordered["CircuitOrder"]
         ],
 
-        tracedOperator = QuantumPartialTrace[ordered, If[ordered["POVMQ"], {# + ordered["OutputQudits"] - ordered["InputQudits"], #} & /@ trace, trace]];
-        Simplify @ QuantumOperator[
-            QuantumOperator[
-                Map[kroneckerProduct @@ Prepend[IdentityMatrix /@ ordered["InputDimensions"][[traceQudits]], #] &, tracedOperator["Projectors"]],
+        tracedOperator = QuantumPartialTrace[
+            ordered,
+            If[ordered["POVMQ"], {# + ordered["OutputQudits"] - ordered["InputQudits"], #} & /@ trace, trace]
+        ];
+        eigenBasis = QuditBasis[
+            MapIndexed[
+                Interpretation[Tooltip[Style[#, Bold], StringTemplate["Eigenvalue ``"][First @ #2]], {#1, #2}] &,
+                tracedOperator["Eigenvalues"]
+            ],
+            tracedOperator["Eigenvectors"]
+        ];
+        outputBasis = QuantumPartialTrace[ordered["Output"], ordered["InputQuditOrder"] + ordered["OutputQudits"] - ordered["InputQudits"]];
+        inputBasis = QuantumPartialTrace[ordered["Input"], ordered["InputQuditOrder"]];
 
-                QuantumBasis[
-                    "Output" -> QuantumTensorProduct[
-                        QuditBasis[
-                            MapIndexed[
-                                Interpretation[Tooltip[Style[#, Bold], StringTemplate["Eigenvalue ``"][First @ #2]], {#1, #2}] &,
-                                tracedOperator["Eigenvalues"]
-                            ],
-                            tracedOperator["Eigenvectors"]
-                        ],
-                        QuantumPartialTrace[ordered["Output"], ordered["InputQuditOrder"]],
-                        tracedOperator["Output"]
-                    ],
-                    "Input" -> QuantumTensorProduct[QuantumPartialTrace[ordered["Input"], ordered["InputQuditOrder"]], tracedOperator["Input"]]
-                ]
-            ][
+        (* construct *)
+        operator = QuantumOperator[
+            Map[kroneckerProduct @@ Prepend[IdentityMatrix /@ ordered["InputDimensions"][[traceQudits]], #] &, tracedOperator["Projectors"]],
+
+            QuantumBasis[
+                "Output" -> QuantumTensorProduct[
+                    eigenBasis,
+                    QuditBasis[outputBasis["Dimensions"]],
+                    QuditBasis[tracedOperator["OutputDimensions"]]
+                ],
+                "Input" -> QuantumTensorProduct[QuditBasis[inputBasis["Dimensions"]], QuditBasis[tracedOperator["InputDimensions"]]]
+            ]
+        ];
+
+        (* change back basis *)
+        operator = QuantumOperator[
+            operator,
+            QuantumBasis[
+                "Output" -> QuantumTensorProduct[
+                    eigenBasis,
+                    outputBasis,
+                    tracedOperator["Output"]
+                ],
+                "Input" -> QuantumTensorProduct[inputBasis, tracedOperator["Input"]]
+            ]
+        ];
+
+        (* permute and set order *)
+        QuantumOperator[
+            operator[
                 {"PermuteOutput", InversePermutation @ FindPermutation[Prepend[1 + Join[traceQudits, ordered["InputQuditOrder"]], 1]]}
             ][
                 {"PermuteInput", InversePermutation @ FindPermutation[Join[traceQudits, ordered["InputQuditOrder"]]]}
