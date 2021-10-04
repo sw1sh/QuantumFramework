@@ -3,24 +3,26 @@ PacletObject[
     "Name" -> "Wolfram__QuantumFramework",
     "Description" -> "Quantum Computing",
     "Creator" -> "Wolfram",
-    "Version" -> "0.2",
+    "PublisherID" -> "Wolfram",
+    "Version" -> "0.3",
     "WolframVersion" -> "12.2+",
     "Extensions" -> {
       {
         "Kernel",
         "Root" -> "Kernel",
-        "Context" -> "QuantumFramework`",
+        "Context" -> "Wolfram`QuantumFramework`",
         "Symbols" -> {
-            "QuantumFramework`QuantumBasisName",
-            "QuantumFramework`QuditBasis",
-            "QuantumFramework`QuantumBasis",
-            "QuantumFramework`QuantumState",
-            "QuantumFramework`QuantumOperator",
-            "QuantumFramework`QuantumMeasurementOperator",
-            "QuantumFramework`QuantumCircuitOperator",
-            "QuantumFramework`QuantumMeasurement",
-            "QuantumFramework`QuantumTensorProduct",
-            "QuantumFramework`QuantumPartialTrace"
+            "Wolfram`QuantumFramework`QuantumBasisName",
+            "Wolfram`QuantumFramework`QuditBasis",
+            "Wolfram`QuantumFramework`QuantumBasis",
+            "Wolfram`QuantumFramework`QuantumState",
+            "Wolfram`QuantumFramework`QuantumOperator",
+            "Wolfram`QuantumFramework`QuantumMeasurementOperator",
+            "Wolfram`QuantumFramework`QuantumCircuitOperator",
+            "Wolfram`QuantumFramework`QuantumMeasurement",
+            "Wolfram`QuantumFramework`QuantumTensorProduct",
+            "Wolfram`QuantumFramework`QuantumPartialTrace",
+            "Wolfram`QuantumFramework`QuantumDistance"
         }
       },
       {"Documentation", "Language" -> "English"}
