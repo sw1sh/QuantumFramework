@@ -8,7 +8,7 @@ PacletObject[
     "Extensions" -> {
       {
         "Kernel",
-        "Root" -> ".",
+        "Root" -> "Kernel",
         "Context" -> "QuantumFramework`",
         "Symbols" -> {
             "QuantumFramework`QuantumBasisName",
