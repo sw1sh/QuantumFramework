@@ -19,8 +19,11 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativeEntropy"] :
 ]
 
 
-QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Trace"] :=
-    Re @ Total @ Abs @ Eigenvalues[qs1["Computational"]["DensityMatrix"] - qs2["Computational"]["DensityMatrix"]] / 2
+QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Trace"] := With[{
+    m = qs1["Computational"]["DensityMatrix"] - qs2["Computational"]["DensityMatrix"]
+},
+    Re @ Tr[MatrixPower[ConjugateTranspose[m] . m, 1 / 2]] / 2
+]
 
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "BuresAngle"] :=
     Re @ ArcCos @ Sqrt @ QuantumDistance[qs1, qs2, "Fidelity"]
