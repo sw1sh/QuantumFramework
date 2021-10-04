@@ -125,7 +125,7 @@ QuantumState[qs_ ? QuantumStateQ] := qs["Computational"]
 (* equality *)
 
 QuantumState /: (qs1_QuantumState ? QuantumStateQ) == (qs2_QuantumState ? QuantumStateQ) :=
-    qs1["Picture"] == qs2["Picture"] && qs1["MatrixRepresentation"] == qs2["MatrixRepresentation"]
+    qs1["Picture"] == qs2["Picture"] && qs1["NormalizedMatrixRepresentation"] == qs2["NormalizedMatrixRepresentation"]
 
 (* addition *)
 

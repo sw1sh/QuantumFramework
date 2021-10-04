@@ -104,8 +104,6 @@ QuantumStateProp[qs_, "NormalizedStateVector"] := qs["NormalizedState"]
 
 QuantumStateProp[qs_, "NormalizedDensityMatrix"] := Enclose @ Confirm[normalizeMatrix @ qs["DensityMatrix"]]
 
-QuantumStateProp[qs_, "NormalizedMatrixRepresentation" | "NormalizedMatrix"] := normalizeMatrix @ qs["Matrix"]
-
 QuantumStateProp[qs_, "Operator"] := qs["Projector"]["Amplitudes"]
 
 QuantumStateProp[qs_, "NormalizedOperator"] := qs["NormalizedProjector"]["Amplitudes"]
@@ -121,15 +119,11 @@ QuantumStateProp[qs_, "Projector"] := QuantumState[Flatten @ qs["DensityMatrix"]
 
 QuantumStateProp[qs_, "NormalizedProjector"] := QuantumState[Flatten @ qs["NormalizedDensityMatrix"], QuantumBasis[qs["Basis"], "Input" -> qs["Output"]["Dual"]]]
 
-QuantumStateProp[qs_, "MatrixRepresentation" | "Matrix"] := qs["Computational"]["DensityMatrix"]
-
 QuantumStateProp[qs_, "MatrixDimensions"] := {qs["Dimension"], qs["Dimension"]}
 
 QuantumStateProp[qs_, "Eigenvalues"] := Eigenvalues[qs["DensityMatrix"]]
 
 QuantumStateProp[qs_, "Eigenvectors"] := eigenvectors[qs["DensityMatrix"]]
-
-QuantumStateProp[qs_, "NormalizedEigenvectors"] := Normalize /@ qs["Eigenvectors"]
 
 QuantumStateProp[qs_, "Eigenstates"] := QuantumState[#, qs["Basis"]] & /@ qs["Eigenvectors"]
 
@@ -296,10 +290,14 @@ QuantumStateProp[qs_, "MatrixRepresentation"] := qs["Computational"]["DensityMat
 
 QuantumStateProp[qs_, "TensorRepresentation"] := qs["Computational"]["StateTensor"]
 
+QuantumStateProp[qs_, "NormalizedMatrixRepresentation"] := normalizeMatrix @ qs["MatrixRepresentation"]
+
 
 (* block sphere*)
 
-QuantumStateProp[qs_, "BlochSphericalCoordinates"] /; qs["Dimension"] == 2 := With[{state = qs["NormalizedStateVector"], matrix = qs["NormalizedDensityMatrix"]},
+QuantumStateProp[qs_, "BlochSphericalCoordinates"] /; qs["Dimension"] == 2 := With[{
+    state = qs["Computational"]["NormalizedStateVector"], matrix = qs["Computational"]["NormalizedDensityMatrix"]
+},
     If[
         qs["PureStateQ"],
 
@@ -320,7 +318,9 @@ QuantumStateProp[qs_, "BlochSphericalCoordinates"] /; qs["Dimension"] == 2 := Wi
     ]
 ]
 
-QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 :=  With[{state = qs["NormalizedStateVector"], matrix = qs["NormalizedDensityMatrix"]},
+QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 :=  With[{
+    state = qs["Computational"]["NormalizedStateVector"], matrix = qs["Computational"]["NormalizedDensityMatrix"]
+},
     If[
         qs["PureStateQ"],
 

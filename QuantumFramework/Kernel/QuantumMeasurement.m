@@ -80,7 +80,7 @@ QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumPartialTrace[
 ]
 
 QuantumMeasurementProp[qm_, "States"] :=
-    QuantumState[#, qm["InputBasis"]["Transpose"]] & /@ qm["State"]["StateMatrix"]
+    QuantumState[QuantumState[#, QuantumBasis[qm["InputDimensions"]]], qm["InputBasis"]["Transpose"]] & /@ qm["State"]["Computational"]["StateMatrix"]
 
 
 QuantumMeasurementProp[qm_, "ProbabilitiesList"] := qm["PostMeasurementState"]["Probabilities"]
