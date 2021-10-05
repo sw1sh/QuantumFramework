@@ -94,8 +94,10 @@ QuantumMeasurementProp[qm_, "DistributionInformation", args___] := Information[q
 QuantumMeasurementProp[qm_, args :
     "Categories" | "Probabilities" | "ProbabilityTable" | "ProbabilityArray" |
     "ProbabilityPlot" |
-    "TopProbabilities" | ("TopProbabilities" -> _Integer) |
-    "Entropy"] := qm["DistributionInformation", args]
+    "TopProbabilities" | ("TopProbabilities" -> _Integer)] := qm["DistributionInformation", args]
+
+
+QuantumMeasurementProp[qm_, "Entropy"] := Quantity[qm["DistributionInformation", "Entropy"] / Log[2], "Bits"]
 
 QuantumMeasurementProp[qm_, "Outcomes"] := qm["DistributionInformation", "Categories"]
 

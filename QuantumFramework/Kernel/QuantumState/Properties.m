@@ -141,7 +141,7 @@ QuantumStateProp[qs_, "VonNeumannEntropy" | "Entropy", logBase_ ? NumericQ] := W
     ]
 ]
 
-QuantumStateProp[qs_, "VonNeumannEntropy" | "Entropy"] := qs["VonNeumannEntropy", E]
+QuantumStateProp[qs_, "VonNeumannEntropy" | "Entropy"] := Quantity[qs["VonNeumannEntropy", 2], "Bits"]
 
 QuantumStateProp[qs_, {"VonNeumannEntropy" | "Entropy", logBase_}] := qs["VonNeumannEntropy", logBase]
 

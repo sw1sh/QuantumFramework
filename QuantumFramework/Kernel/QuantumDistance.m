@@ -15,7 +15,7 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Fidelity"] := With[
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativeEntropy"] := With[{
     m1 = qs1["Computational"]["DensityMatrix"], m2 = qs2["Computational"]["DensityMatrix"]
 },
-    Re[Tr[m1 . MatrixLog[m1]] - Tr[m2 . MatrixLog[m2]]]
+    Quantity[Re[Tr[m1 . MatrixLog[m1]] - Tr[m2 . MatrixLog[m2]]] / Log[2], "Bits"]
 ]
 
 
