@@ -12,8 +12,9 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Fidelity"] := With[
     Re[Tr[MatrixPower[rootDensityMatrix . qs2["Computational"]["DensityMatrix"] . rootDensityMatrix, 1 / 2]] ^ 2]
 ]
 
-QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativeEntropy"] := With[{
-    m1 = qs1["Computational"]["DensityMatrix"], m2 = qs2["Computational"]["DensityMatrix"]
+QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativeEntropy"] := Enclose @ With[{
+    m1 = ConfirmBy[qs1, #["Type"] =!= "Unknown" &]["Computational"]["DensityMatrix"],
+    m2 = ConfirmBy[qs2, #["Type"] =!= "Unknown" &]["Computational"]["DensityMatrix"]
 },
     Quantity[Re[Tr[m1 . MatrixLog[m1]] - Tr[m2 . MatrixLog[m2]]] / Log[2], "Bits"]
 ]
