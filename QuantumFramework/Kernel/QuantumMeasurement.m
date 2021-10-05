@@ -105,7 +105,7 @@ QuantumMeasurementProp[qm_, {"SimulatedMeasurement", n_Integer}] := RandomVariat
 
 QuantumMeasurementProp[qm_, "Mean"] := qm["Eigenvalues"] . qm["ProbabilitiesList"]
 
-QuantumMeasurementProp[qm_, "StateAssociation"] := AssociationThread[qm["Outcomes"], qm["States"]]
+QuantumMeasurementProp[qm_, "StateAssociation" | "StatesAssociation"] := AssociationThread[qm["Outcomes"], qm["States"]]
 
 QuantumMeasurementProp[qm_, "StateAmplitudes"] := Map[Simplify, #["Amplitudes"]] & /@ qm["StateAssociation"]
 

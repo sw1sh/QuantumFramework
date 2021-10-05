@@ -13,12 +13,11 @@ $QuantumMeasurementOperatorProperties = {
     "SuperOperator"
 };
 
-$QuantumMeasurementOperatorProperties = DeleteDuplicates @ Join[
+
+QuantumMeasurementOperator["Properties"] := DeleteDuplicates @ Join[
     $QuantumMeasurementOperatorProperties,
     $QuantumOperatorProperties
 ]
-
-QuantumMeasurementOperator["Properties"] := $QuantumMeasurementOperatorProperties
 
 qmo_QuantumMeasurementOperator["ValidQ"] := QuantumMeasurementOperatorQ[qmo]
 

@@ -279,6 +279,7 @@ QuantumOperator[{"Toffoli", arity_Integer}, args___] := QuantumOperator[
         ], {2 ^ arity, 2 ^ arity}
     ],
     2, 3,
+    "Label" -> "\[ScriptCapitalT]",
     args
 ]
 
@@ -342,6 +343,7 @@ QuantumOperator[{"Deutsch", angle_}, args___] := QuantumOperator[
         {8, 8}
     ],
     2, 3,
+    "Label" -> "\[ScriptCapitalD]",
     args
 ]
 
@@ -360,7 +362,7 @@ QuantumOperator[{"Permutation", dims_List, perm_Cycles}] := QuantumOperator[{"Pe
 
 QuantumOperator[{"Permutation", dims_List, perm_Cycles}, order_ ? orderQ] := QuantumOperator[
     TensorTranspose[ArrayReshape[kroneckerProduct @@ IdentityMatrix /@ dims, Join[dims, dims]], perm],
-    QuantumBasis[QuditBasis[Permute[dims, perm]], QuditBasis[dims]],
+    QuantumBasis[QuditBasis[Permute[dims, perm]], QuditBasis[dims], "Label" -> Superscript["\[Pi]", Row @ PermutationList[perm]]],
     order
 ]
 

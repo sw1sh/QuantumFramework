@@ -81,7 +81,7 @@ QuantumState[state_ ? stateQ, basis_ ? QuantumBasisQ] := QuantumState[
 
 (* Mutation *)
 
-QuantumState[qs_ ? QuantumStateQ, args : Except[_ ? QuantumBasisQ, _ ? nameQ]] :=
+QuantumState[qs_ ? QuantumStateQ, args : Except[_ ? QuantumBasisQ, Except[Alternatives @@ $QuantumBasisPictures, _ ? nameQ]]] :=
     Enclose @ QuantumState[qs, ConfirmBy[QuantumBasis[args], QuantumBasisQ]]
 
 QuantumState[qs_ ? QuantumStateQ, args : Except[_ ? QuantumBasisQ]] :=
