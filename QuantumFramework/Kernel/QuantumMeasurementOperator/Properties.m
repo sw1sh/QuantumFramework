@@ -114,7 +114,7 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
 
         (* construct *)
         operator = QuantumOperator[
-            Map[kroneckerProduct @@ Prepend[IdentityMatrix /@ ordered["InputDimensions"][[traceQudits]], #] &, tracedOperator["Projectors"]],
+            Map[kroneckerProduct @@ Append[IdentityMatrix /@ ordered["InputDimensions"][[traceQudits]], #] &, tracedOperator["Projectors"]],
 
             QuantumBasis[
                 "Output" -> QuantumTensorProduct[
