@@ -170,7 +170,8 @@ drawGateGraphics[gates_List] := Module[{
                     {-2 + 6 Max[gatePositionIndices], - 5 Last[orders[[i]]]},
                     orders[[i]],
                     scaling,
-                    gates[[i]]["Label"] /. None -> "M"
+                    (*gates[[i]]["Label"] /. None -> "M"*)
+                    "M"
                 ]
             ]
         ];

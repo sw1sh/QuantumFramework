@@ -80,14 +80,18 @@ QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumPartialTrace[
 ]
 
 QuantumMeasurementProp[qm_, "States"] :=
-    QuantumState[QuantumState[#, QuantumBasis[qm["InputDimensions"]]], qm["InputBasis"]["Transpose"]] & /@ qm["State"]["Computational"]["StateMatrix"]
+    QuantumState[#, qm["InputBasis"]["Transpose"]] & /@ qm["State"]["StateMatrix"]
+    (*QuantumState[QuantumState[#, QuantumBasis[qm["InputDimensions"]]], qm["InputBasis"]["Transpose"]] & /@ qm["State"]["Computational"]["StateMatrix"]*)
 
 
-QuantumMeasurementProp[qm_, "ProbabilitiesList"] := qm["PostMeasurementState"]["Probabilities"]
+QuantumMeasurementProp[qm_, "ProbabilitiesList"] := qm["EigenState"]["Probabilities"]
 
 QuantumMeasurementProp[qm_, "Eigenvalues"] := qm["EigenState"]["BasisElementNames"]
 
-QuantumMeasurementProp[qm_, "Distribution"] := CategoricalDistribution[qm["PostMeasurementState"]["BasisElementNames"], qm["ProbabilitiesList"]]
+QuantumMeasurementProp[qm_, "Distribution"] := CategoricalDistribution[
+    If[MatchQ[qm["Label"], "Computational"[_]], qm["PostMeasurementState"]["BasisElementNames"], qm["Eigenvalues"]],
+    qm["ProbabilitiesList"]
+]
 
 QuantumMeasurementProp[qm_, "DistributionInformation", args___] := Information[qm["Distribution"], args]
 

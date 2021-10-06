@@ -116,14 +116,3 @@ qb_QuantumBasis /; System`Private`HoldNotValidQ[qb] && quantumBasisQ[Unevaluated
 QuantumBasis /: (qb1_QuantumBasis ? QuantumBasisQ) ==
     (qb2_QuantumBasis ? QuantumBasisQ) := qb1["MatrixRepresentation"] == qb2["MatrixRepresentation"]
 
-
-
-
-ResourceFunction["AddCodeCompletion"]["QuantumBasis"][{
-    "Computational",
-    "PauliX", "PauliY", "PauliZ",
-    "Fourier",
-    "Identity",
-    "Schwinger", "Pauli", "Dirac", "Wigner"
-}]
-

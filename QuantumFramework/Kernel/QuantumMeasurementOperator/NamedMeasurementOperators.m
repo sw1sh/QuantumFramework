@@ -1,14 +1,16 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageScope["$QuantumMeasurementOperatorNames"]
 
 
-ResourceFunction["AddCodeCompletion"]["QuantumMeasurementOperator"][{
+
+$QuantumMeasurementOperatorNames = {
     "ComputationalBasis",
     "BellBasis",
     "PauliXBasis", "PauliYBasis", "PauliZBasis",
     "FourierBasis",
     "RandomHermitian"
-}]
+}
 
 
 QuantumMeasurementOperator["ComputationalBasis", args___] := QuantumMeasurementOperator[{"ComputationalBasis"}, args]
@@ -17,7 +19,12 @@ QuantumMeasurementOperator[{"ComputationalBasis", dimension_Integer : 2}, args__
     QuantumMeasurementOperator[{"ComputationalBasis", dimension, Range[0, (dimension ^ Length[order]) - 1]}, args, order]
 
 QuantumMeasurementOperator[{"ComputationalBasis", dimension_Integer : 2, eigenvalues_List}, args___, order : (_ ? orderQ) : {1}] :=
- QuantumMeasurementOperator[eigenvalues . QuantumBasis[dimension, Length[order]]["Projectors"], dimension, Length[order], args, order]
+QuantumMeasurementOperator[eigenvalues . QuantumBasis[dimension, Length[order]]["Projectors"],
+    dimension, Length[order],
+    args,
+    "Label" -> "Computational",
+    order
+]
 
 
 QuantumMeasurementOperator["BellBasis", order : (_ ? orderQ) : {1}] := QuantumMeasurementOperator[{"BellBasis", Range[0, (4 ^ Length[order]) - 1]}, order]

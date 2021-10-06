@@ -1,14 +1,17 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageScope["$QuditBasisNames"]
 
 
-ResourceFunction["AddCodeCompletion"]["QuditBasis"][{
+$QuditBasisNames = {
     "Computational",
     "PauliX", "PauliY", "PauliZ",
     "Fourier",
     "Identity",
     "Schwinger", "Pauli", "Dirac", "Wigner"
-}]
+}
+
+ResourceFunction["AddCodeCompletion"]["QuditBasis"][$QuditBasisNames]
 
 QuditBasis[1, args___] := QuditBasis[args]
 

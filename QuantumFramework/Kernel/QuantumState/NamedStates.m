@@ -1,8 +1,10 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageScope["$QuantumStateNames"]
 
 
-ResourceFunction["AddCodeCompletion"]["QuantumState"][{
+
+$QuantumStateNames = {
     "Plus", "Minus", "Left", "Right",
     "PsiPlus", "PsiMinus", "PhiPlus", "PhiMinus",
     "BasisState", "Register",
@@ -13,7 +15,7 @@ ResourceFunction["AddCodeCompletion"]["QuantumState"][{
     "W",
     "Werner",
     "Graph"
-}]
+}
 
 (*QuantumState[name_ ? nameQ, args : PatternSequence[] | Except[PatternSequence[_Integer ? Positive, ___]]] := QuantumState[name, 2, args]*)
 

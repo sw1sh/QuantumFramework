@@ -1,11 +1,12 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageScope["$QuantumOperatorNames"]
 PackageScope["pauliZGate"]
 PackageScope["controlledZGate"]
 
 
 
-ResourceFunction["AddCodeCompletion"]["QuantumOperator"][{
+$QuantumOperatorNames = {
     "Identity", "Permutation", "Curry", "Uncurry",
     "Fourier", "InverseFourier",
     "XRotation", "YRotation", "ZRotation",
@@ -15,7 +16,7 @@ ResourceFunction["AddCodeCompletion"]["QuantumOperator"][{
      "ControlledU", "CX", "CY", "CZ", "CH", "CT", "CS", "CPHASE", "CNOT",
     "XX", "YY", "ZZ",
     "Toffoli", "Deutsch", "RandomUnitary"
-}]
+}
 
 
 pauliZGate = SparseArray[{j_, j_} :> Exp[(2 Pi I j / 2) + I Pi], {2, 2}];

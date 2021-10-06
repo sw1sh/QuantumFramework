@@ -102,6 +102,7 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
             ordered,
             If[ordered["POVMQ"], {# + ordered["OutputQudits"] - ordered["InputQudits"], #} & /@ trace, trace]
         ];
+
         eigenBasis = QuditBasis[
             MapIndexed[
                 Interpretation[Tooltip[Style[#, Bold], StringTemplate["Eigenvalue ``"][First @ #2]], {#1, #2}] &,
