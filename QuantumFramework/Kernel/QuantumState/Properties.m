@@ -149,7 +149,7 @@ QuantumStateProp[qs_, {"VonNeumannEntropy" | "Entropy", logBase_}] := qs["VonNeu
 
 (* purity *)
 
-QuantumStateProp[qs_, "Purity"] := Enclose @ TimeConstrained[Abs[Tr[MatrixPower[ConfirmBy[qs["NormalizedDensityMatrix"], MatrixQ], 2]]], 1]
+QuantumStateProp[qs_, "Purity"] := Enclose @ TimeConstrained[Simplify @ Abs[Tr[MatrixPower[ConfirmBy[qs["NormalizedDensityMatrix"], MatrixQ], 2]]], 1]
 
 QuantumStateProp[qs_, "Type"] := Which[
     qs["StateType"] === "Vector" || TrueQ[qs["Purity"] == 1],
@@ -201,7 +201,8 @@ QuantumStateProp[qs_, "SpectralBasis"] := QuantumState[
 ]
 
 
-QuantumStateProp[qs_, "Normalized"] := QuantumState[If[qs["StateType"] === "Vector", qs["NormalizedStateVector"], qs["NormalizedStateMatrix"]], qs["Basis"]]
+QuantumStateProp[qs_, "Normalized" | "NormalizedState"] :=
+    QuantumState[If[qs["StateType"] === "Vector", qs["NormalizedStateVector"], qs["NormalizedDensityMatrix"]], qs["Basis"]]
 
 QuantumStateProp[qs_, "Pure"] := If[qs["PureStateQ"],
     qs,
