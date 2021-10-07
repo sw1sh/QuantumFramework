@@ -17,6 +17,7 @@ PackageScope["eigenvectors"]
 
 PackageScope["toggleSwap"]
 PackageScope["toggleShift"]
+PackageScope["alignDimensions"]
 
 
 
@@ -79,3 +80,26 @@ toggleSwap[xs : {_Integer...}, n_Integer] := MapIndexed[(#1 > n) != (First[#2] >
 
 toggleShift[xs : {_Integer...}, n_Integer] := n - Subtract @@ Total /@ TakeDrop[Boole @ toggleSwap[xs, n], n]
 
+
+alignDimensions[xs_, {}] := {{xs}, {xs}}
+
+alignDimensions[{}, ys_] := {{ys}, {ys}}
+
+alignDimensions[xs : {_Integer..}, ys_ : {_Integer..}] := Module[{
+    as = FoldList[Times, xs], bs = FoldList[Times, ys], p, first, second
+},
+    p = Min[Intersection[as, bs]];
+    If[ IntegerQ[p],
+        first = TakeDrop[xs, First @ FirstPosition[as, p]];
+        second = TakeDrop[ys, First @ FirstPosition[bs, p]];
+        DeleteCases[{}] /@ MapThread[
+            ReverseApplied[Prepend],
+            {
+                {first, second}[[All, 1]],
+                alignDimensions @@ {first, second}[[All, 2]]
+            }
+        ],
+
+        Missing[]
+    ]
+]

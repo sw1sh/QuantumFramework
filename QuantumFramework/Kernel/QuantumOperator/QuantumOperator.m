@@ -131,13 +131,26 @@ QuantumOperator[qo_ ? QuantumOperatorQ] := qo["Computational"]
 
 QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ] := QuantumOperator[qo, qb, qo["Order"]]
 
-QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ, order_ ? orderQ] := Enclose @ Module[{},
-    ConfirmAssert[qo["Dimension"] == qb["Dimension"] || qo["Dimension"] == qb["Dimension"] ^ 2 && qb["InputDimension"] == 1];
+QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ, order_ ? orderQ] := Enclose @ Module[{
+    newBasis
+},
+    newBasis = If[
+        qb["InputDimension"] == 1 && qo["InputDimension"] > 1,
+        QuantumBasis[qb["Output"], qb["Output"]["Dual"]],
+        qb
+    ];
+
+    newBasis = QuantumBasis[
+        QuditBasis[qo["Output"]["Reverse"], newBasis["Output"]["Reverse"]]["Reverse"],
+        QuditBasis[qo["Input"]["Reverse"], newBasis["Input"]["Reverse"]]["Reverse"]
+    ];
+
+    ConfirmAssert[qo["Dimension"] == newBasis["Dimension"], "Basis dimensions are inconsistent"];
     QuantumOperator[
         ConfirmBy[
             QuantumState[
                 qo["State"]["Computational"],
-                If[qo["Dimension"] == qb["Dimension"], qb, QuantumBasis[qb, "Input" -> qb["Output"]["Dual"]]]
+                newBasis
             ],
             QuantumStateQ,
             Message[QuantumOperator::invalidState]

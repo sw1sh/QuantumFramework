@@ -157,6 +157,8 @@ QuditBasisProp[qb_, {"Permute", perm_Cycles, outputs_Integer : 0}] := Enclose @ 
     KeyMap[MapAt[PermutationList[perm, qb["NameRank"]][[#]] &, 2]] @ qb["BasisElements"]
 ]
 
+QuditBasisProp[qb_, "Reverse"] := qb[{"Permute", FindPermutation[Reverse @ Range[qb["Qudits"]]]}]
+
 QuditBasisProp[qb_, {"Ordered", qudits_Integer, order_ ? orderQ}] := If[qb["Dimension"] <= 1, qb,
     With[{arity = Max[qudits, Max[order]]},
         QuantumTensorProduct[qb, QuditBasis[2, arity - qb["Qudits"]]][{"Permute",
@@ -182,6 +184,20 @@ QuditBasisProp[qb_, {"Split", n_Integer ? NonNegative, m_ : None}] /; n <= qb["Q
         {KeySelect[Last[#] <= n &] @ qb["BasisElements"], KeyMap[MapAt[# - n &, 2]] @ KeySelect[Last[#] > n &] @ qb["BasisElements"]}}
     ]
 
+QuditBasisProp[qb_, {"TakeDimension", dim_Integer}] := With[{pos = FirstPosition[FoldList[Times, qb["Dimensions"]], dim]},
+    If[ MissingQ[pos],
+        Failure[<|"Message" -> "Can't take given number dimensions"|>],
+        First @ qb[{"Split", First[pos]}]
+    ]
+]
+
+QuditBasisProp[qb_, {"DropDimension", dim_Integer}] := With[{pos = FirstPosition[FoldList[Times, qb["Dimensions"]], dim]},
+    If[ MissingQ[pos],
+        Failure[<|"Message" -> "Can't drop given number dimensions"|>],
+        Last @ qb[{"Split", First[pos]}]
+    ]
+]
+
 
 QuditBasis[_QuditBasis, 0] := QuditBasis[]
 
@@ -189,6 +205,15 @@ QuditBasis[dimension_Integer, multiplicity_Integer ? Positive] := QuditBasis[Qud
 
 QuditBasis[qb_QuditBasis ? QuditBasisQ, multiplicity_Integer ? Positive] :=
     If[multiplicity > 1, QuantumTensorProduct[Table[qb, multiplicity]], qb]
+
+
+(* basis cast *)
+
+QuditBasis[source_QuditBasis, target_QuditBasis] := If[
+    target["Dimension"] > source["Dimension"],
+    target[{"TakeDimension", source["Dimension"]}],
+    QuantumTensorProduct[target, source[{"DropDimension", target["Dimension"]}]]
+]
 
 
 (* tensor product of multiple parameter basis *)
