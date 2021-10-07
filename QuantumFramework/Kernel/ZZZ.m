@@ -9,12 +9,15 @@ If[ $Notebooks,
         operatorNames = $QuantumOperatorNames,
         measurementOperatorNames = $QuantumMeasurementOperatorNames
     },
-        FE`Evaluate[FEPrivate`AddSpecialArgCompletion[
-            "QuditBasis" -> {basisNames},
-            "QuantumBasis" -> {basisNames},
-            "QuantumState" -> {stateNames, basisNames},
-            "QuantumOperator" -> {operatorNames, basisNames},
-            "QuantumMeasurementOperator" -> {measurementOperatorNames, basisNames}]]
+        Scan[
+            ResourceFunction["AddCodeCompletion"][First[#]] @@ Last[#] &, {
+                "QuditBasis" -> {basisNames},
+                "QuantumBasis" -> {basisNames},
+                "QuantumState" -> {stateNames, basisNames},
+                "QuantumOperator" -> {operatorNames, basisNames},
+                "QuantumMeasurementOperator" -> {measurementOperatorNames, basisNames}
+            }
+        ]
     ]
 ]
 
