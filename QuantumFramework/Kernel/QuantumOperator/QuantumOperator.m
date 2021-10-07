@@ -136,13 +136,13 @@ QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ, order_ ? orderQ] :=
 },
     newBasis = If[
         qb["InputDimension"] == 1 && qo["InputDimension"] > 1,
-        QuantumBasis[qb["Output"], qb["Output"]["Dual"]],
+        QuantumBasis[qb, "Input" -> qb["Output"]["Dual"]],
         qb
     ];
 
-    newBasis = QuantumBasis[
-        QuditBasis[qo["Output"]["Reverse"], newBasis["Output"]["Reverse"]]["Reverse"],
-        QuditBasis[qo["Input"]["Reverse"], newBasis["Input"]["Reverse"]]["Reverse"]
+    newBasis = QuantumBasis[qb,
+        "Output" -> QuditBasis[qo["Output"]["Reverse"], newBasis["Output"]["Reverse"]]["Reverse"],
+        "Input" -> QuditBasis[qo["Input"]["Reverse"], newBasis["Input"]["Reverse"]]["Reverse"]
     ];
 
     ConfirmAssert[qo["Dimension"] == newBasis["Dimension"], "Basis dimensions are inconsistent"];

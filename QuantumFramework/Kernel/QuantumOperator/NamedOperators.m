@@ -269,7 +269,7 @@ QuantumOperator[{"Hadamard" | "H", qudits_Integer ? Positive}, args___, order : 
     QuantumOperator[
         QuantumTensorProduct[Table[QuantumOperator["Hadamard", args], qudits]],
         "Label" -> If[qudits > 1, Superscript["H", CircleTimes[qudits]], "H"],
-        order
+        Join[order, Complement[Range[qudits], order]]
     ]
 
 

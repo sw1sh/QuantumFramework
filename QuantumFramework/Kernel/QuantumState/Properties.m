@@ -108,6 +108,7 @@ QuantumStateProp[qs_, "Operator"] := qs["Projector"]["Amplitudes"]
 
 QuantumStateProp[qs_, "NormalizedOperator"] := qs["NormalizedProjector"]["Amplitudes"]
 
+
 (* density matrix *)
 
 QuantumStateProp[qs_, "DensityMatrix"] /; qs["StateType"] === "Vector" :=
