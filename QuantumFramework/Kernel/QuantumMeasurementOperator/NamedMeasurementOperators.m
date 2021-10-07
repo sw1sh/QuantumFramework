@@ -18,9 +18,20 @@ QuantumMeasurementOperator["ComputationalBasis", args___] := QuantumMeasurementO
 QuantumMeasurementOperator[{"ComputationalBasis", dimension_Integer : 2}, args___, order : (_ ? orderQ) : {1}] :=
     QuantumMeasurementOperator[{"ComputationalBasis", dimension, Range[0, (dimension ^ Length[order]) - 1]}, args, order]
 
-QuantumMeasurementOperator[{"ComputationalBasis", dimension_Integer : 2, eigenvalues_List}, args___, order : (_ ? orderQ) : {1}] :=
+QuantumMeasurementOperator[{"ComputationalBasis", dimension_Integer, eigenvalues_List}, args___, order : (_ ? orderQ) : {1}] :=
 QuantumMeasurementOperator[eigenvalues . QuantumBasis[dimension, Length[order]]["Projectors"],
     dimension, Length[order],
+    args,
+    "Label" -> "Computational",
+    order
+]
+
+QuantumMeasurementOperator[{"ComputationalBasis", dimensions : {_Integer ..}}, args___] :=
+    QuantumMeasurementOperator[{"ComputationalBasis", dimensions, Range[0, Times @@ dimensions - 1]}, args]
+
+QuantumMeasurementOperator[{"ComputationalBasis", dimensions : {_Integer ..}, eigenvalues_List}, args___, order : (_ ? orderQ) : {1}] :=
+QuantumMeasurementOperator[eigenvalues . QuantumBasis[dimensions]["Projectors"],
+    dimensions,
     args,
     "Label" -> "Computational",
     order

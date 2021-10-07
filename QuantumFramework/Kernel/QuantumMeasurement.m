@@ -5,7 +5,7 @@ PackageExport["QuantumMeasurement"]
 PackageScope["QuantumMeasurementQ"]
 
 
-QuantumMeasurementQ[QuantumMeasurement[qs_QuantumState ? QuantumStateQ, _ ? orderQ]] := qs["OutputQudits"] <= qs["InputQudits"]
+QuantumMeasurementQ[QuantumMeasurement[qo_ ? QuantumOperatorQ]] := qo["OutputQudits"] <= qo["InputQudits"]
 
 QuantumMeasurementQ[___] := False
 
@@ -14,6 +14,8 @@ qb_QuantumMeasurement["ValidQ"] := QuantumMeasurementQ[qb]
 
 
 (* constructors *)
+
+QuantumMeasurement[qs_ ? QuantumStateQ, order_ ? orderQ] := QuantumMeasurement[QuantumOperator[qs, order]]
 
 QuantumMeasurement[proba_Association, states : {_QuantumState..}] /;
     Length[proba] == Length[states] && Equal @@ Map[#["Dimensions"] &, states] && AllTrue[states, #["PureStateQ"] &] :=
@@ -40,6 +42,7 @@ QuantumMeasurement[
 (* properties *)
 
 $QuantumMeasurementProperties = {
+    "QuantumOperator",
     "Distribution",
     "Outcomes", "Probabilities",
     "Mean", "States", "StateAssociation",
@@ -48,7 +51,7 @@ $QuantumMeasurementProperties = {
 };
 
 
-QuantumMeasurement["Properties"] := QuantumMeasurement["Properties"] = DeleteDuplicates @ Join[$QuantumMeasurementProperties, QuantumState["Properties"]]
+QuantumMeasurement["Properties"] := QuantumMeasurement["Properties"] = DeleteDuplicates @ Join[$QuantumMeasurementProperties, QuantumOperator["Properties"]]
 
 
 QuantumMeasurement::undefprop = "QuantumMeasurement property `` is undefined for this basis";
@@ -66,11 +69,9 @@ QuantumMeasurement::undefprop = "QuantumMeasurement property `` is undefined for
 QuantumMeasurement[qm_QuantumMeasurement, args___] := QuantumMeasurement[QuantumState[qm["State"], args]]
 
 
-QuantumMeasurementProp[qm_, "Properties"] := DeleteDuplicates @ Join[$QuantumMeasurementProperties, qm["State"]["Properties"]]
+QuantumMeasurementProp[qm_, "Properties"] := DeleteDuplicates @ Join[$QuantumMeasurementProperties, qm["QuantumOperator"]["Properties"]]
 
-QuantumMeasurementProp[QuantumMeasurement[state_, _], "State"] := state
-
-QuantumMeasurementProp[QuantumMeasurement[_, order_], "Order"] := order
+QuantumMeasurementProp[QuantumMeasurement[qo_], "QuantumOperator"] := qo
 
 QuantumMeasurementProp[qm_, "EigenState"] := QuantumPartialTrace[qm["State"]["Transpose"], Range[qm["InputQudits"]]]["Transpose"]
 
@@ -89,7 +90,7 @@ QuantumMeasurementProp[qm_, "ProbabilitiesList"] := qm["EigenState"]["Probabilit
 QuantumMeasurementProp[qm_, "Eigenvalues"] := qm["EigenState"]["BasisElementNames"]
 
 QuantumMeasurementProp[qm_, "Distribution"] := CategoricalDistribution[
-    If[MatchQ[qm["Label"], "Computational"[_]], qm["PostMeasurementState"]["BasisElementNames"], qm["Eigenvalues"]],
+    qm["Outcomes"],
     qm["ProbabilitiesList"]
 ]
 
@@ -103,7 +104,7 @@ QuantumMeasurementProp[qm_, args :
 
 QuantumMeasurementProp[qm_, "Entropy"] := Quantity[qm["DistributionInformation", "Entropy"] / Log[2], "Bits"]
 
-QuantumMeasurementProp[qm_, "Outcomes"] := qm["DistributionInformation", "Categories"]
+QuantumMeasurementProp[qm_, "Outcomes"] := If[MatchQ[qm["Label"], "Computational"[_]], qm["PostMeasurementState"]["BasisElementNames"], qm["Eigenvalues"]]
 
 QuantumMeasurementProp[qm_, "SimulatedMeasurement"] := RandomVariate[qm["Distribution"]]
 
@@ -130,20 +131,33 @@ QuantumMeasurementProp[qm_, {"SimulatedStateMeasurement", n_}] := Part[qm["State
 QuantumMeasurementProp[qm_, "MeanState"] := qm["Mean"] /. qm["StateAssociation"]
 
 
-(* state properties *)
+(* operator properties *)
 
 QuantumMeasurementProp[qm_, prop_ ? propQ, args___] /;
-    MatchQ[prop, Alternatives @@ Intersection[qm["State"]["Properties"], qm["Properties"]]] := qm["State"][prop, args]
+    MatchQ[prop, Alternatives @@ Intersection[qm["QuantumOperator"]["Properties"], qm["Properties"]]] := qm["QuantumOperator"][prop, args]
+
+
+(* equality *)
+
+QuantumMeasurement /: (qm1_QuantumMeasurement ? QuantumMeasurementQ) == (qm2_QuantumMeasurement ? QuantumMeasurementQ) :=
+    qm1["State"] == qm2["State"]
 
 
 (* formatting *)
 
 QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement ? QuantumMeasurementQ, format_] := Module[{icon},
-    icon = (*# /. Line[{a_, Offset[b_, c_]}] :> Sequence[] & @*)
+    icon = If[
+        AllTrue[qm["Probabilities"], NumericQ],
         Show[
             BarChart[qm["Probabilities"], Frame -> {{True, False}, {True, False}}, FrameTicks -> None],
             ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]}
-        ];
+        ],
+        Graphics[{
+            {GrayLevel[0.55], Rectangle[{0., 0.}, {0.87, 1.}]},
+            {GrayLevel[0.8], Rectangle[{1.,0.}, {1.88, 2.}]},
+            {GrayLevel[0.65], Rectangle[{2., 0.}, {2.88, 3.}]}},
+            Background -> GrayLevel[1], ImageSize -> {Automatic, 29.029}, AspectRatio -> 1]
+    ];
     BoxForm`ArrangeSummaryBox["QuantumMeasurement", qm,
         icon,
         {

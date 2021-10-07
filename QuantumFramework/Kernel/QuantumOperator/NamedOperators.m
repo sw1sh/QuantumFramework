@@ -40,6 +40,8 @@ QuantumOperator[{"Identity", dimension_Integer}, args___] := QuantumOperator[Ide
 
 QuantumOperator[{"Identity", dims_List}, args___] := QuantumOperator[{"Permutation", dims, Cycles[{{}}]}, args]
 
+QuantumOperator[{"Identity", qb_ ? QuditBasisQ}, args___] := QuantumOperator[IdentityMatrix[qb["Dimension"]], qb, args]
+
 
 QuantumOperator[{"XRotation", angle_}, args___] := QuantumOperator[
     {{Cos[angle / 2], I Sin[angle / 2]}, {I Sin[angle / 2], Cos[angle / 2]}},

@@ -152,6 +152,8 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
     ]
 ]
 
+QuantumMeasurementOperatorProp[qmo_, "POVM"] := QuantumMeasurementOperator[qmo["SuperOperator"], qmo["Order"]]
+
 
 (* operator properties *)
 

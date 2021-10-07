@@ -50,7 +50,7 @@ QuantumMeasurementOperator[op_ ? QuantumOperatorQ, args__] :=
                     qudits + qs["OutputQudits"] + Range[qs["InputQudits"]],
                     qudits + Range[qs["OutputQudits"]]
                 ]]}][
-            {"Split", qudits + qs["InputQudits"]}
+            {"Split", qudits}
         ],
             "Label" -> qmo["Label"][qs["Label"]]
         ],
@@ -96,12 +96,33 @@ QuantumMeasurementOperator[op_ ? QuantumOperatorQ, args__] :=
             (* permute two measured qudits based on given operator orders, left-most first *)
             (#[{"PermuteOutput", PermutationCycles[Ordering @ Ordering @ DeleteDuplicates @ Join[op["Order"], qmo["Order"]]]}] &)
             ,
+        "Label" -> qmo["Label"] @* op["Label"],
         Union[qmo["Order"], op["Order"]]
     ]
 ]
 
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qm_QuantumMeasurement] := (qmo @ qm["State"]["Transpose"])
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qm_QuantumMeasurement] := With[{
+    state = QuantumMeasurementOperator[
+        (* prepending identity to propogate measurement eigenvalues *)
+        QuantumTensorProduct[
+            QuantumMeasurementOperator[{"Identity", First @ qm["Output"][{"Split", qm["Arity"]}]}],
+            qmo["POVM"][{"Ordered", 1, qm["InputQudits"]}]
+        ],
+        Join[Range[qm["Arity"]], qmo["Order"] + qm["Arity"]]
+    ][
+        qm["State"][{"Split", qm["Qudits"]}]
+    ]["State"],
+    order = Union[qm["Order"], qmo["Order"]]
+},
+    QuantumMeasurement[
+        QuantumState[
+            state[{"Permute", InversePermutation @ FindPermutation @ Join[qm["Order"], qmo["Order"]]}][{"Split", Length @ order}],
+            "Label" -> qmo["Label"] @ qm["Label"]
+        ],
+        order
+    ]
+]
 
 
 (* equality *)
