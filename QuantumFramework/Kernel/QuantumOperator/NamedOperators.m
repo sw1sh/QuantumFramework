@@ -135,17 +135,25 @@ QuantumOperator["CT", args___] := QuantumOperator[{"ControlledU", QuantumOperato
 QuantumOperator["CS", args___] := QuantumOperator[{"ControlledU", QuantumOperator["S"]}, args]
 
 
-QuantumOperator[{"ControlledU", params___}, args___] :=
+QuantumOperator[{"ControlledU", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___]}, args___] :=
     QuantumOperator[{"ControlledU", QuantumOperator[params]}, args]
 
-QuantumOperator[{"ControlledU", qo_ ? QuantumOperatorQ}, args___] :=
-    QuantumOperator[
-        controlledMatrix[qo["MatrixRepresentation"], qo["InputDimension"]],
-        QuantumTensorProduct[QuantumBasis[qo["OutputDimensions"], qo["InputDimensions"]], qo["Basis"]],
-        "Label" -> "Controlled"[qo["Label"]],
-        args
-    ]
+QuantumOperator[{"ControlledU", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___]}, args___, order_ ? orderQ] :=
+    QuantumOperator[{"ControlledU", With[{op = QuantumOperator[params]}, QuantumOperator[op, Max[order] + op["Order"] - Min[op["Order"]] + 1]]}, args, order]
 
+QuantumOperator[{"ControlledU", qo_ ? QuantumOperatorQ}, args : PatternSequence[] | PatternSequence[___, Except[_ ? orderQ]]] :=
+    QuantumOperator[{"ControlledU", qo}, args, {qo["FirstQudit"] - 1}]
+
+QuantumOperator[{"ControlledU", qo_ ? QuantumOperatorQ}, args___, order_ ? orderQ] := Enclose @ With[{controls = Length[order]},
+    ConfirmAssert[! IntersectingQ[order, qo["Order"]], "Target and control qudits shouldn't intersect"];
+    QuantumOperator[
+        ResourceFunction["BlockDiagonalMatrix"][IdentityMatrix[(2 ^ controls - 1) qo["OutputDimension"]], qo["MatrixRepresentation"]],
+        QuantumTensorProduct[QuantumBasis[QuditBasis[2, controls], QuditBasis[2, controls]], qo["Basis"]],
+        "Label" -> "Controlled"[qo["Label"], order],
+        args,
+        Join[order, qo["Order"]]
+    ]
+]
 
 QuantumOperator["Fourier", args___] := QuantumOperator[{"Fourier", 2}, args]
 

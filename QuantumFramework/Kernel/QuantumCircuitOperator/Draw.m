@@ -179,9 +179,13 @@ drawGateGraphics[gates_List] := Module[{
     ];
     If[ QuantumOperatorQ[gates[[i]]],
 
-        If[ MatchQ[gates[[i]]["Label"], "CX" | "CY" | "CZ" | "CNOT" | "CPHASE" | "CSWAP" | "Controlled"[_]],
-            targetQuditsOrder = Rest[orders[[i]]];
-            controlQuditsOrder = Complement[orders[[i]], targetQuditsOrder];
+        If[ MatchQ[gates[[i]]["Label"], "CX" | "CY" | "CZ" | "CNOT" | "CPHASE" | "CSWAP" | "Controlled"[__]],
+            If[ MatchQ[gates[[i]]["Label"], "Controlled"[__]],
+                controlQuditsOrder = gates[[i]]["Label"][[2]];
+                targetQuditsOrder = Complement[orders[[i]], controlQuditsOrder],
+                targetQuditsOrder = Rest @ orders[[i]];
+                controlQuditsOrder = {First @ orders[[i]]}
+            ];
             controlQuditsOrderTop = {};
             controlQuditsOrderBottom = {};
             Do[ Which[
@@ -205,7 +209,7 @@ drawGateGraphics[gates_List] := Module[{
         AppendTo[
             graphicsList,
             Switch[
-                gates[[i]]["Label"] /. "Controlled"[x_] :> x,
+                gates[[i]]["Label"] /. "Controlled"[x_, ___] :> x,
                 "SWAP",
                 drawSwapGate[{-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], - 5 Last[targetQuditsOrder]}, scaling],
                 "RootSWAP",
@@ -217,12 +221,12 @@ drawGateGraphics[gates_List] := Module[{
                     drawUnaryGate[
                         {-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]},
                         scaling,
-                        gates[[i]]["Label"] /. {Composition -> SmallCircle, "Controlled"[x_] :> x} /. None :> Subscript["U", index++]
+                        gates[[i]]["Label"] /. {Composition -> SmallCircle, "Controlled"[x_, ___] :> x} /. None :> Subscript["U", index++]
                     ],
                     drawBinaryGate[
                         {{-2 + 6 Max[gatePositionIndices], - 5 Max[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], - 5 Min[targetQuditsOrder]}},
                         scaling,
-                        gates[[i]]["Label"] /. {Composition -> SmallCircle, "Controlled"[x_] :> x} /. None :> Subscript["U", index++]
+                        gates[[i]]["Label"] /. {Composition -> SmallCircle, "Controlled"[x_, ___] :> x} /. None :> Subscript["U", index++]
                     ]
                 ]
             ]

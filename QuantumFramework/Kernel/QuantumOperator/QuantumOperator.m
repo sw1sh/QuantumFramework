@@ -73,7 +73,9 @@ QuantumOperator[assoc_Association, args___, order : (_ ? orderQ) : {1}] := Enclo
 
 QuantumOperator::invalidState = "invalid state specification";
 
-QuantumOperator[matrix_ ? MatrixQ, args___, order : (_ ? orderQ) : {1}] := Module[{
+QuantumOperator[matrix_ ? MatrixQ, args___, order_ ? orderQ] := QuantumOperator[QuantumOperator[matrix, args], order]
+
+QuantumOperator[matrix_ ? MatrixQ, args : PatternSequence[] | PatternSequence[___, Except[_ ? orderQ]]] := Module[{
     result
 },
     result = Enclose @ Module[{newMatrix = matrix, outputs, inputs,
@@ -105,7 +107,7 @@ QuantumOperator[matrix_ ? MatrixQ, args___, order : (_ ? orderQ) : {1}] := Modul
             QuantumStateQ,
             Message[QuantumOperator::invalidState]
         ];
-        QuantumOperator[state, order]
+        QuantumOperator[state, Range[state["InputQudits"]]]
     ];
     result /; !FailureQ[Unevaluted @ result]
 ]

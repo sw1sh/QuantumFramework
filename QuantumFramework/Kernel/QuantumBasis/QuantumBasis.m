@@ -80,7 +80,7 @@ QuantumBasis[elements_Association ? (Not @* KeyExistsQ["Output"]), args___] := Q
 QuantumBasis[output : _QuditBasis | _List, args___] := QuantumBasis["Output" -> QuditBasis[output], args]
 
 QuantumBasis[output : _QuditBasis | _List, input : _QuditBasis | _List | _Integer, args___] :=
-    QuantumBasis["Output" -> QuditBasis[output], "Input" -> QuditBasis[input], args]
+    QuantumBasis["Output" -> QuditBasis[output], "Input" -> QuditBasis[input]["Dual"], args]
 
 
 (* defaults *)
