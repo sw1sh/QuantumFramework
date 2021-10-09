@@ -8,11 +8,13 @@ $QuantumCircuitOperatorProperties = {
      "Operators", "Diagram", "Gates", "Orders", "CircuitOperator"
 };
 
-$QuantumCircuitOperatorProperties = DeleteDuplicates @ Join[$QuantumCircuitOperatorProperties, $QuantumMeasurementOperatorProperties];
 
 QuantumCircuitOperator["Properties"] := $QuantumCircuitOperatorProperties
 
-QuantumCircuitOperatorProp[qco_, "Properties"] := DeleteDuplicates @ Join[QuantumCircuitOperator["Properties"], Last[qco["Operators"]]["Properties"]]
+QuantumCircuitOperatorProp[qco_, "Properties"] := Enclose @ DeleteDuplicates @ Join[
+    QuantumCircuitOperator["Properties"],
+    ConfirmBy[qco["CircuitOperator"], QuantumFrameworkOperatorQ]["Properties"]
+]
 
 
 qds_QuantumCircuitOperator["ValidQ"] := QuantumCircuitOperatorQ[qds]

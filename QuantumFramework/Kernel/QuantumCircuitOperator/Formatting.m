@@ -2,8 +2,8 @@ Package["Wolfram`QuantumFramework`"]
 
 
 
-QuantumCircuitOperator /: MakeBoxes[qco_QuantumCircuitOperator /; QuantumCircuitOperatorQ[Unevaluated @ qco], format_] :=
-BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
+QuantumCircuitOperator /: MakeBoxes[qco_QuantumCircuitOperator /; QuantumCircuitOperatorQ[Unevaluated @ qco], format_] := Enclose[
+ConfirmQuiet @ BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
     qco,
     qco["Diagram"], {
         {
@@ -22,5 +22,7 @@ BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
     },
     format,
     "Interpretable" -> Automatic
+],
+    ToBoxes[QuantumCircuitOperator[$Failed], format] &
 ]
 

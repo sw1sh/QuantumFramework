@@ -170,8 +170,7 @@ drawGateGraphics[gates_List] := Module[{
                     {-2 + 6 Max[gatePositionIndices], - 5 Last[orders[[i]]]},
                     orders[[i]],
                     scaling,
-                    (*gates[[i]]["Label"] /. None -> "M"*)
-                    "M"
+                    gates[[i]]["Label"] /. None | "Computational" | "Computational"[_] -> "M"
                 ]
             ]
         ];
@@ -218,18 +217,17 @@ drawGateGraphics[gates_List] := Module[{
                     drawUnaryGate[
                         {-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]},
                         scaling,
-                        gates[[i]]["Label"] /. {Composition -> SmallCircle, "Controlled"[x_] :> x} /. None -> Subscript["U", index]
+                        gates[[i]]["Label"] /. {Composition -> SmallCircle, "Controlled"[x_] :> x} /. None :> Subscript["U", index++]
                     ],
                     drawBinaryGate[
                         {{-2 + 6 Max[gatePositionIndices], - 5 Max[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], - 5 Min[targetQuditsOrder]}},
                         scaling,
-                        gates[[i]]["Label"] /. {Composition -> SmallCircle, "Controlled"[x_] :> x} /. None -> Subscript["U", index]
+                        gates[[i]]["Label"] /. {Composition -> SmallCircle, "Controlled"[x_] :> x} /. None :> Subscript["U", index++]
                     ]
                 ]
             ]
         ];
         positionIndices[[ Range[Min[orders[[i]]], Max[orders[[i]]]] ]] = Max[positionIndices[[ Range[Min[orders[[i]]], Max[orders[[i]]]] ]]] + 1;
-        index = index + 1
     ],
         {i, Length[gates]}
     ];

@@ -2,10 +2,10 @@ Package["Wolfram`QuantumFramework`"]
 
 
 
-QuantumOperator /: MakeBoxes[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated @ qo], format_] := With[{
+QuantumOperator /: MakeBoxes[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated @ qo], format_] := Enclose[With[{
     icon = MatrixPlot[
         Enclose[
-            Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], Confirm[qo["OrderedMatrixRepresentation"]], {2}],
+            Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], ConfirmBy[qo["OrderedMatrixRepresentation"], MatrixQ], {2}],
             RandomReal[{0, 1}, {qo["Dimension"], qo["Dimension"]}] &
         ],
         ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},
@@ -42,4 +42,6 @@ QuantumOperator /: MakeBoxes[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated 
         format,
         "Interpretable" -> Automatic
     ]
+],
+    ToBoxes[QuantumOperator[$Failed], format] &
 ]

@@ -2,7 +2,7 @@ Package["Wolfram`QuantumFramework`"]
 
 
 
-QuantumState /: MakeBoxes[qs_QuantumState /; Quiet @ QuantumStateQ[Unevaluated @ qs], format_] := With[{
+QuantumState /: MakeBoxes[qs_QuantumState /; Quiet @ QuantumStateQ[Unevaluated @ qs], format_] := Enclose[With[{
     icon = MatrixPlot[
         Check[
             Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], qs["MatrixRepresentation"], {2}],
@@ -13,7 +13,7 @@ QuantumState /: MakeBoxes[qs_QuantumState /; Quiet @ QuantumStateQ[Unevaluated @
         FrameTicks -> None
     ]
 },
-    BoxForm`ArrangeSummaryBox["QuantumState", qs, icon,
+    ConfirmQuiet @ BoxForm`ArrangeSummaryBox["QuantumState", qs, icon,
     {
         {
             BoxForm`SummaryItem[{"StateType: ", qs["StateType"]}],
@@ -42,5 +42,7 @@ QuantumState /: MakeBoxes[qs_QuantumState /; Quiet @ QuantumStateQ[Unevaluated @
     format,
     "Interpretable" -> Automatic
     ]
+],
+    ToBoxes[QuantumState[$Failed], format] &
 ]
 
