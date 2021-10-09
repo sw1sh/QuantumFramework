@@ -4,7 +4,7 @@ PacletObject[
     "Description" -> "Quantum Computing",
     "Creator" -> "Wolfram",
     "PublisherID" -> "Wolfram",
-    "Version" -> "0.3",
+    "Version" -> "0.4",
     "WolframVersion" -> "12.2+",
     "Extensions" -> {
       {
@@ -22,7 +22,11 @@ PacletObject[
             "Wolfram`QuantumFramework`QuantumMeasurement",
             "Wolfram`QuantumFramework`QuantumTensorProduct",
             "Wolfram`QuantumFramework`QuantumPartialTrace",
-            "Wolfram`QuantumFramework`QuantumDistance"
+            "Wolfram`QuantumFramework`QuantumDistance",
+            "Wolfram`QuantumFramework`QuantumEntanglementMonotone",
+            "Wolfram`QuantumFramework`QuantumEntangledQ",
+            "Wolfram`QuantumFramework`QuantumWignerTransform",
+            "Wolfram`QuantumFramework`QuantumHamiltonianOperator"
         }
       },
       {"Documentation", "Language" -> "English"}
