@@ -5,13 +5,13 @@ PackageScope["QuantumOperatorProp"]
 
 
 $QuantumOperatorProperties = {
-    "InputOrder", "QuditOrder",
     "MatrixRepresentation", "Matrix",
     "TensorRepresentation", "Tensor",
-    "Ordered",
+    "Ordered", "Sort",
     "OrderedMatrixRepresentation", "OrderedMatrix",
     "OrderedTensorRepresentation", "OrderedTensor",
-    "Arity", "MaxArity", "Range", "Order", "QuditOrder", "InputOrder", "CircuitOrder", "InputQuditOrder", "OutputOrder",
+    "Arity", "MaxArity", "FullArity", "Range", "Order", "FullOrder", "InputOrder", "InputQuditOrder", "OutputOrder", "OutputQuditOrder",
+    "FirstQudit", "LastQudit", "OrderQuditMapping",
     "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors", "Projectors",
     "ConjugateTranspose",
     "QuantumOperator", "Operator",
@@ -57,17 +57,29 @@ QuantumOperatorProp[qo_, "Arity"] := Length @ qo["Order"]
 
 QuantumOperatorProp[qo_, "Range"] := Max[qo["Order"]] - Min[qo["Order"]] + 1
 
-QuantumOperatorProp[qo_, "MaxArity"] := Max[qo["InputQudits"], qo["Range"]]
+QuantumOperatorProp[qo_, "MaxArity"] := Max[qo["InputQudits"], qo["Arity"]]
 
-QuantumOperatorProp[qo_, "QuditOrder"] := Range[qo["MaxArity"]]
+QuantumOperatorProp[qo_, "FullArity"] := Max[qo["InputQudits"], qo["Range"]]
 
-QuantumOperatorProp[qo_, "InputOrder"] := qo["QuditOrder"] + Min[qo["Order"]] - 1
+QuantumOperatorProp[qo_, "FullOrder"] := Take[
+    Join[Complement[Range[Max[qo["Order"]] - qo["InputQudits"] + 1, Max[qo["Order"]]], qo["Order"]], qo["Order"]],
+    - qo["InputQudits"]
+]
 
-QuantumOperatorProp[qo_, "CircuitOrder"] :=  qo["QuditOrder"] + Max[Max[qo["Order"]] - qo["InputQudits"], 0]
+QuantumOperatorProp[qo_, "InputOrder"] := Sort @ qo["FullOrder"]
+
+QuantumOperatorProp[qo_, "FirstQudit"] := First @ qo["InputOrder"]
+
+QuantumOperatorProp[qo_, "LastQudit"] := Last @ qo["InputOrder"]
 
 QuantumOperatorProp[qo_, "InputQuditOrder"] := qo["Order"] - Min[qo["InputOrder"]] + 1
 
-QuantumOperatorProp[qo_, "OutputOrder"] := Range[Max[qo["InputOrder"]] - qo["OutputQudits"] + 1, Max[qo["InputOrder"]]]
+QuantumOperatorProp[qo_, "OutputOrder"] := Join[Min[qo["InputOrder"]] - Reverse @ Range[qo["OutputQudits"] - qo["InputQudits"]], qo["InputOrder"]]
+
+QuantumOperatorProp[qo_, "OutputQuditOrder"] := qo["OutputOrder"] - Min[qo["OutputOrder"]] + 1
+
+QuantumOperatorProp[qo_, "OrderQuditMapping"] := Thread[qo["FullOrder"] -> Range[qo["InputQudits"]]]
+
 
 QuantumOperatorProp[qo_, "Tensor"] := qo["StateTensor"]
 
@@ -85,9 +97,9 @@ QuantumOperatorProp[qo_, "QuantumOperator"] := qo
 QuantumOperatorProp[qo_, name : "Computational" | "SchmidtBasis" | "SpectralBasis"] := QuantumOperator[qo["State"][name], qo["Order"]]
 
 
-QuantumOperatorProp[qo_, prop : "OrderedMatrixRepresentation" | "OrderedMatrix"] := qo[{prop, qo["MaxArity"]}]
+QuantumOperatorProp[qo_, prop : "OrderedMatrixRepresentation" | "OrderedMatrix"] := qo[{prop, qo["FullArity"]}]
 
-QuantumOperatorProp[qo_, prop : "OrderedTensorRepresentation" | "OrderedTensor"] := qo[{prop, qo["MaxArity"]}]
+QuantumOperatorProp[qo_, prop : "OrderedTensorRepresentation" | "OrderedTensor"] := qo[{prop, qo["FullArity"]}]
 
 QuantumOperatorProp[qo_, {"OrderedMatrix", arity_Integer}] :=
     qo[{"Ordered", arity}]["Matrix"]
@@ -104,12 +116,13 @@ QuantumOperatorProp[qo_, {"OrderedTensorRepresentation", arity_Integer}] :=
 
 QuantumOperatorProp[qo_, {"PermuteInput", perm_Cycles}] := QuantumOperator[
     qo["State"][{"PermuteInput", perm}],
-    Permute[qo["InputOrder"], perm]
+    (*Select[Permute[qo["FullOrder"], perm], MemberQ[qo["Order"], #] &]*)
+    qo["Order"]
 ]
 
 QuantumOperatorProp[qo_, {"PermuteOutput", perm_Cycles}] := QuantumOperator[
     qo["State"][{"PermuteOutput", perm}],
-    qo["InputOrder"]
+    qo["Order"]
 ]
 
 QuantumOperatorProp[qo_, {"Permute", perm_Cycles}] := With[{shift = Max[qo["OutputQudits"] - qo["InputQudits"], 0]},
@@ -120,32 +133,52 @@ qo[
 ]
 ]
 
+QuantumOperatorProp[qo_, "Sort"] := QuantumOperator[qo[{
+    "Permute",
+    InversePermutation @ FindPermutation[qo["Order"]]
+}],
+    Sort @ qo["Order"]
+]
+
 
 QuantumOperatorProp[qo_, "Ordered"] := qo[{"Ordered", Splice @ MinMax[qo["InputOrder"]]}]
 
-QuantumOperatorProp[qo_, {"Ordered", arity_Integer}] := qo[{"Ordered", Min[qo["Order"]], Min[qo["Order"]] + arity - 1}]
+QuantumOperatorProp[qo_, {"Ordered", arity_Integer}] := qo[{"Ordered", Max[qo["Order"]] - arity + 1, Max[qo["Order"]]}]
 
-QuantumOperatorProp[qo_, {"Ordered", from_Integer, to_Integer}] := Enclose @ (
+QuantumOperatorProp[qo_, {"Ordered", from_Integer, to_Integer}] := qo[{"Ordered", Range[from, to]}]
 
-ConfirmAssert[AllTrue[qo["Order"], Between[{from, to}]], "Range should include operator's order"];
+QuantumOperatorProp[qo_, {"Ordered", order_ ? orderQ}] :=
+    qo[{"Ordered", order,
+        QuditBasis @ Extract[
+            PadLeft[qo["InputDimensions"], Length[order], First @ qo["InputDimensions"]],
+            List /@ (order - qo["FirstQudit"] + 1)
+        ]}
+    ]
 
-If[qo["InputDimension"] <= 1, qo,
-    With[{arity = to - from + 1},
+QuantumOperatorProp[qo_, {"Ordered", from_Integer, to_Integer, qb_ ? QuditBasisQ}] := qo[{"Ordered", Range[from, to], qb}]
+
+QuantumOperatorProp[qo_, {"Ordered", order_ ? orderQ, qb_ ? QuditBasisQ}] := Enclose @ (
+
+ConfirmAssert[ContainsAll[order, qo["FullOrder"]], "Order should contain operator's order"];
+
+If[ qo["InputDimension"] <= 1,
+    qo,
+    With[{arity = Length[order]},
+        ConfirmAssert[qb["Qudits"] == arity, "Order size should be the same as number of qudits"];
         QuantumOperator[If[ arity > qo["InputQudits"],
             QuantumOperator[
                 QuantumTensorProduct[
                     qo,
-                    QuantumOperator[{"Identity", Table[Last[qo["InputDimensions"]], arity - qo["InputQudits"]]}]
-                    (*Sequence @@ Table[QuantumOperator[{"Identity", Last[qo["InputDimensions"]]}, {i + Max[qo["InputOrder"]]}], {i, arity - qo["InputQudits"]}]
-                *)],
-                Range[from, to]
+                    QuantumOperator[{"Identity", qb[{"Delete", Catenate @ Position[order, Alternatives @@ qo["FullOrder"]]}]}]
+                ],
+                order
             ],
             qo
         ][{
             "Permute",
-            InversePermutation @ FindPermutation[Join[qo["Order"], Complement[Range[from, to], qo["Order"]]]]
+            FindPermutation[Join[qo["FullOrder"], DeleteCases[order, Alternatives @@ qo["FullOrder"]]], order]
         }],
-        Range[from, to]
+        order
         ]
     ]
 ]

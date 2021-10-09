@@ -167,7 +167,7 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 (qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] /;
 qo["Picture"] === qo["Picture"] && (
     qs["Picture"] =!= "Heisenberg" || Message[QuantumOperator::incompatiblePictures, qo["Picture"], qs["Picture"]]) := Enclose @ With[{
-    ordered = qo[{"Ordered", 1, qs["OutputQudits"]}]
+    ordered = qo[{"Ordered", qo["FirstQudit"], qo["FirstQudit"] + qs["OutputQudits"] - 1, qs["Output"]}]
 },
     ConfirmAssert[ordered["InputDimension"] == qs["OutputDimension"], "Operator input dimension should be equal to state output dimension"];
     QuantumState[
@@ -187,27 +187,38 @@ qo["Picture"] === qo["Picture"] && (
 ]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumFrameworkOperatorQ] /; qo["Picture"] === op["Picture"] := Enclose @ Module[{
-    ordered1, ordered2
+    top, bottom,
+    outputOrder, inputOrder,
+    outputBasis, inputBasis,
+    basis
 },
-    ordered2 =
-        op[{"Ordered",
-            Min[op["InputOrder"]] - Max[0, Min[op["OutputOrder"]] - Min[qo["InputOrder"]]],
-            Max[op["InputOrder"]] + Max[0, Max[qo["InputOrder"]] - Max[op["OutputOrder"]]]
-            }];
-    ordered1 = qo[{"Ordered", Min[qo["InputOrder"], ordered2["OutputOrder"]], Max[qo["InputOrder"], ordered2["OutputOrder"]]}];
-    ConfirmAssert[ordered1["InputDimension"] == ordered2["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
+    top = qo["Sort"];
+    bottom = op["Sort"];
+
+    outputOrder = Union[top["OutputOrder"], Complement[bottom["OutputOrder"], top["InputOrder"]]];
+    inputOrder = Union[bottom["InputOrder"], Complement[top["InputOrder"], bottom["OutputOrder"]]];
+    outputBasis = QuantumTensorProduct @@ ReplaceAll[outputOrder,
+        Join[Thread[top["OutputOrder"] -> top["Output"]["Decompose"]], Thread[bottom["OutputOrder"] -> bottom["Output"]["Decompose"]]]
+    ];
+    inputBasis = QuantumTensorProduct @@ ReplaceAll[inputOrder,
+        Join[Thread[bottom["InputOrder"] -> bottom["Input"]["Decompose"]], Thread[top["InputOrder"] -> top["Input"]["Decompose"]]]
+    ];
+    basis = QuantumBasis[
+        outputBasis,
+        inputBasis,
+        "Label" -> qo["Label"] @* op["Label"] /. None -> Sequence[]
+    ];
+
+    bottom = bottom[{"Ordered", inputOrder, inputBasis}];
+    top = top[{"Ordered", bottom["OutputOrder"], bottom["Output"]}];
+    ConfirmAssert[top["InputDimension"] == bottom["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
     QuantumOperator[
         QuantumOperator[
-            ordered1["MatrixRepresentation"] . ordered2["MatrixRepresentation"],
-            QuantumBasis["Output" -> QuditBasis[ordered1["OutputDimensions"]], "Input" -> QuditBasis[ordered2["InputDimensions"]]],
-            ordered2["InputOrder"]
+            top["MatrixRepresentation"] . bottom["MatrixRepresentation"],
+            QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
         ],
-        QuantumBasis[
-            "Output" -> ordered1["Output"],
-            "Input" -> ordered2["Input"],
-            "Label" -> qo["Label"] @* op["Label"] /. None -> Sequence[]
-        ],
-        ordered2["Order"]
+        basis,
+        bottom["Order"]
     ]
 ]
 

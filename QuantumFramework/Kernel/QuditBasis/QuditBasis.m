@@ -198,6 +198,33 @@ QuditBasisProp[qb_, {"DropDimension", dim_Integer}] := With[{pos = FirstPosition
     ]
 ]
 
+QuditBasisProp[qb_, {"Take", n_Integer}] := Enclose @ First @ ConfirmBy[qb[{"Split", n}], ListQ]
+
+QuditBasisProp[qb_, {"Drop", n_Integer}] := Enclose @ Last @ ConfirmBy[qb[{"Split", n}], ListQ]
+
+QuditBasisProp[qb_, "Decompose"] := NestWhileList[Last[#][{"Split", 1}] &, {None, qb}, Last[#]["Dimension"] > 1 &][[2 ;;, 1]]
+
+QuditBasisProp[qb_, {"Delete", n_Integer}] := QuantumTensorProduct[qb[{"Take", n - 1}], qb[{"Drop", n}]]
+
+QuditBasisProp[qb_, {"Delete", ns : {_Integer...}}] := If[
+    Complement[Range[qb["Qudits"]], ns] === {},
+    QuditBasis[],
+    QuantumTensorProduct @@ Delete[qb["Decompose"], List /@ ns]
+]
+
+QuditBasisProp[qb1_, {"Insert", n_Integer, qb2_ ? QuditBasisQ}] := QuantumTensorProduct[Insert[qb1[{"Split", n - 1}], qb2, 2]]
+
+QuditBasisProp[_, {"Extract", {}}] := QuditBasis[]
+
+QuditBasisProp[qb_, {"Extract", order_ ? orderQ}] := QuantumTensorProduct @ Extract[qb["Decompose"], List /@ order]
+
+QuditBasisProp[qb1_, {"Replace", order_ ? orderQ, qb2_ ? QuditBasisQ}] := QuantumTensorProduct @ Permute[
+    Join[Delete[qb1["Decompose"], List /@ order], qb2["Decompose"]],
+    PermutationCycles @ Join[Delete[Range[qb1["Qudits"]], List /@ order], order]
+]
+
+QuditBasisProp[qb_, "Identity"] := qb
+
 
 QuditBasis[_QuditBasis, 0] := QuditBasis[]
 

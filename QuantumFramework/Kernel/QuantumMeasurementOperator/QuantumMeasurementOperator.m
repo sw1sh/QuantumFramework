@@ -6,121 +6,118 @@ PackageScope["QuantumMeasurementOperatorQ"]
 
 
 
-QuantumMeasurementOperatorQ[QuantumMeasurementOperator[op_]] := QuantumOperatorQ[op]
+QuantumMeasurementOperatorQ[QuantumMeasurementOperator[qo_, _ ? orderQ]] := QuantumOperatorQ[qo]
 
 QuantumMeasurementOperatorQ[___] := False
 
 
 (* constructors *)
 
-
-QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args__] :=
-    QuantumMeasurementOperator[QuantumOperator[qmo["Operator"], args]]
-
-
-QuantumMeasurementOperator[args : Except[_ ? QuantumOperatorQ]] :=
-    Enclose @ With[{op = ConfirmBy[QuantumOperator[args], QuantumOperatorQ]}, QuantumMeasurementOperator[op, op["InputOrder"]]]
+QuantumMeasurementOperator[qo_ ? QuantumOperatorQ] := QuantumMeasurementOperator[qo, qo["InputOrder"]]
 
 QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumOperatorQ], ___]] :=
     Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumOperator[args], QuantumOperatorQ]]
 
+QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args : PatternSequence[___, Except[_ ? orderQ]]] :=
+    QuantumMeasurementOperator[QuantumOperator[qo, args]]
+
+QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args__, target_ ? orderQ] :=
+    QuantumMeasurementOperator[QuantumOperator[qo, args], target]
+
 
 (* mutation *)
 
-QuantumMeasurementOperator[op_ ? QuantumMeasurementOperatorQ, args__] :=
-    QuantumMeasurementOperator[QuantumOperator[op["QuantumOperator"], args]]
+QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args : PatternSequence[___, Except[_ ? orderQ]]] :=
+    QuantumMeasurementOperator[QuantumOperator[qmo["Operator"], args], qmo["Target"]]
 
-QuantumMeasurementOperator[op_ ? QuantumOperatorQ, args__] :=
-    QuantumMeasurementOperator[QuantumOperator[op, args]]
+QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args___, target_ ? orderQ] :=
+    QuantumMeasurementOperator[QuantumOperator[qmo["Operator"], args], target]
 
 
 (* composition *)
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qs_ ? QuantumStateQ] := Enclose @ With[{
-    qudits = If[qmo["POVMQ"], qmo["Arity"], 1]
+    qudits = If[qmo["POVMQ"], qmo["Targets"], 1]
 },
-    ConfirmAssert[qs["OutputQudits"] >= qmo["Arity"], "Not enough output qudits"];
+    ConfirmAssert[qs["OutputQudits"] >= qmo["Targets"], "Not enough output qudits"];
 
     QuantumMeasurement[
         QuantumState[
-            ConfirmBy[qmo["SuperOperator"][{"Ordered", 1, qs["OutputQudits"]}][qs], QuantumStateQ][
-            {"Permute", FindPermutation[
-                Join[
-                    Range[qudits],
-                    qudits + qs["OutputQudits"] + Range[qs["InputQudits"]],
-                    qudits + Range[qs["OutputQudits"]]
-                ]]}][
-            {"Split", qudits}
-        ],
+            ConfirmBy[qmo["SuperOperator"][{"Ordered", 1, qs["OutputQudits"], qs["Output"]}][qs], QuantumStateQ][
+                {"Split", qudits}
+            ],
             "Label" -> qmo["Label"][qs["Label"]]
         ],
-        qmo["Order"]
+        qmo["Target"]
     ]
 ]
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[op_ ? QuantumOperatorQ] := With[{
-    newOp = qmo["SuperOperator"]
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qo_ ? QuantumOperatorQ] :=
+    QuantumMeasurementOperator[qmo["SuperOperator"] @ qo, qmo["Target"]]
+
+
+(qmo1_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qmo2_ ? QuantumMeasurementOperatorQ] := Enclose @ Module[{
+    top, bottom, orderedTop, orderedBottom, targetOrder
 },
-    QuantumMeasurementOperator[newOp @ op, qmo["Order"]]
-]
+    ConfirmAssert[! IntersectingQ[qmo1["Target"], qmo2["Target"]], "Measurements targets should not intersect"];
 
+    top = qmo1["SuperOperator"];
+    bottom = qmo2["SuperOperator"];
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[op_ ? QuantumMeasurementOperatorQ] := Module[{
-    order, ordered1, ordered2
-},
-    (* ordering will insert identities to fit operator into specified range *)
-    order = {"Ordered", Min[op["InputOrder"], qmo["InputOrder"]], Max[op["InputOrder"], qmo["InputOrder"]]};
-    ordered1 = qmo["SuperOperator"][order];
-    ordered2 = op["SuperOperator"][order];
-
-    ordered1 = QuantumOperator[
+    orderedBottom = bottom[{"Ordered",
+        DeleteDuplicates @ Join[bottom["InputOrder"], top["InputOrder"]],
         QuantumTensorProduct[
-            (* put identities on the left of first operator for each unmatched output qudit of the second operator *)
-            QuantumOperator[
-                QuantumOperator[{"Identity", Take[ordered2["OutputDimensions"], Max[ordered2["OutputQudits"] - ordered1["InputQudits"], 0]]}],
-                With[{qb = QuantumPartialTrace[
-                        ordered2["Output"],
-                        Complement[Range[ordered2["OutputQudits"]], Range[Max[ordered2["OutputQudits"] - ordered1["InputQudits"], 0]]]
-                    ]
-                },
-                    QuantumBasis[qb, qb["Dual"]]
-                ]
-            ],
-            ordered1
-        ],
-        ordered2["OutputOrder"]
+            bottom["Input"],
+            top["Input"][{"Extract", DeleteCases[top["InputOrder"], Alternatives @@ bottom["InputOrder"]] /. top["OrderQuditMapping"]}]["Dual"]
+        ]
+    }];
+
+    orderedTop = top[{"Ordered",
+        DeleteDuplicates @ Join[top["InputOrder"], bottom["InputOrder"]],
+        QuantumTensorProduct[
+            top["Input"],
+            bottom["Input"][{"Extract", DeleteCases[bottom["InputOrder"], Alternatives @@ top["InputOrder"]] /. bottom["OrderQuditMapping"]}]["Dual"]
+        ]
+    }];
+
+    (* put identities on the left of first operator for each measurement qudit of the second operator *)
+    targetOrder = orderedBottom["OutputOrder"][[ ;; qmo2["Targets"] ]];
+    orderedTop = QuantumTensorProduct[
+        QuantumOperator[{"Identity", bottom["Output"][{"Take", qmo2["Targets"]}]}, targetOrder],
+        orderedTop
     ];
 
     QuantumMeasurementOperator[
-        ordered1 @ ordered2 //
-            (* permute two measured qudits based on given operator orders, left-most first *)
-            (#[{"PermuteOutput", PermutationCycles[Ordering @ Ordering @ DeleteDuplicates @ Join[op["Order"], qmo["Order"]]]}] &)
+        orderedTop @ orderedBottom //
+            (* permute two sets of measured qudits based on given operator targets, left-most first *)
+            (#[{"PermuteOutput", InversePermutation @ FindPermutation[DeleteDuplicates @ Join[qmo2["Target"], qmo1["Target"]]]}] &)
             ,
-        "Label" -> qmo["Label"] @* op["Label"],
-        Union[qmo["Order"], op["Order"]]
+        "Label" -> qmo1["Label"] @* qmo2["Label"],
+        Union[qmo1["Target"], qmo2["Target"]]
     ]
 ]
 
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qm_QuantumMeasurement] := With[{
-    state = QuantumMeasurementOperator[
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qm_QuantumMeasurement] := Enclose @ With[{
+    state =
         (* prepending identity to propogate measurement eigenvalues *)
-        QuantumTensorProduct[
-            QuantumMeasurementOperator[{"Identity", First @ qm["Output"][{"Split", qm["Arity"]}]}],
-            qmo["POVM"][{"Ordered", 1, qm["InputQudits"]}]
+        ConfirmBy[
+            QuantumTensorProduct[
+                QuantumOperator[{"Identity", First @ qm["Output"][{"Split", qm["Targets"]}]}, Range[qmo["FirstQudit"] - qm["Targets"], qmo["FirstQudit"] - 1]],
+                qmo["SuperOperator"][{"Ordered", 1, qm["InputQudits"], qm["Input"]}]
+            ],
+            QuantumOperatorQ
+        ][
+            qm["State"][{"Split", qm["Qudits"]}]
         ],
-        Join[Range[qm["Arity"]], qmo["Order"] + qm["Arity"]]
-    ][
-        qm["State"][{"Split", qm["Qudits"]}]
-    ]["State"],
-    order = Union[qm["Order"], qmo["Order"]]
+    target = Union[qm["Target"], qmo["Target"]]
 },
     QuantumMeasurement[
         QuantumState[
-            state[{"Permute", InversePermutation @ FindPermutation @ Join[qm["Order"], qmo["Order"]]}][{"Split", Length @ order}],
+            state[{"PermuteOutput", InversePermutation @ FindPermutation @ Join[qm["Target"], qmo["Target"]]}][{"Split", Length @ target}],
             "Label" -> qmo["Label"] @ qm["Label"]
         ],
-        order
+        target
     ]
 ]
 

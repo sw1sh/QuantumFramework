@@ -6,15 +6,7 @@ PackageExport["QuantumPartialTrace"]
 
 QuantumPartialTrace[arg_, {}] := arg
 
-QuantumPartialTrace[qb_QuditBasis, qudits : {_Integer ..}] := Module[{
-    newNames = DeleteDuplicates[#["Delete", List /@ qudits] & /@ qb["Names"]],
-    replace = Replace @ Thread[Complement[Range[qb["Rank"]], qudits] -> Range[qb["Rank"] - Length[qudits]]]
-},
-    QuditBasis[
-        newNames,
-        KeyMap[MapAt[replace, 2]] @ KeySelect[! MemberQ[qudits, Last[#]] &] @ qb["BasisElements"]
-    ]
-]
+QuantumPartialTrace[qb_QuditBasis, qudits : {_Integer ..}] := qb[{"Delete", qudits}]
 
 
 QuantumPartialTrace[qb_QuantumBasis, qudits : {{_Integer, _Integer} ..}] := Enclose @ Module[{},

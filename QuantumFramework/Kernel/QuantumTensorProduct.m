@@ -56,14 +56,14 @@ QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] := Enclose[
 QuantumTensorProduct[qdo1_QuantumOperator, qdo2_QuantumOperator] :=
     QuantumOperator[QuantumTensorProduct[qdo1["State"], qdo2["State"]],
         If[ IntersectingQ[qdo1["InputOrder"], qdo2["InputOrder"]],
-            Join[qdo1["Order"], Max[qdo1["Order"]] + qdo2["QuditOrder"]],
+            Join[qdo1["Order"], Max[qdo1["Order"]] + qdo2["InputQuditOrder"]],
             Join[qdo1["Order"], qdo2["Order"]]
         ]
     ]
 
 
 QuantumTensorProduct[qmo1_QuantumMeasurementOperator, qmo2_QuantumMeasurementOperator] :=
-    QuantumMeasurementOperator[QuantumTensorProduct[qmo1["QuantumOperator"], qmo2["QuantumOperator"]], Union[qmo1["Order"], qmo2["Order"]]]
+    QuantumMeasurementOperator[QuantumTensorProduct[qmo1["QuantumOperator"], qmo2["QuantumOperator"]], Union[qmo1["Target"], qmo2["Target"]]]
 
 
 QuantumTensorProduct[qm1_QuantumMeasurement, qm2_QuantumMeasurement] := QuantumMeasurement @ QuantumTensorProduct[qm1["State"], qm2["State"]]

@@ -31,10 +31,12 @@ QuantumOperator /: MakeBoxes[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated 
         {
             {
                 BoxForm`SummaryItem[{"Hermitian: ", qo["HermitianQ"]}],
+                BoxForm`SummaryItem[{"Input Order: ", qo["InputOrder"]}],
                 BoxForm`SummaryItem[{"Output Order: ", qo["OutputOrder"]}]
             },
             {
-                BoxForm`SummaryItem[{"Unitary: ", qo["UnitaryQ"]}]
+                BoxForm`SummaryItem[{"Unitary: ", qo["UnitaryQ"]}],
+                BoxForm`SummaryItem[{"Dimensions: ", qo["Dimensions"]}]
             }
         },
         format,

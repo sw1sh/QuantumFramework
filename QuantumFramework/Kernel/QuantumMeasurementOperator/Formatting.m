@@ -5,7 +5,7 @@ Package["Wolfram`QuantumFramework`"]
 QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; QuantumMeasurementOperatorQ[Unevaluated @ qmo], format_] := With[{
     icon = MatrixPlot[
         Enclose[
-            Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], Confirm[qmo["OrderedMatrixRepresentation"]], {2}],
+            Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], Confirm[qmo["Ordered"]["MatrixRepresentation"]], {2}],
             RandomReal[{0, 1}, {qmo["Dimension"], qmo["Dimension"]}] &
         ],
         ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},
@@ -24,7 +24,7 @@ QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; Quantu
                 BoxForm`SummaryItem[{"Dimension: ", qmo["InputDimension"]}]
             },
             {
-                SpanFromLeft,
+                BoxForm`SummaryItem[{"Target: ", qmo["Target"]}],
                 BoxForm`SummaryItem[{"Order: ", qmo["Order"]}]
             }
         },

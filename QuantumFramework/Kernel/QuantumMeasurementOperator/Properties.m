@@ -5,7 +5,7 @@ PackageScope["QuantumMeasurementOperatorProp"]
 
 
 $QuantumMeasurementOperatorProperties = {
-    "QuantumOperator",
+    "QuantumOperator", "Target",
     "Operator", "Basis", "MatrixRepresentation", "POVMElements",
     "OrderedMatrixRepresentation", "OrderedPOVMElements",
     "Arity", "Dimensions", "Order", "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors",
@@ -38,10 +38,11 @@ QuantumMeasurementOperatorProp[qmo_, "Properties"] :=
 
 (* getters *)
 
-QuantumMeasurementOperatorProp[_[op_], "Operator"] := op
+QuantumMeasurementOperatorProp[_[op_, _], "Operator" | "QuantumOperator"] := op
 
+QuantumMeasurementOperatorProp[_[_, target_], "Target"] := target
 
-QuantumMeasurementOperatorProp[qmo_, "QuantumOperator"] := QuantumOperator[qmo["Operator"], qmo["CircuitOrder"]]
+QuantumMeasurementOperatorProp[qmo_, "Targets"] := Length[qmo["Target"]]
 
 QuantumMeasurementOperatorProp[qmo_, "Type"] := Which[
     qmo["OutputQudits"] == qmo["InputQudits"],
@@ -52,19 +53,15 @@ QuantumMeasurementOperatorProp[qmo_, "Type"] := Which[
     "Destructive"
 ]
 
-QuantumMeasurementOperatorProp[qo_, "InputOrder"] := qo["CircuitOrder"]
-
-QuantumMeasurementOperatorProp[qo_, "InputQuditOrder"] := qo["Order"] - Min[qo["InputOrder"]] + 1
-
-QuantumMeasurementOperatorProp[qo_, "OutputOrder"] := Range[Max[qo["InputOrder"]] - qo["OutputQudits"] + 1, Max[qo["InputOrder"]]]
-
 QuantumMeasurementOperatorProp[qmo_, "ProjectionQ"] := qmo["Type"] === "Projection"
 
 QuantumMeasurementOperatorProp[qmo_, "POVMQ"] := qmo["Type"] === "POVM"
 
 QuantumMeasurementOperatorProp[qmo_, "POVMElements"] := If[qmo["POVMQ"], qmo["Tensor"], qmo["Projectors"]]
 
-QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | {"Ordered", __}] := QuantumMeasurementOperator[qmo["QuantumOperator"][prop], qmo["Order"]]
+QuantumMeasurementOperatorProp[qmo_, "Sort"] := QuantumMeasurementOperator[qmo["QuantumOperator"]["Sort"], qmo["Target"]]
+
+QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | {"Ordered", __}] := QuantumMeasurementOperator[qmo["QuantumOperator"][prop], qmo["Target"]]
 
 QuantumMeasurementOperatorProp[qmo_, "OrderedPOVMElements"] := qmo[{"OrderedPOVMElements", qmo["MaxArity"]}]
 
@@ -79,24 +76,19 @@ QuantumMeasurementOperatorProp[qmo_, "Operators"] := If[qmo["POVMQ"],
 ]
 
 QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
-    ordered = qmo["Ordered"],
+    ordered = qmo["Sort"],
     trace,
     traceQudits,
     tracedOperator,
     eigenBasis, outputBasis, inputBasis, operator
 },
-    trace = Complement[ordered["InputOrder"], qmo["Order"]];
+    trace = Complement[ordered["InputOrder"], qmo["Target"]];
     traceQudits = trace - Min[ordered["InputOrder"]] + 1;
 
     If[
         ordered["POVMQ"],
 
-        QuantumOperator[QuantumOperator[
-            ArrayReshape[#, {Times @@ Rest @ ordered["OutputDimensions"], ordered["InputDimension"]}] & /@ ordered["POVMElements"],
-            ordered["Basis"]
-        ],
-            ordered["CircuitOrder"]
-        ],
+        ordered["Operator"],
 
         tracedOperator = QuantumPartialTrace[
             ordered,
@@ -110,8 +102,9 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
             ],
             tracedOperator["Eigenvectors"]
         ];
-        outputBasis = QuantumPartialTrace[ordered["Output"], ordered["InputQuditOrder"] + ordered["OutputQudits"] - ordered["InputQudits"]];
-        inputBasis = QuantumPartialTrace[ordered["Input"], ordered["InputQuditOrder"]];
+
+        outputBasis = QuantumPartialTrace[ordered["Output"], ordered["Target"] - ordered["FirstQudit"] + 1 + ordered["OutputQudits"] - ordered["InputQudits"]];
+        inputBasis = QuantumPartialTrace[ordered["Input"], ordered["Target"] - ordered["FirstQudit"] + 1];
 
         (* construct *)
         operator = QuantumOperator[
@@ -143,16 +136,16 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
         (* permute and set order *)
         QuantumOperator[
             operator[
-                {"PermuteOutput", InversePermutation @ FindPermutation[Prepend[1 + Join[traceQudits, ordered["InputQuditOrder"]], 1]]}
+                {"PermuteOutput", InversePermutation @ FindPermutation[Prepend[1 + Join[traceQudits, ordered["Target"]], 1]]}
             ][
-                {"PermuteInput", InversePermutation @ FindPermutation[Join[traceQudits, ordered["InputQuditOrder"]]]}
+                {"PermuteInput", InversePermutation @ FindPermutation[Join[traceQudits, ordered["Target"]]]}
             ],
-            ordered["CircuitOrder"]
+            ordered["Order"]
         ]
     ]
 ]
 
-QuantumMeasurementOperatorProp[qmo_, "POVM"] := QuantumMeasurementOperator[qmo["SuperOperator"], qmo["Order"]]
+QuantumMeasurementOperatorProp[qmo_, "POVM"] := QuantumMeasurementOperator[qmo["SuperOperator"], qmo["Target"]]
 
 
 (* operator properties *)
