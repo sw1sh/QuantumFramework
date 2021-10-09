@@ -65,7 +65,7 @@ kroneckerProduct[ts___] := Fold[If[ArrayQ[#1] && ArrayQ[#2], KroneckerProduct[##
 projector[v_] := KroneckerProduct[v, Conjugate[v]]
 
 
-Options[eigenvectors] = {"Sort" -> False, "Normalize" -> True}
+Options[eigenvectors] = {"Sort" -> False, "Normalize" -> False}
 
 eigenvectors[matrix_, OptionsPattern[]] :=
     If[TrueQ[OptionValue["Normalize"]], Normalize, Identity] /@

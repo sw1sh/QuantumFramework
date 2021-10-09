@@ -211,7 +211,7 @@ drawGateGraphics[gates_List] := Module[{
                 drawSwapGate[{-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], - 5 Last[targetQuditsOrder]}, scaling],
                 "RootSWAP",
                 drawRootSwapGate[{-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], - 5 Last[targetQuditsOrder]}, scaling],
-                "NOT" | "X",
+                "NOT",
                 drawNotGate[{-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]}, scaling],
                 _,
                 If[ gates[[i]]["Arity"] == 1,

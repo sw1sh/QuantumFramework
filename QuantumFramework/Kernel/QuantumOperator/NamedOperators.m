@@ -358,7 +358,7 @@ QuantumOperator[{"Deutsch", angle_}, args___] := QuantumOperator[
 QuantumOperator["RandomUnitary", args___] := QuantumOperator[{"RandomUnitary", 2}, args]
 
 QuantumOperator[{"RandomUnitary", dimension_Integer}, args___, order : (_ ? orderQ) : {1}] :=
-    QuantumOperator[RandomVariate @ CircularUnitaryMatrixDistribution[dimension ^ Length[order]], dimension, args, order]
+    QuantumOperator[RandomVariate @ CircularUnitaryMatrixDistribution[dimension ^ Length[order]], dimension, Length[order], args, order]
 
 
 QuantumOperator[{"Permutation", perm_Cycles}, args___] := QuantumOperator[{"Permutation", 2, perm}, args]
