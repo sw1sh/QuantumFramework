@@ -122,9 +122,9 @@ QuantumOperator[qo_ ? QuantumOperatorQ, args : Except[_ ? QuantumBasisQ], order_
 QuantumOperator[qo_ ? QuantumOperatorQ, args : Except[_ ? QuantumBasisQ]] := Enclose @
     QuantumOperator[qo, ConfirmBy[QuantumBasis[qo["Basis"], args], QuantumBasisQ]]
 
-QuantumOperator[{qo_ ? QuantumOperatorQ, multiplicity_Integer ? Positive}] := QuantumOperator[{qo, multiplicity}, Range[multiplicity]]
+QuantumOperator[{qo : _ ? QuantumOperatorQ, multiplicity_Integer ? Positive}] := QuantumOperator[{qo, multiplicity}, Range[multiplicity]]
 
-QuantumOperator[{qo_ ? QuantumOperatorQ, multiplicity_Integer ? Positive}, order_ ? orderQ] :=
+QuantumOperator[{qo : _ ? QuantumOperatorQ, multiplicity_Integer ? Positive}, order_ ? orderQ] :=
     QuantumOperator[QuantumTensorProduct @ Table[qo, multiplicity], order]
 
 (* change of basis *)
@@ -133,13 +133,17 @@ QuantumOperator[qo_ ? QuantumOperatorQ] := qo["Computational"]
 
 QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ] := QuantumOperator[qo, qb, qo["Order"]]
 
-QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ, order_ ? orderQ] := Enclose @ Module[{
+QuantumOperator[qo_ ? QuantumOperatorQ, name_ ? nameQ, args___] := QuantumOperator[qo, QuantumBasis[name], args]
+
+QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ, args : PatternSequence[___, Except[_ ? orderQ]]] := QuantumOperator[qo, qb, args, qo["Order"]]
+
+QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ, args___, order_ ? orderQ] := Enclose @ Module[{
     newBasis
 },
     newBasis = If[
         qb["InputDimension"] == 1 && qo["InputDimension"] > 1,
-        QuantumBasis[qb, "Input" -> qb["Output"]["Dual"]],
-        qb
+        QuantumBasis[qb, "Input" -> qb["Output"]["Dual"], args],
+        QuantumBasis[qb, args]
     ];
 
     newBasis = QuantumBasis[qb,

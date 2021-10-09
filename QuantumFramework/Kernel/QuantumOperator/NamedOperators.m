@@ -139,7 +139,12 @@ QuantumOperator[{"ControlledU", params___}, args___] :=
     QuantumOperator[{"ControlledU", QuantumOperator[params]}, args]
 
 QuantumOperator[{"ControlledU", qo_ ? QuantumOperatorQ}, args___] :=
-    QuantumOperator[controlledMatrix[qo["MatrixRepresentation"], qo["InputDimension"]], qo["InputDimension"], "Label" -> "Controlled"[qo["Label"]], args]
+    QuantumOperator[
+        controlledMatrix[qo["MatrixRepresentation"], qo["InputDimension"]],
+        QuantumTensorProduct[QuantumBasis[qo["OutputDimensions"], qo["InputDimensions"]], qo["Basis"]],
+        "Label" -> "Controlled"[qo["Label"]],
+        args
+    ]
 
 
 QuantumOperator["Fourier", args___] := QuantumOperator[{"Fourier", 2}, args]
@@ -150,6 +155,7 @@ QuantumOperator[{"Fourier", dimension_Integer}, args___, order : (_ ? orderQ) : 
         {dimension ^ Length[order], dimension ^ Length[order]}
     ],
     dimension,
+    Length[order],
     "Label" -> "QFT",
     args,
     order
@@ -163,6 +169,7 @@ QuantumOperator[{"InverseFourier", dimension_Integer}, args___, order : (_ ? ord
         {dimension ^ Length[order], dimension ^ Length[order]}
     ],
     dimension,
+    Length[order],
     "Label" -> Superscript["QFT", "\[Dagger]"],
     args,
     order
@@ -285,7 +292,7 @@ QuantumOperator[{"Toffoli", arity_Integer}, args___] := QuantumOperator[
             0
         ], {2 ^ arity, 2 ^ arity}
     ],
-    2, 3,
+    2, arity,
     "Label" -> "\[ScriptCapitalT]",
     args
 ]

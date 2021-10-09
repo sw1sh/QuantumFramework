@@ -13,13 +13,10 @@ QuantumMeasurementOperatorQ[___] := False
 
 (* constructors *)
 
-QuantumMeasurementOperator[qo_ ? QuantumOperatorQ] := QuantumMeasurementOperator[qo, qo["InputOrder"]]
-
-QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumOperatorQ], ___]] :=
-    Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumOperator[args], QuantumOperatorQ]]
+QuantumMeasurementOperator[qo_ ? QuantumOperatorQ] := QuantumMeasurementOperator[qo, qo["Order"]]
 
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args : PatternSequence[___, Except[_ ? orderQ]]] :=
-    QuantumMeasurementOperator[QuantumOperator[qo, args]]
+    QuantumMeasurementOperator[QuantumOperator[qo, args, qo["FullOrder"]], qo["Order"]]
 
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args__, target_ ? orderQ] :=
     QuantumMeasurementOperator[QuantumOperator[qo, args], target]
@@ -32,6 +29,14 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args : PatternSeq
 
 QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args___, target_ ? orderQ] :=
     QuantumMeasurementOperator[QuantumOperator[qmo["Operator"], args], target]
+
+
+QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumOperatorQ], ___]] :=
+    Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumOperator[args], QuantumOperatorQ]]
+
+
+QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? orderQ] /; ! ContainsAll[qo["FullOrder"], target] :=
+    QuantumMeasurementOperator[qo, qo["FullOrder"]]
 
 
 (* composition *)
@@ -59,7 +64,7 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args___, target_ 
 (qmo1_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qmo2_ ? QuantumMeasurementOperatorQ] := Enclose @ Module[{
     top, bottom, orderedTop, orderedBottom, targetOrder
 },
-    ConfirmAssert[! IntersectingQ[qmo1["Target"], qmo2["Target"]], "Measurements targets should not intersect"];
+    (*ConfirmAssert[! IntersectingQ[qmo1["Target"], qmo2["Target"]], "Measurements targets should not intersect"];*)
 
     top = qmo1["SuperOperator"];
     bottom = qmo2["SuperOperator"];
@@ -102,7 +107,7 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args___, target_ 
     state =
         (* prepending identity to propogate measurement eigenvalues *)
         ConfirmBy[
-            QuantumTensorProduct[
+                QuantumTensorProduct[
                 QuantumOperator[{"Identity", First @ qm["Output"][{"Split", qm["Targets"]}]}, Range[qmo["FirstQudit"] - qm["Targets"], qmo["FirstQudit"] - 1]],
                 qmo["SuperOperator"][{"Ordered", 1, qm["InputQudits"], qm["Input"]}]
             ],

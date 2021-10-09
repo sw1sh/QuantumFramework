@@ -82,12 +82,10 @@ QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumPartialTrace[
     Join[Range[qm["OutputQudits"]], qm["OutputQudits"] + Complement[Range[qm["InputQudits"]], qm["Target"]]]
 ]
 
-QuantumMeasurementProp[qm_, "States"] := With[{
-    states = QuantumState[QuantumState[#, QuantumBasis[qm["InputDimensions"]]], QuantumBasis[qm["Input"]]] & /@
-        qm["State"]["Computational"]["StateMatrix"]
-    (*states = QuantumState[#, qm["Input"]] & /@ qm["State"]["StateMatrix"]*)
-},
-    If[MatchQ[qm["Label"], "Computational"[_]], #["Computational"] & /@ states, states]
+QuantumMeasurementProp[qm_, "States"] := If[MatchQ[qm["Label"], "Computational"[_]],
+    QuantumState[QuantumState[#, QuantumBasis[qm["InputDimensions"]]], QuantumBasis[qm["Input"]]] & /@
+        qm["State"]["Computational"]["StateMatrix"],
+    QuantumState[#, qm["Input"]] & /@ qm["State"]["StateMatrix"]
 ]
 
 QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
