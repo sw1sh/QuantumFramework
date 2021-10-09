@@ -20,8 +20,6 @@ QuantumOperatorQ[___] := False
 QuantumOperator[qs_QuantumState ? QuantumStateQ] :=
     QuantumOperator[qs, {1}]
 
-(*QuantumOperator[arg_, multiplicity_Integer, args___, order : (_ ? orderQ) : {1}] :=
-    QuantumOperator[QuantumTensorProduct[Table[QuantumOperator[arg, args], multiplicity]], order]*)
 
 QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, args___, order : (_ ? orderQ) : {1}] := Module[{
     dimensions = TensorDimensions[tensor],
@@ -124,6 +122,10 @@ QuantumOperator[qo_ ? QuantumOperatorQ, args : Except[_ ? QuantumBasisQ], order_
 QuantumOperator[qo_ ? QuantumOperatorQ, args : Except[_ ? QuantumBasisQ]] := Enclose @
     QuantumOperator[qo, ConfirmBy[QuantumBasis[qo["Basis"], args], QuantumBasisQ]]
 
+QuantumOperator[{qo_ ? QuantumOperatorQ, multiplicity_Integer ? Positive}] := QuantumOperator[{qo, multiplicity}, Range[multiplicity]]
+
+QuantumOperator[{qo_ ? QuantumOperatorQ, multiplicity_Integer ? Positive}, order_ ? orderQ] :=
+    QuantumOperator[QuantumTensorProduct @ Table[qo, multiplicity], order]
 
 (* change of basis *)
 
