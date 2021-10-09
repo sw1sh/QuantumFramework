@@ -192,8 +192,8 @@ qo["Picture"] === qo["Picture"] && (
     outputBasis, inputBasis,
     basis
 },
-    top = qo["Sort"];
-    bottom = op["Sort"];
+    top = qo;
+    bottom = op;
 
     outputOrder = Union[top["OutputOrder"], Complement[bottom["OutputOrder"], top["InputOrder"]]];
     inputOrder = Union[bottom["InputOrder"], Complement[top["InputOrder"], bottom["OutputOrder"]]];

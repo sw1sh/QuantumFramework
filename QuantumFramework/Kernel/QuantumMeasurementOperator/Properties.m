@@ -76,7 +76,7 @@ QuantumMeasurementOperatorProp[qmo_, "Operators"] := If[qmo["POVMQ"],
 ]
 
 QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
-    ordered = qmo["Sort"],
+    ordered = qmo,
     trace,
     traceQudits,
     tracedOperator,

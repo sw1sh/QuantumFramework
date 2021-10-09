@@ -135,9 +135,9 @@ qo[
 
 QuantumOperatorProp[qo_, "Sort"] := QuantumOperator[qo[{
     "Permute",
-    InversePermutation @ FindPermutation[qo["Order"]]
+    InversePermutation @ FindPermutation[qo["FullOrder"]]
 }],
-    Sort @ qo["Order"]
+    qo["InputOrder"]
 ]
 
 
