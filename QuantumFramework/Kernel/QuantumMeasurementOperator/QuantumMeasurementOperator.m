@@ -107,9 +107,9 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? orderQ] /; ! Contai
     state =
         (* prepending identity to propogate measurement eigenvalues *)
         ConfirmBy[
-                QuantumTensorProduct[
+            QuantumTensorProduct[
                 QuantumOperator[{"Identity", First @ qm["Output"][{"Split", qm["Targets"]}]}, Range[qmo["FirstQudit"] - qm["Targets"], qmo["FirstQudit"] - 1]],
-                qmo["SuperOperator"][{"Ordered", 1, qm["InputQudits"], qm["Input"]}]
+                qmo["SuperOperator"][{"Ordered", 1, qm["InputQudits"], qm["Input"]["Dual"]}]
             ],
             QuantumOperatorQ
         ][

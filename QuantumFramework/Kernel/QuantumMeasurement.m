@@ -83,9 +83,9 @@ QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumPartialTrace[
 ]
 
 QuantumMeasurementProp[qm_, "States"] := If[MatchQ[qm["Label"], "Computational"[_]],
-    QuantumState[QuantumState[#, QuantumBasis[qm["InputDimensions"]]], QuantumBasis[qm["Input"]]] & /@
+    QuantumState[QuantumState[#, QuantumBasis[qm["InputDimensions"]]], QuantumBasis[qm["Input"]["Dual"]]] & /@
         qm["State"]["Computational"]["StateMatrix"],
-    QuantumState[#, qm["Input"]] & /@ qm["State"]["StateMatrix"]
+    QuantumState[#, qm["Input"]["Dual"]] & /@ qm["State"]["StateMatrix"]
 ]
 
 QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
