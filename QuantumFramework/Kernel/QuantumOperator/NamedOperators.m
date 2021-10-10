@@ -122,42 +122,50 @@ controlledMatrix[matrix_ ? MatrixQ, dimension_Integer] := ReplacePart[
 
 QuantumOperator[name : "CX" | "CY" | "CZ", args___] := QuantumOperator[{name, 2}, args]
 
-QuantumOperator[{"CX", dimension_Integer}, args___, order : (_ ? orderQ) : {1, 2}] :=
-    QuantumOperator[{"ControlledU", {"PauliX", dimension}, Rest @ order}, args, {First @ order}]
+QuantumOperator[{"CX", dimension_Integer}, args___] :=
+    QuantumOperator[{"ControlledU", {"PauliX", dimension}}, args]
 
-QuantumOperator[{"CY", dimension_Integer}, args___, order : (_ ? orderQ) : {1, 2}] :=
-    QuantumOperator[{"ControlledU", {"PauliY", dimension}, Rest @ order}, args, {First @ order}]
+QuantumOperator[{"CY", dimension_Integer}, args___] :=
+    QuantumOperator[{"ControlledU", {"PauliY", dimension}}, args]
 
-QuantumOperator[{"CZ", dimension_Integer}, args___, order : (_ ? orderQ) : {1, 2}] :=
-    QuantumOperator[{"ControlledU", {"PauliZ", dimension}, Rest @ order}, args, {First @ order}]
+QuantumOperator[{"CZ", dimension_Integer}, args___] :=
+    QuantumOperator[{"ControlledU", {"PauliZ", dimension}}, args]
 
-QuantumOperator["CH", args___] := QuantumOperator[{"ControlledU", QuantumOperator["Hadamard"]}, args]
+QuantumOperator["CH", args___] := QuantumOperator[{"ControlledU", "Hadamard"}, args]
 
-QuantumOperator["CT", args___] := QuantumOperator[{"ControlledU", QuantumOperator["T"]}, args]
+QuantumOperator["CT", args___] := QuantumOperator[{"ControlledU", "T"}, args]
 
-QuantumOperator["CS", args___] := QuantumOperator[{"ControlledU", QuantumOperator["S"]}, args]
+QuantumOperator["CS", args___] := QuantumOperator[{"ControlledU", "S"}, args]
 
+
+QuantumOperator[{"ControlledU", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___, control_ ? orderQ]}, args___] :=
+    QuantumOperator[{"ControlledU", QuantumOperator[params], control}, args]
+
+QuantumOperator[{"ControlledU", params : PatternSequence[___, Except[_ ? orderQ]]}, args___, order_ ? orderQ] :=
+    With[{op = QuantumOperator[params, Rest @ order /. {} -> {First @ order + 1}]},
+        QuantumOperator[{"ControlledU", op, {First @ order}}, args]
+    ]
 
 QuantumOperator[{"ControlledU", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___]}, args___] :=
-    QuantumOperator[{"ControlledU", QuantumOperator[params]}, args]
+    With[{op = QuantumOperator[params]},
+        QuantumOperator[{"ControlledU", QuantumOperator[op, Rest @ op["Order"] /. {} -> {First @ op["Order"] + 1}], {First @ op["Order"]}}, args]
+    ]
 
-QuantumOperator[{"ControlledU", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___, _ ? orderQ]}, args___, control_ ? orderQ] :=
-    QuantumOperator[{"ControlledU", QuantumOperator[params]}, args, control]
+QuantumOperator[{"ControlledU", qo_ ? QuantumOperatorQ}, args___] := QuantumOperator[{"ControlledU", qo, {qo["LastQudit"] + 1}}, args]
 
-QuantumOperator[{"ControlledU", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___]}, args___, order_ ? orderQ] :=
-    With[{op = QuantumOperator[params, Rest @ order]}, QuantumOperator[{"ControlledU", op}, args, {First @ order}]]
-
-QuantumOperator[{"ControlledU", qo_ ? QuantumOperatorQ}, args : PatternSequence[] | PatternSequence[___, Except[_ ? orderQ]]] :=
-    QuantumOperator[{"ControlledU", qo}, args, {qo["FirstQudit"] - 1}]
-
-QuantumOperator[{"ControlledU", qo_ ? QuantumOperatorQ}, args___, control_ ? orderQ] := Enclose @ With[{controls = Length[control]},
-    ConfirmAssert[! IntersectingQ[qo["Order"], control], "Target and control qudits shouldn't intersect"];
+QuantumOperator[{"ControlledU", qo_ ? QuantumOperatorQ, control_ ? orderQ}, args___] := Enclose @ With[{controls = Length[control]},
+    (*ConfirmAssert[! IntersectingQ[qo["Order"], control], "Target and control qudits shouldn't intersect"];*)
     QuantumOperator[
         ResourceFunction["BlockDiagonalMatrix"][IdentityMatrix[(2 ^ controls - 1) qo["OutputDimension"]], qo["MatrixRepresentation"]],
         QuantumTensorProduct[QuantumBasis[QuditBasis[2, controls], QuditBasis[2, controls]], qo["Basis"]],
         "Label" -> "Controlled"[qo["Label"], control],
         args,
-        Join[control, qo["Order"]]
+        Join[control,
+            If[ IntersectingQ[control, qo["Order"]],
+                Complement[Range @@ MinMax[Join[control, qo["FullOrder"]]], control],
+                qo["Order"]
+            ]
+        ]
     ]
 ]
 
@@ -288,11 +296,14 @@ QuantumOperator[{"RootNOT", dimension_Integer}, args___] := QuantumOperator[
 
 QuantumOperator["Hadamard" | "H", args___] := QuantumOperator[HadamardMatrix[2], "Label" -> "H", args]
 
-QuantumOperator[{"Hadamard" | "H", qudits_Integer ? Positive}, args___, order : (_ ? orderQ) : {1}] :=
+QuantumOperator[{"Hadamard" | "H", qudits_Integer ? Positive}, args : PatternSequence[] | PatternSequence[___, Except[_ ? orderQ]]] :=
+    QuantumOperator[{"H", qudits}, args, Range[qudits]]
+
+QuantumOperator[{"Hadamard" | "H", qudits_Integer ? Positive}, args___, order_ ? orderQ] :=
     QuantumOperator[
         QuantumTensorProduct[Table[QuantumOperator["Hadamard", args], qudits]],
         "Label" -> If[qudits > 1, Superscript["H", CircleTimes[qudits]], "H"],
-        Join[order, Complement[Range[qudits], order]]
+        order
     ]
 
 

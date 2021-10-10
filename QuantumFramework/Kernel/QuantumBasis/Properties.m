@@ -18,6 +18,7 @@ $QuantumBasisProperties = {
      "InputNameDimensions", "InputDimensions", "InputNameDimension", "InputDimension",
      "OutputNameDimensions", "OutputDimensions", "OutputNameDimension", "OutputDimension",
      "NameDimensions", "Dimensions", "Dimension",
+     "HasInputQ",
      "MatrixNameDimensions", "MatrixElementDimensions",
      "TensorDimensions", "MatrixDimensions",
      "InputTensor", "InputMatrix",
@@ -142,6 +143,8 @@ QuantumBasisProp[qb_, "MatrixDimensions"] := {qb["BasisElementDimension"], qb["D
 QuantumBasisProp[qb_, "InputBasis"] := QuantumBasis[qb, "Output" -> QuditBasis[]]
 
 QuantumBasisProp[qb_, "OutputBasis"] := QuantumBasis[qb, "Input" -> QuditBasis[]]
+
+QuantumBasisProp[qb_, "HasInputQ"] := qb["InputDimension"] > 1
 
 
 QuantumBasisProp[qb_, "OrthogonalBasisElements"] := ArrayReshape[#, qb["BasisElementDimensions"]] & /@ (

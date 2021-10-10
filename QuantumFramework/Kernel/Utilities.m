@@ -38,7 +38,7 @@ propQ[prop_] := MatchQ[prop, _String | {_String, ___} | (_String -> _)]
 
 stateQ[state_] := !nameQ[state] && VectorQ[state] && Length[state] > 0 || SquareMatrixQ[state]
 
-orderQ[order_] := VectorQ[order, IntegerQ] && DuplicateFreeQ[order]
+orderQ[order_] := VectorQ[order, IntegerQ] && Length[order] > 0 && DuplicateFreeQ[order]
 
 measurementReprQ[state_] := TensorQ[state] && MemberQ[{2, 3}, TensorRank[state]]
 

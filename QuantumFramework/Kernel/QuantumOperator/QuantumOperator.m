@@ -173,6 +173,7 @@ QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ, args___, order_ ? o
 QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible with this operation"
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] /;
+qo["Arity"] == qs["OutputQudits"] &&
 qo["Picture"] === qo["Picture"] && (
     qs["Picture"] =!= "Heisenberg" || Message[QuantumOperator::incompatiblePictures, qo["Picture"], qs["Picture"]]) := Enclose @ With[{
     ordered = qo[{"Ordered", qo["FirstQudit"], qo["FirstQudit"] + qs["OutputQudits"] - 1, qs["Output"]}]
@@ -194,40 +195,59 @@ qo["Picture"] === qo["Picture"] && (
     ]
 ]
 
+(qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] :=
+    (*QuantumOperator[qo, Join[qo["Order"], qs["OutputQudits"] + Complement[Range[qs["OutputQudits"]], qo["Order"]]]] @*)
+    qo @ QuantumOperator[qs, Range[qs["OutputQudits"]]]
+
+
 (qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumFrameworkOperatorQ] /; qo["Picture"] === op["Picture"] := Enclose @ Module[{
     top, bottom,
     outputOrder, inputOrder,
     outputBasis, inputBasis,
-    basis
+    basis,
+    state
 },
     top = qo;
     bottom = op;
 
     outputOrder = Union[top["OutputOrder"], Complement[bottom["OutputOrder"], top["InputOrder"]]];
     inputOrder = Union[bottom["InputOrder"], Complement[top["InputOrder"], bottom["OutputOrder"]]];
-    outputBasis = QuantumTensorProduct @@ ReplaceAll[outputOrder,
-        Join[Thread[top["OutputOrder"] -> top["Output"]["Decompose"]], Thread[bottom["OutputOrder"] -> bottom["Output"]["Decompose"]]]
+    outputBasis = If[Length[outputOrder] > 0,
+        QuantumTensorProduct @@ ReplaceAll[outputOrder,
+            Join[Thread[top["OutputOrder"] -> top["Output"]["Decompose"]], Thread[bottom["OutputOrder"] -> bottom["Output"]["Decompose"]]]
+        ],
+        QuditBasis[]
     ];
-    inputBasis = QuantumTensorProduct @@ ReplaceAll[inputOrder,
-        Join[Thread[bottom["InputOrder"] -> bottom["Input"]["Decompose"]], Thread[top["InputOrder"] -> top["Input"]["Decompose"]]]
+    inputBasis = If[Length[inputOrder] > 0,
+        QuantumTensorProduct @@ ReplaceAll[inputOrder,
+            Join[Thread[bottom["InputOrder"] -> bottom["Input"]["Decompose"]], Thread[top["InputOrder"] -> top["Input"]["Decompose"]]]
+        ],
+        QuditBasis[]
     ];
+    If[ bottom["HasInputQ"],
+        bottom = bottom[{"Ordered", inputOrder, inputBasis}];
+        top = top[{"Ordered", bottom["OutputOrder"], bottom["Output"]}],
+
+        If[ top["Arity"] > bottom["Arity"],
+            bottom = bottom[{"Ordered", top["InputOrder"], top["Input"]}],
+            top = top[{"Ordered", bottom["OutputOrder"], bottom["Output"]}]
+        ]
+    ];
+    ConfirmAssert[top["InputDimension"] == bottom["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
     basis = QuantumBasis[
-        outputBasis,
-        inputBasis,
+        top["Output"],
+        bottom["Input"],
         "Label" -> qo["Label"] @* op["Label"] /. None -> Sequence[]
     ];
-
-    bottom = bottom[{"Ordered", inputOrder, inputBasis}];
-    top = top[{"Ordered", bottom["OutputOrder"], bottom["Output"]}];
-    ConfirmAssert[top["InputDimension"] == bottom["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
-    QuantumOperator[
-        QuantumOperator[
-            top["MatrixRepresentation"] . bottom["MatrixRepresentation"],
+    state = QuantumState[
+        QuantumState[
+            Flatten[top["MatrixRepresentation"] . bottom["MatrixRepresentation"]],
             QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
         ],
-        basis,
-        bottom["Order"]
-    ]
+        basis
+    ];
+
+    If[ bottom["HasInputQ"], QuantumOperator[state, bottom["InputOrder"]], state]
 ]
 
 

@@ -53,11 +53,23 @@ QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] := Enclose[
 
 (* operator x operator *)
 
-QuantumTensorProduct[qdo1_QuantumOperator, qdo2_QuantumOperator] :=
-    QuantumOperator[QuantumTensorProduct[qdo1["State"], qdo2["State"]],
-        If[ IntersectingQ[qdo1["InputOrder"], qdo2["InputOrder"]],
-            Join[qdo1["Order"], Max[qdo1["Order"]] + qdo2["InputQuditOrder"]],
-            Join[qdo1["Order"], qdo2["Order"]]
+QuantumTensorProduct[qo1_QuantumOperator, qo2_QuantumOperator] :=
+    QuantumOperator[QuantumTensorProduct[qo1["State"], qo2["State"]],
+        Which[
+            qo1["HasInputQ"] && !qo2["HasInputQ"],
+            qo1["Order"],
+            !qo1["HasInputQ"] && qo2["HasInputQ"],
+            qo2["Order"],
+            qo1["HasInputQ"] && qo2["HasInputQ"],
+            If[ IntersectingQ[qo1["InputOrder"], qo2["InputOrder"]],
+                Join[qo1["Order"], Max[qo1["Order"]] + qo2["InputQuditOrder"]],
+                Join[qo1["Order"], qo2["Order"]]
+            ],
+            True,
+            If[ IntersectingQ[qo1["OuputOrder"], qo2["OuputOrder"]],
+                Join[qo1["Order"], Max[qo1["Order"]] + qo2["OutputQuditOrder"]],
+                Join[qo1["Order"], qo2["Order"]]
+            ]
         ]
     ]
 
