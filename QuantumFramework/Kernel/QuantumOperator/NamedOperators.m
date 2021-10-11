@@ -138,8 +138,11 @@ QuantumOperator["CT", args___] := QuantumOperator[{"ControlledU", "T"}, args]
 QuantumOperator["CS", args___] := QuantumOperator[{"ControlledU", "S"}, args]
 
 
-QuantumOperator[{"ControlledU", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___, control_ ? orderQ]}, args___] :=
-    QuantumOperator[{"ControlledU", QuantumOperator[params], control}, args]
+QuantumOperator[{"ControlledU", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___], control_ ? orderQ}, args___] :=
+    With[{op = QuantumOperator[params]}, QuantumOperator[{"ControlledU", QuantumOperator[op, Max[control] + op["Order"]], control}, args]]
+
+QuantumOperator[{"ControlledU", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___, control_ ? orderQ]}, args___, target_ ? orderQ] :=
+    QuantumOperator[{"ControlledU", QuantumOperator[params, target], control}, args]
 
 QuantumOperator[{"ControlledU", params : PatternSequence[___, Except[_ ? orderQ]]}, args___, order_ ? orderQ] :=
     With[{op = QuantumOperator[params, Rest @ order /. {} -> {First @ order + 1}]},

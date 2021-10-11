@@ -97,10 +97,16 @@ QuantumMeasurementOperator[{"RandomHermitian", dimension_Integer : 2}, args___, 
     ]
 
 QuantumMeasurementOperator[{matrix_ ? MatrixQ, eigenvalues_ ? VectorQ}, args___, target : (_ ? orderQ) : {1}] :=
-    QuantumMeasurementOperator[QuantumOperator[eigenvalues . (projector /@ matrix), target], args, target]
+    QuantumMeasurementOperator[QuantumOperator[eigenvalues . (projector /@ matrix)], args, target]
 
 QuantumMeasurementOperator[{qb_ ? QuantumBasisQ, eigenvalues_ ? VectorQ}, args___, target : (_ ? orderQ) : {1}] :=
-    QuantumMeasurementOperator[QuantumOperator[eigenvalues . qb["Projectors"], qb, target], args, target]
+    QuantumMeasurementOperator[
+        QuantumOperator[eigenvalues . qb["Projectors"],
+        qb,
+        Range[If[qb["HasInputQ"], qb["InputQudits"], qb["OutputQudits"]]]],
+        args,
+        target
+    ]
 
 QuantumMeasurementOperator[qb_ ? QuantumBasisQ, args___, target : (_ ? orderQ) : {1}] :=
     QuantumMeasurementOperator[{qb, Range[qb["Dimension"]] - 1}, args, target]

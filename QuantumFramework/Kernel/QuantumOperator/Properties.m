@@ -156,7 +156,7 @@ QuantumOperatorProp[qo_, {"Ordered", from_Integer, to_Integer}] := qo[{"Ordered"
 QuantumOperatorProp[qo_, {"Ordered", order_ ? orderQ}] := With[{
     dimensions = qo[If[qo["HasInputQ"], "InputDimensions", "OutputDimensions"]]
 },
-    If[ Length[dimensions] == Length[order],
+    If[ Length[order] <= Length[dimensions],
         qo[{"Ordered", order,
             QuditBasis @ Extract[
                 dimensions,
@@ -175,7 +175,7 @@ QuantumOperatorProp[qo_, {"Ordered", order_ ? orderQ, qb_ ? QuditBasisQ}] := Enc
     arity = Length[order]
 },
     ConfirmAssert[ContainsAll[order, qo["Order"]], "Given order should contain all operator order qudits"];
-    ConfirmAssert[qb["Qudits"] == arity, "Order size should be the same as number of qudits"];
+    ConfirmAssert[arity <= qb["Qudits"], "Order size should be less than or equal to number of qudits"];
     QuantumOperator[If[ arity > qo["OrderQudits"],
         QuantumOperator[
             QuantumTensorProduct[

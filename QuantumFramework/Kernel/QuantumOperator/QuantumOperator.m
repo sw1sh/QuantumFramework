@@ -253,6 +253,6 @@ qo["Picture"] === qo["Picture"] && (
 
 (* equality *)
 
-QuantumOperator /: (qo1_QuantumOperator ? QuantumOperatorQ) == (qo2_QuantumOperator ? QuantumOperatorQ) :=
-    qo1["Picture"] == qo2["Picture"] && qo1["OrderedMatrixRepresentation"] == qo2["OrderedMatrixRepresentation"]
+QuantumOperator /: Equal[qo : _QuantumOperator ... ] :=
+    Equal @@ (#["Picture"] & /@ {qo}) && Equal @@ (#["OrderedMatrixRepresentation"] & /@ {qo})
 

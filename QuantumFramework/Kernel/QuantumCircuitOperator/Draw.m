@@ -181,7 +181,7 @@ drawGateGraphics[gates_List] := Module[{
 
         If[ MatchQ[gates[[i]]["Label"], "CX" | "CY" | "CZ" | "CNOT" | "CPHASE" | "CSWAP" | "Controlled"[__]],
             If[ MatchQ[gates[[i]]["Label"], "Controlled"[__]],
-                controlQuditsOrder = gates[[i]]["Label"][[2]];
+                controlQuditsOrder = If[Length[gates[[i]]["Label"]] > 1, gates[[i]]["Label"][[2]], orders[[i]][[;; 1]]];
                 targetQuditsOrder = Complement[orders[[i]], controlQuditsOrder],
                 targetQuditsOrder = Rest @ orders[[i]];
                 controlQuditsOrder = {First @ orders[[i]]}

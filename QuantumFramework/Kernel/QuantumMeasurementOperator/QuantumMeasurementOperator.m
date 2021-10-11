@@ -129,6 +129,6 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? orderQ] /; ! Contai
 
 (* equality *)
 
-QuantumMeasurementOperator /: (qmo1_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ) ==
-    (qmo2_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ) := qmo1["MatrixRepresentation"] == qmo2["MatrixRepresentation"]
+QuantumMeasurementOperator /: Equal[qmo : _QuantumMeasurementOperator ... ] :=
+    Equal @@ (#["Picture"] & /@ {qmo}) && Equal @@ (#["OrderedMatrixRepresentation"] & /@ {qmo})
 
