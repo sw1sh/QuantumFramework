@@ -234,7 +234,7 @@ qo["Picture"] === qo["Picture"] && (
     qo @ QuantumOperator[qs]
 
 
-(qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumFrameworkOperatorQ] /; qo["Picture"] === op["Picture"] := Enclose @ Module[{
+(qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumOperatorQ] /; qo["Picture"] === op["Picture"] := Enclose @ Module[{
     top, bottom,
     order,
     basis,
@@ -271,6 +271,9 @@ qo["Picture"] === qo["Picture"] && (
 
     If[ bottom["HasInputQ"], QuantumOperator[state, top["OutputOrder"], bottom["InputOrder"]], state]
 ]
+
+
+(qo_QuantumOperator ? QuantumOperatorQ)[qmo_ ? QuantumMeasurementOperatorQ] := QuantumMeasurementOperator[qo @ qmo["Operator"], qmo["Target"]]
 
 
 (* equality *)
