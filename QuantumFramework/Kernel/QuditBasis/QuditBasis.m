@@ -159,10 +159,11 @@ QuditBasisProp[qb_, "SortedQ"] := OrderedQ @ qb["Names"] && OrderedQ @ Keys @ qb
 
 QuditBasisProp[qb_, "Sort"] := QuditBasis[Sort @ qb["Names"], KeySort @ qb["BasisElements"]]
 
-QuditBasisProp[qb_, {"Permute", perm_Cycles, outputs_Integer : 0}] := Enclose @ QuditBasis[
+QuditBasisProp[qb_, {"Permute", perm_Cycles, outputs_Integer : 0}] := Enclose @ If[perm === Cycles[{}], qb,
+QuditBasis[
     #[{"Permute", perm, outputs}] & /@ qb["Names"],
     KeyMap[MapAt[PermutationList[perm, qb["NameRank"]][[#]] &, 2]] @ qb["BasisElements"]
-]
+]]
 
 QuditBasisProp[qb_, "Reverse"] := qb[{"Permute", FindPermutation[Reverse @ Range[qb["Qudits"]]]}]
 
@@ -177,6 +178,8 @@ QuditBasisProp[qb_, "RemoveIdentities"] := QuditBasis[
     (QuditBasisName @@ Delete[Normal[#], Position[qb["Dimensions"], 1]])["Group"] & /@ qb["Names"],
     Select[qb["BasisElements"], TensorRank[#] > 0 &]
 ]
+
+QuditBasisProp[qb_, {"Split", __}] /; qb["Qudits"] == 0 := {QuditBasis[], QuditBasis[]}
 
 QuditBasisProp[qb_, {"Split", n_Integer ? NonNegative, m_ : None}] /; n <= qb["Qudits"] :=
     MapThread[QuditBasis,

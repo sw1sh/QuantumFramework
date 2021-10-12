@@ -85,7 +85,7 @@ alignDimensions[xs_, {}] := {{xs}, {xs}}
 
 alignDimensions[{}, ys_] := {{ys}, {ys}}
 
-alignDimensions[xs : {_Integer..}, ys_ : {_Integer..}] := Module[{
+alignDimensions[xs : {_Integer..}, ys : {_Integer..}] := Module[{
     as = FoldList[Times, xs], bs = FoldList[Times, ys], p, first, second
 },
     p = Min[Intersection[as, bs]];
