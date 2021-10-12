@@ -141,7 +141,7 @@ QuantumOperator["CS", args___] := QuantumOperator[{"ControlledU", "S"}, args]
 QuantumOperator[{"ControlledU", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___], control_ ? orderQ}, args___] :=
     With[{op = QuantumOperator[params]}, QuantumOperator[{"ControlledU", QuantumOperator[op, Max[control] + op["InputOrder"]], control}, args]]
 
-QuantumOperator[{"ControlledU", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___, control_ ? orderQ]}, args___, target_ ? orderQ] :=
+QuantumOperator[{"ControlledU", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___], control_ ? orderQ}, args___, target_ ? orderQ] :=
     QuantumOperator[{"ControlledU", QuantumOperator[params, target], control}, args]
 
 QuantumOperator[{"ControlledU", params : PatternSequence[___, Except[_ ? orderQ]]}, args___, order_ ? orderQ] :=
