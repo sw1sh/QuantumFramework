@@ -90,6 +90,8 @@ QuantumState[qs_ ? QuantumStateQ, args : Except[_ ? QuantumBasisQ]] :=
 
 (* change of basis *)
 
+QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; ! newBasis["SortedQ"] := QuantumState[qs, newBasis["Sort"]]
+
 QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Basis"] == newBasis := QuantumState[qs["State"], newBasis]
 
 QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["BasisElementDimension"] === newBasis["BasisElementDimension"] := Switch[

@@ -40,13 +40,22 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? orderQ] /; ! Contai
 (* composition *)
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qs_ ? QuantumStateQ] := Enclose @ With[{
-    qudits = If[qmo["POVMQ"], qmo["Targets"], 1]
+    qudits = If[qmo["POVMQ"], qmo["Targets"], 1],
+    op = qmo["SuperOperator"]
 },
     ConfirmAssert[qs["OutputQudits"] >= qmo["Targets"], "Not enough output qudits"];
 
     QuantumMeasurement[
         QuantumState[
-            ConfirmBy[qmo[QuantumOperator[qs, {Range[qs["OutputQudits"]], Automatic}]]["State"], QuantumStateQ][
+            ConfirmBy[
+                QuantumOperator[op,
+                    ReplacePart[op["FullOutputOrder"], Thread[List /@ Range[qudits] -> 1 - Reverse @ Range[qudits]]],
+                    op["InputOrder"]
+                ][
+                    {"OrderedInput", Range[qs["OutputQudits"]], qs["Output"]}
+                ] @ qs,
+                QuantumStateQ
+            ][
                 {"Split", qudits}
             ],
             "Label" -> qmo["Label"][qs["Label"]]

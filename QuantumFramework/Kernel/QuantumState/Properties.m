@@ -33,7 +33,7 @@ QuantumState::failprop = "property `` failed with ``"
 (qs_QuantumState[prop_ ? propQ, args___]) /; QuantumStateQ[qs] := With[{
     result = QuantumStateProp[qs, prop, args]
 },
-    (QuantumStateProp[qs, prop, args] = result) /;
+    If[TrueQ[$QuantumFrameworkPropCache], QuantumStateProp[qs, prop, args] = result, result] /;
         (!FailureQ[Unevaluated @ result] || Message[QuantumState::failprop, prop, result]) &&
         (!MatchQ[Unevaluated @ result, _QuantumStateProp] || Message[QuantumState::undefprop, prop])
 ]
@@ -267,6 +267,7 @@ QuantumStateProp[qs_, {"Split", n_Integer : 0}] := With[{basis = qs["Basis"][{"S
     QuantumState[QuantumState[qs["Computational"]["State"], QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]], basis]
 ]
 
+QuantumStateProp[qs_, "Numeric"] := QuantumState[N @ qs["State"], qs["Basis"]["Numeric"]]
 
 (* representations *)
 

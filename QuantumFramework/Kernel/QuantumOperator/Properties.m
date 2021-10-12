@@ -52,7 +52,8 @@ QuantumOperatorProp[QuantumOperator[_, {outputOrder_, _}], "OutputOrder"] := out
 (qo_QuantumOperator[prop_ ? propQ, args___]) /; QuantumOperatorQ[qo] := With[{
     result = QuantumOperatorProp[qo, prop, args]
     },
-    (QuantumOperatorProp[qo, prop, args] = result) /; (!FailureQ[Unevaluated @ result] || Message[QuantumOperator::failprop, prop, result]) &&
+    If[TrueQ[$QuantumFrameworkPropCache], QuantumOperatorProp[qo, prop, args] = result, result] /;
+        (!FailureQ[Unevaluated @ result] || Message[QuantumOperator::failprop, prop, result]) &&
         (!MatchQ[result, _QuantumOperatorProp] || Message[QuantumOperator::undefprop, prop])
 ]
 
@@ -194,31 +195,27 @@ QuantumOperatorProp[qo_, {"Ordered", order_ ? orderQ, qb_ ? QuditBasisQ}] :=
 
 QuantumOperatorProp[qo_, {"Ordered" | "OrderedInput" | "OrderedOutput", {}, ___}] := qo
 
-QuantumOperatorProp[qo_, {"OrderedInput", order_ ? orderQ}] := With[{
+QuantumOperatorProp[qo_, {"OrderedInput", order_ ? orderQ}] := Enclose @ With[{
     dimensions = qo["InputDimensions"]
 },
-    If[ Length[order] <= Length[dimensions],
-        qo[{"OrderedInput", order,
-            QuditBasis @ Extract[
-                dimensions,
-                List /@ (order /. qo["InputOrderQuditMapping"])
-            ]}
-        ],
-        qo
+    ConfirmAssert[Length[order] <= Length[dimensions], "Not enough input dimensions to order"];
+    qo[{"OrderedInput", order,
+        QuditBasis @ Extract[
+            dimensions,
+            List /@ (order /. qo["InputOrderQuditMapping"])
+        ]}
     ]
 ]
 
-QuantumOperatorProp[qo_, {"OrderedOutput", order_ ? orderQ}] := With[{
+QuantumOperatorProp[qo_, {"OrderedOutput", order_ ? orderQ}] := ConfirmAssert @ With[{
     dimensions = qo["OutputDimensions"]
 },
-    If[ Length[order] <= Length[dimensions],
-        qo[{"OrderedOutput", order,
-            QuditBasis @ Extract[
-                dimensions,
-                List /@ (order /. qo["OutputOrderQuditMapping"])
-            ]}
-        ],
-        qo
+    ConfirmAssert[Length[order] <= Length[dimensions], "Not enough output dimensions to order"];
+    qo[{"OrderedOutput", order,
+        QuditBasis @ Extract[
+            dimensions,
+            List /@ (order /. qo["OutputOrderQuditMapping"])
+        ]}
     ]
 ]
 
@@ -227,7 +224,7 @@ QuantumOperatorProp[qo_, {"OrderedInput", qb_ ? QuditBasisQ}] := qo[{"OrderedInp
 QuantumOperatorProp[qo_, {"OrderedInput", order_ ? orderQ, qb_ ? QuditBasisQ}] := Enclose @ With[{
     arity = Length[order]
 },
-    ConfirmAssert[ContainsAll[order, qo["InputOrder"]], "Given order should contain all operator order qudits"];
+    ConfirmAssert[ContainsAll[order, qo["FullInputOrder"]], "Given order should contain all operator order qudits"];
     ConfirmAssert[arity <= qb["Qudits"], "Order size should be less than or equal to number of qudits"];
     If[ arity > qo["InputQudits"],
         QuantumTensorProduct[
@@ -245,7 +242,7 @@ QuantumOperatorProp[qo_, {"OrderedOutput", qb_ ? QuditBasisQ}] := qo[{"OrderedOu
 QuantumOperatorProp[qo_, {"OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ}] := Enclose @ With[{
     arity = Length[order]
 },
-    ConfirmAssert[ContainsAll[order, qo["OutputOrder"]], "Given order should contain all operator order qudits"];
+    ConfirmAssert[ContainsAll[order, qo["FullOutputOrder"]], "Given order should contain all operator order qudits"];
     ConfirmAssert[arity <= qb["Qudits"], "Order size should be less than or equal to number of qudits"];
     If[ arity > qo["OutputQudits"],
         QuantumTensorProduct[
@@ -257,6 +254,8 @@ QuantumOperatorProp[qo_, {"OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ}] 
         qo
     ][{"OrderOutputExtra", qo["FullOutputOrder"], order}]
 ]
+
+QuantumOperatorProp[qo_, "Numeric"] := QuantumOperator[qo["State"]["Numeric"], qo["Order"]]
 
 
 QuantumOperatorProp[qo_, "HermitianQ"] := HermitianMatrixQ[qo["Matrix"]]

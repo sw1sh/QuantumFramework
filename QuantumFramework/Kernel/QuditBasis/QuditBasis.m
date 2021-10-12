@@ -84,6 +84,9 @@ QuditBasis[names_List, elements_List, args___] :=
 QuditBasis[names_List, elements_Association] /; Not @ AllTrue[names, MatchQ[_QuditBasisName]] :=
     QuditBasis[Map[QuditBasisName, names], elements]
 
+QuditBasis[names_List, elements_Association] /; Not @ AllTrue[elements, NumericQ[#] || SparseArrayQ[#] &] :=
+    QuditBasis[names, Map[If[NumericQ[#], #, SparseArray[#]] &, elements]]
+
 QuditBasis[names_List, elements_Association] /; Not @ AllTrue[Keys[elements], MatchQ[{_, _Integer ? Positive}]] :=
     QuditBasis[names, KeyMap[{#, 1} &, elements]]
 
@@ -95,7 +98,7 @@ QuditBasis::undefprop = "QuditBasis property `` is undefined for this basis";
 (qb_QuditBasis[prop_ ? propQ, args___]) /; QuditBasisQ[qb] := With[{
     result = QuditBasisProp[qb, prop, args]
 },
-    (QuditBasisProp[qb, prop, args] = result) /; !FailureQ[Unevaluated @ result] &&
+    If[$QuantumFrameworkPropCache, QuditBasisProp[qb, prop, args] = result, result] /; !FailureQ[Unevaluated @ result] &&
     (!MatchQ[result, _QuditBasisProp] || Message[QuditBasis::undefprop, prop])
 ]
 
@@ -152,7 +155,9 @@ QuditBasisProp[qb_, "Canonical"] := QuditBasis[Sort @ qb["Names"], qb["BasisElem
 QuditBasisProp[qb_, "Uncurry"] := QuditBasis[KeyMap[QuditBasisName @* Row @* Map[#["Name"] &] @* Normal] @ qb["Association"]]
 
 
-QuditBasisProp[qb_, "Sort"] := QuditBasis[Sort @ qb["Names"], qb["BasisElements"]]
+QuditBasisProp[qb_, "SortedQ"] := OrderedQ @ qb["Names"] && OrderedQ @ Keys @ qb["BasisElements"]
+
+QuditBasisProp[qb_, "Sort"] := QuditBasis[Sort @ qb["Names"], KeySort @ qb["BasisElements"]]
 
 QuditBasisProp[qb_, {"Permute", perm_Cycles, outputs_Integer : 0}] := Enclose @ QuditBasis[
     #[{"Permute", perm, outputs}] & /@ qb["Names"],
@@ -226,6 +231,8 @@ QuditBasisProp[qb1_, {"Replace", order_ ? orderQ, qb2_ ? QuditBasisQ}] := Quantu
 ]
 
 QuditBasisProp[qb_, "Identity"] := qb
+
+QuditBasisProp[qb_, "Numeric"] := QuditBasis[qb["Names"], N /@ qb["BasisElements"]]
 
 
 QuditBasis[_QuditBasis, 0] := QuditBasis[]

@@ -25,7 +25,7 @@ QuantumCircuitOperator::undefprop = "property `` is undefined for this circuit";
 (qds_QuantumCircuitOperator[prop_ ? propQ, args___]) /; QuantumCircuitOperatorQ[qds] := With[{
     result = Check[QuantumCircuitOperatorProp[qds, prop, args], $Failed]
 },
-    (QuantumCircuitOperatorProp[qds, prop, args] = result) /;
+    If[TrueQ[$QuantumFrameworkPropCache], QuantumCircuitOperatorProp[qds, prop, args] = result, result] /;
         !FailureQ[Unevaluated @ result] && (!MatchQ[Unevaluated @ result, _QuantumCircuitOperatorProp] || Message[QuantumCircuitOperator::undefprop, prop])
 ]
 

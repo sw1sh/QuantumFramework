@@ -39,7 +39,7 @@ QuantumBasis::undefprop = "QuantumBasis property `` is undefined for this basis"
 (qb_QuantumBasis[prop_ ? propQ, args___]) /; QuantumBasisQ[qb] := With[{
     result = QuantumBasisProp[qb, prop, args]
 },
-    (QuantumBasisProp[qb, prop, args] = result) /; !FailureQ[Unevaluated @ result] &&
+    If[TrueQ[$QuantumFrameworkPropCache], QuantumBasisProp[qb, prop, args] = result, result] /; !FailureQ[Unevaluated @ result] &&
     (!MatchQ[result, _QuantumBasisProp] || Message[QuantumBasis::undefprop, prop])
 ]
 
@@ -200,4 +200,10 @@ QuantumBasisProp[qb_, "Dagger" | "ConjugateTranspose"] := QuantumBasis[qb,
 QuantumBasisProp[qb_, {"PermuteInput", perm_Cycles}] := QuantumBasis[qb, "Input" -> qb["Input"][{"Permute", perm}]]
 
 QuantumBasisProp[qb_, {"PermuteOutput", perm_Cycles}] := QuantumBasis[qb, "Output" -> qb["Output"][{"Permute", perm}]]
+
+QuantumBasisProp[qb_, "SortedQ"] := qb["Output"]["SortedQ"] && qb["Input"]["SortedQ"]
+
+QuantumBasisProp[qb_, "Sort"] := QuantumBasis[qb, "Output" -> qb["Output"]["Sort"], "Input" -> qb["Input"]["Sort"]]
+
+QuantumBasisProp[qb_, "Numeric"] := QuantumBasis[qb, "Output" -> qb["Output"]["Numeric"], "Input" -> qb["Input"]["Numeric"]]
 

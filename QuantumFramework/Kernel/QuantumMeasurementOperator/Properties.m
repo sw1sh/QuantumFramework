@@ -28,7 +28,7 @@ QuantumMeasurementOperator::undefprop = "QuantumMeasurementOperator property `` 
 (qmo_QuantumMeasurementOperator[prop_ ? propQ, args___]) /; QuantumMeasurementOperatorQ[qmo] := With[{
     result = QuantumMeasurementOperatorProp[qmo, prop, args]
     },
-    (QuantumMeasurementOperatorProp[qmo, prop, args] = result)
+    If[TrueQ[$QuantumFrameworkPropCache], QuantumMeasurementOperatorProp[qmo, prop, args] = result, result]
         /; !FailureQ[Unevaluated @ result] && (!MatchQ[result, _QuantumMeasurementOperatorProp] || Message[QuantumMeasurementOperator::undefprop, prop])
 ]
 
@@ -143,6 +143,8 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
 ]
 
 QuantumMeasurementOperatorProp[qmo_, "POVM"] := QuantumMeasurementOperator[qmo["SuperOperator"], qmo["Target"]]
+
+QuantumMeasurementOperatorProp[qmo_, "Numeric"] := QuantumMeasurementOperator[qmo["Operator"]["Numeric"], qmo["Target"]]
 
 
 (* operator properties *)
