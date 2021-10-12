@@ -37,7 +37,7 @@ QuantumCircuitOperatorProp[qco_, "CircuitOperator"] := Fold[ReverseApplied[Const
 
 QuantumCircuitOperatorProp[qco_, "Gates"] := Length @ qco["Operators"]
 
-QuantumCircuitOperatorProp[qco_, "Orders" | "OperatorOrders"] := #["Order"] & /@ qco["Operators"]
+QuantumCircuitOperatorProp[qco_, "Orders" | "OperatorOrders"] := #["InputOrder"] & /@ qco["Operators"]
 
 
 (* operator properties *)

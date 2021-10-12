@@ -13,7 +13,7 @@ QuantumState /: MakeBoxes[qs_QuantumState /; Quiet @ QuantumStateQ[Unevaluated @
         FrameTicks -> None
     ]
 },
-    ConfirmQuiet @ BoxForm`ArrangeSummaryBox["QuantumState", qs, icon,
+    BoxForm`ArrangeSummaryBox["QuantumState", qs, icon,
     {
         {
             BoxForm`SummaryItem[{"StateType: ", qs["StateType"]}],

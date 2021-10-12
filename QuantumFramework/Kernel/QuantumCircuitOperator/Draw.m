@@ -110,12 +110,12 @@ drawMeasurementGate[coordinates_List, order_List, scaling_, name_] := Module[{wi
     Show[semiCircle, arrow, frame]
 ]
 
-drawMeasurement[coordinates_, sourceQudit_] := Module[{width = 4},
+drawMeasurement[coordinates_] := Module[{width = 4},
     Graphics[{
         Thick,
-        Line[{coordinates + {.125, width / 2}, coordinates + {.125, 5 sourceQudit - 1}}],
-        Line[{coordinates + {-.125, width / 2}, coordinates + {-.125, 5 sourceQudit - 1}}],
-        Polygon[coordinates + {0, 5 sourceQudit - 1.5} + # & /@ {{-.75, 0}, {.75, 0}, {0, 1.25}}]
+        Line[{coordinates + {.125, width / 2}, coordinates {1, 0}  + {.125, - 1}}],
+        Line[{coordinates + {-.125, width / 2}, coordinates {1, 0} + {-.125, - 1}}],
+        Polygon[coordinates {1, 0} + {0, - 1.25} + # & /@ {{-.75, 0}, {.75, 0}, {0, 1.25}}]
     }
     ]
 ]
@@ -148,7 +148,7 @@ drawGateGraphics[gates_List] := Module[{
 },
     width = 4;
     height = 3;
-    orders = #["Order"] & /@ gates;
+    orders = #["InputOrder"] & /@ gates;
     dimensions = First[gates]["InputDimensions"];
     lineScaling = Max[2, 0.1 Max[Flatten[orders]] Length[gates]] + 0.2;
     scaling = Max[1, 0.2 Max[Flatten[orders]] Length[gates]] + 0.1;
@@ -167,14 +167,14 @@ drawGateGraphics[gates_List] := Module[{
             AppendTo[
                 graphicsList,
                 drawMeasurementGate[
-                    {-2 + 6 Max[gatePositionIndices], - 5 Last[orders[[i]]]},
+                    {-2 + 6 Max[gatePositionIndices], - 5 Max[orders[[i]]]},
                     orders[[i]],
                     scaling,
                     gates[[i]]["Label"] /. None | "Computational" | "Computational"[_] -> "M"
                 ]
             ]
         ];
-        AppendTo[graphicsList, drawMeasurement[{-2 + 6 Max[gatePositionIndices], - 5 Max[orders[[i]]]}, First[orders[[i]]]]];
+        AppendTo[graphicsList, drawMeasurement[{-2 + 6 Max[gatePositionIndices], - 5 Min[orders[[i]]]}]];
         positionIndices = positionIndices + 1;
     ];
     If[ QuantumOperatorQ[gates[[i]]],

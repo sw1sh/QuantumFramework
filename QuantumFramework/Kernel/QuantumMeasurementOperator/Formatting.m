@@ -7,7 +7,10 @@ QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; Quantu
         Enclose[
             Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]],
                 If[ qmo["POVMQ"],
-                    ArrayReshape[Mean @ qmo["Ordered"]["TensorRepresentation"], qmo["MatrixNameDimensions"] / {First @ qmo["Dimensions"], 1}],
+                    ArrayReshape[
+                        Nest[Mean, qmo["Ordered"]["TensorRepresentation"], qmo["Targets"]],
+                        qmo["MatrixNameDimensions"] / {Times @@ Take[qmo["Dimensions"], qmo["Targets"]], 1}
+                    ],
                     Confirm[qmo["Ordered"]["MatrixRepresentation"]]
                 ],
                 {2}

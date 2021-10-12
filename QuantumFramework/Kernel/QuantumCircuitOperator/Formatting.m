@@ -11,7 +11,7 @@ ConfirmQuiet @ BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
             BoxForm`SummaryItem[{"Arity: ", qco["Arity"]}]
         }, {
             BoxForm`SummaryItem[{"Dimension: ", qco["InputDimension"]}],
-            BoxForm`SummaryItem[{"Order: ", qco["CircuitOperator"]["Order"]}]
+            BoxForm`SummaryItem[{"Order: ", qco["CircuitOperator"]["InputOrder"]}]
         }
     }, {
         {
