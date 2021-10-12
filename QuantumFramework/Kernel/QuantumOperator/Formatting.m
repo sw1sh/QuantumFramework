@@ -5,7 +5,7 @@ Package["Wolfram`QuantumFramework`"]
 QuantumOperator /: MakeBoxes[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated @ qo], format_] := Enclose[With[{
     icon = MatrixPlot[
         Enclose[
-            Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], ConfirmBy[qo["OrderedMatrixRepresentation"], MatrixQ], {2}],
+            Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], ConfirmBy[qo["Sort"]["MatrixRepresentation"], MatrixQ], {2}],
             RandomReal[{0, 1}, {qo["Dimension"], qo["Dimension"]}] &
         ],
         ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},
@@ -22,17 +22,13 @@ QuantumOperator /: MakeBoxes[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated 
             {
                 BoxForm`SummaryItem[basisDimensionSummaryItem[qo]],
                 BoxForm`SummaryItem[basisQuditsSummaryItem[qo]]
-            },
-            {
-                SpanFromLeft,
-                BoxForm`SummaryItem[{"Order: ", qo["Order"]}]
             }
         },
         {
             {
                 BoxForm`SummaryItem[{"Hermitian: ", qo["HermitianQ"]}],
-                BoxForm`SummaryItem[{"Input Order: ", qo["InputOrder"]}],
-                BoxForm`SummaryItem[{"Output Order: ", qo["OutputOrder"]}]
+                BoxForm`SummaryItem[{"Output Order: ", qo["OutputOrder"]}],
+                BoxForm`SummaryItem[{"Input Order: ", qo["InputOrder"]}]
             },
             {
                 BoxForm`SummaryItem[{"Unitary: ", qo["UnitaryQ"]}],

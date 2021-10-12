@@ -7,7 +7,7 @@ QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; Quantu
         Enclose[
             Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]],
                 If[ qmo["POVMQ"],
-                    ArrayReshape[Mean @ qmo["OrderedPOVMElements"], qmo["MatrixNameDimensions"] / {First @ qmo["Dimensions"], 1}],
+                    ArrayReshape[Mean @ qmo["Ordered"]["TensorRepresentation"], qmo["MatrixNameDimensions"] / {First @ qmo["Dimensions"], 1}],
                     Confirm[qmo["Ordered"]["MatrixRepresentation"]]
                 ],
                 {2}
@@ -31,7 +31,7 @@ QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; Quantu
             },
             {
                 BoxForm`SummaryItem[{"Target: ", qmo["Target"]}],
-                BoxForm`SummaryItem[{"Order: ", qmo["Order"]}]
+                BoxForm`SummaryItem[{"Order: ", qmo["InputOrder"]}]
             }
         },
         {

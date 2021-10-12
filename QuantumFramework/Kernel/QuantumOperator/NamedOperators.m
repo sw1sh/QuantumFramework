@@ -139,7 +139,7 @@ QuantumOperator["CS", args___] := QuantumOperator[{"ControlledU", "S"}, args]
 
 
 QuantumOperator[{"ControlledU", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___], control_ ? orderQ}, args___] :=
-    With[{op = QuantumOperator[params]}, QuantumOperator[{"ControlledU", QuantumOperator[op, Max[control] + op["Order"]], control}, args]]
+    With[{op = QuantumOperator[params]}, QuantumOperator[{"ControlledU", QuantumOperator[op, Max[control] + op["InputOrder"]], control}, args]]
 
 QuantumOperator[{"ControlledU", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___, control_ ? orderQ]}, args___, target_ ? orderQ] :=
     QuantumOperator[{"ControlledU", QuantumOperator[params, target], control}, args]
@@ -151,10 +151,10 @@ QuantumOperator[{"ControlledU", params : PatternSequence[___, Except[_ ? orderQ]
 
 QuantumOperator[{"ControlledU", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___]}, args___] :=
     With[{op = QuantumOperator[params]},
-        QuantumOperator[{"ControlledU", QuantumOperator[op, Rest @ op["Order"] /. {} -> {First @ op["Order"] + 1}], {First @ op["Order"]}}, args]
+        QuantumOperator[{"ControlledU", QuantumOperator[op, Rest @ op["InputOrder"] /. {} -> {First @ op["InputOrder"] + 1}], {First @ op["InputOrder"]}}, args]
     ]
 
-QuantumOperator[{"ControlledU", qo_ ? QuantumOperatorQ}, args___] := QuantumOperator[{"ControlledU", qo, {qo["LastQudit"] + 1}}, args]
+QuantumOperator[{"ControlledU", qo_ ? QuantumOperatorQ}, args___] := QuantumOperator[{"ControlledU", qo, {qo["LastInputQudit"] + 1}}, args]
 
 QuantumOperator[{"ControlledU", qo_ ? QuantumOperatorQ, control_ ? orderQ}, args___] := Enclose @ With[{controls = Length[control]},
     (*ConfirmAssert[! IntersectingQ[qo["Order"], control], "Target and control qudits shouldn't intersect"];*)
@@ -164,9 +164,9 @@ QuantumOperator[{"ControlledU", qo_ ? QuantumOperatorQ, control_ ? orderQ}, args
         "Label" -> "Controlled"[qo["Label"], control],
         args,
         Join[control,
-            If[ IntersectingQ[control, qo["Order"]],
-                Complement[Range @@ MinMax[Join[control, qo["FullOrder"]]], control],
-                qo["Order"]
+            If[ IntersectingQ[control, qo["InputOrder"]],
+                Complement[Range @@ MinMax[Join[control, qo["FullInputOrder"]]], control],
+                qo["InputOrder"]
             ]
         ]
     ]
