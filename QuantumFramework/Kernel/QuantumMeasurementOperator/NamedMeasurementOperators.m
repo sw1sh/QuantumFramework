@@ -15,10 +15,15 @@ $QuantumMeasurementOperatorNames = {
 
 QuantumMeasurementOperator["ComputationalBasis" | "Computational", args___] := QuantumMeasurementOperator[{"ComputationalBasis"}, args]
 
-QuantumMeasurementOperator[{"ComputationalBasis" | "Computational", dimension_Integer : 2}, args___, target : (_ ? orderQ) : {1}] :=
-    QuantumMeasurementOperator[{"ComputationalBasis", dimension, Range[0, (dimension ^ Length[target]) - 1]}, args, target]
+QuantumMeasurementOperator["ComputationalBasis" | "Computational" | {"ComputationalBasis" | "Computational"} -> eigenvalues_ ? VectorQ, args___] :=
+    QuantumMeasurementOperator[{"ComputationalBasis"} -> eigenvalues, args]
 
-QuantumMeasurementOperator[{"ComputationalBasis" | "Computational", dimension_Integer, eigenvalues_List}, args___, target : (_ ? orderQ) : {1}] := With[{
+QuantumMeasurementOperator[{"ComputationalBasis" | "Computational", dimension_Integer : 2}, args___, target : (_ ? orderQ) : {1}] :=
+    QuantumMeasurementOperator[{"ComputationalBasis", dimension} -> Range[0, (dimension ^ Length[target]) - 1], args, target]
+
+QuantumMeasurementOperator[{"ComputationalBasis" | "Computational",
+    dimension_Integer} -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : {1}] :=
+With[{
     qudits = Ceiling @ Log[dimension, Length @ eigenvalues]
 },
 QuantumMeasurementOperator[
@@ -33,10 +38,11 @@ QuantumMeasurementOperator[
 ]
 ]
 
-QuantumMeasurementOperator[{"ComputationalBasis" | "Computational", eigenvalues_List}, args___] :=
-    QuantumMeasurementOperator[{"ComputationalBasis", 2, eigenvalues}, args]
+QuantumMeasurementOperator[{"ComputationalBasis" | "Computational",
+    dimensions : {_Integer ..}}, args___] := QuantumMeasurementOperator[{"ComputationalBasis", dimensions} -> Range[Times @@ dimensions] - 1, args]
 
-QuantumMeasurementOperator[{"ComputationalBasis" | "Computational", dimensions : {_Integer ..}, eigenvalues_List}, args___, target : (_ ? orderQ) : {1}] :=
+QuantumMeasurementOperator[{"ComputationalBasis" | "Computational",
+    dimensions : {_Integer ..}} -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : {1}] :=
 QuantumMeasurementOperator[
     QuantumOperator[
         PadRight[eigenvalues, Times @@ dimensions] . QuantumBasis[dimensions]["Projectors"],
@@ -49,9 +55,10 @@ QuantumMeasurementOperator[
 ]
 
 
-QuantumMeasurementOperator["BellBasis", target : (_ ? orderQ) : {1}] := QuantumMeasurementOperator[{"BellBasis", Range[0, (4 ^ Length[target]) - 1]}, target]
+QuantumMeasurementOperator["BellBasis", target : (_ ? orderQ) : {1}] :=
+    QuantumMeasurementOperator["BellBasis" -> Range[0, (4 ^ Length[target]) - 1], target]
 
-QuantumMeasurementOperator[{"BellBasis", eigenvalues_List}, args___, target : (_ ? orderQ) : {1}] :=
+QuantumMeasurementOperator["BellBasis" -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : {1}] :=
     QuantumMeasurementOperator[
         QuantumOperator[eigenvalues . QuantumBasis["Bell", Length[target]]["Projectors"], 4, Length[target], target],
         args, "Label" -> "Bell",
@@ -60,9 +67,9 @@ QuantumMeasurementOperator[{"BellBasis", eigenvalues_List}, args___, target : (_
 
 
 QuantumMeasurementOperator[name : "PauliXBasis" | "PauliYBasis" | "PauliZBasis", args___, target : (_ ? orderQ) : {1}] :=
-    QuantumMeasurementOperator[{name, Range[0, (2 ^ Length[target]) - 1]}, args, target]
+    QuantumMeasurementOperator[name -> Range[0, (2 ^ Length[target]) - 1], args, target]
 
-QuantumMeasurementOperator[{name : "PauliXBasis" | "PauliYBasis" | "PauliZBasis", eigenvalues_List}, args___, target : (_ ? orderQ) : {1}] :=
+QuantumMeasurementOperator[name : "PauliXBasis" | "PauliYBasis" | "PauliZBasis" -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : {1}] :=
     QuantumMeasurementOperator[
         QuantumOperator[eigenvalues . QuantumBasis[StringDelete[name, "Basis"], Length[target]]["Projectors"], 2, Length[target], target], args,
         "Label" -> StringDelete[name, "Pauli" | "Basis"], target
@@ -72,9 +79,9 @@ QuantumMeasurementOperator[{name : "PauliXBasis" | "PauliYBasis" | "PauliZBasis"
  QuantumMeasurementOperator["FourierBasis", args___] := QuantumMeasurementOperator[{"FourierBasis"}, args]
 
 QuantumMeasurementOperator[{"FourierBasis", dimension_Integer : 2}, args___, target : (_ ? orderQ) : {1}] :=
-    QuantumMeasurementOperator[{"FourierBasis", dimension, Range[0, (dimension ^ Length[target]) - 1]}, args, target]
+    QuantumMeasurementOperator[{"FourierBasis", dimension} -> Range[0, (dimension ^ Length[target]) - 1], args, target]
 
-QuantumMeasurementOperator[{"FourierBasis", dimension_Integer : 2, eigenvalues_List}, args___, target : (_ ? orderQ) : {1}] :=
+QuantumMeasurementOperator[{"FourierBasis", dimension_Integer : 2} -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : {1}] :=
     QuantumMeasurementOperator[
         QuantumOperator[eigenvalues . QuantumBasis[{"Fourier", dimension}, Length[target]]["Projectors"], dimension, target], args, "Label" -> "F", target]
 
@@ -96,10 +103,10 @@ QuantumMeasurementOperator[{"RandomHermitian", dimension_Integer : 2}, args___, 
         target
     ]
 
-QuantumMeasurementOperator[{matrix_ ? MatrixQ, eigenvalues_ ? VectorQ}, args___, target : (_ ? orderQ) : {1}] :=
+QuantumMeasurementOperator[matrix_ ? MatrixQ -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : {1}] :=
     QuantumMeasurementOperator[QuantumOperator[eigenvalues . (projector /@ matrix)], args, target]
 
-QuantumMeasurementOperator[{qb_ ? QuantumBasisQ, eigenvalues_ ? VectorQ}, args___, target : (_ ? orderQ) : {1}] :=
+QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : {1}] :=
     QuantumMeasurementOperator[
         QuantumOperator[eigenvalues . qb["Projectors"],
         qb,
@@ -109,5 +116,5 @@ QuantumMeasurementOperator[{qb_ ? QuantumBasisQ, eigenvalues_ ? VectorQ}, args__
     ]
 
 QuantumMeasurementOperator[qb_ ? QuantumBasisQ, args___, target : (_ ? orderQ) : {1}] :=
-    QuantumMeasurementOperator[{qb, Range[qb["Dimension"]] - 1}, args, target]
+    QuantumMeasurementOperator[qb -> Range[qb["Dimension"]] - 1, args, target]
 
