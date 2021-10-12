@@ -152,6 +152,8 @@ QuditBasisProp[qb_, "Canonical"] := QuditBasis[Sort @ qb["Names"], qb["BasisElem
 QuditBasisProp[qb_, "Uncurry"] := QuditBasis[KeyMap[QuditBasisName @* Row @* Map[#["Name"] &] @* Normal] @ qb["Association"]]
 
 
+QuditBasisProp[qb_, "Sort"] := QuditBasis[Sort @ qb["Names"], qb["BasisElements"]]
+
 QuditBasisProp[qb_, {"Permute", perm_Cycles, outputs_Integer : 0}] := Enclose @ QuditBasis[
     #[{"Permute", perm, outputs}] & /@ qb["Names"],
     KeyMap[MapAt[PermutationList[perm, qb["NameRank"]][[#]] &, 2]] @ qb["BasisElements"]

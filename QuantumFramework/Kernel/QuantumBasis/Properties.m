@@ -162,7 +162,7 @@ QuantumBasisProp[qb_, "OutputMatrix"] := qb["Output"]["Matrix"]
 
 QuantumBasisProp[qb_, "TensorRepresentation" | "Tensor"] := ArrayReshape[qb["Matrix"], qb["TensorDimensions"]]
 
-QuantumBasisProp[qb_, "MatrixRepresentation" | "Matrix"] :=  KroneckerProduct[qb["OutputMatrix"], qb["InputMatrix"]]
+QuantumBasisProp[qb_, "MatrixRepresentation" | "Matrix"] := KroneckerProduct[qb["OutputMatrix"], qb["InputMatrix"]]
 
 
 QuantumBasisProp[qb_, "Projectors"] := projector /@ qb["Matrix"]
