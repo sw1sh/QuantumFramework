@@ -1,7 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
 PackageExport["QuditBasis"]
-PackageExport["QuditBasisName"]
+PackageExport["QuditName"]
 
 PackageScope["QuditBasisQ"]
 
@@ -31,7 +31,7 @@ quditBasisQ[QuditBasis[names_List, elements_Association]] := Enclose[
 Module[{
     elementQudits, numericElements
 },
-    ConfirmAssert[AllTrue[names, MatchQ[_QuditBasisName]]];
+    ConfirmAssert[AllTrue[names, MatchQ[_QuditName]]];
 
     elementQudits = #["Qudits"] & /@ names;
 
@@ -62,7 +62,7 @@ QuditBasisQ[qb : QuditBasis[_, _]] := System`Private`ValidQ[qb]
 QuditBasisQ[___] := False
 
 
-QuditBasis[] := QuditBasis[{QuditBasisName[]}, {1}]
+QuditBasis[] := QuditBasis[{QuditName[]}, {1}]
 
 QuditBasis[{1...}] := QuditBasis[]
 
@@ -74,15 +74,15 @@ QuditBasis[qb_QuditBasis] := qb
 ]*)
 
 QuditBasis[assoc_Association, args___] := QuditBasis[Keys[assoc],
-    KeyMap[{If[MatchQ[#, _QuditBasisName], #["Name"], #], 1} &, assoc], args]
+    KeyMap[{If[MatchQ[#, _QuditName], #["Name"], #], 1} &, assoc], args]
 
 QuditBasis[names : {Except[_Integer]..}] := QuditBasis[names, IdentityMatrix[Length[names]]]
 
 QuditBasis[names_List, elements_List, args___] :=
     QuditBasis[AssociationThread[names, elements], args]
 
-QuditBasis[names_List, elements_Association] /; Not @ AllTrue[names, MatchQ[_QuditBasisName]] :=
-    QuditBasis[Map[QuditBasisName, names], elements]
+QuditBasis[names_List, elements_Association] /; Not @ AllTrue[names, MatchQ[_QuditName]] :=
+    QuditBasis[Map[QuditName, names], elements]
 
 QuditBasis[names_List, elements_Association] /; Not @ AllTrue[elements, NumericQ[#] || SparseArrayQ[#] &] :=
     QuditBasis[names, Map[If[NumericQ[#], #, SparseArray[#]] &, elements]]
@@ -155,7 +155,7 @@ QuditBasisProp[qb_, "Reverse"] := QuditBasis[Reverse @ qb["Names"], qb["Represen
 
 QuditBasisProp[qb_, "Canonical"] := QuditBasis[Sort @ qb["Names"], qb["Representations"]]
 
-QuditBasisProp[qb_, "Uncurry"] := QuditBasis[KeyMap[QuditBasisName @* Row @* Map[#["Name"] &] @* Normal] @ qb["Association"]]
+QuditBasisProp[qb_, "Uncurry"] := QuditBasis[KeyMap[QuditName @* Row @* Map[#["Name"] &] @* Normal] @ qb["Association"]]
 
 
 QuditBasisProp[qb_, "SortedQ"] := OrderedQ @ qb["Names"] && OrderedQ @ Keys @ qb["Representations"]
@@ -178,7 +178,7 @@ QuditBasisProp[qb_, {"Ordered", qudits_Integer, order_ ? orderQ}] := If[qb["Dime
 ]
 
 QuditBasisProp[qb_, "RemoveIdentities"] := QuditBasis[
-    (QuditBasisName @@ Delete[Normal[#], Position[qb["Dimensions"], 1]])["Group"] & /@ qb["Names"],
+    (QuditName @@ Delete[Normal[#], Position[qb["Dimensions"], 1]])["Group"] & /@ qb["Names"],
     Select[qb["Representations"], TensorRank[#] > 0 &]
 ]
 
@@ -186,7 +186,7 @@ QuditBasisProp[qb_, {"Split", __}] /; qb["Qudits"] == 0 := {QuditBasis[], QuditB
 
 QuditBasisProp[qb_, {"Split", n_Integer ? NonNegative, m_ : None}] /; n <= qb["Qudits"] :=
     MapThread[QuditBasis,
-        {DeleteDuplicates /@ Transpose[(QuditBasisName @@ #)["Group"] & /@
+        {DeleteDuplicates /@ Transpose[(QuditName @@ #)["Group"] & /@
             TakeDrop[
                 If[ IntegerQ[m],
                     MapIndexed[If[Function[{from, to}, from <= First[#2] <= to] @@ If[n >= m, {m + 1, n}, {n + 1, m}], #1["Dual"], #1] &, Normal @ #],

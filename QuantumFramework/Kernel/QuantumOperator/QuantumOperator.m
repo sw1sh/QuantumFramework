@@ -71,7 +71,7 @@ QuantumOperator[assoc_Association, args___, order : (_ ? orderQ) : {1}] := Enclo
     tensorDimensions
 },
     quditBasis = QuditBasis[
-        QuditBasisName /@ Keys[assoc],
+        QuditName /@ Keys[assoc],
         Association @ Catenate @ MapIndexed[
             With[{counts = #1, i = First[#2]}, MapIndexed[{#1, i} -> UnitVector[Max[counts], First[#2]] &, Keys @ counts]] &,
             Counts /@ Transpose[ConfirmBy[Keys[assoc], MatrixQ]]

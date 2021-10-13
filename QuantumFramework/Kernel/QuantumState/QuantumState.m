@@ -41,9 +41,9 @@ QuantumState[state_ ? AssociationQ, basisArgs___] /; VectorQ[Values[state]] := E
     basis = ConfirmBy[QuantumBasis[basisArgs], QuantumBasisQ], multiplicity},
     multiplicity = basisMultiplicity[Length[state], basis["Dimension"]];
     basis = ConfirmBy[QuantumBasis[basis, multiplicity], QuantumBasisQ];
-    ConfirmAssert[ContainsOnly[QuditBasisName /@ Keys[state], basis["ElementNames"]], "Association keys and basis names don't match"];
+    ConfirmAssert[ContainsOnly[QuditName /@ Keys[state], basis["ElementNames"]], "Association keys and basis names don't match"];
     QuantumState[
-        Values @ KeyMap[QuditBasisName, state][[Key /@ basis["ElementNames"]]] /. _Missing -> 0,
+        Values @ KeyMap[QuditName, state][[Key /@ basis["ElementNames"]]] /. _Missing -> 0,
         basis
     ]
 ]
@@ -162,6 +162,11 @@ QuantumState /: (x : (_ ? NumericQ) | _Symbol) * (qs_QuantumState ? QuantumState
         x qs["State"],
         qs["Basis"]
     ]
+
+QuantumState /: (qs_QuantumState ? QuantumStateQ) ^ p_ := Enclose @ QuantumState[ConfirmBy[MatrixPower[qs["DensityMatrix"], p], MatrixQ], qs["Basis"]]
+
+QuantumState /: f_Symbol[qs_QuantumState] /; MemberQ[Attributes[f], NumericFunction] :=
+    Enclose @ QuantumState[ConfirmBy[MatrixFunction[f, qs["DensityMatrix"]], MatrixQ], qs["Basis"]]
 
 
 (* composition *)

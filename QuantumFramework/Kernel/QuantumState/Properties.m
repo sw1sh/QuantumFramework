@@ -192,7 +192,7 @@ QuantumStateProp[qs_, "SpectralBasis"] := QuantumState[
     QuantumBasis[Association @ Catenate @ MapIndexed[
             If[ qs["InputDimension"] == 1,
                 Subscript["s", First @ #2],
-                QuditBasisName[QuditBasisName[Subscript["s", First @ #2]], QuditBasisName[Subscript["s", Last @ #2]]["Dual"]]
+                QuditName[QuditName[Subscript["s", First @ #2]], QuditName[Subscript["s", Last @ #2]]["Dual"]]
             ] -> #1 &,
             Partition[qs["Eigenvectors"], qs["InputDimension"]],
             {2}
