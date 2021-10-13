@@ -130,17 +130,20 @@ QuditBasisProp[qb_, "Qudits"] := If[Length[qb["Names"]] > 0, First[qb["Names"]][
 
 QuditBasisProp[qb_, "ElementDimensions"] := Dimensions @ First[MaximalBy[qb["Elements"], ArrayDepth], 0]
 
-QuditBasisProp[qb_, "ElementDimension"] := Times @@ qb["ElementDimensions"]
+QuditBasisProp[qb_, "ElementDimension"] := If[qb["Size"] > 0, Times @@ qb["ElementDimensions"], 0]
 
-QuditBasisProp[qb_, "Rank"] := Length @ qb["ElementDimensions"]
+QuditBasisProp[qb_, "Rank"] := If[qb["Size"] > 0, Length @ qb["ElementDimensions"], 0]
 
-QuditBasisProp[qb_, "Dimension"] := Times @@ qb["Dimensions"]
+QuditBasisProp[qb_, "Dimension"] := If[qb["Size"] > 0, Times @@ qb["Dimensions"], 0]
 
 QuditBasisProp[qb_, "MatrixDimensions"] := {qb["ElementDimension"], qb["Dimension"]}
 
 QuditBasisProp[qb_, "TensorDimensions"] := Join[qb["ElementDimensions"], qb["Dimensions"]]
 
-QuditBasisProp[qb_, "Tensor"] := ArrayReshape[Transpose[qb["Elements"], Cycles[{RotateRight @ Range[qb["Rank"] + 1, 1 , -1]}]], qb["TensorDimensions"]]
+QuditBasisProp[qb_, "Tensor"] := If[qb["Rank"] > 0,
+    ArrayReshape[Transpose[qb["Elements"], Cycles[{RotateRight @ Range[qb["Rank"] + 1, 1 , -1]}]], qb["TensorDimensions"]],
+    {}
+]
 
 QuditBasisProp[qb_, "Matrix"] := ArrayReshape[qb["Tensor"], qb["MatrixDimensions"]]
 

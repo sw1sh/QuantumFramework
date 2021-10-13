@@ -93,18 +93,18 @@ QuantumBasisProp[qb_, "OutputBasisElementDimensions"] := qb["Output"]["ElementDi
 QuantumBasisProp[qb_, "BasisElementDimensions"] := Join[qb["OutputBasisElementDimensions"], qb["InputBasisElementDimensions"]]
 
 
-QuantumBasisProp[qb_, "InputBasisElementDimension"] := Times @@ qb["InputBasisElementDimensions"]
+QuantumBasisProp[qb_, "InputBasisElementDimension"] := qb["Input"]["BasisElementDimensions"]
 
-QuantumBasisProp[qb_, "OutputBasisElementDimension"] := Times @@ qb["OutputBasisElementDimensions"]
+QuantumBasisProp[qb_, "OutputBasisElementDimension"] := qb["Output"]["BasisElementDimensions"]
 
-QuantumBasisProp[qb_, "BasisElementDimension"] := Times @@ qb["BasisElementDimensions"]
+QuantumBasisProp[qb_, "BasisElementDimension"] := qb["OutputBasisElementDimension"] qb["InputBasisElementDimension"]
 
 
-QuantumBasisProp[qb_, "InputRank"] := Length[qb["InputBasisElementDimensions"]]
+QuantumBasisProp[qb_, "InputRank"] := qb["Input"]["Rank"]
 
-QuantumBasisProp[qb_, "OutputRank"] := Length[qb["OutputBasisElementDimensions"]]
+QuantumBasisProp[qb_, "OutputRank"] := qb["Output"]["Rank"]
 
-QuantumBasisProp[qb_, "Rank"] := Length[qb["BasisElementDimensions"]]
+QuantumBasisProp[qb_, "Rank"] := qb["OutputRank"] + qb["InputRank"]
 
 
 QuantumBasisProp[qb_, "Type"] := Switch[qb["Rank"], 0, "Scalar", 1, "Vector", 2, "Matrix", _, "Tensor"]
@@ -124,11 +124,11 @@ QuantumBasisProp[qb_, "OutputNameDimensions" | "OutputDimensions"] := qb["Output
 QuantumBasisProp[qb_, "NameDimensions" | "Dimensions"] := DeleteCases[Join[qb["OutputNameDimensions"], qb["InputNameDimensions"]], 1]
 
 
-QuantumBasisProp[qb_, "InputNameDimension" | "InputDimension"] := Times @@ qb["InputNameDimensions"]
+QuantumBasisProp[qb_, "InputNameDimension" | "InputDimension"] := qb["Input"]["Dimension"]
 
-QuantumBasisProp[qb_, "OutputNameDimension" | "OutputDimension"] := Times @@ qb["OutputNameDimensions"]
+QuantumBasisProp[qb_, "OutputNameDimension" | "OutputDimension"] := qb["Output"]["Dimension"]
 
-QuantumBasisProp[qb_, "NameDimension" | "Dimension"] := Times @@ qb["NameDimensions"]
+QuantumBasisProp[qb_, "NameDimension" | "Dimension"] := qb["OutputDimension"] qb["InputDimension"]
 
 
 QuantumBasisProp[qb_, "MatrixNameDimensions"] := {qb["OutputNameDimension"], qb["InputNameDimension"]}
