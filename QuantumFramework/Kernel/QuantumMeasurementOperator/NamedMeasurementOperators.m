@@ -55,12 +55,12 @@ QuantumMeasurementOperator[
 ]
 
 
-QuantumMeasurementOperator["BellBasis", target : (_ ? orderQ) : {1}] :=
-    QuantumMeasurementOperator["BellBasis" -> Range[0, (4 ^ Length[target]) - 1], target]
+QuantumMeasurementOperator["BellBasis", args___, target : (_ ? orderQ) : {1}] :=
+    QuantumMeasurementOperator["BellBasis" -> Range[0, (4 ^ Length[target]) - 1], args, target]
 
 QuantumMeasurementOperator["BellBasis" -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : {1}] :=
     QuantumMeasurementOperator[
-        QuantumOperator[eigenvalues . QuantumBasis["Bell", Length[target]]["Projectors"], 4, Length[target], target],
+        QuantumOperator[QuantumOperator[eigenvalues . QuantumBasis["Bell", Length[target]]["Projectors"], 4, Length[target]], target],
         args, "Label" -> "Bell",
         target
     ]

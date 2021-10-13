@@ -26,7 +26,10 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args : PatternSeq
     QuantumMeasurementOperator[QuantumOperator[qmo["Operator"], args], qmo["Target"]]
 
 QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args___, target_ ? orderQ] :=
-    QuantumMeasurementOperator[QuantumOperator[qmo["Operator"], args], target]
+    QuantumMeasurementOperator[
+        If[ContainsAll[qmo["Operator"]["InputOrder"], target], QuantumOperator[qmo["Operator"], args], QuantumOperator[qmo["Operator"], args, target]],
+        target
+    ]
 
 
 QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumOperatorQ], ___]] :=
