@@ -9,7 +9,7 @@ $QuantumOperatorProperties = {
     "InputOrder", "OutputOrder",
     "MatrixRepresentation", "Matrix",
     "TensorRepresentation", "Tensor",
-    "Ordered", "OrderedInput", "OrderedOutput", "SortInput",
+    "Ordered", "OrderedInput", "OrderedOutput", "SortInput", "SortOutput", "Sort",
     "OrderedMatrixRepresentation", "OrderedMatrix",
     "OrderedTensorRepresentation", "OrderedTensor",
     "Arity", "MaxArity", "FullArity", "Range", "FullInputOrder", "InputQuditOrder", "OutputQuditOrder",
@@ -184,7 +184,9 @@ QuantumOperatorProp[qo_, "SortOutput"] := QuantumOperator[qo[{
 QuantumOperatorProp[qo_, "Sort"] := qo["SortOutput"]["SortInput"]
 
 
-QuantumOperatorProp[qo_, "Ordered"] := qo[{"OrderedInput", Sort @ qo["FullInputOrder"]}]
+QuantumOperatorProp[qo_, "Ordered" | "OrderedInput"] := qo[{"OrderedInput", Sort @ qo["FullInputOrder"]}]
+
+QuantumOperatorProp[qo_, "OrderedOutput"] := qo[{"OrderedOutput", Sort @ qo["FullOutputOrder"]}]
 
 QuantumOperatorProp[qo_, {"Ordered", from_Integer, to_Integer}] := qo[{"Ordered", Range[from, to]}]
 
@@ -207,7 +209,7 @@ QuantumOperatorProp[qo_, {"OrderedInput", order_ ? orderQ}] := Enclose @ With[{
     ]
 ]
 
-QuantumOperatorProp[qo_, {"OrderedOutput", order_ ? orderQ}] := ConfirmAssert @ With[{
+QuantumOperatorProp[qo_, {"OrderedOutput", order_ ? orderQ}] := Enclose @ With[{
     dimensions = qo["OutputDimensions"]
 },
     ConfirmAssert[Length[order] <= Length[dimensions], "Not enough output dimensions to order"];
@@ -271,7 +273,7 @@ QuantumOperatorProp[qo_, "Projectors"] := projector /@ qo["Eigenvectors"]
 QuantumOperatorProp[qo_, "Dagger" | "ConjugateTranspose"] := QuantumOperator[
     ConjugateTranspose[qo["Matrix"]], qo["Basis"]["Dagger"], qo["OutputOrder"], qo["InputOrder"]]
 
-QuantumOperatorProp[qo_, "Dual"] := QuantumOperator[Conjugate[qo["Matrix"]], qo["Basis"]["Dual"], qo["Order"]]
+QuantumOperatorProp[qo_, "Dual"] := QuantumOperator[QuantumOperator[Conjugate[qo["Matrix"]], qo["Basis"]["Dual"]], qo["Order"]]
 
 
 (* state properties *)

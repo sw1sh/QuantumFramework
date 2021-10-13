@@ -12,7 +12,7 @@ PacletObject[
         "Root" -> "Kernel",
         "Context" -> "Wolfram`QuantumFramework`",
         "Symbols" -> {
-            "Wolfram`QuantumFramework`QuantumBasisName",
+            "Wolfram`QuantumFramework`QuditName",
             "Wolfram`QuantumFramework`QuditBasis",
             "Wolfram`QuantumFramework`QuantumBasis",
             "Wolfram`QuantumFramework`QuantumState",

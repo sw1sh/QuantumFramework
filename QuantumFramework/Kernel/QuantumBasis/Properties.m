@@ -147,7 +147,7 @@ QuantumBasisProp[qb_, "OutputBasis"] := QuantumBasis[qb, "Input" -> QuditBasis[]
 QuantumBasisProp[qb_, "HasInputQ"] := qb["InputDimension"] > 1
 
 
-QuantumBasisProp[qb_, "OrthogonaElements"] := ArrayReshape[#, qb["ElementDimensions"]] & /@ (
+QuantumBasisProp[qb_, "OrthogonalElements"] := ArrayReshape[#, qb["ElementDimensions"]] & /@ (
     Orthogonalize[Flatten /@ qb["Elements"]]
 )
 
