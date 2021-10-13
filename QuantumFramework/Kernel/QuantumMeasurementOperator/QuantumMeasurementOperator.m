@@ -32,6 +32,12 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args___, target_ 
     ]
 
 
+QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumOperatorQ], ___], target_ ? orderQ] :=
+    Enclose @ QuantumMeasurementOperator[
+        ConfirmBy[QuantumOperator[args], QuantumOperatorQ],
+        target
+    ]
+
 QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumOperatorQ], ___]] :=
     Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumOperator[args], QuantumOperatorQ]]
 

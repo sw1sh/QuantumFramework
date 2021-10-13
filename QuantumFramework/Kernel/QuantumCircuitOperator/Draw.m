@@ -113,9 +113,9 @@ drawMeasurementGate[coordinates_List, order_List, scaling_, name_] := Module[{wi
 drawMeasurement[coordinates_] := Module[{width = 4},
     Graphics[{
         Thick,
-        Line[{coordinates + {.125, width / 2}, coordinates {1, 0}  + {.125, - 1}}],
-        Line[{coordinates + {-.125, width / 2}, coordinates {1, 0} + {-.125, - 1}}],
-        Polygon[coordinates {1, 0} + {0, - 1.25} + # & /@ {{-.75, 0}, {.75, 0}, {0, 1.25}}]
+        Line[{coordinates + {.125, width / 2 + 0.05}, coordinates {1, 0}  + {.125, - 1}}],
+        Line[{coordinates + {-.125, width / 2 + 0.05}, coordinates {1, 0} + {-.125, - 1}}],
+        Polygon[coordinates {1, 0} + {0, - 1.4} + # & /@ {{-.75, 0}, {.75, 0}, {0, 1.25}}]
     }
     ]
 ]
