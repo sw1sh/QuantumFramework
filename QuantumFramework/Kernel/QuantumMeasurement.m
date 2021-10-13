@@ -91,7 +91,7 @@ QuantumMeasurementProp[qm_, "States"] := If[MatchQ[qm["Label"], "Computational"[
 QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
     If[MatchQ[qm["Label"], "Computational"[_]], qm["Eigenstate"]["Computational"], qm["Eigenstate"]]["Probabilities"]
 
-QuantumMeasurementProp[qm_, "Eigenvalues"] := qm["Eigenstate"]["BasisElementNames"]
+QuantumMeasurementProp[qm_, "Eigenvalues"] := qm["Eigenstate"]["ElementNames"]
 
 QuantumMeasurementProp[qm_, "Outcomes"] :=
     If[MatchQ[qm["Label"], "Computational"[_]], QuditBasis[qm["InputDimensions"][[ qm["Target"] ]]]["Names"], qm["Eigenvalues"]]

@@ -41,9 +41,9 @@ QuantumState[state_ ? AssociationQ, basisArgs___] /; VectorQ[Values[state]] := E
     basis = ConfirmBy[QuantumBasis[basisArgs], QuantumBasisQ], multiplicity},
     multiplicity = basisMultiplicity[Length[state], basis["Dimension"]];
     basis = ConfirmBy[QuantumBasis[basis, multiplicity], QuantumBasisQ];
-    ConfirmAssert[ContainsOnly[QuditBasisName /@ Keys[state], basis["BasisElementNames"]], "Association keys and basis names don't match"];
+    ConfirmAssert[ContainsOnly[QuditBasisName /@ Keys[state], basis["ElementNames"]], "Association keys and basis names don't match"];
     QuantumState[
-        Values @ KeyMap[QuditBasisName, state][[Key /@ basis["BasisElementNames"]]] /. _Missing -> 0,
+        Values @ KeyMap[QuditBasisName, state][[Key /@ basis["ElementNames"]]] /. _Missing -> 0,
         basis
     ]
 ]
@@ -94,7 +94,7 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; ! newBasis["Sort
 
 QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Basis"] == newBasis := QuantumState[qs["State"], newBasis]
 
-QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["BasisElementDimension"] === newBasis["BasisElementDimension"] := Switch[
+QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["ElementDimension"] == newBasis["ElementDimension"] := Switch[
     qs["StateType"],
     "Vector",
     QuantumState[

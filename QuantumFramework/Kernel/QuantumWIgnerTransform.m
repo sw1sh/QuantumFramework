@@ -9,10 +9,10 @@ Options[QuantumWignerTransform] = {"Exact" -> True}
 QuantumWignerTransform[qb_ ? QuditBasisQ, OptionsPattern[]] /; qb["Dimension"] == 1 := qb
 
 QuantumWignerTransform[qb_ ? QuditBasisQ, OptionsPattern[]] := Module[{
-    basisElements = qb["Association"], newDimensionality, positionBasis, momentumBasis, kernelElement
+    representations = qb["Association"], newDimensionality, positionBasis, momentumBasis, kernelElement
 },
     newDimensionality = qb["Dimension"];
-    positionBasis = {#} & /@ Normal[Flatten /@ basisElements];
+    positionBasis = {#} & /@ Normal[Flatten /@ representations];
     If[ !TrueQ[OptionValue["Exact"]],
         positionBasis = N @ positionBasis
     ];
@@ -81,7 +81,7 @@ QuantumWignerTransform[qs_ ? QuantumStateQ, opts : OptionsPattern[]] := With[{
 },
     QuantumState[
         QuantumState[
-            Tr[densityMatrix . ArrayReshape[#, Times @@@ Partition[Dimensions[#], Length[#] / 2]]] / basis["Dimension"] & /@ basis["BasisElements"] // Simplify,
+            Tr[densityMatrix . ArrayReshape[#, Times @@@ Partition[Dimensions[#], Length[#] / 2]]] / basis["Dimension"] & /@ basis["Elements"] // Simplify,
             QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
         ],
         basis
