@@ -58,22 +58,30 @@ QuantumMeasurementOperator[
 QuantumMeasurementOperator["BellBasis", args___, target : (_ ? orderQ) : {1}] :=
     QuantumMeasurementOperator["BellBasis" -> Range[0, (4 ^ Length[target]) - 1], args, target]
 
-QuantumMeasurementOperator["BellBasis" -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : {1}] :=
+QuantumMeasurementOperator["BellBasis" -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : {1}] := With[{
+    basis = QuantumBasis["Bell", Length[target]]
+},
     QuantumMeasurementOperator[
-        QuantumOperator[QuantumOperator[eigenvalues . QuantumBasis["Bell", Length[target]]["Projectors"], 4, Length[target]], target],
-        args, "Label" -> "Bell",
+        QuantumOperator[QuantumOperator[eigenvalues . basis["Projectors"], basis], target],
+        args,
+        "Label" -> "Bell",
         target
     ]
+]
 
 
 QuantumMeasurementOperator[name : "PauliXBasis" | "PauliYBasis" | "PauliZBasis", args___, target : (_ ? orderQ) : {1}] :=
     QuantumMeasurementOperator[name -> Range[0, (2 ^ Length[target]) - 1], args, target]
 
 QuantumMeasurementOperator[name : "PauliXBasis" | "PauliYBasis" | "PauliZBasis" -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : {1}] :=
+With[{basis = QuantumBasis[StringDelete[name, "Basis"], Length[target]]},
     QuantumMeasurementOperator[
-        QuantumOperator[eigenvalues . QuantumBasis[StringDelete[name, "Basis"], Length[target]]["Projectors"], 2, Length[target], target], args,
-        "Label" -> StringDelete[name, "Pauli" | "Basis"], target
+        QuantumOperator[eigenvalues . basis["Projectors"], basis, target],
+        args,
+        "Label" -> StringDelete[name, "Pauli" | "Basis"],
+        target
     ]
+]
 
 
  QuantumMeasurementOperator["FourierBasis", args___] := QuantumMeasurementOperator[{"FourierBasis"}, args]
@@ -81,9 +89,16 @@ QuantumMeasurementOperator[name : "PauliXBasis" | "PauliYBasis" | "PauliZBasis" 
 QuantumMeasurementOperator[{"FourierBasis", dimension_Integer : 2}, args___, target : (_ ? orderQ) : {1}] :=
     QuantumMeasurementOperator[{"FourierBasis", dimension} -> Range[0, (dimension ^ Length[target]) - 1], args, target]
 
-QuantumMeasurementOperator[{"FourierBasis", dimension_Integer : 2} -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : {1}] :=
+QuantumMeasurementOperator[{"FourierBasis", dimension_Integer : 2} -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : {1}] := With[{
+    basis = QuantumBasis[{"Fourier", dimension}, Length[target]]
+},
     QuantumMeasurementOperator[
-        QuantumOperator[eigenvalues . QuantumBasis[{"Fourier", dimension}, Length[target]]["Projectors"], dimension, target], args, "Label" -> "F", target]
+        QuantumOperator[eigenvalues . basis["Projectors"], basis, target],
+        args,
+        "Label" -> "F",
+        target
+    ]
+]
 
 
 QuantumMeasurementOperator["RandomHermitian", args___] := QuantumMeasurementOperator[{"RandomHermitian", 2}, args]
@@ -108,9 +123,11 @@ QuantumMeasurementOperator[matrix_ ? MatrixQ -> eigenvalues_ ? VectorQ, args___,
 
 QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : {1}] :=
     QuantumMeasurementOperator[
-        QuantumOperator[eigenvalues . qb["Projectors"],
-        qb,
-        Range[If[qb["HasInputQ"], qb["InputQudits"], qb["OutputQudits"]]]],
+        QuantumOperator[
+            eigenvalues . qb["Projectors"],
+            qb,
+            Range[If[qb["HasInputQ"], qb["InputQudits"], qb["OutputQudits"]]]
+        ],
         args,
         target
     ]
