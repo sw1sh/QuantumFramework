@@ -211,3 +211,5 @@ QuditBasis[{"Wigner", qb_QuditBasis /; QuditBasisQ[qb]}, args___] := Module[{
         ]
 ]
 
+QuditBasis[nameArg_ ? nameQ, args___] := QuditBasis[nameArg /. name_String :> StringDelete[name, "Basis"], args]
+

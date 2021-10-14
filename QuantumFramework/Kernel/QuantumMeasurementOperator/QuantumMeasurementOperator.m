@@ -13,12 +13,29 @@ QuantumMeasurementOperatorQ[___] := False
 
 (* constructors *)
 
+QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : {1}] :=
+    QuantumMeasurementOperator[
+        QuantumOperator[
+            PadRight[eigenvalues, qb["Dimension"]] . qb["Projectors"],
+            qb,
+            args,
+            Join[target, Complement[Min[target] - 1 + Range[If[qb["HasInputQ"], qb["InputQudits"], qb["OutputQudits"]]], target]]
+        ],
+        target
+    ]
+
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args : PatternSequence[] | PatternSequence[___, Except[_ ? orderQ]]] :=
     QuantumMeasurementOperator[QuantumOperator[qo, args, qo["FullInputOrder"], qo["OutputOrder"]], qo["InputOrder"]]
 
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args__, target_ ? orderQ] :=
     QuantumMeasurementOperator[QuantumOperator[qo, args], target]
 
+QuantumMeasurementOperator[args : PatternSequence[] | PatternSequence[Except[_ ? QuantumOperatorQ], ___], target : (_ ? orderQ) : {1}] :=
+Enclose @ With[{
+    basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ]
+},
+    QuantumMeasurementOperator[basis -> Range[0, basis["Dimension"] - 1], target]
+]
 
 (* mutation *)
 
@@ -31,18 +48,8 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args___, target_ 
         target
     ]
 
-
-QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumOperatorQ], ___], target_ ? orderQ] :=
-    Enclose @ QuantumMeasurementOperator[
-        ConfirmBy[QuantumOperator[args], QuantumOperatorQ],
-        target
-    ]
-
-QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumOperatorQ], ___]] :=
-    Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumOperator[args], QuantumOperatorQ]]
-
-
-QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? orderQ] /; ! ContainsAll[qo["FullInputOrder"], target] :=
+(* auto reassign bad target *)
+QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? orderQ] /; !ContainsAll[qo["FullInputOrder"], target] :=
     QuantumMeasurementOperator[qo, qo["FullInputOrder"]]
 
 

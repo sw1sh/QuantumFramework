@@ -95,6 +95,9 @@ QuantumOperator[assoc_Association, args___, order : (_ ? orderQ) : {1}] := Enclo
 
 QuantumOperator::invalidState = "invalid state specification";
 
+QuantumOperator[matrix_ ? MatrixQ, args___, order : {_ ? orderQ, _ ? orderQ}] :=
+    QuantumOperator[QuantumOperator[matrix, args]["State"], order]
+
 QuantumOperator[matrix_ ? MatrixQ, args___, order_ ? orderQ] := QuantumOperator[QuantumOperator[matrix, args]["State"], {Automatic, order}]
 
 QuantumOperator[matrix_ ? MatrixQ, args : PatternSequence[] | PatternSequence[___, Except[_ ? orderQ]]] := Module[{
@@ -169,7 +172,7 @@ QuantumOperator[qo_ ? QuantumOperatorQ] := qo["Computational"]
 QuantumOperator[qo_ ? QuantumOperatorQ, name_ ? nameQ, args___] := QuantumOperator[qo, QuantumBasis[name], args]
 
 
-QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ, args___, order : {_, _}] := Enclose @ Module[{
+QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ, args___, order : _ ? orderQ | {_ ? orderQ, _ ? orderQ}] := Enclose @ Module[{
     newBasis
 },
     newBasis = If[

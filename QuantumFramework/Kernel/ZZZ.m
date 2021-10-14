@@ -1,5 +1,14 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageScope["$QuantumMeasurementOperatorNames"]
+
+
+$QuantumMeasurementOperatorNames = Join[
+    $QuditBasisNames,
+    {
+       "RandomHermitian"
+    }
+]
 
 
 If[ $Notebooks,
