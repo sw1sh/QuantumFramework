@@ -109,7 +109,8 @@ QuantumMeasurementOperator[{"RandomHermitian", dimension_Integer : 2}, args___, 
             Table[
                 RandomReal[NormalDistribution[0, 1 / 2]] + I RandomReal[NormalDistribution[0, 1 / 2]],
                 dimension ^ Length[target], dimension ^ Length[target]
-            ]
+            ],
+            target
         ],
             dimension,
             target
@@ -126,7 +127,7 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, args__
         QuantumOperator[
             eigenvalues . qb["Projectors"],
             qb,
-            Range[If[qb["HasInputQ"], qb["InputQudits"], qb["OutputQudits"]]]
+            Join[target, Complement[Min[target] - 1 + Range[If[qb["HasInputQ"], qb["InputQudits"], qb["OutputQudits"]]], target]]
         ],
         args,
         target
