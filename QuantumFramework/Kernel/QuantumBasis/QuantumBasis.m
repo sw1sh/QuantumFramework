@@ -103,7 +103,11 @@ QuantumBasis[qb_ ? QuantumBasisQ, multiplicity_Integer, args___] := QuantumBasis
     args
 ]
 
-QuantumBasis[param : (_ ? nameQ) | _Integer, args___] := QuantumBasis[<|"Output" -> QuditBasis[param]|>, args]
+QuantumBasis[param : name_String | {name_String, ___}, args___] :=
+    QuantumBasis[<|"Output" -> QuditBasis[param], "Label" -> StringDelete[name, "Basis"]|>, args]
+
+QuantumBasis[param : _ ? nameQ | _Integer, args___] :=
+    QuantumBasis[<|"Output" -> QuditBasis[param]|>, args]
 
 QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) | _Rule) ...] := QuantumBasis["Computational", args]
 
