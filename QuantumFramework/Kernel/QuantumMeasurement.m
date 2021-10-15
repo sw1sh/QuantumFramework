@@ -101,7 +101,7 @@ QuantumMeasurementProp[qm_, "Outcomes"] :=
 
 QuantumMeasurementProp[qm_, "Distribution"] := CategoricalDistribution[
     qm["Outcomes"],
-    qm["ProbabilitiesList"]
+    Chop @ qm["ProbabilitiesList"]
 ]
 
 QuantumMeasurementProp[qm_, "DistributionInformation", args___] := Information[qm["Distribution"], args]

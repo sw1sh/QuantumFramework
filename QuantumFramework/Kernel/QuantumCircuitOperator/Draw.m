@@ -156,9 +156,9 @@ drawGateGraphics[gates_List] := Module[{
     index = 1;
     positionIndices = ConstantArray[1, Max[Flatten[orders]]];
     Do[
-    gatePositionIndices = Table[positionIndices[[j]], {j, Min[orders[[i]]], Max[orders[[i]]]}];
-
+    
     If[ QuantumMeasurementOperatorQ[gates[[i]]],
+        gatePositionIndices = Table[Max[positionIndices], {j, Min[orders[[i]]], Max[orders[[i]]]}];
         includeMeasurement = True;
         Which[
             gates[[i]]["POVMQ"],
@@ -175,10 +175,10 @@ drawGateGraphics[gates_List] := Module[{
             ]
         ];
         AppendTo[graphicsList, drawMeasurement[{-2 + 6 Max[gatePositionIndices], - 5 Min[orders[[i]]]}]];
-        positionIndices = positionIndices + 1;
+        positionIndices = ConstantArray[Max[positionIndices] + 1, Length[positionIndices]];
     ];
     If[ QuantumOperatorQ[gates[[i]]],
-
+        gatePositionIndices = Table[positionIndices[[j]], {j, Min[orders[[i]]], Max[orders[[i]]]}];
         If[ MatchQ[gates[[i]]["Label"], "CX" | "CY" | "CZ" | "CNOT" | "CPHASE" | "CSWAP" | "Controlled"[__]],
             If[ MatchQ[gates[[i]]["Label"], "Controlled"[__]],
                 controlQuditsOrder = If[Length[gates[[i]]["Label"]] > 1, gates[[i]]["Label"][[2]], orders[[i]][[;; 1]]];

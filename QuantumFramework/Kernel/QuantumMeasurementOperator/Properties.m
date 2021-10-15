@@ -44,6 +44,8 @@ QuantumMeasurementOperatorProp[_[_, target_], "Target"] := target
 
 QuantumMeasurementOperatorProp[qmo_, "Targets"] := Length[qmo["Target"]]
 
+QuantumMeasurementOperatorProp[qmo_, "Eigenqudits"] := If[qmo["POVMQ"], qmo["OutputQudits"] - qmo["InputQudits"], 1]
+
 QuantumMeasurementOperatorProp[qmo_, "Type"] := Which[
     qmo["OutputQudits"] == qmo["InputQudits"],
     "Projection",

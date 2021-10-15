@@ -17,11 +17,14 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, args__
     QuantumMeasurementOperator[
         ConfirmBy[
             QuantumOperator[
-                PadRight[eigenvalues, qb["Dimension"]] . qb["Projectors"],
+                QuantumOperator[
+                    PadRight[eigenvalues, qb["Dimension"]] . qb["Projectors"],
+                    QuantumBasis[qb["OutputDimensions"], qb["InputDimensions"]],
+                    args
+                ],
                 qb,
-                args,
                 With[{order = Join[target, Complement[Max[target] + 1 - Range[If[qb["HasInputQ"], qb["InputQudits"], qb["OutputQudits"]]], target]]},
-                    order + Max[1 - order, 0]
+                    Sort[order + Max[1 - order, 0]]
                 ]
             ],
             QuantumOperatorQ
@@ -36,18 +39,29 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args : PatternSequence[] | Pa
     QuantumMeasurementOperator[QuantumOperator[qo, args, qo["FullInputOrder"], qo["OutputOrder"]], qo["InputOrder"]]
 
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args__, target_ ? orderQ] :=
-    QuantumMeasurementOperator[QuantumOperator[qo, args], target]
+    QuantumMeasurementOperator[
+        With[{op = QuantumOperator[qo, args]},
+            QuantumOperator[op, Sort @ Join[target, Complement[op["InputQuditOrder"] + Min[target] - 1, target]]]
+        ],
+        target
+    ]
 
-QuantumMeasurementOperator[tensor_ ? TensorQ, args___] :=
+QuantumMeasurementOperator[tensor_ ? TensorQ /; 2 <= TensorRank[tensor] <= 3, args___] :=
     QuantumMeasurementOperator[QuantumOperator[tensor], args]
 
-QuantumMeasurementOperator[tensor_ ? TensorQ, qb_ ? QuantumBasisQ, args___] :=
+QuantumMeasurementOperator[tensor_ ? TensorQ /; 2 <= TensorRank[tensor] <= 3, qb_ ? QuantumBasisQ, args___] :=
     QuantumMeasurementOperator[QuantumOperator[tensor, qb], args]
 
-QuantumMeasurementOperator[args : PatternSequence[] | PatternSequence[Except[_ ? QuantumOperatorQ | _ ? QuantumBasisQ | _ ? TensorQ], ___], target : (_ ? orderQ) : {1}] :=
-Enclose @ With[{
+QuantumMeasurementOperator[
+    args : PatternSequence[] | 
+        PatternSequence[Except[_ ? QuantumOperatorQ | (tensor_ ? TensorQ /; 2 <= TensorRank[tensor] <= 3)], ___],
+    target : (_ ? orderQ) : {1}] :=
+Enclose @ Module[{
     basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ]
 },
+    If[ basis["Qudits"] < Length[target],
+        basis = QuantumBasis[basis, Ceiling[Length[target] / basis["Qudits"]]]
+    ];
     QuantumMeasurementOperator[basis -> Range[0, basis["Dimension"] - 1], target]
 ]
 
@@ -65,17 +79,18 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args___, target_ 
 
 (* auto reassign bad target *)
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? orderQ] /; !ContainsAll[qo["FullInputOrder"], target] :=
-    QuantumMeasurementOperator[qo, qo["FullInputOrder"]]
+    QuantumMeasurementOperator[
+        QuantumOperator[qo, Automatic, Join[target, Complement[qo["InputQuditOrder"] + Min[target] - 1, target]]],
+        target
+    ]
 
 
 (* composition *)
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qs_ ? QuantumStateQ] := Enclose @ With[{
-    qudits = If[qmo["POVMQ"], qmo["Targets"], 1],
+    qudits = qmo["Eigenqudits"],
     op = qmo["SuperOperator"]
 },
-    ConfirmAssert[qs["OutputQudits"] >= qmo["Targets"], "Not enough output qudits"];
-
     QuantumMeasurement[
         QuantumState[
             ConfirmBy[
@@ -100,7 +115,7 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? orderQ] /; !Contain
 },
     QuantumMeasurementOperator[
         QuantumOperator[op, {
-            ReplacePart[op["FullOutputOrder"], Thread[List /@ Range[qmo["Targets"]] -> qo["FirstOutputQudit"] - Reverse @ Range[qmo["Targets"]]]],
+            ReplacePart[op["FullOutputOrder"], Thread[List /@ Range[qmo["Eigenqudits"]] -> qo["FirstOutputQudit"] - Reverse @ Range[qmo["Eigenqudits"]]]],
             op["InputOrder"]
         }] @ qo,
         qmo["Target"]
@@ -115,19 +130,18 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? orderQ] /; !Contain
     top = qmo1["SuperOperator"];
     bottom = qmo2["SuperOperator"];
 
-    If[ top["FirstOutputQudit"] + qmo1["Targets"] - 1 <= bottom["FirstOutputQudit"] + qmo2["Targets"] - 1,
+    If[ top["FirstOutputQudit"] + qmo1["Eigenqudits"] <= bottom["FirstOutputQudit"] + qmo2["Eigenqudits"],
         bottom = QuantumOperator[bottom, {
-            ReplacePart[bottom["FullOutputOrder"], Thread[List /@ Range[qmo2["Targets"]] -> top["FirstOutputQudit"] - Reverse @ Range[qmo2["Targets"]]]],
+            ReplacePart[bottom["FullOutputOrder"], Thread[List /@ Range[qmo2["Eigenqudits"]] -> top["FirstOutputQudit"] - Reverse @ Range[qmo2["Eigenqudits"]]]],
             bottom["InputOrder"]
             }
         ],
         top = QuantumOperator[top, {
-            ReplacePart[top["FullOutputOrder"], Thread[List /@ Range[qmo1["Targets"]] -> bottom["FirstOutputQudit"] - Reverse @ Range[qmo1["Targets"]]]],
+            ReplacePart[top["FullOutputOrder"], Thread[List /@ Range[qmo1["Eigenqudits"]] -> bottom["FirstOutputQudit"] - Reverse @ Range[qmo1["Eigenqudits"]]]],
             top["InputOrder"]
             }
         ]
     ];
-
     QuantumMeasurementOperator[
         top[bottom] //
             (* permute two sets of measured qudits based on given operator targets, left-most first *)
