@@ -278,6 +278,9 @@ qo["Picture"] === qo["Picture"] && (
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qmo_ ? QuantumMeasurementOperatorQ] := QuantumMeasurementOperator[qo @ qmo["Operator"], qmo["Target"]]
 
+(qo_QuantumOperator ? QuantumOperatorQ)[qm_ ? QuantumMeasurementQ] :=
+    QuantumMeasurement[qm["Operator"][qo]["State"], qm["Target"]]
+
 
 (* equality *)
 

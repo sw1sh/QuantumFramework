@@ -270,8 +270,11 @@ QuantumOperatorProp[qo_, "Eigenvectors"] := eigenvectors[qo["MatrixRepresentatio
 
 QuantumOperatorProp[qo_, "Projectors"] := projector /@ qo["Eigenvectors"]
 
+QuantumOperatorProp[qo_, "Transpose"] := QuantumOperator[
+    Transpose[qo["Matrix"]], qo["Basis"]["Transpose"], {qo["InputOrder"], qo["OutputOrder"]}]
+
 QuantumOperatorProp[qo_, "Dagger" | "ConjugateTranspose"] := QuantumOperator[
-    ConjugateTranspose[qo["Matrix"]], qo["Basis"]["Dagger"], qo["OutputOrder"], qo["InputOrder"]]
+    ConjugateTranspose[qo["Matrix"]], qo["Basis"]["Dagger"], {qo["InputOrder"], qo["OutputOrder"]}]
 
 QuantumOperatorProp[qo_, "Dual"] := QuantumOperator[QuantumOperator[Conjugate[qo["Matrix"]], qo["Basis"]["Dual"]], qo["Order"]]
 

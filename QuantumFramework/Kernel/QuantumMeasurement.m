@@ -73,6 +73,9 @@ QuantumMeasurementProp[QuantumMeasurement[qs_, _], "State"] := qs
 
 QuantumMeasurementProp[QuantumMeasurement[_, target_], "Target"] := target
 
+QuantumMeasurementProp[qm_, "Operator"] := QuantumOperator[qm["State"], Range[1 - qm["Targets"], 0], Range[qm["InputQudits"]]]
+
+
 QuantumMeasurementProp[qm_, "Arity" | "Targets"] := Length @ qm["Target"]
 
 QuantumMeasurementProp[qm_, "Eigenstate"] := QuantumPartialTrace[qm["State"][{"Split", qm["Qudits"]}], qm["OutputQudits"] + Range[qm["InputQudits"]]]
