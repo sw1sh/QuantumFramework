@@ -73,8 +73,13 @@ QuditBasis[qb_QuditBasis] := qb
     args
 ]*)
 
-QuditBasis[assoc_Association, args___] := QuditBasis[Keys[assoc],
-    KeyMap[{If[MatchQ[#, _QuditName], #["Name"], #], 1} &, assoc], args]
+QuditBasis[assoc_Association, args___] := QuditBasis[
+    QuditBasis[
+        Keys[assoc],
+        KeyMap[{If[MatchQ[#, _QuditName], #["Name"], #], 1} &, assoc]
+    ],
+    args
+]
 
 QuditBasis[names : {Except[_Integer | (name_String | {name_String, ___} /; MemberQ[$QuditBasisNames, name])] ..}] :=
     QuditBasis[names, IdentityMatrix[Length[names]]]
@@ -265,7 +270,7 @@ QuditBasis[{name_String, params_List}, args___] := QuantumTensorProduct @@ (Qudi
 
 QuditBasis[params_List] := QuantumTensorProduct @@ (QuditBasis /@ params)
 
-QuditBasis[name : _String | {_String, Except[_List]} | _Integer, multiplicity_Integer ? Positive, args___] :=
+QuditBasis[name : _String | {_String, PatternSequence[] | PatternSequence[Except[_List], ___]} | _Integer, multiplicity_Integer ? Positive, args___] :=
     QuditBasis[QuditBasis[name, args], multiplicity, args]
 
 

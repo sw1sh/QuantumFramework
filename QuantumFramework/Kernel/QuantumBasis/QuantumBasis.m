@@ -79,7 +79,7 @@ QuantumBasis[elements_Association ? (Not @* KeyExistsQ["Output"]), args___] := Q
 
 QuantumBasis[output : _QuditBasis | _List, args___] := QuantumBasis["Output" -> QuditBasis[output], args]
 
-QuantumBasis[output : _QuditBasis | _List, input : _QuditBasis | _List | _Integer, args___] :=
+QuantumBasis[output : _QuditBasis | _List, input : _QuditBasis | _List, args___] :=
     QuantumBasis["Output" -> QuditBasis[output], "Input" -> QuditBasis[input]["Dual"], args]
 
 
@@ -100,6 +100,11 @@ QuantumBasis[qb_ ? QuantumBasisQ, 1, args___] := QuantumBasis[qb, args]
 QuantumBasis[qb_ ? QuantumBasisQ, multiplicity_Integer, args___] := QuantumBasis[qb,
     "Input" -> QuditBasis[qb["Input"], multiplicity],
     "Output" -> QuditBasis[qb["Output"], multiplicity],
+    args
+]
+
+QuantumBasis[arg_, multiplicity_Integer, args___] := QuantumBasis[
+    "Output" -> QuditBasis[arg, multiplicity],
     args
 ]
 
