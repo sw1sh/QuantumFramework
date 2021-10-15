@@ -20,7 +20,9 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, args__
                 PadRight[eigenvalues, qb["Dimension"]] . qb["Projectors"],
                 qb,
                 args,
-                Join[target, Complement[Min[target] - 1 + Range[If[qb["HasInputQ"], qb["InputQudits"], qb["OutputQudits"]]], target]]
+                With[{order = Join[target, Complement[Max[target] + 1 - Range[If[qb["HasInputQ"], qb["InputQudits"], qb["OutputQudits"]]], target]]},
+                    order + Max[1 - order, 0]
+                ]
             ],
             QuantumOperatorQ
         ],
@@ -36,10 +38,13 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args : PatternSequence[] | Pa
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args__, target_ ? orderQ] :=
     QuantumMeasurementOperator[QuantumOperator[qo, args], target]
 
-QuantumMeasurementOperator[matrix_ ? MatrixQ, qb_ ? QuantumBasisQ, args___] :=
-    QuantumMeasurementOperator[QuantumOperator[matrix, qb], args]
+QuantumMeasurementOperator[tensor_ ? TensorQ, args___] :=
+    QuantumMeasurementOperator[QuantumOperator[tensor], args]
 
-QuantumMeasurementOperator[args : PatternSequence[] | PatternSequence[Except[_ ? QuantumOperatorQ | _ ? QuantumBasisQ], ___], target : (_ ? orderQ) : {1}] :=
+QuantumMeasurementOperator[tensor_ ? TensorQ, qb_ ? QuantumBasisQ, args___] :=
+    QuantumMeasurementOperator[QuantumOperator[tensor, qb], args]
+
+QuantumMeasurementOperator[args : PatternSequence[] | PatternSequence[Except[_ ? QuantumOperatorQ | _ ? QuantumBasisQ | _ ? TensorQ], ___], target : (_ ? orderQ) : {1}] :=
 Enclose @ With[{
     basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ]
 },
