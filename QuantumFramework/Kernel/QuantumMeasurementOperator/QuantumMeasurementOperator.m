@@ -13,16 +13,22 @@ QuantumMeasurementOperatorQ[___] := False
 
 (* constructors *)
 
-QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : {1}] :=
+QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : {1}] := Enclose @
     QuantumMeasurementOperator[
-        QuantumOperator[
-            PadRight[eigenvalues, qb["Dimension"]] . qb["Projectors"],
-            qb,
-            args,
-            Join[target, Complement[Min[target] - 1 + Range[If[qb["HasInputQ"], qb["InputQudits"], qb["OutputQudits"]]], target]]
+        ConfirmBy[
+            QuantumOperator[
+                PadRight[eigenvalues, qb["Dimension"]] . qb["Projectors"],
+                qb,
+                args,
+                Join[target, Complement[Min[target] - 1 + Range[If[qb["HasInputQ"], qb["InputQudits"], qb["OutputQudits"]]], target]]
+            ],
+            QuantumOperatorQ
         ],
         target
     ]
+
+QuantumMeasurementOperator[arg_ -> eigenvalues_ ? VectorQ, args___] :=
+    Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumBasis[arg], QuantumBasisQ] -> eigenvalues, args]
 
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args : PatternSequence[] | PatternSequence[___, Except[_ ? orderQ]]] :=
     QuantumMeasurementOperator[QuantumOperator[qo, args, qo["FullInputOrder"], qo["OutputOrder"]], qo["InputOrder"]]
@@ -30,12 +36,16 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args : PatternSequence[] | Pa
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args__, target_ ? orderQ] :=
     QuantumMeasurementOperator[QuantumOperator[qo, args], target]
 
-QuantumMeasurementOperator[args : PatternSequence[] | PatternSequence[Except[_ ? QuantumOperatorQ], ___], target : (_ ? orderQ) : {1}] :=
+QuantumMeasurementOperator[matrix_ ? MatrixQ, qb_ ? QuantumBasisQ, args___] :=
+    QuantumMeasurementOperator[QuantumOperator[matrix, qb], args]
+
+QuantumMeasurementOperator[args : PatternSequence[] | PatternSequence[Except[_ ? QuantumOperatorQ | _ ? QuantumBasisQ], ___], target : (_ ? orderQ) : {1}] :=
 Enclose @ With[{
     basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ]
 },
     QuantumMeasurementOperator[basis -> Range[0, basis["Dimension"] - 1], target]
 ]
+
 
 (* mutation *)
 

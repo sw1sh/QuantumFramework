@@ -211,5 +211,6 @@ QuditBasis[{"Wigner", qb_QuditBasis /; QuditBasisQ[qb]}, args___] := Module[{
         ]
 ]
 
-QuditBasis[nameArg_ ? nameQ, args___] := QuditBasis[nameArg /. name_String :> StringDelete[name, "Basis"], args]
+QuditBasis[nameArg_ ? nameQ, args___] /; ! FreeQ[nameArg, _String ? (StringContainsQ["Basis"])] :=
+    QuditBasis[nameArg /. name_String :> StringDelete[Echo@name, "Basis"], args]
 
