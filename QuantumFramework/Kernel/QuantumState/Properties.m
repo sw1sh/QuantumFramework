@@ -17,7 +17,8 @@ $QuantumStateProperties = {
      "Eigenvalues", "Eigenvectors", "Eigenstates",
      "Computational", "SchmidtBasis", "SpectralBasis",
      "StateTensor", "StateMatrix",
-     "Tensor", "Matrix"
+     "Tensor", "Matrix",
+     "Pure", "Mixed"
 };
 
 QuantumState["Properties"] := QuantumState["Properties"] = DeleteDuplicates @ Join[$QuantumStateProperties, QuantumBasis["Properties"]]
@@ -213,7 +214,12 @@ QuantumStateProp[qs_, "Mixed"] := Which[
     qs["MixedStateQ"],
     qs,
     qs["PureStateQ"] && IntegerQ[Sqrt[qs["Dimension"]]],
-    QuantumState[ArrayReshape[qs["StateVector"], Table[Sqrt[qs["Dimension"]], 2]]],
+    With[{dimension = Sqrt[qs["Dimension"]]},
+        QuantumState[
+            ArrayReshape[qs["StateVector"], Table[dimension, 2]],
+            QuantumBasis @ qs["QuditBasis"][{"TakeDimension", dimension}]
+        ]
+    ],
     True,
     $Failed
 ]
@@ -277,7 +283,17 @@ QuantumStateProp[qs_, "StateTensor"] := If[
     ArrayReshape[qs["DensityMatrix"], Join[qs["Dimensions"], qs["Dimensions"]]]
 ]
 
-QuantumStateProp[qs_, "StateMatrix"] := If[qs["PureStateQ"], ArrayReshape[qs["StateVector"], qs["MatrixNameDimensions"]], qs["DensityMatrix"]]
+QuantumStateProp[qs_, "StateMatrix"] := If[
+    qs["PureStateQ"],
+    ArrayReshape[qs["StateVector"], qs["MatrixNameDimensions"]],
+    ArrayReshape[Transpose[qs["StateTensor"], InversePermutation @ FindPermutation[
+        With[{input = Join[Range[qs["OutputQudits"]], qs["Qudits"] + Range[qs["OutputQudits"]]]},
+            Join[input, Complement[Range[2 qs["Qudits"]], input]]
+        ]
+    ]],
+        qs["MatrixNameDimensions"] ^ 2
+    ]
+]
 
 QuantumStateProp[qs_, "Tensor"] := qs["Computational"]["StateTensor"]
 

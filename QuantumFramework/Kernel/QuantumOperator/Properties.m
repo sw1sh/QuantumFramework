@@ -139,29 +139,29 @@ QuantumOperatorProp[qo_, {"PermuteOutput", perm_Cycles}] := QuantumOperator[
 
 QuantumOperatorProp[qo_, {"OrderInputExtra", inputSource_ ? orderQ, inputTarget_ ? orderQ}] := Module[{
     extra = DeleteCases[inputTarget, Alternatives @@ inputSource],
-    outputPerm, inputPerm
+    inputPerm, outputTarget
 },
     (* assume extra qudits are on the right *)
     inputPerm = FindPermutation[Join[inputSource, extra], inputTarget];
-    outputPerm = FindPermutation[qo["FullOutputOrder"], qo["FullOutputOrder"] /. Thread[qo["FullInputOrder"] -> Permute[qo["FullInputOrder"], inputPerm]]];
+    outputTarget = qo["FullOutputOrder"] /. Thread[Permute[qo["FullInputOrder"], inputPerm] -> inputTarget];
     QuantumOperator[
-        qo[{"PermuteInput", inputPerm}][{"PermuteOutput", outputPerm}],
-        qo["FullOutputOrder"] /. Thread[qo["FullInputOrder"] -> Sort @ inputTarget],
+        qo[{"PermuteInput", inputPerm}],
+        outputTarget,
         Sort @ inputTarget
     ]
 ]
 
 QuantumOperatorProp[qo_, {"OrderOutputExtra", outputSource_ ? orderQ, outputTarget_ ? orderQ}] := Module[{
     extra = DeleteCases[outputTarget, Alternatives @@ outputSource],
-    outputPerm, inputPerm
+    outputPerm, inputTarget
 },
     (* assume extra qudits are on the right *)
     outputPerm = FindPermutation[Join[outputSource, extra], outputTarget];
-    inputPerm = FindPermutation[qo["FullInputOrder"], qo["FullInputOrder"] /. Thread[qo["FullOutputOrder"] -> Permute[qo["FullOutputOrder"], outputPerm]]];
+    inputTarget = qo["FullInputOrder"] /. Thread[Permute[qo["FullOutputOrder"], outputPerm] -> outputTarget];
     QuantumOperator[
-        qo[{"PermuteInput", inputPerm}][{"PermuteOutput", outputPerm}],
+        qo[{"PermuteOutput", outputPerm}],
         Sort @ outputTarget,
-        qo["FullInputOrder"] /. Thread[qo["FullOutputOrder"] -> Sort @ outputTarget]
+        inputTarget
     ]
 ]
 
@@ -232,7 +232,11 @@ QuantumOperatorProp[qo_, {"OrderedInput", order_ ? orderQ, qb_ ? QuditBasisQ}] :
         QuantumTensorProduct[
             qo,
             With[{iqb = qb[{"Delete", Catenate @ Position[order, Alternatives @@ qo["FullInputOrder"]]}]},
-                QuantumOperator[QuantumOperator[{"Identity", iqb}], qo["LastOutputQudit"] + Range @ iqb["Qudits"], qo["LastInputQudit"] + Range @ iqb["Qudits"]]
+                QuantumOperator[
+                    QuantumOperator[{"Identity", iqb}],
+                    Automatic,
+                    Max[qo["LastOutputQudit"], qo["LastInputQudit"]] + Range @ iqb["Qudits"]
+                ]
             ]
         ],
         qo
@@ -250,7 +254,11 @@ QuantumOperatorProp[qo_, {"OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ}] 
         QuantumTensorProduct[
             qo,
             With[{iqb = qb[{"Delete", Catenate @ Position[order, Alternatives @@ qo["FullOutputOrder"]]}]},
-                QuantumOperator[QuantumOperator[{"Identity", iqb}], qo["LastOutputQudit"] + Range @ iqb["Qudits"], qo["LastInputQudit"] + Range @ iqb["Qudits"]]
+                QuantumOperator[
+                    QuantumOperator[{"Identity", iqb}],
+                    Max[qo["LastOutputQudit"], qo["LastInputQudit"]] + Range @ iqb["Qudits"],
+                    Automatic
+                ]
             ]
         ],
         qo

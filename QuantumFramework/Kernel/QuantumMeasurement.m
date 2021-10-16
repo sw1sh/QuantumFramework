@@ -80,24 +80,39 @@ QuantumMeasurementProp[qm_, "Arity" | "Targets"] := Length @ qm["Target"]
 
 QuantumMeasurementProp[qm_, "Eigenstate"] := QuantumPartialTrace[qm["State"][{"Split", qm["Qudits"]}], qm["OutputQudits"] + Range[qm["InputQudits"]]]
 
+QuantumMeasurementProp[qm_, "Eigenqudits"] := qm["OutputQudits"]
+
 QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumPartialTrace[
     qm["State"][{"Split", qm["Qudits"]}],
     Join[Range[qm["OutputQudits"]], qm["OutputQudits"] + Complement[Range[qm["InputQudits"]], qm["Target"]]]
 ]
 
-QuantumMeasurementProp[qm_, "States"] := If[MatchQ[qm["Label"], "Computational"[_]],
-    QuantumState[QuantumState[#, QuantumBasis[qm["InputDimensions"]]], QuantumBasis[qm["Input"]["Dual"]]] & /@
-        qm["State"]["Computational"]["StateMatrix"],
-    QuantumState[#, qm["Input"]["Dual"]] & /@ qm["State"]["StateMatrix"]
+QuantumMeasurementProp[qm_, "MixedStates"] := With[{rep = If[qm["PureStateQ"], 1, 2]},
+    If[ MatchQ[qm["Label"], "Computational"[_]],
+        QuantumState[QuantumState[ArrayReshape[#, Table[qm["InputDimension"], rep]], QuantumBasis[qm["InputDimensions"]]], QuantumBasis[qm["Input"]["Dual"]]] & /@
+            qm["State"]["Computational"]["StateMatrix"],
+        QuantumState[ArrayReshape[#, Table[qm["InputDimension"], rep]], qm["Input"]["Dual"]] & /@ qm["State"]["StateMatrix"]
+    ]
 ]
+
+QuantumMeasurementProp[qm_, "States"] := If[qm["PureStateQ"], qm["MixedStates"], Plus @@@ Partition[qm["MixedStates"], qm["OutputDimension"]]]
 
 QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
     If[MatchQ[qm["Label"], "Computational"[_]], qm["Eigenstate"]["Computational"], qm["Eigenstate"]]["Probabilities"]
 
 QuantumMeasurementProp[qm_, "Eigenvalues"] := qm["Eigenstate"]["ElementNames"]
 
-QuantumMeasurementProp[qm_, "Outcomes"] :=
-    If[MatchQ[qm["Label"], "Computational"[_]], QuditBasis[qm["InputDimensions"][[ qm["Target"] ]]]["Names"], qm["Eigenvalues"]]
+QuantumMeasurementProp[qm_, "Outcomes"] := If[
+    MatchQ[qm["Label"], "Computational"[_]],
+    QuditBasis[qm["InputDimensions"][[ qm["Target"] ]]]["Names"],
+    qm["Eigenvalues"]
+]
+
+QuantumMeasurementProp[qm_, "MixedOutcomes"] := If[
+    qm["PureStateQ"],
+    qm["Outcomes"],
+    QuantumTensorProduct @@@ Tuples[{qm["Outcomes"], #["Dual"] & /@ qm["Outcomes"]}]
+]
 
 QuantumMeasurementProp[qm_, "Distribution"] := CategoricalDistribution[
     qm["Outcomes"],

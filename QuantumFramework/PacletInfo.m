@@ -4,7 +4,7 @@ PacletObject[
     "Description" -> "Quantum Computing",
     "Creator" -> "Wolfram",
     "PublisherID" -> "Wolfram",
-    "Version" -> "0.5",
+    "Version" -> "0.6",
     "WolframVersion" -> "12.2+",
     "Extensions" -> {
       {

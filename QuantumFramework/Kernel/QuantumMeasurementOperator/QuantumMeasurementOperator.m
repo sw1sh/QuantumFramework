@@ -54,7 +54,7 @@ QuantumMeasurementOperator[tensor_ ? TensorQ /; 2 <= TensorRank[tensor] <= 3, qb
 
 QuantumMeasurementOperator[
     args : PatternSequence[] | 
-        PatternSequence[Except[_ ? QuantumOperatorQ | (tensor_ ? TensorQ /; 2 <= TensorRank[tensor] <= 3)], ___],
+        PatternSequence[Except[_ ? QuantumFrameworkOperatorQ | (tensor_ ? TensorQ /; 2 <= TensorRank[tensor] <= 3)], ___],
     target : (_ ? orderQ) : {1}] :=
 Enclose @ Module[{
     basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ]
@@ -123,62 +123,56 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? orderQ] /; !Contain
 ]
 
 
-(qmo1_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qmo2_ ? QuantumMeasurementOperatorQ] := Enclose @ Module[{
-    top, bottom
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qm : _ ? QuantumMeasurementOperatorQ | _ ? QuantumMeasurementQ] := Enclose @ Module[{
+    top, bottom, topIsLeft, result
 },
 
-    top = qmo1["SuperOperator"];
-    bottom = qmo2["SuperOperator"];
+    top = qmo["SuperOperator"];
+    bottom = If[
+        QuantumMeasurementOperatorQ[qm],
+        qm["SuperOperator"],
+        QuantumOperator[
+            QuantumState[qm["State"], QuantumBasis[qm["Basis"], "Input" -> qm["Input"]["Dual"]]][
+                {"Split", qm["Qudits"]}
+            ],
+            {Range[qm["Qudits"]] - qm["Eigenqudits"], Automatic}
+        ]
+    ];
 
-    If[ top["FirstOutputQudit"] + qmo1["Eigenqudits"] <= bottom["FirstOutputQudit"] + qmo2["Eigenqudits"],
+    (* depending on relative positions of superoperator eigenqudits,
+        change the right-most operator's eigenqudit order being to the left
+        of the left-most operator
+    *)
+    topIsLeft = top["FirstOutputQudit"] + qmo["Eigenqudits"] <= bottom["FirstOutputQudit"] + qm["Eigenqudits"];
+    If[ topIsLeft,
         bottom = QuantumOperator[bottom, {
-            ReplacePart[bottom["FullOutputOrder"], Thread[List /@ Range[qmo2["Eigenqudits"]] -> top["FirstOutputQudit"] - Reverse @ Range[qmo2["Eigenqudits"]]]],
+            ReplacePart[bottom["FullOutputOrder"], Thread[List /@ Range[qm["Eigenqudits"]] -> top["FirstOutputQudit"] - Reverse @ Range[qm["Eigenqudits"]]]],
             bottom["InputOrder"]
             }
         ],
         top = QuantumOperator[top, {
-            ReplacePart[top["FullOutputOrder"], Thread[List /@ Range[qmo1["Eigenqudits"]] -> bottom["FirstOutputQudit"] - Reverse @ Range[qmo1["Eigenqudits"]]]],
+            ReplacePart[top["FullOutputOrder"], Thread[List /@ Range[qmo["Eigenqudits"]] -> bottom["FirstOutputQudit"] - Reverse @ Range[qmo["Eigenqudits"]]]],
             top["InputOrder"]
             }
         ]
     ];
-    QuantumMeasurementOperator[
-        top[bottom] //
-            (* permute two sets of measured qudits based on given operator targets, left-most first *)
-            (#[{"PermuteOutput", InversePermutation @ FindPermutation[DeleteDuplicates @
-                Join[qmo1["Target"], qmo2["Target"]]]}] &)
-            ,
-        "Label" -> qmo1["Label"] @* qmo2["Label"],
-        Union[qmo1["Target"], qmo2["Target"]]
-    ]
-]
-
-
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qm_QuantumMeasurement] := Enclose @ With[{
-    state =
-        (* prepending identity to propogate measurement eigenvalues *)
-        ConfirmBy[
-            QuantumTensorProduct[
-                QuantumOperator[{"Identity",
-                    First @ qm["Output"][{"Split", qm["Targets"]}]},
-                    Range[qmo["FirstOutputQudit"] - qm["Targets"], qmo["FirstOutputQudit"] - 1]],
-                With[{op = qmo["SuperOperator"]}, QuantumOperator[op,
-                    ReplacePart[op["FullOutputOrder"], Thread[List /@ Range[qmo["Targets"]] -> 1 - qm["Targets"] - Reverse @ Range[qmo["Targets"]]]],
-                    op["InputOrder"]
-                ]][{"OrderedInput", Range[qm["InputQudits"]], qm["Input"]["Dual"]}]
+    result = top[bottom]["Sort"][
+        (* permute two sets of eigenqudits based on given operator targets, left-most first *)
+        {"PermuteOutput", InversePermutation @ FindPermutation[DeleteDuplicates @
+            If[topIsLeft, Join[qm["Target"], qmo["Target"]], Join[qmo["Target"], qm["Target"]]]]}
+    ];
+    If[ QuantumMeasurementOperatorQ[qm],
+        QuantumMeasurementOperator[
+            result,
+            Union[qmo["Target"], qm["Target"]]
+        ],
+        QuantumMeasurement[
+            QuantumState[
+                result["State"][{"Split", qmo["Eigenqudits"] + qm["Eigenqudits"]}],
+                "Label" -> qmo["Label"][qm["Label"]]
             ],
-            QuantumOperatorQ
-        ][
-            qm["State"][{"Split", qm["Qudits"]}]
-        ],
-    target = Union[qm["Target"], qmo["Target"]]
-},
-    QuantumMeasurement[
-        QuantumState[
-            state[{"PermuteOutput", InversePermutation @ FindPermutation @ Join[qm["Target"], qmo["Target"]]}][{"Split", Length @ target}],
-            "Label" -> qmo["Label"] @ qm["Label"]
-        ],
-        target
+            Union[qmo["Target"], qm["Target"]]
+        ]
     ]
 ]
 

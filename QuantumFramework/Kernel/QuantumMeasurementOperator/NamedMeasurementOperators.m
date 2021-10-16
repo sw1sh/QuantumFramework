@@ -5,11 +5,8 @@ QuantumMeasurementOperator["RandomHermitian", args___, target : (_ ? orderQ) : {
     basis = QuantumBasis[args]
 },
     QuantumMeasurementOperator[
-        QuantumOperator[Orthogonalize @
-            Table[
-                RandomReal[NormalDistribution[0, 1 / 2]] + I RandomReal[NormalDistribution[0, 1 / 2]],
-                basis["Dimension"], basis["Dimension"]
-            ],
+        QuantumOperator[
+            With[{m = RandomComplex[1 + I, {basis["Dimension"], basis["Dimension"]}]}, (m + ConjugateTranspose[m]) / 2],
             basis
         ],
         target

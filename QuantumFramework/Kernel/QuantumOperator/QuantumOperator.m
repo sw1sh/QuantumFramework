@@ -210,31 +210,12 @@ QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ, args___, outputOrde
 
 QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible with this operation"
 
-(qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] /;
-qo["Arity"] == qs["OutputQudits"] &&
-qo["Picture"] === qo["Picture"] && (
-    qs["Picture"] =!= "Heisenberg" || Message[QuantumOperator::incompatiblePictures, qo["Picture"], qs["Picture"]]) := Enclose @ With[{
-    ordered = qo[{"OrderedInput", Range[qo["FirstInputQudit"], qo["FirstInputQudit"] + qs["OutputQudits"] - 1], qs["Output"]}]
-},
-    ConfirmAssert[ordered["InputDimension"] == qs["OutputDimension"], "Operator input dimension should be equal to state output dimension"];
-    QuantumState[
-        QuantumState[
-            If[ qs["StateType"] === "Vector",
-                Flatten[ordered["MatrixRepresentation"] . qs["PureMatrix"]],
-                ordered["MatrixRepresentation"] . qs["MatrixRepresentation"] . ConjugateTranspose[ordered["MatrixRepresentation"]]
-            ],
-            QuantumBasis["Output" -> QuditBasis[ordered["OutputDimensions"]], "Input" -> QuditBasis[qs["InputDimensions"]]]
-        ],
-        QuantumBasis[
-            "Output" -> ordered["Output"],
-            "Input" -> qs["Input"],
-            "Label" -> ordered["Label"] @* qs["Label"] /. None -> Sequence[]
-        ]
+(qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] /; qo["Picture"] === qo["Picture"] && (
+    qs["Picture"] =!= "Heisenberg" || Message[QuantumOperator::incompatiblePictures, qo["Picture"], qs["Picture"]]) :=
+    If[ qs["PureStateQ"],
+        qo[QuantumOperator[qs]]["Sort"]["State"],
+        qo[QuantumOperator[qs["Pure"][{"Split", qs["Qudits"]}]] @ qo["Dagger"]]["Sort"]["Mixed"]
     ]
-]
-
-(qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] :=
-    qo @ QuantumOperator[qs]
 
 
 (qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumOperatorQ] /; qo["Picture"] === op["Picture"] := Enclose @ Module[{
@@ -272,13 +253,14 @@ qo["Picture"] === qo["Picture"] && (
         ]
     ];
 
-    If[ bottom["HasInputQ"], QuantumOperator[state, top["OutputOrder"], bottom["InputOrder"]], state]
+    QuantumOperator[state, top["OutputOrder"], bottom["InputOrder"]]
 ]
 
 
-(qo_QuantumOperator ? QuantumOperatorQ)[qmo_ ? QuantumMeasurementOperatorQ] := QuantumMeasurementOperator[qo @ qmo["Operator"], qmo["Target"]]
+(qo_QuantumOperator ? QuantumOperatorQ)[qmo_ ? QuantumMeasurementOperatorQ] /; qo["Picture"] == qmo["Picture"] :=
+    QuantumMeasurementOperator[qo @ qmo["Operator"], qmo["Target"]]
 
-(qo_QuantumOperator ? QuantumOperatorQ)[qm_ ? QuantumMeasurementQ] :=
+(qo_QuantumOperator ? QuantumOperatorQ)[qm_ ? QuantumMeasurementQ] /; qo["Picture"] == qm["Picture"] :=
     QuantumMeasurement[qm["Operator"][qo]["State"], qm["Target"]]
 
 
