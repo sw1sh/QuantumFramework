@@ -29,7 +29,8 @@ PacletObject[
             "Wolfram`QuantumFramework`QuantumHamiltonianOperator"
         }
       },
-      {"Documentation", "Language" -> "English"}
+      {"Documentation", "Language" -> "English"},
+      {"FrontEnd"}
     }
   |>
 ]
