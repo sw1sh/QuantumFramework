@@ -1,5 +1,10 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageScope["$QuantumMeasurementOperatorNames"]
+
+
+$QuantumMeasurementOperatorNames = {"RandomHermitian"}
+
 
 QuantumMeasurementOperator["RandomHermitian", args___, target : (_ ? orderQ) : {1}] := With[{
     basis = QuantumBasis[args]

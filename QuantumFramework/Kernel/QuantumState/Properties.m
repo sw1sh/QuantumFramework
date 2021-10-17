@@ -101,7 +101,7 @@ QuantumStateProp[qs_, "NormalizedAmplitudes"] := Enclose @ With[{amplitudes = qs
     ConfirmQuiet[amplitudes / Norm[Values[amplitudes]], Power::infy]
 ]
 
-QuantumStateProp[qs_, "NormalizedStateVector"] := qs["NormalizedState"]
+QuantumStateProp[qs_, "NormalizedStateVector"] := Normalize @ qs["StateVector"]
 
 QuantumStateProp[qs_, "NormalizedDensityMatrix"] := Enclose @ Confirm[normalizeMatrix @ qs["DensityMatrix"]]
 

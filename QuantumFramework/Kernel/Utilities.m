@@ -69,7 +69,7 @@ Options[eigenvectors] = {"Sort" -> False, "Normalize" -> False}
 
 eigenvectors[matrix_, OptionsPattern[]] :=
     If[TrueQ[OptionValue["Normalize"]], Normalize, Identity] /@
-        Eigenvectors[#, ZeroTest -> If[Precision[#] === MachinePrecision, Chop[#1] == 0 &, Automatic]][[
+        Eigenvectors[Chop @ #][[
             If[TrueQ[OptionValue["Sort"]], Ordering[Eigenvalues[matrix]], All]
         ]] & @ matrix
 

@@ -1,14 +1,5 @@
 Package["Wolfram`QuantumFramework`"]
 
-PackageScope["$QuantumMeasurementOperatorNames"]
-
-
-$QuantumMeasurementOperatorNames = Join[
-    $QuditBasisNames,
-    {
-       "RandomHermitian"
-    }
-]
 
 
 If[ $Notebooks,
@@ -16,7 +7,10 @@ If[ $Notebooks,
         basisNames = $QuditBasisNames,
         stateNames = $QuantumStateNames,
         operatorNames = $QuantumOperatorNames,
-        measurementOperatorNames = $QuantumMeasurementOperatorNames
+        measurementOperatorNames = Join[
+            $QuditBasisNames,
+            $QuantumMeasurementOperatorNames
+        ]
     },
         Scan[
             ResourceFunction["AddCodeCompletion"][First[#]] @@ Last[#] &, {
