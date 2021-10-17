@@ -67,11 +67,21 @@ projector[v_] := KroneckerProduct[v, Conjugate[v]]
 
 Options[eigenvectors] = {"Sort" -> False, "Normalize" -> False}
 
-eigenvectors[matrix_, OptionsPattern[]] :=
-    If[TrueQ[OptionValue["Normalize"]], Normalize, Identity] /@
-        Eigenvectors[Chop @ #][[
-            If[TrueQ[OptionValue["Sort"]], Ordering[Eigenvalues[matrix]], All]
-        ]] & @ matrix
+eigenvectors[matrix_, OptionsPattern[]] := Map[
+    If[ TrueQ[OptionValue["Normalize"]], Normalize, Identity],
+    Enclose[
+        ConfirmBy[
+            If[ Precision[matrix] === MachinePrecision,
+                Eigenvectors[matrix, ZeroTest -> (Chop[#1] == 0 &)],
+                Eigenvectors[Chop @ matrix]
+            ],
+            MatrixQ
+        ],
+        Eigenvectors[matrix] &
+    ][[
+        If[TrueQ[OptionValue["Sort"]], Ordering[Eigenvalues[matrix]], All]
+    ]]
+]
 
 
 (* helpers *)

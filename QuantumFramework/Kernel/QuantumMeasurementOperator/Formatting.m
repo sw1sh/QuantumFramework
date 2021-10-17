@@ -26,27 +26,23 @@ QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; Quantu
         icon, {
             {
                 BoxForm`SummaryItem[{"Measurement Type: ", qmo["Type"]}],
-                BoxForm`SummaryItem[{"Arity: ", qmo["Arity"]}]
+                BoxForm`SummaryItem[{"Target: ", qmo["Target"]}]
             },
             {
-                BoxForm`SummaryItem[{"Qudits: ", qmo["InputQudits"]}],
-                BoxForm`SummaryItem[{"Dimension: ", qmo["InputDimension"]}]
-            },
-            {
-                BoxForm`SummaryItem[{"Target: ", qmo["Target"]}],
-                BoxForm`SummaryItem[{"Order: ", qmo["InputOrder"]}]
+                BoxForm`SummaryItem[{"Dimension: ", Row[{qmo["InputDimension"], "\[RightArrow]", qmo["OutputDimension"]}]}],
+                BoxForm`SummaryItem[{"Qudits: ", Row[{qmo["InputQudits"], "\[RightArrow]", qmo["OutputQudits"]}]}]
             }
         },
         {
             {
+                BoxForm`SummaryItem[{"Hermitian: ", qmo["HermitianQ"]}],
+                BoxForm`SummaryItem[{"Order: ", Row[{qmo["InputOrder"], "\[RightArrow]", qmo["OutputOrder"]}]}]
+            },
+            {
+                BoxForm`SummaryItem[{"Unitary: ", qmo["UnitaryQ"]}],
                 BoxForm`SummaryItem[{"Dimensions: ",
-                If[qmo["InputQudits"] > 0, MapAt[Style[#, Bold] &, qmo["Dimensions"], {- qmo["InputQudits"] ;; }], qmo["Dimensions"]]}]
-            },
-            {
-                BoxForm`SummaryItem[{"Hermitian: ", qmo["HermitianQ"]}]
-            },
-            {
-                BoxForm`SummaryItem[{"Unitary: ", qmo["UnitaryQ"]}]
+                    Row[{qmo["InputDimensions"], "\[RightArrow]", qmo["OutputDimensions"]}]}
+                ]
             }
         },
         format,

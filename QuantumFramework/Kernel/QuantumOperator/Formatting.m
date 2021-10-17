@@ -20,19 +20,20 @@ QuantumOperator /: MakeBoxes[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated 
                 BoxForm`SummaryItem[{"Arity: ", qo["Arity"]}]
             },
             {
-                BoxForm`SummaryItem[basisDimensionSummaryItem[qo]],
-                BoxForm`SummaryItem[basisQuditsSummaryItem[qo]]
+                BoxForm`SummaryItem[{"Dimension: ", Row[{qo["InputDimension"], "\[RightArrow]", qo["OutputDimension"]}]}],
+                BoxForm`SummaryItem[{"Qudits: ", Row[{qo["InputQudits"], "\[RightArrow]", qo["OutputQudits"]}]}]
             }
         },
         {
             {
                 BoxForm`SummaryItem[{"Hermitian: ", qo["HermitianQ"]}],
-                BoxForm`SummaryItem[{"Output Order: ", qo["OutputOrder"]}],
-                BoxForm`SummaryItem[{"Input Order: ", qo["InputOrder"]}]
+                BoxForm`SummaryItem[{"Order: ", Row[{qo["InputOrder"], "\[RightArrow]", qo["OutputOrder"]}]}]
             },
             {
                 BoxForm`SummaryItem[{"Unitary: ", qo["UnitaryQ"]}],
-                BoxForm`SummaryItem[{"Dimensions: ", qo["Dimensions"]}]
+                BoxForm`SummaryItem[{"Dimensions: ",
+                    Row[{qo["InputDimensions"], "\[RightArrow]", qo["OutputDimensions"]}]}
+]
             }
         },
         format,

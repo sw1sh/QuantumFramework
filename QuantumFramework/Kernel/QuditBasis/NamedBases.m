@@ -36,8 +36,8 @@ QuditBasis["Bell", args___] := QuditBasis[
 
 QuditBasis["PauliX", args___] := QuditBasis[
     AssociationThread[{
-            Subscript["\[Psi]", "x+"],
-            Subscript["\[Psi]", "x-"]
+            Subscript["\[Psi]", "x-"],
+            Subscript["\[Psi]", "x+"]
         },
         (1 / Sqrt[2]) {{1, 1}, {1, -1}}
     ],
@@ -46,8 +46,8 @@ QuditBasis["PauliX", args___] := QuditBasis[
 
 QuditBasis["PauliY", args___] := QuditBasis[
     AssociationThread[{
-            Subscript["\[Psi]", "y+"],
-            Subscript["\[Psi]", "y-"]
+            Subscript["\[Psi]", "y-"],
+            Subscript["\[Psi]", "y+"]
         },
         (1 / Sqrt[2]) {{1, I}, {1, -I}}
     ],
@@ -56,8 +56,8 @@ QuditBasis["PauliY", args___] := QuditBasis[
 
 QuditBasis["PauliZ", args___] := QuditBasis[
     AssociationThread[{
-            Subscript["\[Psi]", "z+"],
-            Subscript["\[Psi]", "z-"]
+            Subscript["\[Psi]", "z-"],
+            Subscript["\[Psi]", "z+"]
         },
         IdentityMatrix[2]
     ],

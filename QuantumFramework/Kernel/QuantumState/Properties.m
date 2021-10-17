@@ -238,6 +238,8 @@ QuantumStateProp[qs_, {"Transpose", qudits : {_Integer...}}] := QuantumState[
     qs["Basis"]
 ]
 
+QuantumStateProp[qs_, {"Trace", qudits : {_Integer...}}] := QuantumPartialTrace[qs, qudits]
+
 QuantumStateProp[qs_, "Conjugate" | "Dual"] := QuantumState[If[qs["PureStateQ"], Flatten, Identity] @ Conjugate[qs["StateMatrix"]], qs["Basis"]["Dual"]]
 
 QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := QuantumState[

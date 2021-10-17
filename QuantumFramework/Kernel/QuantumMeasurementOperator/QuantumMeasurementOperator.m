@@ -24,7 +24,7 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, args__
                 ],
                 qb,
                 With[{order = Join[target, Complement[Max[target] + 1 - Range[If[qb["HasInputQ"], qb["InputQudits"], qb["OutputQudits"]]], target]]},
-                    Sort[order + Max[1 - order, 0]]
+                    Table[Sort[order + Max[1 - order, 0]], 2]
                 ]
             ],
             QuantumOperatorQ

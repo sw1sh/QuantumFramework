@@ -85,7 +85,7 @@ QuantumBasis[output : _QuditBasis | _List, input : _QuditBasis | _List, args___]
 
 (* defaults *)
 QuantumBasis[data_Association ? (Keys /* Not @* ContainsExactly[$QuantumBasisDataKeys]), args___] :=
-    QuantumBasis[<|<|"Input" -> QuditBasis[], "Output" -> QuditBasis[], "Picture" -> "Schrodinger", "Label" -> None|>, data|>, args]
+    QuantumBasis[<|<|"Input" -> QuditBasis[], "Output" -> QuditBasis[], "Picture" -> "Schrödinger", "Label" -> None|>, data|>, args]
 
 
 QuantumBasis[data_Association] /; AssociationQ[data["Input"]] := QuantumBasis[MapAt[QuditBasis, data, "Input"]]
