@@ -117,6 +117,8 @@ QuantumStateProp[qs_, "DensityMatrix"] /; qs["StateType"] === "Vector" :=
 
 QuantumStateProp[qs_, "DensityMatrix"] /; qs["StateType"] === "Matrix" := qs["State"]
 
+QuantumStateProp[qs_, "DensityTensor"] := ArrayReshape[qs["DensityMatrix"], Join[qs["Dimensions"], qs["Dimensions"]]]
+
 QuantumStateProp[qs_, "Projector"] := QuantumState[Flatten @ qs["DensityMatrix"], QuantumBasis[qs["Basis"], "Input" -> qs["Output"]["Dual"]]]
 
 QuantumStateProp[qs_, "NormalizedProjector"] := QuantumState[Flatten @ qs["NormalizedDensityMatrix"], QuantumBasis[qs["Basis"], "Input" -> qs["Output"]["Dual"]]]
@@ -223,6 +225,8 @@ QuantumStateProp[qs_, "Mixed"] := Which[
     True,
     $Failed
 ]
+
+QuantumStateProp[qs_, "MatrixState"] := If[qs["StateType"] === "Matrix", qs, QuantumState[qs["DensityMatrix"], qs["Basis"]]]
 
 QuantumStateProp[qs_, "Transpose"] := QuantumState[If[qs["PureStateQ"], Flatten, Identity] @ Transpose[qs["StateMatrix"]], qs["Basis"]["Transpose"]]
 

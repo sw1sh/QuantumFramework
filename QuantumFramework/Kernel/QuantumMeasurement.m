@@ -15,25 +15,32 @@ qm_QuantumMeasurement["ValidQ"] := QuantumMeasurementQ[qm]
 
 (* constructors *)
 
-QuantumMeasurement[proba_Association, states : {_QuantumState..}] /;
-    Length[proba] == Length[states] && Equal @@ Map[#["Dimensions"] &, states] && AllTrue[states, #["PureStateQ"] &] :=
+QuantumMeasurement[proba_Association, states : {_ ? QuantumStateQ..}] /;
+    Length[proba] == Length[states] && Equal @@ Map[#["Dimensions"] &, states] :=
 QuantumMeasurement[
     QuantumState[
         QuantumState[
-            Flatten @ kroneckerProduct[Map[#["Computational"]["StateVector"] &, states], Sqrt @ Values[proba]],
+            ArrayReshape[
+                Transpose[
+                    TensorProduct[
+                        Sqrt @ Values[proba],
+                        MapThread[Times, {Sqrt @ Values[proba], #["Computational"]["Normalized"]["DensityTensor"] & /@ states}]
+                    ],
+                    Cycles[{RotateRight @ Reverse @ Range[Length[states] + 1]}]
+                ],
+                Table[Length[states] First[states]["Dimension"], 2]
+            ],
             QuantumTensorProduct[
-
-                QuantumBasis[QuditBasis @ Prepend[First[states]["Dimensions"], Length[states]]],
-                QuantumBasis[Keys[proba]]
+                QuantumBasis[Keys[proba]],
+                QuantumBasis[First[states]["Dimensions"]]
             ]
         ],
         QuantumTensorProduct[
-            QuantumBasis[QuditBasis[Length[states]]],
-            First[states]["Basis"][{"Split", First[states]["Qudits"]}],
-            QuantumBasis[Keys[proba]]
+            QuantumBasis[Keys[proba]],
+            First[states]["Basis"]
         ][{"Split", 1}]
-    ](*[{"PermuteInput", Cycles[{Range[1 + First[states]["Qudits"]]}]}]*),
-    {First[states]["Qudits"] + 1}
+    ],
+    Range[First[states]["Qudits"]]
 ]
 
 
