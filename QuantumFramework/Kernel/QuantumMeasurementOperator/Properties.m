@@ -8,7 +8,7 @@ $QuantumMeasurementOperatorProperties = {
     "QuantumOperator", "Target",
     "Operator", "Basis", "MatrixRepresentation", "POVMElements",
     "OrderedMatrixRepresentation", "OrderedPOVMElements",
-    "Arity", "Dimensions", "Order", "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors",
+    "Arity", "Eigenqudits", "Dimensions", "Order", "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors",
     "ProjectionQ", "POVMQ",
     "SuperOperator"
 };

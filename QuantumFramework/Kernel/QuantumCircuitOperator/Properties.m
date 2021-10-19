@@ -5,7 +5,7 @@ PackageScope["QuantumCircuitOperatorProp"]
 
 
 $QuantumCircuitOperatorProperties = {
-     "Operators", "Diagram", "Gates", "Orders", "CircuitOperator"
+     "Operators", "Diagram", "Gates", "Orders", "CircuitOperator", "QiskitCircuit"
 };
 
 
@@ -39,6 +39,7 @@ QuantumCircuitOperatorProp[qco_, "Gates"] := Length @ qco["Operators"]
 
 QuantumCircuitOperatorProp[qco_, "Orders" | "OperatorOrders"] := #["InputOrder"] & /@ qco["Operators"]
 
+QuantumCircuitOperatorProp[qco_, "QiskitCircuit" | "Qiskit"] := QuantumCircuitOperatorToQiskit[qco]
 
 (* operator properties *)
 
