@@ -19,6 +19,9 @@ PackageScope["toggleSwap"]
 PackageScope["toggleShift"]
 PackageScope["alignDimensions"]
 
+PackageScope["$QuantumFrameworkProfile"]
+PackageScope["profile"]
+
 
 
 
@@ -113,3 +116,9 @@ alignDimensions[xs : {_Integer..}, ys : {_Integer..}] := Module[{
         Missing[]
     ]
 ]
+
+
+$QuantumFrameworkProfile = False
+
+profile[label_] := Function[{expr}, If[TrueQ[$QuantumFrameworkProfile], EchoTiming[expr, label], expr], HoldFirst]
+

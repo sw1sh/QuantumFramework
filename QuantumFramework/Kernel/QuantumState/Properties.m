@@ -259,7 +259,7 @@ QuantumStateProp[qs_, {"Permute", perm_Cycles}] := QuantumState[
     qs["Basis"][{"Permute", perm}]
 ]
 
-QuantumStateProp[qs_, {"PermuteInput", perm_Cycles}] := If[perm === Cycles[{}],
+QuantumStateProp[qs_, {"PermuteInput", perm_Cycles}] := profile["PermuteInput"] @ If[perm === Cycles[{}],
     qs,
     QuantumState[
         qs @ QuantumOperator[{"Permutation", Permute[qs["InputDimensions"], perm], InversePermutation @ perm}]["State"],
@@ -267,7 +267,7 @@ QuantumStateProp[qs_, {"PermuteInput", perm_Cycles}] := If[perm === Cycles[{}],
     ]
 ]
 
-QuantumStateProp[qs_, {"PermuteOutput", perm_Cycles}] := If[perm === Cycles[{}],
+QuantumStateProp[qs_, {"PermuteOutput", perm_Cycles}] := profile["PermuteOutput"] @ If[perm === Cycles[{}],
     qs,
     QuantumState[
         QuantumOperator[{"Permutation", qs["OutputDimensions"], perm}]["State"] @ qs,

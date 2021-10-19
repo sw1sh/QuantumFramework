@@ -128,7 +128,6 @@ QuantumOperatorProp[qo_, "OrderedTensorRepresentation"] := qo["Ordered"]["Tensor
 
 QuantumOperatorProp[qo_, {"PermuteInput", perm_Cycles}] := QuantumOperator[
     qo["State"][{"PermuteInput", perm}],
-    (*Select[Permute[qo["FullInputOrder"], perm], MemberQ[qo["InpuOrder"], #] &]*)
     qo["Order"]
 ]
 
