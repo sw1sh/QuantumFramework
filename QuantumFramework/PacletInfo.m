@@ -30,7 +30,7 @@ PacletObject[
         }
       },
       {"Documentation", "Language" -> "English"},
-      {"FrontEnd"}
+      {"AutoCompletionData", "Root" -> "AutoCompletionData"}
     }
   |>
 ]
