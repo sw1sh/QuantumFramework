@@ -102,12 +102,12 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
             tracedOperator["Eigenvectors"]
         ];
 
-        outputBasis = QuantumPartialTrace[qmo["Output"], qmo["Target"] - qmo["FirstInputQudit"] + 1 + qmo["OutputQudits"] - qmo["InputQudits"]];
-        inputBasis = QuantumPartialTrace[qmo["Input"], qmo["Target"] - qmo["FirstInputQudit"] + 1];
+        outputBasis = QuantumPartialTrace[qmo["Output"], Catenate @ Position[qmo["OutputOrder"], Alternatives @@ qmo["Target"]]];
+        inputBasis = QuantumPartialTrace[qmo["Input"], Catenate @ Position[qmo["InputOrder"], Alternatives @@ qmo["Target"]]];
 
         (* construct *)
         operator = QuantumOperator[
-            Map[kroneckerProduct @@ Append[IdentityMatrix /@ qmo["InputDimensions"][[traceQudits]], #] &, tracedOperator["Projectors"]],
+            Map[kroneckerProduct @@ Append[IdentityMatrix /@ qmo["InputDimensions"][[traceQudits]], #] &, tracedOperator["Projectors"][[Ordering[tracedOperator["Eigenvalues"]]]]],
 
             QuantumBasis[
                 "Output" -> QuantumTensorProduct[

@@ -23,9 +23,7 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, args__
                     args
                 ],
                 qb,
-                With[{order = Join[target, Complement[Max[target] + 1 - Range[If[qb["HasInputQ"], qb["InputQudits"], qb["OutputQudits"]]], target]]},
-                    Table[Sort[order + Max[1 - order, 0]], 2]
-                ]
+                target
             ],
             QuantumOperatorQ
         ],
@@ -80,7 +78,13 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args___, target_ 
 (* auto reassign bad target *)
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? orderQ] /; !ContainsAll[qo["FullInputOrder"], target] :=
     QuantumMeasurementOperator[
-        QuantumOperator[qo, Automatic, Join[target, Complement[qo["InputQuditOrder"] + Min[target] - 1, target]]],
+        qo,
+        Cases[qo["FullInputOrder"], Alternatives @@ target] /. {} -> Automatic
+    ]
+
+QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? orderQ] /; qo["InputOrder"] != qo["FullInputOrder"] :=
+    QuantumMeasurementOperator[
+        QuantumOperator[qo, qo["FullInputOrder"]],
         target
     ]
 

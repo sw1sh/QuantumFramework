@@ -8,6 +8,7 @@ PackageScope["QuditBasisQ"]
 
 
 QuditBasis["Properties"] = {
+    "Representations",
     "Association", "Names", "Elements",
     "Size", "Qudits",
     "Dimensions", "NameRank", "NameTensor",
@@ -63,8 +64,15 @@ QuditBasis[names : {Except[_Integer | (name_String | {name_String, ___} /; Membe
 QuditBasis[names_List, elements_List] :=
     QuditBasis[AssociationThread[names, elements]]
 
-QuditBasis[elements_Association] /; Not @ AllTrue[elements, NumericQ[#] || SparseArrayQ[#] &] :=
-    QuditBasis[Map[If[NumericQ[#], #, SparseArray[#]] &, elements]]
+QuditBasis[elements_Association] /; Not @ AllTrue[elements, NumericQ[#] || SparseArrayQ[#] && #["Density"] < 0.25 || ! SparseArrayQ[#] && SparseArray[#]["Density"] >= 0.25 &] :=
+    QuditBasis[Map[If[NumericQ[#], #, With[{a = SparseArray[#]}, If[a["Density"] >= 0.25, Developer`ToPackedArray[Normal @ a], a]]] &, elements]]
+
+QuditBasis[elements_Association] /;
+    Not @ AllTrue[elements, Precision[#] === Infinity || Precision[#] === MachinePrecision && Developer`PackedArrayQ[#] &] :=
+    QuditBasis[Developer`ToPackedArray @* N /@ elements]
+
+QuditBasis[elements_Association] /; !OrderedQ[Reverse /@ Keys[elements]] :=
+    QuditBasis[KeySortBy[elements, Reverse]]
 
 qb_QuditBasis /; System`Private`HoldNotValidQ[qb] && quditBasisQ[Unevaluated @ qb] := System`Private`HoldSetValid[qb]
 
@@ -97,13 +105,13 @@ QuditBasisProp[qb_, "NameRank"] := Count[qb["Dimensions"], Except[1]]
 QuditBasisProp[qb_, "NameTensor"] := ArrayReshape[qb["Names"], qb["Dimensions"]]
 
 QuditBasisProp[qb_, "Elements"] := If[Length[qb["Representations"]] > 0,
-    TensorProduct @@@ Tuples @ Values @ KeySort @ ResourceFunction["KeyGroupBy"][qb["Representations"], Last, Values],
+    SparseArray[TensorProduct @@@ Tuples @ Values @ KeySort @ ResourceFunction["KeyGroupBy"][qb["Representations"], Last, SparseArray @* Values]],
     {}
 ]
 
-QuditBasisProp[qb_, "Association"] := AssociationThread[qb["Names"], qb["Elements"]]
+QuditBasisProp[qb_, "Association"] := Association @ Thread[qb["Names"] -> qb["Elements"]]
 
-QuditBasisProp[qb_, "Size"] := Length[qb["Names"]]
+QuditBasisProp[qb_, "Size"] := If[Length[qb["Representations"]] > 0, Times @@ qb["Dimensions"], 0]
 
 QuditBasisProp[qb_, "ElementDimensions"] := Dimensions @ First[MaximalBy[qb["Elements"], ArrayDepth], 0]
 
@@ -204,7 +212,7 @@ QuditBasisProp[qb1_, {"Replace", order_ ? orderQ, qb2_ ? QuditBasisQ}] := Quantu
 
 QuditBasisProp[qb_, "Identity"] := qb
 
-QuditBasisProp[qb_, "Numeric"] := QuditBasis[qb["Names"], N /@ qb["Representations"]]
+QuditBasisProp[qb_, "Numeric"] := QuditBasis[N /@ qb["Representations"]]
 
 
 QuditBasis[_QuditBasis, 0] := QuditBasis[]

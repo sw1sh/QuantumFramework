@@ -81,6 +81,11 @@ QuantumState[state_ ? stateQ, basis_ ? QuantumBasisQ] := QuantumState[
 
 (* Mutation *)
 
+QuantumState[state_ ? stateQ, basis_ ? QuantumBasisQ] /;
+    ArrayQ[state, _ ? NumericQ] && Precision[state] === MachinePrecision && !Developer`PackedArrayQ[state] :=
+    QuantumState[Developer`ToPackedArray[state], basis]
+
+
 QuantumState[qs_ ? QuantumStateQ, args : Except[_ ? QuantumBasisQ, Except[Alternatives @@ $QuantumBasisPictures, _ ? nameQ]]] :=
     Enclose @ QuantumState[qs, ConfirmBy[QuantumBasis[args], QuantumBasisQ]]
 

@@ -67,12 +67,16 @@ QuantumBasisProp[qb_, "OutputElements"] := qb["Output"]["Elements"]
 QuantumBasisProp[qb_, "ElementNames" | "Names"] :=
     QuantumTensorProduct @@@ Tuples[{qb["OutputElementNames"], qb["InputElementNames"]}]
 
-QuantumBasisProp[qb_, "Elements"] := TensorProduct @@@ Tuples[{qb["OutputElements"], qb["InputElements"]}]
+QuantumBasisProp[qb_, "Elements"] := ArrayReshape[Transpose[
+    TensorProduct[qb["OutputElements"], qb["InputElements"]],
+    FindPermutation[Join[{1, qb["OutputRank"] + 2}, Range[qb["OutputRank"]] + 1]]
+],
+    Prepend[qb["ElementDimensions"], qb["OutputSize"] qb["InputSize"]]
+]
 
 
-QuantumBasisProp[qb_, "ElementAssociation" | "Association"] := AssociationThread[
-    qb["ElementNames"],
-    qb["Elements"]
+QuantumBasisProp[qb_, "ElementAssociation" | "Association"] := Association @ Thread[
+    qb["ElementNames"] -> qb["Elements"]
 ]
 
 
