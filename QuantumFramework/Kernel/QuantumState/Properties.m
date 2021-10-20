@@ -18,7 +18,8 @@ $QuantumStateProperties = {
      "Computational", "SchmidtBasis", "SpectralBasis",
      "StateTensor", "StateMatrix",
      "Tensor", "Matrix",
-     "Pure", "Mixed"
+     "Pure", "Mixed",
+     "Formula"
 };
 
 QuantumState["Properties"] := QuantumState["Properties"] = DeleteDuplicates @ Join[$QuantumStateProperties, QuantumBasis["Properties"]]

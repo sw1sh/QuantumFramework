@@ -59,7 +59,7 @@ QuditBasis["PauliZ", args___] := QuditBasis[
             Subscript["\[Psi]", "z-"],
             Subscript["\[Psi]", "z+"]
         },
-        IdentityMatrix[2]
+        Reverse @ IdentityMatrix[2]
     ],
     args
 ]

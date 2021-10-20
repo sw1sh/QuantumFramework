@@ -27,27 +27,11 @@ QuditBasis::dependentElements = "elements should be linearly independent";
 
 
 
-quditBasisQ[QuditBasis[names_List, elements_Association]] := Enclose[
+quditBasisQ[QuditBasis[representations_Association]] := Enclose[
 Module[{
     elementQudits, numericElements
 },
-    ConfirmAssert[AllTrue[names, MatchQ[_QuditName]]];
-
-    elementQudits = #["Qudits"] & /@ names;
-
-
-    ConfirmAssert[Equal @@ elementQudits, Message[QuditBasis::inconsistentNames]];
-
-    (*numericElements = Select[elements, TensorQ[#, NumericQ] &];
-
-    ConfirmAssert[
-        Equal @@ Dimensions /@ numericElements,
-        Message[QuditBasis::inconsistentElements]
-    ];
-    ConfirmAssert[
-        (Length[numericElements] === 0 || ResourceFunction["LinearlyIndependent"] @ (Flatten /@ numericElements)),
-        Message[QuditBasis::dependentElements]
-    ];*)
+    ConfirmAssert[AllTrue[Keys @ representations, MatchQ[{_QuditName, _Integer ? Positive}]]];
 
     True
 ],
@@ -57,7 +41,7 @@ False &
 quditBasisQ[___] := False
 
 
-QuditBasisQ[qb : QuditBasis[_, _]] := System`Private`ValidQ[qb]
+QuditBasisQ[qb : QuditBasis[_]] := System`Private`ValidQ[qb]
 
 QuditBasisQ[___] := False
 
@@ -68,33 +52,19 @@ QuditBasis[{1...}] := QuditBasis[]
 
 QuditBasis[qb_QuditBasis] := qb
 
-(*QuditBasis[elements_ /; VectorQ[elements, TensorQ], args___] := QuditBasis[
-    QuditBasis[Range[0, Length[elements] - 1], elements],
-    args
-]*)
-
-QuditBasis[assoc_Association, args___] := QuditBasis[
+QuditBasis[assoc_Association] /; ! AllTrue[Keys[assoc], MatchQ[{_QuditName, _Integer ? Positive}]] :=
     QuditBasis[
-        Keys[assoc],
-        KeyMap[{If[MatchQ[#, _QuditName], #["Name"], #], 1} &, assoc]
-    ],
-    args
-]
+        KeyMap[{QuditName[#], 1} &, assoc]
+    ]
 
 QuditBasis[names : {Except[_Integer | (name_String | {name_String, ___} /; MemberQ[$QuditBasisNames, name])] ..}] :=
     QuditBasis[names, IdentityMatrix[Length[names]]]
 
-QuditBasis[names_List, elements_List, args___] :=
-    QuditBasis[AssociationThread[names, elements], args]
+QuditBasis[names_List, elements_List] :=
+    QuditBasis[AssociationThread[names, elements]]
 
-QuditBasis[names_List, elements_Association] /; Not @ AllTrue[names, MatchQ[_QuditName]] :=
-    QuditBasis[Map[QuditName, names], elements]
-
-QuditBasis[names_List, elements_Association] /; Not @ AllTrue[elements, NumericQ[#] || SparseArrayQ[#] &] :=
-    QuditBasis[names, Map[If[NumericQ[#], #, SparseArray[#]] &, elements]]
-
-QuditBasis[names_List, elements_Association] /; Not @ AllTrue[Keys[elements], MatchQ[{_, _Integer ? Positive}]] :=
-    QuditBasis[names, KeyMap[{#, 1} &, elements]]
+QuditBasis[elements_Association] /; Not @ AllTrue[elements, NumericQ[#] || SparseArrayQ[#] &] :=
+    QuditBasis[Map[If[NumericQ[#], #, SparseArray[#]] &, elements]]
 
 qb_QuditBasis /; System`Private`HoldNotValidQ[qb] && quditBasisQ[Unevaluated @ qb] := System`Private`HoldSetValid[qb]
 
@@ -111,28 +81,29 @@ QuditBasis::undefprop = "QuditBasis property `` is undefined for this basis";
 
 QuditBasisProp[_, "Properties"] := QuditBasis["Properties"]
 
-QuditBasisProp[QuditBasis[names_, _], "Names"] := names
+QuditBasisProp[QuditBasis[representations_], "Representations"] := representations
 
-QuditBasisProp[QuditBasis[_, representations_], "Representations"] := representations
+QuditBasisProp[qb_, "Qudits"] := If[Length[qb["Representations"]] > 1, Max @ Keys[qb["Representations"]][[All, -1]], 0]
 
-QuditBasisProp[qb_, "Dimensions"] := CountDistinct /@ Transpose[Normal /@ qb["Names"]]
+QuditBasisProp[qb_, "Dimensions"] := Values @ KeySort @ ResourceFunction["KeyGroupBy"][qb["Representations"], Last, Length]
+
+QuditBasisProp[qb_, "Names"] := If[Length[qb["Representations"]] > 0,
+    QuditName[#]["Group"] & /@ Tuples @ Values @ KeySort @ ResourceFunction["KeyGroupBy"][qb["Representations"], Last, Keys[#][[All, 1]] &],
+    {}
+]
 
 QuditBasisProp[qb_, "NameRank"] := Count[qb["Dimensions"], Except[1]]
 
 QuditBasisProp[qb_, "NameTensor"] := ArrayReshape[qb["Names"], qb["Dimensions"]]
 
-QuditBasisProp[qb_, "Elements"] := With[{representations = qb["Representations"]},
-    If[ ContainsAll[Keys[representations][[All, 1]], #["Name"] & /@ qb["Names"]],
-        Lookup[KeyMap[First, representations], Key[#["Name"]] & /@ qb["Names"]],
-        TensorProduct @@@ Map[MapIndexed[Lookup[representations, Key[{#1["Name"], First[#2]}], 1] &], Normal /@ qb["Names"]]
-    ]
+QuditBasisProp[qb_, "Elements"] := If[Length[qb["Representations"]] > 0,
+    TensorProduct @@@ Tuples @ Values @ KeySort @ ResourceFunction["KeyGroupBy"][qb["Representations"], Last, Values],
+    {}
 ]
 
 QuditBasisProp[qb_, "Association"] := AssociationThread[qb["Names"], qb["Elements"]]
 
 QuditBasisProp[qb_, "Size"] := Length[qb["Names"]]
-
-QuditBasisProp[qb_, "Qudits"] := If[Length[qb["Names"]] > 0, First[qb["Names"]]["Qudits"], 0]
 
 QuditBasisProp[qb_, "ElementDimensions"] := Dimensions @ First[MaximalBy[qb["Elements"], ArrayDepth], 0]
 
@@ -153,24 +124,19 @@ QuditBasisProp[qb_, "Tensor"] := If[qb["Rank"] > 0,
 
 QuditBasisProp[qb_, "Matrix"] := ArrayReshape[qb["Tensor"], qb["MatrixDimensions"]]
 
-QuditBasisProp[qb_, "Dual"] := QuditBasis[#["Dual"] & /@ qb["Names"], qb["Representations"]]
+QuditBasisProp[qb_, "Dual"] := QuditBasis @ KeyMap[MapAt[#["Dual"] &, 1], qb["Representations"]]
 
-QuditBasisProp[qb_, "DualQ"] := AllTrue[qb["Names"], #["DualQ"] &]
+QuditBasisProp[qb_, "DualQ"] := AllTrue[Keys[qb["Representations"]][[All, 1]], #["DualQ"] &]
 
-QuditBasisProp[qb_, "Reverse"] := QuditBasis[Reverse @ qb["Names"], qb["Representations"]]
-
-QuditBasisProp[qb_, "Canonical"] := QuditBasis[Sort @ qb["Names"], qb["Representations"]]
-
-QuditBasisProp[qb_, "Uncurry"] := QuditBasis[KeyMap[QuditName @* Row @* Map[#["Name"] &] @* Normal] @ qb["Association"]]
+QuditBasisProp[qb_, "Reverse"] := QuditBasis @ KeyMap[MapAt[qb["NameRank"] - # + 1 &, 2], qb["Representations"]]
 
 
-QuditBasisProp[qb_, "SortedQ"] := OrderedQ @ qb["Names"] && OrderedQ @ Keys @ qb["Representations"]
+QuditBasisProp[qb_, "SortedQ"] := OrderedQ[Reverse /@ Keys @ qb["Representations"]]
 
-QuditBasisProp[qb_, "Sort"] := QuditBasis[Sort @ qb["Names"], KeySort @ qb["Representations"]]
+QuditBasisProp[qb_, "Sort"] := QuditBasis[KeySortBy[qb["Representations"], Reverse]]
 
 QuditBasisProp[qb_, {"Permute", perm_Cycles, outputs_Integer : 0}] := Enclose @ If[perm === Cycles[{}], qb,
 QuditBasis[
-    #[{"Permute", perm, outputs}] & /@ qb["Names"],
     KeyMap[MapAt[PermutationList[perm, qb["NameRank"]][[#]] &, 2]] @ qb["Representations"]
 ]]
 
@@ -183,25 +149,19 @@ QuditBasisProp[qb_, {"Ordered", qudits_Integer, order_ ? orderQ}] := If[qb["Dime
     ]
 ]
 
-QuditBasisProp[qb_, "RemoveIdentities"] := QuditBasis[
-    (QuditName @@ Delete[Normal[#], Position[qb["Dimensions"], 1]])["Group"] & /@ qb["Names"],
-    Select[qb["Representations"], TensorRank[#] > 0 &]
+QuditBasisProp[qb_, "RemoveIdentities"] := If[qb["Size"] > 1, 
+    QuditBasis[
+        Select[qb["Representations"], TensorRank[#] > 0 &]
+    ],
+    qb
 ]
 
-QuditBasisProp[qb_, {"Split", __}] /; qb["Qudits"] == 0 := {QuditBasis[], QuditBasis[]}
+QuditBasisProp[qb_, {"Split", __}] /; qb["Size"] == 0 := {QuditBasis[0], QuditBasis[0]}
 
-QuditBasisProp[qb_, {"Split", n_Integer ? NonNegative, m_ : None}] /; n <= qb["Qudits"] :=
-    MapThread[QuditBasis,
-        {DeleteDuplicates /@ Transpose[(QuditName @@ #)["Group"] & /@
-            TakeDrop[
-                If[ IntegerQ[m],
-                    MapIndexed[If[Function[{from, to}, from <= First[#2] <= to] @@ If[n >= m, {m + 1, n}, {n + 1, m}], #1["Dual"], #1] &, Normal @ #],
-                    Normal @ #
-                ],
-                n
-            ] & /@ qb["Names"]],
-        {KeySelect[Last[#] <= n &] @ qb["Representations"], KeyMap[MapAt[# - n &, 2]] @ KeySelect[Last[#] > n &] @ qb["Representations"]}}
-    ]
+QuditBasisProp[qb_, {"Split", n_Integer ? NonNegative}] /; n <= qb["Qudits"] := {
+    If[n > 0, QuditBasis[KeySelect[Last[#] <= n &] @ qb["Representations"]], QuditBasis[]],
+    If[n < qb["Qudits"], QuditBasis[KeyMap[MapAt[# - n &, 2]] @ KeySelect[Last[#] > n &] @ qb["Representations"]], QuditBasis[]]
+}
 
 QuditBasisProp[qb_, {"TakeDimension", dim_Integer}] := With[{pos = FirstPosition[FoldList[Times, qb["Dimensions"]], dim]},
     If[ MissingQ[pos],
@@ -275,5 +235,5 @@ QuditBasis[name : _String | {_String, PatternSequence[] | PatternSequence[Except
 
 
 QuditBasis /: MakeBoxes[qb_QuditBasis /; QuditBasisQ[Unevaluated @ qb], format_] :=
-    With[{boxes = ToBoxes[qb["Association"], format]}, InterpretationBox[boxes, qb]]
+    With[{boxes = ToBoxes[Normal /@ qb["Association"], format]}, InterpretationBox[boxes, qb]]
 
