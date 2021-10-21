@@ -50,7 +50,7 @@ QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, args___, order : (_
     inputDimension, outputDimension
 },
     rank = Max[Length[dimensions], Max[order] - Min[order] + 1];
-    {outputDimension, inputDimension} = Times @@@ TakeDrop[TensorDimensions[tensor], rank - Length[order]];
+    {outputDimension, inputDimension} = Times @@@ TakeDrop[dimensions, rank - Length[order]];
     basis = QuantumBasis[args];
     If[ basis["OutputDimension"] != outputDimension,
         basis = QuantumBasis[basis, "Output" -> QuditBasis[dimensions[[;; - Length[order] - 1]]]]
@@ -59,7 +59,7 @@ QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, args___, order : (_
         basis = QuantumBasis[basis, "Input" -> QuditBasis[dimensions[[- Length[order] ;;]]]]
     ];
     QuantumOperator[
-        ArrayReshape[tensor, Times @@@ TakeDrop[TensorDimensions[tensor], rank - Length[order]]],
+        ArrayReshape[tensor, {outputDimension, inputDimension}],
         basis,
         order
     ]

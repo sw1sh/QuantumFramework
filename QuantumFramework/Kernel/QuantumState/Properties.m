@@ -85,7 +85,10 @@ QuantumStateProp[qs_, "StateVector"] := Module[{result},
     result /; !FailureQ[result]
 ]
 
-QuantumStateProp[qs_, "Weights"] := If[qs["PureStateQ"], Abs[qs["StateVector"]] ^ 2, PseudoInverse[qs["Eigenvectors"]] . qs["Eigenvalues"]]
+QuantumStateProp[qs_, "Weights"] := If[qs["PureStateQ"],
+    Abs[qs["StateVector"]] ^ 2,
+    With[{es = Eigensystem @ Chop @ qs["DensityMatrix"]}, PseudoInverse[es[[2]]] . es[[1]] ]
+]
 
 QuantumStateProp[qs_, "Probabilities"] := qs["Weights"] / Total[qs["Weights"]]
 
@@ -135,15 +138,17 @@ QuantumStateProp[qs_, "Eigenstates"] := QuantumState[#, qs["Basis"]] & /@ qs["Ei
 
 (* entropy *)
 
-QuantumStateProp[qs_, "VonNeumannEntropy" | "Entropy", logBase_ ? NumericQ] := With[{
-    matrix = qs["NormalizedDensityMatrix"]
-},  If[
+QuantumStateProp[qs_, "VonNeumannEntropy" | "Entropy", logBase_ ? NumericQ] := Enclose[With[{
+        matrix = qs["NormalizedDensityMatrix"]
+    },
+    If[
         qs["PureStateQ"],
         0,
-        (* - Total @ Map[# Log[logBase, #] &, Select[Re @ Eigenvalues@qs[DensityMatrix"], Positive]] *)
-
+        ConfirmAssert[qs["Dimension"] < 2 ^ 10];
         Enclose[TimeConstrained[Chop @ Simplify @ - Tr[matrix . ConfirmBy[MatrixLog[matrix], MatrixQ]] / Log[logBase], 1], $Failed &]
     ]
+],
+    Indeterminate &
 ]
 
 QuantumStateProp[qs_, "VonNeumannEntropy" | "Entropy"] := Quantity[qs["VonNeumannEntropy", 2], "Bits"]
@@ -153,10 +158,17 @@ QuantumStateProp[qs_, {"VonNeumannEntropy" | "Entropy", logBase_}] := qs["VonNeu
 
 (* purity *)
 
-QuantumStateProp[qs_, "Purity"] := Enclose @ TimeConstrained[Simplify @ Abs[Tr[MatrixPower[ConfirmBy[qs["NormalizedDensityMatrix"], MatrixQ], 2]]], 1]
+QuantumStateProp[qs_, "Purity"] := Enclose[
+    If[ qs["StateType"] === "Vector",
+        1,
+        ConfirmAssert[qs["Dimension"] < 2 ^ 10];
+        TimeConstrained[Simplify @ Abs[Tr[MatrixPower[ConfirmBy[qs["NormalizedDensityMatrix"], MatrixQ], 2]]], 1]
+    ],
+    Indeterminate &
+]
 
 QuantumStateProp[qs_, "Type"] := Which[
-    qs["StateType"] === "Vector" || TrueQ[qs["Purity"] == 1],
+    TrueQ[qs["Purity"] == 1],
     "Pure",
     PositiveSemidefiniteMatrixQ[qs["DensityMatrix"]],
     "Mixed",
@@ -210,7 +222,7 @@ QuantumStateProp[qs_, "Normalized" | "NormalizedState"] :=
 
 QuantumStateProp[qs_, "Pure"] := If[qs["PureStateQ"],
     qs,
-    QuantumState[Flatten @ qs["DensityMatrix"], QuantumTensorProduct[qs["Basis"], qs["Basis"]["Dual"]]]
+    QuantumState[Flatten @ qs["DensityMatrix"], QuantumTensorProduct[qs["Basis"], qs["Basis"]["Dagger"]]][{"Split", 2 qs["Qudits"]}]
 ]
 
 QuantumStateProp[qs_, "Mixed"] := Which[

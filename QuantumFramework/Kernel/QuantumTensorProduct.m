@@ -9,21 +9,19 @@ QuantumTensorProduct[args_List] := Fold[QuantumTensorProduct, args]
 QuantumTensorProduct[args___] := QuantumTensorProduct[{args}]
 
 
-QuantumTensorProduct[qb1_QuditBasis, qb2_QuditBasis] := QuditBasis[
-    Association[qb1["Representations"], KeyMap[MapAt[# + qb1["NameRank"] &, 2]] @ qb2["Representations"]]
-]["RemoveIdentities"]
+QuantumTensorProduct[qb1_QuditBasis, qb2_QuditBasis] := If[qb1["Size"] == 0 || qb2["Size"] == 0, QuditBasis[0],
+    QuditBasis[
+        Association[qb1["Representations"], KeyMap[MapAt[# + qb1["NameRank"] &, 2]] @ qb2["Representations"]]
+    ]["RemoveIdentities"]
+]
 
 
 (* basis x basis *)
 
 QuantumTensorProduct[qb1_QuantumBasis, qb2_QuantumBasis] /; qb1["Picture"] === qb2["Picture"] :=
 QuantumBasis[
-    "Output" -> QuditBasis[
-        Association[qb1["Output"]["Representations"], KeyMap[MapAt[# + qb1["Output"]["NameRank"] &, 2]] @ qb2["Output"]["Representations"]]
-    ],
-    "Input" -> QuditBasis[
-        Association[qb1["Input"]["Representations"], KeyMap[MapAt[# + qb1["Input"]["NameRank"] &, 2]] @ qb2["Input"]["Representations"]]
-    ],
+    "Output" -> QuantumTensorProduct[qb1["Output"], qb2["Output"]],
+    "Input" -> QuantumTensorProduct[qb1["Input"], qb2["Input"]],
     "Picture" -> qb1["Picture"],
     "Label" -> Flatten @ CircleTimes[qb1["Label"], qb2["Label"]] /. None -> Sequence[]
 ]

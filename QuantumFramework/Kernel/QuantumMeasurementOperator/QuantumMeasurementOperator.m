@@ -51,7 +51,7 @@ QuantumMeasurementOperator[tensor_ ? TensorQ /; 2 <= TensorRank[tensor] <= 3, qb
     QuantumMeasurementOperator[QuantumOperator[tensor, qb], args]
 
 QuantumMeasurementOperator[
-    args : PatternSequence[] | 
+    args : PatternSequence[] |
         PatternSequence[Except[_ ? QuantumFrameworkOperatorQ | (tensor_ ? TensorQ /; 2 <= TensorRank[tensor] <= 3)], ___],
     target : (_ ? orderQ) : {1}] :=
 Enclose @ Module[{

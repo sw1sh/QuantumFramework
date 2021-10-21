@@ -61,10 +61,6 @@ QuantumMeasurementOperatorProp[qmo_, "POVMQ"] := qmo["Type"] === "POVM"
 
 QuantumMeasurementOperatorProp[qmo_, "POVMElements"] := If[qmo["POVMQ"], qmo["Tensor"], qmo["Projectors"]]
 
-QuantumMeasurementOperatorProp[qmo_, "Sort"] := QuantumMeasurementOperator[qmo["QuantumOperator"]["Sort"], qmo["Target"]]
-
-QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | {"Ordered", __}] := QuantumMeasurementOperator[qmo["QuantumOperator"][prop], qmo["Target"]]
-
 QuantumMeasurementOperatorProp[qmo_, "OrderedPOVMElements"] := If[qmo["POVMQ"],
     qmo["OrderedTensor"],
     projector /@ qmo["OrderedMatrix"]
@@ -97,9 +93,9 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
         eigenBasis = QuditBasis[
             MapIndexed[
                 Interpretation[Tooltip[Style[#, Bold], StringTemplate["Eigenvalue ``"][First @ #2]], {#1, #2}] &,
-                tracedOperator["Eigenvalues"]
+                Chop @ tracedOperator["Eigenvalues"]
             ],
-            tracedOperator["Eigenvectors"]
+            Chop @ tracedOperator["Eigenvectors"]
         ];
 
         outputBasis = QuantumPartialTrace[qmo["Output"], Catenate @ Position[qmo["OutputOrder"], Alternatives @@ qmo["Target"]]];
@@ -107,7 +103,7 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
 
         (* construct *)
         operator = QuantumOperator[
-            Map[kroneckerProduct @@ Append[IdentityMatrix /@ qmo["InputDimensions"][[traceQudits]], #] &, tracedOperator["Projectors"][[Ordering[tracedOperator["Eigenvalues"]]]]],
+            SparseArray @ Map[kroneckerProduct @@ Append[IdentityMatrix /@ qmo["InputDimensions"][[traceQudits]], #] &, tracedOperator["Projectors"][[Ordering[tracedOperator["Eigenvalues"]]]]],
 
             QuantumBasis[
                 "Output" -> QuantumTensorProduct[
@@ -147,10 +143,10 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
 
 QuantumMeasurementOperatorProp[qmo_, "POVM"] := QuantumMeasurementOperator[qmo["SuperOperator"], qmo["Target"]]
 
-QuantumMeasurementOperatorProp[qmo_, "Numeric"] := QuantumMeasurementOperator[qmo["Operator"]["Numeric"], qmo["Target"]]
-
-
 (* operator properties *)
+
+QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | {"Ordered", __} | "Sort" | "Numeric" | "Computational"] :=
+    QuantumMeasurementOperator[qmo["QuantumOperator"][prop], qmo["Target"]]
 
 QuantumMeasurementOperatorProp[qmo_, args : PatternSequence[prop_String, ___] | PatternSequence[{prop_String, ___}, ___]] /;
     MemberQ[Intersection[qmo["Operator"]["Properties"], qmo["Properties"]], prop] := qmo["Operator"][args]

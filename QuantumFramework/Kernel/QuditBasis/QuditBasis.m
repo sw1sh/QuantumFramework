@@ -64,12 +64,8 @@ QuditBasis[names : {Except[_Integer | (name_String | {name_String, ___} /; Membe
 QuditBasis[names_List, elements_List] :=
     QuditBasis[AssociationThread[names, elements]]
 
-QuditBasis[elements_Association] /; Not @ AllTrue[elements, NumericQ[#] || SparseArrayQ[#] && #["Density"] < 0.25 || ! SparseArrayQ[#] && SparseArray[#]["Density"] >= 0.25 &] :=
-    QuditBasis[Map[If[NumericQ[#], #, With[{a = SparseArray[#]}, If[a["Density"] >= 0.25, Developer`ToPackedArray[Normal @ a], a]]] &, elements]]
-
-QuditBasis[elements_Association] /;
-    Not @ AllTrue[elements, Precision[#] === Infinity || Precision[#] === MachinePrecision && Developer`PackedArrayQ[#] &] :=
-    QuditBasis[Developer`ToPackedArray @* N /@ elements]
+QuditBasis[elements_Association] /; Not @ AllTrue[elements, NumericQ[#] || SparseArrayQ[#] &] :=
+    QuditBasis[Map[If[NumericQ[#], #, SparseArray[#]] &, elements]]
 
 QuditBasis[elements_Association] /; !OrderedQ[Reverse /@ Keys[elements]] :=
     QuditBasis[KeySortBy[elements, Reverse]]

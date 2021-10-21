@@ -68,15 +68,18 @@ kroneckerProduct[ts___] := Fold[If[ArrayQ[#1] && ArrayQ[#2], KroneckerProduct[##
 projector[v_] := KroneckerProduct[v, Conjugate[v]]
 
 
-Options[eigenvectors] = {"Sort" -> False, "Normalize" -> False}
+Options[eigenvectors] = {"Sort" -> False, "Normalize" -> False, Chop -> False}
 
 eigenvectors[matrix_, OptionsPattern[]] := Map[
     If[ TrueQ[OptionValue["Normalize"]], Normalize, Identity],
     Enclose[
         ConfirmBy[
-            If[ Precision[matrix] === MachinePrecision,
-                Eigenvectors[matrix, ZeroTest -> (Chop[#1] == 0 &)],
-                Eigenvectors[Chop @ matrix]
+            If[ TrueQ[OptionValue[Chop]],
+                If[ Precision[matrix] === MachinePrecision,
+                    Eigenvectors[matrix, ZeroTest -> (Chop[#1] == 0 &)],
+                    Eigenvectors[Chop @ matrix]
+                ],
+                Eigenvectors[matrix]
             ],
             MatrixQ
         ],

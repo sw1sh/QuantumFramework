@@ -15,9 +15,10 @@ basisQuditsSummaryItem[o_] := {"Qudits: ", If[o["InputQudits"] === o["OutputQudi
 
 QuantumBasis /: MakeBoxes[qb_QuantumBasis /; QuantumBasisQ[Unevaluated @ qb], format_] := With[{
     icon = MatrixPlot[
-        Check[
+        Enclose[
+            ConfirmAssert[qb["ElementDimension"] < 2 ^ 11];
             Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], qb["MatrixRepresentation"], {2}],
-            RandomReal[{0, 1}, PadRight[qb["ElementDimensions"], 2, 2]]
+            RandomReal[{0, 1}, If[qb["ElementDimension"] < 2 ^ 11, PadRight[qb["ElementDimensions"], 2, 2], {2 ^ 11, 2 ^ 11}]] &
         ],
         ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},
         Frame -> False,
