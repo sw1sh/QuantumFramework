@@ -78,7 +78,7 @@ QuantumStateProp[qs_, "StateVector"] := Module[{result},
         qs["StateType"] === "Vector",
         qs["State"],
         qs["PureStateQ"],
-        First @ Pick[qs["Eigenvectors"], ConfirmBy[Thread[Chop[qs["Eigenvalues"]] =!= 0], Apply[Or]]],
+        First @ Pick[qs["Eigenvectors"], ConfirmBy[Map[# =!= 0 &, Chop[qs["Eigenvalues"]]], Apply[Or]]],
         True,
         Message[QuantumState::notpure]; $Failed
     ];
