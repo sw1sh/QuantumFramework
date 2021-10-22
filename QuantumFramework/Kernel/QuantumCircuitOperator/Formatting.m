@@ -7,17 +7,14 @@ ConfirmQuiet @ BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
     qco,
     qco["Diagram"], {
         {
-            BoxForm`SummaryItem[{"Gates: ", qco["Gates"]}],
-            BoxForm`SummaryItem[{"Arity: ", qco["Arity"]}]
-        }, {
-            BoxForm`SummaryItem[{"Dimension: ", qco["InputDimension"]}],
-            BoxForm`SummaryItem[{"Order: ", qco["CircuitOperator"]["InputOrder"]}]
+            BoxForm`SummaryItem[{"Gates: ", qco["Gates"]}]
         }
-    }, {
+    },
+    {
         {
-            BoxForm`SummaryItem[{"Hermitian: ", qco["HermitianQ"]}]
-        }, {
-            BoxForm`SummaryItem[{"Unitary: ", qco["UnitaryQ"]}]
+            BoxForm`SummaryItem[{"Dimension: ", Row[{qco["InputDimension"], "\[RightArrow]", qco["InputDimension"]}]}],
+            BoxForm`SummaryItem[{"Order: ", Row[{qco["InputOrder"], "\[RightArrow]", qco["OutputOrder"]}]}],
+            BoxForm`SummaryItem[{"Target: ", qco["Target"]}]
         }
     },
     format,

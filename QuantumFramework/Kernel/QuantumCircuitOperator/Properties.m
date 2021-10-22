@@ -33,11 +33,29 @@ QuantumCircuitOperatorProp[QuantumCircuitOperator[operators_], "Operators"] := o
 
 QuantumCircuitOperatorProp[qco_, "Diagram"] := Show[drawGateGraphics[qco["Operators"]]]
 
-QuantumCircuitOperatorProp[qco_, "CircuitOperator"] := Fold[ReverseApplied[Construct], qco["Operators"]]
+QuantumCircuitOperatorProp[qco_, "CircuitOperator" | "Compile"] := Fold[ReverseApplied[Construct], qco["Operators"]]
 
 QuantumCircuitOperatorProp[qco_, "Gates"] := Length @ qco["Operators"]
 
-QuantumCircuitOperatorProp[qco_, "Orders" | "OperatorOrders"] := #["InputOrder"] & /@ qco["Operators"]
+QuantumCircuitOperatorProp[qco_, "InputOrders"] := #["InputOrder"] & /@ qco["Operators"]
+
+QuantumCircuitOperatorProp[qco_, "InputOrder"] := Union @@ qco["InputOrders"]
+
+QuantumCircuitOperatorProp[qco_, "OutputOrders"] := #["OutputOrder"] & /@ qco["Operators"]
+
+QuantumCircuitOperatorProp[qco_, "OutputOrder"] := Union @@ qco["OutputOrders"]
+
+QuantumCircuitOperatorProp[qco_, "Arity"] := Length @ qco["InputOrder"]
+
+QuantumCircuitOperatorProp[qco_, "InputDimensions"] :=
+    (q |-> #["InputDimensions"][[ q /. #["InputOrderQuditMapping"] ]] & @
+        SelectFirst[qco["Operators"], op |-> MemberQ[op["FullInputOrder"], q]]) /@ qco["InputOrder"]
+
+QuantumCircuitOperatorProp[qco_, "OutputDimensions"] :=
+    (q |-> #["OutputDimensions"][[ q /. #["OutputOrderQuditMapping"] ]] & @
+        SelectFirst[Reverse @ qco["Operators"], op |-> MemberQ[op["FullOutputOrder"], q]]) /@ qco["OutputOrder"]
+
+QuantumCircuitOperatorProp[qco_, "Target"] := Union @@ (#["Target"] & /@ Select[qco["Operators"], QuantumMeasurementOperatorQ])
 
 QuantumCircuitOperatorProp[qco_, "QiskitCircuit" | "Qiskit"] := QuantumCircuitOperatorToQiskit[qco]
 
