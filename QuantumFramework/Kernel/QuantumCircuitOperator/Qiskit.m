@@ -73,16 +73,15 @@ qc_QiskitCircuit["EvalBytes", attr_String, args___, kwargs : OptionsPattern[]] :
 
 
 qiskitDiagram[qc_QiskitCircuit, OptionsPattern[{"Scale" -> 5}]] := Enclose @ With[{
-    latex = StringSplit[qc["Eval", "draw", "output" -> "latex_source", "scale" -> OptionValue["Scale"]], EndOfLine]
+    latex = qc["Eval", "draw", "output" -> "latex_source", "scale" -> OptionValue["Scale"]]
 },
     Confirm @ Check[Needs["MaTeX`"], ResourceFunction["MaTeXInstall"][]; Needs["MaTeX`"]];
     MaTeX`MaTeX[
-        StringJoin @ latex[[7 ;; -2]],
-        "BasePreamble" -> {},
-        "Preamble" -> Prepend[latex[[3 ;; 4]], "\\standaloneconfig{border=-16 -8 -16 -16}"]
+        First @ StringCases[latex, "\\begin{document}" ~~ s___ ~~ "\\end{document}" :> s],
+        "Preamble" -> Prepend[StringCases[latex, s : ("\\usepackage" ~~ Shortest[___] ~~ EndOfLine) :> s], "\\standaloneconfig{border=-16 -8 -16 -16}"]
     ]
 ]
-    
+
 
 qc_QiskitCircuit["Diagram", opts : OptionsPattern[]] := qiskitDiagram[qc, opts]
 
