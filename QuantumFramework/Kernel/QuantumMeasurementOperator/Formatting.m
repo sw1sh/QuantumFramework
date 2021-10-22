@@ -5,7 +5,7 @@ Package["Wolfram`QuantumFramework`"]
 QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; QuantumMeasurementOperatorQ[Unevaluated @ qmo], format_] := With[{
     icon = MatrixPlot[
         Enclose[
-            ConfirmAssert[qo["Dimension"] < 2 ^ 11];
+            ConfirmAssert[qmo["Dimension"] < 2 ^ 11];
             Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]],
                 If[ qmo["POVMQ"],
                     ArrayReshape[

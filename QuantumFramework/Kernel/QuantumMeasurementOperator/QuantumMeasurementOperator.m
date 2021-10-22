@@ -110,7 +110,7 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? orderQ] /; qo["Inpu
             ],
             "Label" -> qmo["Label"][qs["Label"]]
         ],
-        qmo["Target"]
+        If[op["OutputQudits"] <= op["InputQudits"], Range[qmo["Eigenqudits"]], qmo["Target"]]
     ]
 ]
 
@@ -122,7 +122,7 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? orderQ] /; qo["Inpu
             ReplacePart[op["FullOutputOrder"], Thread[List /@ Range[qmo["Eigenqudits"]] -> qo["FirstOutputQudit"] - Reverse @ Range[qmo["Eigenqudits"]]]],
             op["InputOrder"]
         }] @ qo,
-        qmo["Target"]
+        If[qo["OutputQudits"] < qo["InputQudits"] && qo["OutputDimension"] == qo["InputDimension"], Sort @ qo["FullInputOrder"], qmo["Target"]]
     ]
 ]
 

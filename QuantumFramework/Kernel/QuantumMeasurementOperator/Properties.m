@@ -44,12 +44,26 @@ QuantumMeasurementOperatorProp[_[_, target_], "Target"] := target
 
 QuantumMeasurementOperatorProp[qmo_, "Targets"] := Length[qmo["Target"]]
 
-QuantumMeasurementOperatorProp[qmo_, "Eigenqudits"] := If[qmo["POVMQ"], qmo["OutputQudits"] - qmo["InputQudits"], 1]
+QuantumMeasurementOperatorProp[qmo_, "TargetDimensions"] :=
+    Extract[qmo["InputDimensions"], Position[qmo["FullInputOrder"], Alternatives @@ qmo["Target"]] ]
+
+QuantumMeasurementOperatorProp[qmo_, "TargetDimension"] := Times @@ qmo["TargetDimensions"]
+
+QuantumMeasurementOperatorProp[qmo_, "Eigenqudits"] := If[qmo["POVMQ"],
+    Enclose[
+        First @ Confirm @ FirstPosition[
+            FoldList[Times, qmo["OutputDimensions"]],
+            qmo["TargetDimension"]
+        ],
+        1 &
+    ],
+    1
+]
 
 QuantumMeasurementOperatorProp[qmo_, "Type"] := Which[
-    qmo["OutputQudits"] == qmo["InputQudits"],
+    qmo["OutputDimension"] == qmo["InputDimension"],
     "Projection",
-    qmo["OutputQudits"] > qmo["InputQudits"],
+    qmo["OutputDimension"] > qmo["InputDimension"],
     "POVM",
     True,
     "Destructive"
