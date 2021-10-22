@@ -412,10 +412,13 @@ QuantumOperator[{"Permutation", dims_List, perm_Cycles}, order_ ? orderQ] := Qua
 
 QuantumOperator["Uncurry", args___] := QuantumOperator[{"Uncurry", {2, 2}}, args]
 
-QuantumOperator[{"Uncurry", dims_List}] := QuantumOperator[{"Uncurry", dims}, Range[Length[dims]]]
+QuantumOperator[{"Uncurry", dims_List}] := QuantumOperator[{"Uncurry", dims}, {1}, Range[Length[dims]]]
 
 QuantumOperator[{"Uncurry", dims_List}, args___] :=
-    QuantumOperator[IdentityMatrix[Times @@ dims], QuantumBasis[QuditBasis[Times @@ dims], QuditBasis[dims]["Dual"]], args]
+    QuantumOperator[
+        QuantumOperator[IdentityMatrix[Times @@ dims], QuantumBasis[QuditBasis[Times @@ dims], QuditBasis[dims]["Dual"]]],
+        args
+    ]
 
 
 QuantumOperator[name : "Curry" | {"Curry", ___}, args___] := QuantumOperator[name /. "Curry" -> "Uncurry", args]["ConjugateTranspose"]

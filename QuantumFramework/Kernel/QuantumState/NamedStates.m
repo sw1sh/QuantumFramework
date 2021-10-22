@@ -30,13 +30,13 @@ QuantumState["Left", args___] := QuantumState[Normalize @ {1, I}, args]
 
 QuantumState["Right", args___] := QuantumState[Normalize @ {1, -I}, args]
 
-QuantumState["PsiPlus", args___] := QuantumState[Normalize @ {1, 0, 0, 1}, args]
+QuantumState["PhiPlus", args___] := QuantumState[Normalize @ {1, 0, 0, 1}, args]
 
-QuantumState["PsiMinus", args___] := QuantumState[Normalize @ {1, 0, 0, -1}, args]
+QuantumState["PhiMinus", args___] := QuantumState[Normalize @ {1, 0, 0, -1}, args]
 
-QuantumState["PhiPlus", args___] := QuantumState[Normalize @ {0, 1, 1, 0}, args]
+QuantumState["PsiPlus", args___] := QuantumState[Normalize @ {0, 1, 1, 0}, args]
 
-QuantumState["PhiMinus", args___] := QuantumState[Normalize @ {0, 1, -1, 0}, args]
+QuantumState["PsiMinus", args___] := QuantumState[Normalize @ {0, 1, -1, 0}, args]
 
 QuantumState[{name : "Plus" | "Minus" | "Left" | "Right" | "PsiPlus" | "PsiMinus" | "PhiPlus" | "PhiMinus", n_Integer ? Positive}, args___] :=
     QuantumTensorProduct @ Table[QuantumState[name, args], n]

@@ -6,6 +6,7 @@ PackageScope["$QuditBasisNames"]
 $QuditBasisNames = {
     "Computational",
     "PauliX", "PauliY", "PauliZ",
+    "Bell",
     "Fourier",
     "Identity",
     "Schwinger", "Pauli", "Dirac", "Wigner"
