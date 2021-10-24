@@ -65,7 +65,7 @@ QuantumMeasurement::undefprop = "QuantumMeasurement property `` is undefined for
     result = QuantumMeasurementProp[qm, prop, args]
     },
     (* don't cache Simulated* results *)
-    If[ ! TrueQ[$QuantumFrameworkPropCache] && MatchQ[prop, name_String | {name_String, ___} /; StringStartsQ[name, "Simulated"]],
+    If[ ! TrueQ[$QuantumFrameworkPropCache] || MatchQ[prop, name_String | {name_String, ___} /; StringStartsQ[name, "Simulated"]],
         result,
         QuantumMeasurementProp[qm, prop, args] = result
     ] /; !MatchQ[result, _QuantumMeasurementProp] || Message[QuantumMeasurement::undefprop, prop]
@@ -79,6 +79,20 @@ QuantumMeasurementProp[qm_, "Properties"] := DeleteDuplicates @ Join[$QuantumMea
 QuantumMeasurementProp[QuantumMeasurement[qs_, _], "State"] := qs
 
 QuantumMeasurementProp[QuantumMeasurement[_, target_], "Target"] := target
+
+QuantumMeasurementProp[qm_, "TargetBasis"] := qm["Input"][{"Extract", qm["Target"]}]["Dual"]
+
+QuantumMeasurementProp[qm_, "CanonicalBasis"] := QuantumBasis[qm["TargetBasis"], qm["Input"]]
+
+QuantumMeasurementProp[qm_, "Canonical"] := QuantumMeasurement[
+    QuantumState[qm["State"], qm["CanonicalBasis"]],
+    qm["Target"]
+]
+
+QuantumMeasurementProp[qm_, "Computational"] := QuantumMeasurement[
+    qm["State"]["Computational"],
+    qm["Target"]
+]
 
 QuantumMeasurementProp[qm_, "Operator"] := QuantumOperator[qm["State"], Range[1 - qm["Targets"], 0], Range[qm["InputQudits"]]]
 
@@ -95,10 +109,15 @@ QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumPartialTrace[
 ]
 
 QuantumMeasurementProp[qm_, "MixedStates"] := With[{rep = If[qm["PureStateQ"], 1, 2]},
-    If[ MatchQ[qm["Label"], "Computational"[_]],
+    Which[
+        MatchQ[qm["Label"], "Eigen" | "Eigen"[__]],
+        QuantumState[ArrayReshape[#, Table[qm["InputDimension"], rep]], qm["Input"]["Dual"]] & /@ qm["StateMatrix"],
+        MatchQ[qm["Label"], "Computational" | "Computational"[__]],
         QuantumState[QuantumState[ArrayReshape[#, Table[qm["InputDimension"], rep]], QuantumBasis[qm["InputDimensions"]]], QuantumBasis[qm["Input"]["Dual"]]] & /@
-            qm["State"]["Computational"]["StateMatrix"],
-        QuantumState[ArrayReshape[#, Table[qm["InputDimension"], rep]], qm["Input"]["Dual"]] & /@ qm["State"]["StateMatrix"]
+            qm["Computational"]["StateMatrix"],
+        True,
+        QuantumState[ArrayReshape[#, Table[qm["InputDimension"], rep]], QuantumBasis[qm["TargetBasis"]]] & /@
+            qm["Canonical"]["StateMatrix"]
     ]
 ]
 
@@ -107,12 +126,15 @@ QuantumMeasurementProp[qm_, "States"] := If[qm["PureStateQ"], qm["MixedStates"],
 QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
     If[MatchQ[qm["Label"], "Computational"[_]], qm["Eigenstate"]["Computational"], qm["Eigenstate"]]["Probabilities"]
 
-QuantumMeasurementProp[qm_, "Eigenvalues"] := qm["Eigenstate"]["ElementNames"]
+QuantumMeasurementProp[qm_, "Eigenvalues"] := qm["Eigenstate"]["Names"]
 
-QuantumMeasurementProp[qm_, "Outcomes"] := If[
-    MatchQ[qm["Label"], "Computational"[_]],
+QuantumMeasurementProp[qm_, "Outcomes"] := Which[
+    MatchQ[qm["Label"], "Eigen" | "Eigen"[__]],
+    qm["Eigenvalues"],
+    MatchQ[qm["Label"], "Computational" | "Computational"[__]],
     QuditBasis[qm["InputDimensions"][[ qm["Target"] ]]]["Names"],
-    qm["Eigenvalues"]
+    True,
+    qm["Canonical"]["Output"]["Names"]
 ]
 
 QuantumMeasurementProp[qm_, "MixedOutcomes"] := If[

@@ -87,10 +87,12 @@ QuantumStateProp[qs_, "StateVector"] := Module[{result},
 
 QuantumStateProp[qs_, "Weights"] := If[qs["PureStateQ"],
     Abs[qs["StateVector"]] ^ 2,
-    With[{es = Eigensystem @ Chop @ qs["DensityMatrix"]}, PseudoInverse[es[[2]]] . es[[1]] ]
+    Diagonal @ qs["DensityMatrix"]
 ]
 
-QuantumStateProp[qs_, "Probabilities"] := qs["Weights"] / Total[qs["Weights"]]
+QuantumStateProp[qs_, "Probabilities"] := Simplify /@ (qs["Weights"] / Total[qs["Weights"]])
+
+QuantumStateProp[qs_, "Distribution"] := CategoricalDistribution[qs["Names"], qs["Probabilities"]]
 
 QuantumStateProp[qs_, "Formula"] := Total @ KeyValueMap[Times, qs["NormalizedAmplitudes"]]
 
