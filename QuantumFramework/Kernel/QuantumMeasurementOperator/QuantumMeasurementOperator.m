@@ -13,22 +13,28 @@ QuantumMeasurementOperatorQ[___] := False
 
 (* constructors *)
 
-QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : {1}] := Enclose @
+QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : {1}] := Enclose @ Module[{
+    basis
+},
+    basis = QuantumBasis[qb, Ceiling[Length[target] / qb["OutputQudits"]]];
+    basis = QuantumBasis[basis, Ceiling[Length[eigenvalues] / basis["Dimension"]]];
+
     QuantumMeasurementOperator[
         ConfirmBy[
             QuantumOperator[
                 QuantumOperator[
-                    PadRight[eigenvalues, qb["Dimension"]] . qb["Projectors"],
-                    QuantumBasis[qb["OutputDimensions"], qb["InputDimensions"]],
-                    args
+                    PadRight[eigenvalues, basis["Dimension"]] . basis["Projectors"],
+                    QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
                 ],
-                qb,
+                basis,
                 target
             ],
             QuantumOperatorQ
         ],
+        args,
         target
     ]
+]
 
 QuantumMeasurementOperator[arg_ -> eigenvalues_ ? VectorQ, args___] :=
     Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumBasis[arg], QuantumBasisQ] -> eigenvalues, args]

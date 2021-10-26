@@ -102,8 +102,9 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["ElementDimen
     qs["StateType"],
     "Vector",
     QuantumState[
-        Flatten[
+        Simplify @ Flatten[
             PseudoInverse[newBasis["OutputMatrix"]] . (qs["OutputMatrix"] . qs["StateMatrix"] . PseudoInverse[qs["InputMatrix"]]) . newBasis["InputMatrix"]
+            (* PseudoInverse[qs["OutputMatrix"]] . qs["StateMatrix"] . newBasis["OutputMatrix"] *)
         ],
         newBasis
     ],
@@ -178,7 +179,7 @@ QuantumState /: f_Symbol[qs_QuantumState] /; MemberQ[Attributes[f], NumericFunct
 (qs1_QuantumState ? QuantumStateQ)[(qs2_QuantumState ? QuantumStateQ)] /; qs1["InputDimension"] == qs2["OutputDimension"] :=
     profile[StringTemplate["State composition: `` -> ``"][qs1["Dimensions"], qs2["Dimensions"]]] @ QuantumState[
         QuantumState[
-            profile["Matrix multiply"] @ Flatten[qs1["PureMatrix"] . qs2["PureMatrix"]],
+            profile["Matrix multiply"] @ Simplify @ Flatten[qs1["PureMatrix"] . qs2["PureMatrix"]],
             QuantumBasis["Output" -> QuditBasis[qs1["OutputDimensions"]], "Input" -> QuditBasis[qs2["InputDimensions"]]]
         ],
         QuantumBasis["Output" -> qs1["Output"], "Input" -> qs2["Input"], "Label" -> qs1["Label"] @* qs2["Label"]]

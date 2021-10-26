@@ -291,7 +291,8 @@ QuantumStateProp[qs_, {"PermuteOutput", perm_Cycles}] := profile["PermuteOutput"
 ]
 
 QuantumStateProp[qs_, {"Split", n_Integer : 0}] := With[{basis = qs["Basis"][{"Split", n}]},
-    QuantumState[QuantumState[qs["Computational"]["State"], QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]], basis]
+    QuantumState[qs["State"], basis]
+    (* QuantumState[QuantumState[qs["Computational"]["State"], QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]], basis] *)
 ]
 
 QuantumStateProp[qs_, "Numeric"] := QuantumState[N @ qs["State"], qs["Basis"]["Numeric"]]

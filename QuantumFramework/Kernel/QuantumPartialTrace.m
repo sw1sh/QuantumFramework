@@ -23,7 +23,7 @@ QuantumPartialTrace[qb_QuantumBasis, qudits : {_Integer ..}] := QuantumBasis[qb,
 QuantumPartialTrace[qs_QuantumState, qudits : {_Integer ..}] :=
     QuantumState[
         QuantumState[
-            ResourceFunction["MatrixPartialTrace"][qs["Computational"]["DensityMatrix"], qudits, qs["Dimensions"]],
+            Simplify @ ResourceFunction["MatrixPartialTrace"][qs["Computational"]["DensityMatrix"], qudits, qs["Dimensions"]],
             QuantumBasis[qs["Dimensions"][[Complement[Range[qs["Qudits"]], qudits]]]]
         ],
         QuantumBasis @@ QuantumPartialTrace[QuantumTensorProduct[qs["Output"], qs["Input"]], qudits][

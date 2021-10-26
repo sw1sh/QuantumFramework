@@ -105,10 +105,7 @@ QuantumBasis[qb_ ? QuantumBasisQ, multiplicity_Integer, args___] := QuantumBasis
     args
 ]
 
-QuantumBasis[arg_, multiplicity_Integer, args___] := QuantumBasis[
-    "Output" -> QuditBasis[arg, multiplicity],
-    args
-]
+QuantumBasis[arg_, multiplicity_Integer, args___] := QuantumTensorProduct @ Table[QuantumBasis[arg, args], multiplicity]
 
 QuantumBasis[param : name_String | {name_String, ___}, args___] :=
     QuantumBasis[<|"Output" -> QuditBasis[param], "Label" -> StringDelete[name, "Basis"]|>, args]

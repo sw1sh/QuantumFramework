@@ -40,7 +40,7 @@ QuditBasis["PauliX", args___] := QuditBasis[
             Subscript["\[Psi]", "x-"],
             Subscript["\[Psi]", "x+"]
         },
-        (1 / Sqrt[2]) {{1, -1}, {1, 1}}
+        (1 / Sqrt[2]) {{-1, 1}, {1, 1}}
     ],
     args
 ]
@@ -50,7 +50,7 @@ QuditBasis["PauliY", args___] := QuditBasis[
             Subscript["\[Psi]", "y-"],
             Subscript["\[Psi]", "y+"]
         },
-        (1 / Sqrt[2]) {{1, -I}, {1, I}}
+        (1 / Sqrt[2]) {{I, 1}, {-I, 1}}
     ],
     args
 ]

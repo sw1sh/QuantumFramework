@@ -82,7 +82,7 @@ QuantumMeasurementProp[QuantumMeasurement[_, target_], "Target"] := target
 
 QuantumMeasurementProp[qm_, "TargetBasis"] := qm["Input"][{"Extract", qm["Target"]}]["Dual"]
 
-QuantumMeasurementProp[qm_, "CanonicalBasis"] := QuantumBasis[qm["TargetBasis"], qm["Input"]]
+QuantumMeasurementProp[qm_, "CanonicalBasis"] := QuantumBasis[qm["TargetBasis"], qm["Input"]["Dual"]]
 
 QuantumMeasurementProp[qm_, "Canonical"] := QuantumMeasurement[
     QuantumState[qm["State"], qm["CanonicalBasis"]],

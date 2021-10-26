@@ -19,11 +19,12 @@ QuantumTensorProduct[qb1_QuditBasis, qb2_QuditBasis] := If[qb1["Size"] == 0 || q
 (* basis x basis *)
 
 QuantumTensorProduct[qb1_QuantumBasis, qb2_QuantumBasis] /; qb1["Picture"] === qb2["Picture"] :=
-QuantumBasis[
+QuantumBasis[<|
     "Output" -> QuantumTensorProduct[qb1["Output"], qb2["Output"]],
     "Input" -> QuantumTensorProduct[qb1["Input"], qb2["Input"]],
     "Picture" -> qb1["Picture"],
     "Label" -> Flatten @ CircleTimes[qb1["Label"], qb2["Label"]] /. None -> Sequence[]
+|>
 ]
 
 
