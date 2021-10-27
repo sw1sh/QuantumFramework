@@ -15,7 +15,8 @@ $QuantumOperatorNames = {
     "SWAP", "RootSWAP", "CSWAP",
      "ControlledU", "CX", "CY", "CZ", "CH", "CT", "CS", "CPHASE", "CNOT",
     "XX", "YY", "ZZ",
-    "Toffoli", "Deutsch", "RandomUnitary"
+    "Toffoli", "Deutsch", "RandomUnitary",
+    "Spider"
 }
 
 
@@ -285,6 +286,8 @@ QuantumOperator[{"PauliZ" | "Z", dimension_Integer}, args___] := With[{
     ]
 ]
 
+QuantumOperator["NOT", args___] := QuantumOperator["X", "Label" -> "NOT", args]
+
 
 QuantumOperator["RootNOT", args___] := QuantumOperator[{"RootNOT", 2}, args]
 
@@ -312,20 +315,8 @@ QuantumOperator[{"Hadamard" | "H", qudits_Integer ? Positive}, args___, order_ ?
     ]
 
 
-QuantumOperator["Toffoli", args___, order : (_ ? orderQ) : {1, 2, 3}] := QuantumOperator[{"Toffoli", Length[order]}, args, order]
-
-QuantumOperator[{"Toffoli", arity_Integer}, args___] := QuantumOperator[
-    SparseArray[{i_, j_} :>
-        If[ (i == j && i < (2 ^ arity) - 1) || (i == (2 ^ arity) - 1 &&
-            j == 2 ^ arity) || (j == (2 ^ arity) - 1 && i == 2 ^ arity),
-            1,
-            0
-        ], {2 ^ arity, 2 ^ arity}
-    ],
-    2, arity,
-    "Label" -> "\[ScriptCapitalT]",
-    args
-]
+QuantumOperator["Toffoli", order : (_ ? orderQ) : {1, 2, 3}] :=
+    QuantumOperator[{"ControlledU", "NOT", Most[order]}, {Last[order]}]
 
 
 QuantumOperator["CSWAP", args___] := QuantumOperator[
@@ -422,4 +413,16 @@ QuantumOperator[{"Uncurry", dims_List}, args___] :=
 
 
 QuantumOperator[name : "Curry" | {"Curry", ___}, args___] := QuantumOperator[name /. "Curry" -> "Uncurry", args]["ConjugateTranspose"]
+
+
+QuantumOperator["Spider", args___] := QuantumOperator[{"Spider"}, args]
+
+QuantumOperator[{"Spider", out_Integer : 1, in_Integer : 1}, args__ : "Computational"] := With[{
+    basis = QuantumBasis[QuditBasis[args, out], QuditBasis[args, in], "Label" -> "Spider"]
+},
+    QuantumOperator[
+        QuantumState[SparseArray[{1 -> 1, -1 -> 1}, basis["Dimension"]], basis],
+        Range[out], Range[in]
+    ]
+]
 
