@@ -5,21 +5,26 @@ PackageScope["$PythonSession"]
 
 
 
-confirmPython[session_] := ExternalEvaluate[session, "import qiskit"] === Null
+confirmPython[session_] := ResourceFunction["PythonPackageInstalledQ"][session, "qiskit"] || ExternalEvaluate[session, "import qiskit"] === Null
 
-$PythonSession := Enclose @
+$PythonSession := With[{session = SelectFirst[ExternalSessions[], confirmPython, StartExternalSession["Python"]]},
+Enclose[
     ConfirmBy[
-        SelectFirst[ExternalSessions[], confirmPython, StartExternalSession["Python"]],
+        session,
         confirmPython,
-        "No suitable python environment found."
-    ]
+        "No qiskit package found. Installing it first instead."
+    ],
+    (PrintTemporary["Installing Qiskit ..."]; ResourceFunction["PythonPackageInstall"][session, "qiskit"]; session) &
+]
+]
 
 
 PythonEvalAttr[{bytes_ByteArray, attr_String, args___, kwargs : OptionsPattern[]}, OptionsPattern[{"ReturnBytes" -> False}]] := Block[{
     Wolfram`QuantumFramework`pythonBytes = bytes,
     Wolfram`QuantumFramework`pythonAttr = attr,
     Wolfram`QuantumFramework`pythonArgs = {args},
-    Wolfram`QuantumFramework`pythonKWargs = Association @ {kwargs}
+    Wolfram`QuantumFramework`pythonKWargs = Association @ {kwargs},
+    Wolfram`QuantumFramework`returnBytes = OptionValue["ReturnBytes"]
 },
     ExternalEvaluate[$PythonSession, "
 import pickle
@@ -30,7 +35,7 @@ if hasattr(attr, '__call__'):
 else:
     result = attr
 
-if <* TrueQ @ OptionValue[\"ReturnBytes\"] *>:
+if <* TrueQ @ Wolfram`QuantumFramework`returnBytes  *>:
     result = pickle.dumps(result)
 
 result

@@ -28,7 +28,7 @@ QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
                 Splice[{label, None, {#, #}} & /@ (#["InputOrder"] - 1)],
                 {
                     label,
-                    NumericArray @ N @ #["MatrixRepresentation"],
+                    NumericArray @ N @ Normal @ #["MatrixRepresentation"],
                     #["InputOrder"] - 1
                 }
             ]
