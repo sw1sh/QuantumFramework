@@ -24,7 +24,7 @@ QuantumState[name_ ? nameQ, basisName : Except[Alternatives @@ $QuantumBasisPict
 
 QuantumState["Plus", args___] := QuantumState[Normalize @ {1, 1}, args]
 
-QuantumState["Minus", args___] := QuantumState[Normalize @ {1, -1}, args]
+QuantumState["Minus", args___] := QuantumState[Normalize @ {-1, 1}, args]
 
 QuantumState["Left", args___] := QuantumState[Normalize @ {1, I}, args]
 
