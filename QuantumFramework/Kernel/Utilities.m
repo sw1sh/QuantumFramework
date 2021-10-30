@@ -4,6 +4,7 @@ PackageScope["symbolicTensorQ"]
 PackageScope["basisMultiplicity"]
 PackageScope["nameQ"]
 PackageScope["propQ"]
+PackageScope["propName"]
 PackageScope["stateQ"]
 PackageScope["orderQ"]
 PackageScope["measurementReprQ"]
@@ -38,6 +39,8 @@ basisMultiplicity[dim_, size_] := Quiet[Ceiling @ Log[size, dim] /. 0 | Indeterm
 nameQ[name_] := MatchQ[name, _String | {_String, ___}]
 
 propQ[prop_] := MatchQ[prop, _String | {_String, ___} | (_String -> _)]
+
+propName[prop_] := Replace[prop, name_String | {name_String, ___} | (name_String -> _) :> name]
 
 stateQ[state_] := !nameQ[state] && VectorQ[state] && Length[state] > 0 || SquareMatrixQ[state]
 

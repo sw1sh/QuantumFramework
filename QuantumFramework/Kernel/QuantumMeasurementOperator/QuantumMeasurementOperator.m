@@ -50,11 +50,11 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args__, target_ ? orderQ] :=
         target
     ]
 
-QuantumMeasurementOperator[tensor_ ? TensorQ /; 2 <= TensorRank[tensor] <= 3, args___] :=
-    QuantumMeasurementOperator[QuantumOperator[tensor], "Label" -> "Eigen", args]
+QuantumMeasurementOperator[tensor_ ? TensorQ /; 2 <= TensorRank[tensor] <= 3, args___, target : (_ ? orderQ) : {1}] :=
+    QuantumMeasurementOperator[QuantumOperator[tensor, target], "Label" -> "Eigen", args, target]
 
-QuantumMeasurementOperator[tensor_ ? TensorQ /; 2 <= TensorRank[tensor] <= 3, qb_ ? QuantumBasisQ, args___] :=
-    QuantumMeasurementOperator[QuantumOperator[tensor, qb], "Label" -> "Eigen", args]
+QuantumMeasurementOperator[tensor_ ? TensorQ /; 2 <= TensorRank[tensor] <= 3, qb_ ? QuantumBasisQ, args___, target : (_ ? orderQ) : {1}] :=
+    QuantumMeasurementOperator[QuantumOperator[tensor, qb, target], "Label" -> "Eigen", args, target]
 
 QuantumMeasurementOperator[
     args : PatternSequence[] |
@@ -185,6 +185,9 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? orderQ] /; qo["Inpu
         ]
     ]
 ]
+
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ] :=
+    QuantumCircuitOperator[Append[qco["Operators"], qmo]]
 
 
 (* equality *)

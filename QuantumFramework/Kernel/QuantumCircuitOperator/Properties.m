@@ -13,7 +13,7 @@ QuantumCircuitOperator["Properties"] := $QuantumCircuitOperatorProperties
 
 QuantumCircuitOperatorProp[qco_, "Properties"] := Enclose @ DeleteDuplicates @ Join[
     QuantumCircuitOperator["Properties"],
-    ConfirmBy[qco["CircuitOperator"], QuantumFrameworkOperatorQ]["Properties"]
+    ConfirmBy[Last[qco["Operators"]], QuantumFrameworkOperatorQ]["Properties"]
 ]
 
 
@@ -25,7 +25,10 @@ QuantumCircuitOperator::undefprop = "property `` is undefined for this circuit";
 (qds_QuantumCircuitOperator[prop_ ? propQ, args___]) /; QuantumCircuitOperatorQ[qds] := With[{
     result = Check[QuantumCircuitOperatorProp[qds, prop, args], $Failed]
 },
-    If[TrueQ[$QuantumFrameworkPropCache], QuantumCircuitOperatorProp[qds, prop, args] = result, result] /;
+    If[ TrueQ[$QuantumFrameworkPropCache] && ! MemberQ[{"Operators", "Diagram", "Qiskit", "QiskitCircuit"}, propName[prop]],
+        QuantumCircuitOperatorProp[qds, prop, args] = result,
+        result
+    ] /;
         !FailureQ[Unevaluated @ result] && (!MatchQ[Unevaluated @ result, _QuantumCircuitOperatorProp] || Message[QuantumCircuitOperator::undefprop, prop])
 ]
 
@@ -51,9 +54,13 @@ QuantumCircuitOperatorProp[qco_, "InputDimensions"] :=
     (q |-> #["InputDimensions"][[ q /. #["InputOrderQuditMapping"] ]] & @
         SelectFirst[qco["Operators"], op |-> MemberQ[op["FullInputOrder"], q]]) /@ qco["InputOrder"]
 
+QuantumCircuitOperatorProp[qco_, "InputDimension"] := Times @@ qco["InputDimensions"]
+
 QuantumCircuitOperatorProp[qco_, "OutputDimensions"] :=
     (q |-> #["OutputDimensions"][[ q /. #["OutputOrderQuditMapping"] ]] & @
         SelectFirst[Reverse @ qco["Operators"], op |-> MemberQ[op["FullOutputOrder"], q]]) /@ qco["OutputOrder"]
+
+QuantumCircuitOperatorProp[qco_, "OutputDimension"] := Times @@ qco["OutputDimensions"]
 
 QuantumCircuitOperatorProp[qco_, "Target"] := Union @@ (#["Target"] & /@ Select[qco["Operators"], QuantumMeasurementOperatorQ])
 
@@ -62,5 +69,5 @@ QuantumCircuitOperatorProp[qco_, "QiskitCircuit" | "Qiskit"] := QuantumCircuitOp
 (* operator properties *)
 
 QuantumCircuitOperatorProp[qco_, args : PatternSequence[prop_String, ___] | PatternSequence[{prop_String, ___}, ___]] /;
-    MemberQ[Intersection[qco["CircuitOperator"]["Properties"], qco["Properties"]], prop] := qco["CircuitOperator"][args]
+    MemberQ[Intersection[Last[qco["Operators"]]["Properties"], qco["Properties"]], prop] := qco["CircuitOperator"][args]
 

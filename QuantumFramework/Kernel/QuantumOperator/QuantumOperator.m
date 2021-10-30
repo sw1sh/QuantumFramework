@@ -263,6 +263,8 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 (qo_QuantumOperator ? QuantumOperatorQ)[qm_ ? QuantumMeasurementQ] /; qo["Picture"] == qm["Picture"] :=
     QuantumMeasurement[qm["Operator"][qo]["State"], qm["Target"]]
 
+(qo_QuantumOperator ? QuantumOperatorQ)[qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ] :=
+    QuantumCircuitOperator[Append[qco["Operators"], qo]]
 
 (* equality *)
 

@@ -16,7 +16,10 @@ QuantumCircuitOperator[operators_, args__] := QuantumCircuitOperator[MapAt[Head[
 QuantumCircuitOperator[op_ ? QuantumFrameworkOperatorQ] := QuantumCircuitOperator[{op}]
 
 
-(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[arg_ ? QuantumOperatorQ] := Head[arg][qco["CircuitOperator"][arg]]
+(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[op_ ? QuantumFrameworkOperatorQ] :=
+    QuantumCircuitOperator[Prepend[qco["Operators"], op]]
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qs_ ? QuantumStateQ] := qco["CircuitOperator"][qs]
 
+op_QuantumMeasurementOperator[qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ] :=
+    QuantumCircuitOperator[Append[qco["Operators"], op]]

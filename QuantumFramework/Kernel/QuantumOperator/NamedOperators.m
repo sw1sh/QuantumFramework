@@ -70,21 +70,7 @@ QuantumOperator["T", args___] := QuantumOperator[{"ZRotation", Pi / 4}, "Label" 
 
 QuantumOperator["CNOT", args___] := QuantumOperator[{"CNOT", 2}, args]
 
-QuantumOperator[{"CNOT", dimension_Integer}, args___] := QuantumOperator[
-    SparseArray[{i_, j_} :> 
-        If[ IntegerDigits[j - 1, dimension, 2] == {
-                First[IntegerDigits[i - 1, dimension, 2]],
-                Mod[-Total[IntegerDigits[i - 1, dimension, 2]], dimension]
-            },
-            1,
-            0
-        ],
-        {dimension ^ 2, dimension ^ 2}
-    ],
-    dimension,
-    "Label" -> "Controlled"["NOT"],
-    args
-]
+QuantumOperator[{"CNOT", dimension_Integer}, args___] := QuantumOperator[{"ControlledU", {"NOT", dimension}}, args]
 
 
 QuantumOperator["CPHASE", args___] := QuantumOperator[{"CPHASE", 2}, args]
@@ -242,7 +228,7 @@ QuantumOperator[{"SUM", dimension_Integer}, args___] := QuantumOperator[
 ]
 
 
-QuantumOperator[name : "X" | "Y" | "Z" | "PauliX" | "PauliY" | "PauliZ", args___] := QuantumOperator[{name, 2}, args]
+QuantumOperator[name : "X" | "Y" | "Z" | "PauliX" | "PauliY" | "PauliZ" | "NOT", args___] := QuantumOperator[{name, 2}, args]
 
 QuantumOperator[{"PauliX" | "X", dimension_Integer}, args___] := With[{
     s = (dimension - 1) / 2
@@ -286,7 +272,7 @@ QuantumOperator[{"PauliZ" | "Z", dimension_Integer}, args___] := With[{
     ]
 ]
 
-QuantumOperator["NOT", args___] := QuantumOperator["X", "Label" -> "NOT", args]
+QuantumOperator[{"NOT", dimension_Integer}, args___] := QuantumOperator[{"X", dimension}, "Label" -> "NOT", args]
 
 
 QuantumOperator["RootNOT", args___] := QuantumOperator[{"RootNOT", 2}, args]
