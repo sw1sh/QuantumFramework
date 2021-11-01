@@ -266,6 +266,21 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 (qo_QuantumOperator ? QuantumOperatorQ)[qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ] :=
     QuantumCircuitOperator[Append[qco["Operators"], qo]]
 
+
+QuantumOperator /: (qo1_QuantumOperator ? QuantumOperatorQ) + (qo2_QuantumOperator ? QuantumOperatorQ) /;
+    qo1["Dimension"] == qo2["Dimension"] && qo1["Order"] == qo2["Order"] :=
+    QuantumOperator[
+        QuantumOperator[
+            qo1["MatrixRepresentation"] + qo2["MatrixRepresentation"],
+            QuantumBasis[qo1["Dimensions"]]
+        ],
+        qo1["Basis"]
+    ]
+
+QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator] ...] /; MemberQ[Attributes[f], NumericFunction] :=
+    Enclose @ QuantumOperator[ConfirmBy[MatrixFunction[f[left, #, right] &, qo["Matrix"]], MatrixQ], qo["Basis"], "Label" -> f[left, qo["Label"], right], qo["Order"]]
+
+
 (* equality *)
 
 QuantumOperator /: Equal[qo : _QuantumOperator ... ] :=

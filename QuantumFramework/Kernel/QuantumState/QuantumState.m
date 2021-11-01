@@ -168,10 +168,8 @@ QuantumState /: (x : (_ ? NumericQ) | _Symbol) * (qs_QuantumState ? QuantumState
         qs["Basis"]
     ]
 
-QuantumState /: (qs_QuantumState ? QuantumStateQ) ^ p_ := Enclose @ QuantumState[ConfirmBy[MatrixPower[qs["DensityMatrix"], p], MatrixQ], qs["Basis"]]
-
-QuantumState /: f_Symbol[qs_QuantumState] /; MemberQ[Attributes[f], NumericFunction] :=
-    Enclose @ QuantumState[ConfirmBy[MatrixFunction[f, qs["DensityMatrix"]], MatrixQ], qs["Basis"]]
+QuantumState /: f_Symbol[left : _ ? NumericQ ..., qs_QuantumState, right : _ ? NumericQ ...] /; MemberQ[Attributes[f], NumericFunction] :=
+    Enclose @ QuantumState[ConfirmBy[MatrixFunction[f[left, #, right] &, qs["DensityMatrix"]], MatrixQ], qs["Basis"]]
 
 
 (* composition *)

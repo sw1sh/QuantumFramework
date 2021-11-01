@@ -190,6 +190,20 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? orderQ] /; qo["Inpu
     QuantumCircuitOperator[Append[qco["Operators"], qmo]]
 
 
+
+QuantumMeasurementOperator /: (qmo1_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ) + (qmo2_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ) /;
+    qmo1["Dimension"] == qmo2["Dimension"] && qmo1["Order"] == qmo2["Order"] && qmo1["Target"] == qmo2["Target"] :=
+    QuantumMeasurementOperator[
+        qmo1["Operator"] + qmo2["Operator"],
+        qmo1["Target"]
+    ]
+
+QuantumMeasurementOperator /: f_Symbol[left : Except[_QuantumMeasurementOperator] ...,
+    qmo_QuantumMeasurementOperator, right : Except[_QuantumMeasurementOperator] ...] /; MemberQ[Attributes[f], NumericFunction] :=
+    QuantumMeasurementOperator[f[left, qmo["Operator"], right], qmo["Target"]]
+
+
+
 (* equality *)
 
 QuantumMeasurementOperator /: Equal[qmo : _QuantumMeasurementOperator ... ] :=
