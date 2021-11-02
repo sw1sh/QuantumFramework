@@ -272,7 +272,7 @@ QuantumOperator /: (qo1_QuantumOperator ? QuantumOperatorQ) + (qo2_QuantumOperat
     QuantumOperator[
         QuantumOperator[
             qo1["MatrixRepresentation"] + qo2["MatrixRepresentation"],
-            QuantumBasis[qo1["Dimensions"]]
+            QuantumBasis[qo1["OutputDimensions"], qo1["InputDimensions"]]
         ],
         qo1["Basis"]
     ]
