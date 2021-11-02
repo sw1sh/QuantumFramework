@@ -45,7 +45,7 @@ QuantumOperator[{"Identity", qb_ ? QuditBasisQ}, args___] := QuantumOperator[Ide
 
 
 QuantumOperator[{"XRotation", angle_}, args___] := QuantumOperator[
-    {{Cos[angle / 2], I Sin[angle / 2]}, {I Sin[angle / 2], Cos[angle / 2]}},
+    {{Cos[angle / 2], - I Sin[angle / 2]}, {- I Sin[angle / 2], Cos[angle / 2]}},
     "Label" -> Superscript["X", angle],
     args
 ]
@@ -57,15 +57,21 @@ QuantumOperator[{"YRotation", angle_}, args___] := QuantumOperator[
 ]
 
 QuantumOperator[{"ZRotation", angle_}, args___] := QuantumOperator[
-    SparseArray[{{1, 1} -> 1, {2, 2} -> Exp[I angle]}],
+    SparseArray[{{1, 1} -> Exp[- I angle / 2], {2, 2} -> Exp[I angle / 2]}],
     "Label" -> Superscript["Z", angle],
     args
 ]
 
+QuantumOperator[{"Phase", angle_}, args___] := QuantumOperator[
+    SparseArray[{{1, 1} -> 1, {2, 2} -> Exp[I angle]}],
+    "Label" -> Superscript["Phase", angle],
+    args
+]
 
-QuantumOperator["S", args___] := QuantumOperator[{"ZRotation", Pi / 2}, "Label" -> "S", args]
 
-QuantumOperator["T", args___] := QuantumOperator[{"ZRotation", Pi / 4}, "Label" -> "T", args]
+QuantumOperator["S", args___] := QuantumOperator[{"Phase", Pi / 2}, "Label" -> "S", args]
+
+QuantumOperator["T", args___] := QuantumOperator[{"Phase", Pi / 4}, "Label" -> "T", args]
 
 
 QuantumOperator["CNOT", args___] := QuantumOperator[{"CNOT", 2}, args]
@@ -323,8 +329,8 @@ QuantumOperator[name : "XX" | "YY" | "ZZ", args___] := QuantumOperator[{name, 0}
 
 QuantumOperator[{"XX", angle_}, args___] := QuantumOperator[
     SparseArray[{
-        {1, 1} -> Cos[angle], {2, 2} -> Cos[angle], {3, 3} -> Cos[angle], {4, 4} -> Cos[angle],
-        {4, 1} -> -I Sin[angle], {3, 2} -> -I Sin[angle], {2, 3} -> -I Sin[angle], {1, 4} -> -I Sin[angle]
+        {1, 1} -> Cos[angle / 2], {2, 2} -> Cos[angle / 2], {3, 3} -> Cos[angle / 2], {4, 4} -> Cos[angle / 2],
+        {4, 1} -> -I Sin[angle / 2], {3, 2} -> -I Sin[angle / 2], {2, 3} -> -I Sin[angle / 2], {1, 4} -> -I Sin[angle / 2]
     },
         {4, 4}
     ],
@@ -334,8 +340,8 @@ QuantumOperator[{"XX", angle_}, args___] := QuantumOperator[
 
 QuantumOperator[{"YY", angle_}, args___] := QuantumOperator[
     SparseArray[{
-        {1, 1} -> Cos[angle], {2, 2} -> Cos[angle], {3, 3} -> Cos[angle], {4, 4} -> Cos[angle],
-        {4, 1} -> I Sin[angle], {3, 2} -> -I Sin[angle], {2, 3} -> -I Sin[angle], {1, 4} -> I Sin[angle]
+        {1, 1} -> Cos[angle / 2], {2, 2} -> Cos[angle / 2], {3, 3} -> Cos[angle / 2], {4, 4} -> Cos[angle / 2],
+        {4, 1} -> I Sin[angle / 2], {3, 2} -> -I Sin[angle / 2], {2, 3} -> -I Sin[angle / 2], {1, 4} -> I Sin[angle / 2]
     },
         {4, 4}
     ],
@@ -345,8 +351,8 @@ QuantumOperator[{"YY", angle_}, args___] := QuantumOperator[
 
 QuantumOperator[{"ZZ", angle_}, args___] := QuantumOperator[
     SparseArray[{
-        {1, 1} -> Exp[I angle / 2], {2, 2} -> Exp[-I angle / 2],
-        {3, 3} -> Exp[-I angle / 2], {4, 4} ->  Exp[I angle / 2]
+        {1, 1} -> Exp[- I angle / 2], {2, 2} -> Exp[I angle / 2],
+        {3, 3} -> Exp[I angle / 2], {4, 4} ->  Exp[- I angle / 2]
     },
         {4, 4}
     ],
