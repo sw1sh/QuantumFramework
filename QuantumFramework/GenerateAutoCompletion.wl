@@ -1,22 +1,17 @@
-Get["Wolfram`QuantumFramework`"]
-
-$ContextPath = Prepend[$ContextPath, "Wolfram`QuantumFramework`PackageScope`"]
+Needs["Wolfram`QuantumFramework`"]
 
 $AutoCompletionData = With[{
-    basisNames = $QuditBasisNames,
-    stateNames = $QuantumStateNames,
-    operatorNames = $QuantumOperatorNames,
-    measurementOperatorNames = Join[
-        $QuditBasisNames,
-        $QuantumMeasurementOperatorNames
-    ]
+    basisNames = Wolfram`QuantumFramework`PackageScope`$QuditBasisNames,
+    stateNames = Wolfram`QuantumFramework`PackageScope`$QuantumStateNames,
+    operatorNames = Wolfram`QuantumFramework`PackageScope`$QuantumOperatorNames,
+    measurementOperatorNames = Wolfram`QuantumFramework`PackageScope`$QuantumMeasurementOperatorNames
 },
     {
         "QuditBasis" -> {basisNames},
         "QuantumBasis" -> {basisNames},
         "QuantumState" -> {stateNames, basisNames},
         "QuantumOperator" -> {operatorNames, basisNames},
-        "QuantumMeasurementOperator" -> {measurementOperatorNames, basisNames}
+        "QuantumMeasurementOperator" -> {Join[basisNames, measurementOperatorNames], basisNames}
     }
 ]
 

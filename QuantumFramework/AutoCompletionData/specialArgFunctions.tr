@@ -78,6 +78,7 @@
                 "XRotation",
                 "YRotation",
                 "ZRotation",
+                "Phase",
                 "SUM",
                 "RootNot",
                 "X",
