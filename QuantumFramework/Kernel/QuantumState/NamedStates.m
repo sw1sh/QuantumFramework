@@ -22,21 +22,21 @@ $QuantumStateNames = {
 QuantumState[name_ ? nameQ, basisName : Except[Alternatives @@ $QuantumBasisPictures, _ ? nameQ]] :=
     QuantumState[QuantumState[name], QuantumBasis[basisName]]
 
-QuantumState["Plus", args___] := QuantumState[Normalize @ {1, 1}, args]
+QuantumState["Plus", args___] := QuantumState[Normalize @ {1, 1}, "Label" -> "+", args]
 
-QuantumState["Minus", args___] := QuantumState[Normalize @ {-1, 1}, args]
+QuantumState["Minus", args___] := QuantumState[Normalize @ {-1, 1}, "Label" -> "-", args]
 
-QuantumState["Left", args___] := QuantumState[Normalize @ {1, I}, args]
+QuantumState["Left", args___] := QuantumState[Normalize @ {1, I}, "Label" -> "L", args]
 
-QuantumState["Right", args___] := QuantumState[Normalize @ {1, -I}, args]
+QuantumState["Right", args___] := QuantumState[Normalize @ {1, -I}, "Label" -> "R", args]
 
-QuantumState["PhiPlus", args___] := QuantumState[Normalize @ {1, 0, 0, 1}, args]
+QuantumState["PhiPlus", args___] := QuantumState[Normalize @ {1, 0, 0, 1}, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(+\)]", args]
 
-QuantumState["PhiMinus", args___] := QuantumState[Normalize @ {1, 0, 0, -1}, args]
+QuantumState["PhiMinus", args___] := QuantumState[Normalize @ {1, 0, 0, -1}, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(-\)]"args]
 
-QuantumState["PsiPlus", args___] := QuantumState[Normalize @ {0, 1, 1, 0}, args]
+QuantumState["PsiPlus", args___] := QuantumState[Normalize @ {0, 1, 1, 0}, "Label" -> "\*SubscriptBox[\[CapitalPsi], \(+\)]", args]
 
-QuantumState["PsiMinus", args___] := QuantumState[Normalize @ {0, 1, -1, 0}, args]
+QuantumState["PsiMinus", args___] := QuantumState[Normalize @ {0, 1, -1, 0}, "Label" -> "\*SubscriptBox[\[CapitalPsi], \(-\)]", args]
 
 QuantumState[{name : "Plus" | "Minus" | "Left" | "Right" | "PsiPlus" | "PsiMinus" | "PhiPlus" | "PhiMinus", n_Integer ? Positive}, args___] :=
     QuantumTensorProduct @ Table[QuantumState[name, args], n]

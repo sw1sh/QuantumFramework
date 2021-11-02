@@ -26,7 +26,8 @@ $QuantumBasisProperties = {
      "TensorRepresentation", "Tensor", "MatrixRepresentation", "Matrix",
      "Qudits", "InputQudits", "OutputQudits", "InputBasis", "OutputBasis",
      "Dual", "Transpose", "ConjugateTranspose",
-     "Picture"
+     "Picture",
+     "Diagram"
 };
 
 QuantumBasis["Properties"] := DeleteDuplicates @ Join[$QuantumBasisProperties, $QuantumBasisDataKeys]
@@ -212,4 +213,17 @@ QuantumBasisProp[qb_, "SortedQ"] := qb["Output"]["SortedQ"] && qb["Input"]["Sort
 QuantumBasisProp[qb_, "Sort"] := QuantumBasis[qb, "Output" -> qb["Output"]["Sort"], "Input" -> qb["Input"]["Sort"]]
 
 QuantumBasisProp[qb_, "Numeric"] := QuantumBasis[qb, "Output" -> qb["Output"]["Numeric"], "Input" -> qb["Input"]["Numeric"]]
+
+
+
+QuantumBasisProp[qb_, "Diagram", opts : OptionsPattern[QuantumDiagramGraphics]] := QuantumDiagramGraphics[
+    qb,
+    opts,
+    "Shape" -> Which[
+        qb["OutputQudits"] == 0 && qb["InputQudits"] == 0, "Diamond",
+        qb["OutputQudits"] == 0, "Triangle",
+        qb["InputQudits"] == 0, "UpsideDownTriangle",
+        True, "Rectangle"
+    ]
+]
 
