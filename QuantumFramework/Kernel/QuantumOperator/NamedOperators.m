@@ -9,10 +9,10 @@ PackageScope["controlledZGate"]
 $QuantumOperatorNames = {
     "Identity", "Permutation", "Curry", "Uncurry",
     "Fourier", "InverseFourier",
-    "XRotation", "YRotation", "ZRotation", "Phase",
+    "XRotation", "YRotation", "ZRotation", "Phase", "P",
     "SUM", "RootNot",
     "X", "Y", "Z", "PauliX", "PauliY", "PauliZ", "H", "Hadamard",
-    "SWAP", "RootSWAP", "CSWAP",
+    "SWAP", "RootSWAP", "CSWAP", "Fredkin",
      "ControlledU", "CX", "CY", "CZ", "CH", "CT", "CS", "CPHASE", "CNOT",
     "XX", "YY", "ZZ",
     "Toffoli", "Deutsch", "RandomUnitary",
@@ -46,23 +46,23 @@ QuantumOperator[{"Identity", qb_ ? QuditBasisQ}, args___] := QuantumOperator[Ide
 
 QuantumOperator[{"XRotation", angle_}, args___] := QuantumOperator[
     {{Cos[angle / 2], - I Sin[angle / 2]}, {- I Sin[angle / 2], Cos[angle / 2]}},
-    "Label" -> Superscript["X", angle],
+    "Label" -> Subscript["R", "X"][angle],
     args
 ]
 
 QuantumOperator[{"YRotation", angle_}, args___] := QuantumOperator[
     {{Cos[angle / 2], - Sin[angle / 2]}, {Sin[angle / 2], Cos[angle / 2]}},
-    "Label" -> Superscript["Y", angle],
+    "Label" -> Subscript["R", "Y"][angle],
     args
 ]
 
 QuantumOperator[{"ZRotation", angle_}, args___] := QuantumOperator[
     SparseArray[{{1, 1} -> Exp[- I angle / 2], {2, 2} -> Exp[I angle / 2]}],
-    "Label" -> Superscript["Z", angle],
+    "Label" -> Subscript["R", "Z"][angle],
     args
 ]
 
-QuantumOperator[{"Phase", angle_}, args___] := QuantumOperator[
+QuantumOperator[{"Phase" | "P", angle_}, args___] := QuantumOperator[
     SparseArray[{{1, 1} -> 1, {2, 2} -> Exp[I angle]}],
     "Label" -> Superscript["Phase", angle],
     args
@@ -144,7 +144,7 @@ QuantumOperator[{"ControlledU", params : PatternSequence[___, Except[_ ? orderQ]
 
 QuantumOperator[{"ControlledU", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___]}, args___] :=
     With[{op = QuantumOperator[params]},
-        QuantumOperator[{"ControlledU", QuantumOperator[op, Rest @ op["InputOrder"] /. {} -> {First @ op["InputOrder"] + 1}], {First @ op["InputOrder"]}}, args]
+        QuantumOperator[{"ControlledU", QuantumOperator[op, op["InputOrder"] + 1], {First @ op["InputOrder"]}}, args]
     ]
 
 QuantumOperator[{"ControlledU", qo_ ? QuantumOperatorQ}, args___] := QuantumOperator[{"ControlledU", qo, {qo["LastInputQudit"] + 1}}, args]
@@ -311,18 +311,7 @@ QuantumOperator["Toffoli", order : (_ ? orderQ) : {1, 2, 3}] :=
     QuantumOperator[{"ControlledU", "NOT", Most[order]}, {Last[order]}]
 
 
-QuantumOperator["CSWAP", args___] := QuantumOperator[
-    SparseArray[
-        {
-            {1, 1} -> 1, {2, 2} -> 1, {3, 3} -> 1, {4, 4} -> 1,
-            {5, 5} -> 1, {6, 7} -> 1, {7, 6} -> 1, {8, 8} -> 1
-        },
-        {8, 8}
-    ],
-    2, 3,
-    "Label" -> "Controlled"["SWAP"],
-    args
-]
+QuantumOperator["CSWAP" | "Fredkin", args___] := QuantumOperator[{"ControlledU", "SWAP"}, args]
 
 
 QuantumOperator[name : "XX" | "YY" | "ZZ", args___] := QuantumOperator[{name, 0}, args]
