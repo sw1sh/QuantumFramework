@@ -44,26 +44,29 @@ QuantumOperator[{"Identity", dims_List}, args___] := QuantumOperator[{"Permutati
 QuantumOperator[{"Identity", qb_ ? QuditBasisQ}, args___] := QuantumOperator[IdentityMatrix[qb["Dimension"]], qb, args]
 
 
-QuantumOperator[{"XRotation", angle_}, args___] := QuantumOperator[
-    {{Cos[angle / 2], - I Sin[angle / 2]}, {- I Sin[angle / 2], Cos[angle / 2]}},
-    "Label" -> Subscript["R", "X"][angle],
-    args
+QuantumOperator[name : "XRotation" | "YRotation" | "ZRotation", args___] :=  QuantumOperator[{name, Pi / 2}, args]
+
+QuantumOperator[{"XRotation", angle_, dimension_Integer : 2}, args___] := QuantumOperator[
+    Exp[- I angle / 2 QuantumOperator[{"PauliX", dimension}, args]],
+    "Label" -> Subscript["R", "X"][angle]
 ]
 
-QuantumOperator[{"YRotation", angle_}, args___] := QuantumOperator[
-    {{Cos[angle / 2], - Sin[angle / 2]}, {Sin[angle / 2], Cos[angle / 2]}},
+QuantumOperator[{"YRotation", angle_, dimension_Integer : 2}, args___] := QuantumOperator[
+    Exp[- I angle / 2 QuantumOperator[{"PauliY", dimension}, args]],
     "Label" -> Subscript["R", "Y"][angle],
     args
 ]
 
-QuantumOperator[{"ZRotation", angle_}, args___] := QuantumOperator[
-    SparseArray[{{1, 1} -> Exp[- I angle / 2], {2, 2} -> Exp[I angle / 2]}],
+QuantumOperator[{"ZRotation", angle_, dimension_Integer : 2}, args___] := QuantumOperator[
+    Exp[- I angle / 2 QuantumOperator[{"PauliZ", dimension}, args]],
     "Label" -> Subscript["R", "Z"][angle],
     args
 ]
 
-QuantumOperator[{"Phase" | "P", angle_}, args___] := QuantumOperator[
-    SparseArray[{{1, 1} -> 1, {2, 2} -> Exp[I angle]}],
+QuantumOperator["Phase" | "P", args___] := QuantumOperator[{"Phase", Pi}, args]
+
+QuantumOperator[{"Phase" | "P", angle_, dimension_Integer : 2}, args___] := QuantumOperator[
+    SparseArray[{{1, 1} -> 1, {dimension, dimension} -> Exp[I angle]}],
     "Label" -> Superscript["Phase", angle],
     args
 ]
@@ -79,25 +82,9 @@ QuantumOperator["CNOT", args___] := QuantumOperator[{"CNOT", 2}, args]
 QuantumOperator[{"CNOT", dimension_Integer}, args___] := QuantumOperator[{"ControlledU", {"NOT", dimension}}, args]
 
 
-QuantumOperator["CPHASE", args___] := QuantumOperator[{"CPHASE", 2}, args]
+QuantumOperator["CPHASE", args___] := QuantumOperator[{"CPHASE", Pi}, args]
 
-QuantumOperator[{"CPHASE", dimension_Integer}, args___] := QuantumOperator[
-    SparseArray[{i_, j_} :>  Which[
-            (i == j && First[IntegerDigits[i - 1, dimension, 2]] == 0),
-            1,
-
-            i == j && First[IntegerDigits[j - 1, dimension, 2]] > 0 && First[IntegerDigits[i - 1, dimension, 2]] > 0,
-            Exp[2 Pi I (IntegerDigits[i - 1, dimension, 2][[2]]) (IntegerDigits[j - 1, dimension, 2][[2]]) / dimension],
-
-            True,
-            0
-        ],
-        {dimension ^ 2, dimension ^ 2}
-    ],
-    dimension,
-    "Label" -> "Controlled"["PHASE"],
-    args
-]
+QuantumOperator[{"CPHASE", angle_, dimension_Integer : 2}, args___] := QuantumOperator[{"ControlledU", {"Phase", angle, dimension}}, args]
 
 
 controlledMatrix[matrix_ ? MatrixQ, dimension_Integer] := ReplacePart[
@@ -142,9 +129,9 @@ QuantumOperator[{"ControlledU", params : PatternSequence[___, Except[_ ? orderQ]
         QuantumOperator[{"ControlledU", op, {First @ order}}, args]
     ]
 
-QuantumOperator[{"ControlledU", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___]}, args___] :=
+QuantumOperator[{"ControlledU", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___]}, args___] := Enclose @
     With[{op = QuantumOperator[params]},
-        QuantumOperator[{"ControlledU", QuantumOperator[op, op["InputOrder"] + 1], {First @ op["InputOrder"]}}, args]
+        QuantumOperator[{"ControlledU", ConfirmBy[QuantumOperator[op, op["InputOrder"] + 1], QuantumOperatorQ], {First @ op["InputOrder"]}}, args]
     ]
 
 QuantumOperator[{"ControlledU", qo_ ? QuantumOperatorQ}, args___] := QuantumOperator[{"ControlledU", qo, {qo["LastInputQudit"] + 1}}, args]
