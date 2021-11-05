@@ -34,7 +34,8 @@ QuantumCircuitOperator::undefprop = "property `` is undefined for this circuit";
 
 QuantumCircuitOperatorProp[QuantumCircuitOperator[operators_], "Operators"] := operators
 
-QuantumCircuitOperatorProp[qco_, "Diagram"] := Show[drawGateGraphics[qco["Operators"]]]
+QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[drawGateGraphics]] :=
+    Show[drawGateGraphics[qco["Operators"], opts], ImageSize -> Scaled[0.25]]
 
 QuantumCircuitOperatorProp[qco_, "CircuitOperator" | "Compile"] := Fold[ReverseApplied[Construct], qco["Operators"]]
 
