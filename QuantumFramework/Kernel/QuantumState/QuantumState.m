@@ -174,11 +174,20 @@ QuantumState /: f_Symbol[left : _ ? NumericQ ..., qs_QuantumState, right : _ ? N
 
 (* composition *)
 
+
+(qs1_QuantumState ? QuantumStateQ)[(qs2_QuantumState ? QuantumStateQ)] /; qs1["Input"] == qs2["Output"] :=
+    QuantumState[
+        Simplify @ Flatten[qs1["Pure"]["StateMatrix"] . qs2["Pure"]["StateMatrix"]],
+        QuantumBasis["Output" -> qs1["Output"], "Input" -> qs2["Input"], "Label" -> qs1["Label"] @* qs2["Label"]
+    ]
+]
+
 (qs1_QuantumState ? QuantumStateQ)[(qs2_QuantumState ? QuantumStateQ)] /; qs1["InputDimension"] == qs2["OutputDimension"] :=
-    profile[StringTemplate["State composition: `` -> ``"][qs1["Dimensions"], qs2["Dimensions"]]] @ QuantumState[
+    QuantumState[
         QuantumState[
-            profile["Matrix multiply"] @ Simplify @ Flatten[qs1["PureMatrix"] . qs2["PureMatrix"]],
+            Simplify @ Flatten[qs1["PureMatrix"] . qs2["PureMatrix"]],
             QuantumBasis["Output" -> QuditBasis[qs1["OutputDimensions"]], "Input" -> QuditBasis[qs2["InputDimensions"]]]
         ],
         QuantumBasis["Output" -> qs1["Output"], "Input" -> qs2["Input"], "Label" -> qs1["Label"] @* qs2["Label"]]
     ]
+

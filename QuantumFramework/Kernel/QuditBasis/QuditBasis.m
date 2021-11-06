@@ -90,6 +90,8 @@ QuditBasis[source_QuditBasis, target_QuditBasis] := If[
     QuantumTensorProduct[target, source[{"DropDimension", target["Dimension"]}]]
 ]
 
+QuditBasis /: qb1_QuditBasis == qb2_QuditBasis := Values[qb1["Representations"]] === Values[qb2["Representations"]]
+
 
 (* formatting *)
 
