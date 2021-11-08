@@ -98,7 +98,14 @@ QuantumOperator::invalidState = "invalid state specification";
 QuantumOperator[matrix_ ? MatrixQ, args___, order : {_ ? orderQ, _ ? orderQ}] :=
     QuantumOperator[QuantumOperator[matrix, args]["State"], order]
 
-QuantumOperator[matrix_ ? MatrixQ, args___, order_ ? orderQ] := QuantumOperator[QuantumOperator[matrix, args]["State"], {Automatic, order}]
+QuantumOperator[matrix_ ? MatrixQ, args___, order_ ? orderQ] := Enclose @ With[{
+    op = ConfirmBy[QuantumOperator[matrix, args], QuantumOperatorQ]
+},
+    If[ op["InputQudits"] < Length[order],
+        QuantumOperator[{op, Ceiling[Length[order], op["InputQudits"]] / op["InputQudits"]}, order],
+        QuantumOperator[op["State"], {Automatic, order}]
+    ]
+]
 
 QuantumOperator[matrix_ ? MatrixQ, args : PatternSequence[] | PatternSequence[___, Except[_ ? orderQ]]] := Module[{
     result
