@@ -13,26 +13,29 @@ QuantumMeasurementOperatorQ[___] := False
 
 (* constructors *)
 
-QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : {1}] := Enclose @ Module[{
-    basis
+QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : Automatic] := Enclose @ Module[{
+    basis, op
 },
-    basis = QuantumBasis[qb, Ceiling[Length[target] / qb["OutputQudits"]]];
+    basis = If[ target === Automatic,
+        qb,
+        QuantumBasis[qb, Ceiling[Length[target] / qb["OutputQudits"]]]
+    ];
     basis = QuantumBasis[basis, Ceiling[Length[eigenvalues] / basis["Dimension"]]];
-
-    QuantumMeasurementOperator[
-        ConfirmBy[
+    op = ConfirmBy[
+        QuantumOperator[
             QuantumOperator[
-                QuantumOperator[
-                    PadRight[eigenvalues, basis["Dimension"]] . basis["Projectors"],
-                    QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
-                ],
-                basis,
+                PadRight[eigenvalues, basis["Dimension"]] . basis["Projectors"],
+                QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]],
                 target
             ],
-            QuantumOperatorQ
+            basis
         ],
+        QuantumOperatorQ
+    ];
+    QuantumMeasurementOperator[
+        op,
         args,
-        target
+        target /. Automatic -> op["FullInputOrder"]
     ]
 ]
 

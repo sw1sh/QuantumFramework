@@ -24,9 +24,9 @@ QuantumOperator[qs_ ? QuantumStateQ] := QuantumOperator[qs,
     If[qs["InputDimension"] > 1, {Automatic, Range[qs["InputQudits"]]}, {Range[qs["OutputQudits"]], Automatic}]
 ]
 
-QuantumOperator[qs_ ? QuantumStateQ, order_ ? orderQ] := QuantumOperator[qs, {Automatic, order}]
+QuantumOperator[arg : _ ? QuantumStateQ, order : _ ? orderQ | Automatic] := QuantumOperator[arg, {Automatic, order}]
 
-QuantumOperator[qs_ ? QuantumStateQ, outputOrder_, inputOrder_] := QuantumOperator[qs, {outputOrder, inputOrder}]
+QuantumOperator[arg : _ ? QuantumStateQ, outputOrder_, inputOrder_] := QuantumOperator[arg, {outputOrder, inputOrder}]
 
 QuantumOperator[qs_ ? QuantumStateQ, {Automatic, order_ ? orderQ}] := QuantumOperator[qs,
     {
@@ -95,19 +95,21 @@ QuantumOperator[assoc_Association, args___, order : (_ ? orderQ) : {1}] := Enclo
 
 QuantumOperator::invalidState = "invalid state specification";
 
-QuantumOperator[matrix_ ? MatrixQ, args___, order : {_ ? orderQ, _ ? orderQ}] :=
+QuantumOperator[matrix_ ? MatrixQ, args___, order : {_ ? orderQ | Automatic, _ ? orderQ | Automatic}] :=
     QuantumOperator[QuantumOperator[matrix, args]["State"], order]
 
-QuantumOperator[matrix_ ? MatrixQ, args___, order_ ? orderQ] := Enclose @ With[{
-    op = ConfirmBy[QuantumOperator[matrix, args], QuantumOperatorQ]
+QuantumOperator[matrix_ ? MatrixQ, args___, order : _ ? orderQ | Automatic] := Enclose @ Module[{
+    op = ConfirmBy[QuantumOperator[matrix, args], QuantumOperatorQ],
+    newOrder
 },
-    If[ op["InputQudits"] < Length[order],
-        QuantumOperator[{op, Ceiling[Length[order], op["InputQudits"]] / op["InputQudits"]}, order],
-        QuantumOperator[op["State"], {Automatic, order}]
+    newOrder = order /. Automatic -> op["FullInputOrder"];
+    If[ op["InputQudits"] < Length[newOrder],
+        QuantumOperator[{op, Ceiling[Length[newOrder], op["InputQudits"]] / op["InputQudits"]}, newOrder],
+        QuantumOperator[op["State"], {Automatic, newOrder}]
     ]
 ]
 
-QuantumOperator[matrix_ ? MatrixQ, args : PatternSequence[] | PatternSequence[___, Except[_ ? orderQ]]] := Module[{
+QuantumOperator[matrix_ ? MatrixQ, args : PatternSequence[] | PatternSequence[___, Except[Automatic | _ ? orderQ]]] := Module[{
     result
 },
     result = Enclose @ Module[{newMatrix = matrix, outputs, inputs,
@@ -179,7 +181,9 @@ QuantumOperator[qo_ ? QuantumOperatorQ] := qo["Computational"]
 QuantumOperator[qo_ ? QuantumOperatorQ, name_ ? nameQ, args___] := QuantumOperator[qo, QuantumBasis[name], args]
 
 
-QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ, args___, order : _ ? orderQ | {_ ? orderQ, _ ? orderQ}] := Enclose @ Module[{
+QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ, args___,
+    order : _ ? orderQ | Automatic | {_ ? orderQ | Automatic, _ ? orderQ | Automatic}] :=
+Enclose @ Module[{
     newBasis
 },
     newBasis = If[
@@ -207,10 +211,11 @@ QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ, args___, order : _ 
     ]
 ]
 
-QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ, args : PatternSequence[] | PatternSequence[___, Except[{_ ? orderQ, _ ? orderQ}]]] :=
+QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ,
+    args : PatternSequence[] | PatternSequence[___, Except[_ ? orderQ | Automatic | {_ ? orderQ | Automatic, _ ? orderQ | Automatic}]]] :=
     QuantumOperator[qo, qb, args, qo["Order"]]
 
-QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ, args___, outputOrder_ ? orderQ, inputOrder_ ? orderQ] :=
+QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ, args___, outputOrder_ ? orderQ | Automatic, inputOrder_ ? orderQ | Automatic] :=
     QuantumOperator[qo, qb, args, {outputOrder, inputOrder}]
 
 (* composition *)
