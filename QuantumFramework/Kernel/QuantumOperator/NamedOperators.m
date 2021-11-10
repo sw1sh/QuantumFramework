@@ -16,7 +16,7 @@ $QuantumOperatorNames = {
      "ControlledU", "CX", "CY", "CZ", "CH", "CT", "CS", "CPHASE", "CNOT",
     "XX", "YY", "ZZ",
     "Toffoli", "Deutsch", "RandomUnitary",
-    "Spider"
+    "Spider", "Deutsch"
 }
 
 
@@ -392,5 +392,17 @@ QuantumOperator[{"Spider", out_Integer : 1, in_Integer : 1}, args__ : "Computati
         QuantumState[SparseArray[{1 -> 1, -1 -> 1}, basis["Dimension"]], basis],
         Range[out], Range[in]
     ]
+]
+
+
+QuantumOperator[{"Deutsch", theta_}, order : _ ? orderQ : {1, 2, 3}] := With[{
+    controlOrder = PadRight[Most[order], 2, Range[2] + Max[order]],
+    targetOrder = {Last[order]}
+},
+    QuantumOperator[{
+        "ControlledU",
+        QuantumOperator[I QuantumOperator[{"XRotation", theta}, targetOrder], "Label" -> "D"[theta]],
+        controlOrder
+    }]
 ]
 

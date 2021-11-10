@@ -109,7 +109,8 @@
                 "Toffoli",
                 "Deutsch",
                 "RandomUnitary",
-                "Spider"
+                "Spider",
+                "Deutsch"
             },
             {
                 "Computational",
