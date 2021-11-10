@@ -116,7 +116,7 @@ QuantumMeasurementProp[qm_, "MixedStates"] := With[{rep = If[qm["PureStateQ"], 1
         QuantumState[QuantumState[ArrayReshape[#, Table[qm["InputDimension"], rep]], QuantumBasis[qm["InputDimensions"]]], QuantumBasis[qm["Input"]["Dual"]]] & /@
             qm["Computational"]["StateMatrix"],
         True,
-        QuantumState[ArrayReshape[#, Table[qm["InputDimension"], rep]], QuantumBasis[qm["TargetBasis"]]] & /@
+        QuantumState[ArrayReshape[#, Table[qm["InputDimension"], rep]], QuantumBasis[qm["Input"]["Dual"]]] & /@
             qm["Canonical"]["StateMatrix"]
     ]
 ]
