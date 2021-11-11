@@ -34,8 +34,20 @@ QuantumCircuitOperator::undefprop = "property `` is undefined for this circuit";
 
 QuantumCircuitOperatorProp[QuantumCircuitOperator[operators_], "Operators"] := operators
 
-QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[drawGateGraphics]] :=
-    Show[drawGateGraphics[qco["Operators"], opts], ImageSize -> Scaled[0.25]]
+QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[Join[Options[drawGateGraphics], Options[Graphics]]]] := Module[{
+    labels, indices, graphics,
+    sizes,
+    scale = Dynamic[0.26 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]]
+},
+    {labels, indices, graphics} = drawGateGraphics[qco["Operators"],
+        FilterRules[{opts}, Options[drawGateGraphics]]
+    ];
+    sizes = Most @ Rasterize[#, "BoundingBox"] & /@ labels;
+    Show[graphics,
+        FilterRules[{opts}, Options[Graphics]],
+        ImageSize -> Max[Max[indices] Max[sizes[[All, 1]] + 1] scale, 200]
+    ]
+]
 
 QuantumCircuitOperatorProp[qco_, "CircuitOperator" | "Compile"] := Fold[ReverseApplied[Construct], qco["Operators"]]
 

@@ -18,7 +18,7 @@ drawNotGate[coordinates_List, _] := Module[{whiteRadius, whiteCircle, lines},
 drawUnaryGate[coordinates_List, name_, opts : OptionsPattern[Style]] := Module[{width, height, textGraphics, rectangle},
     width = 4;
     height = 3;
-    textGraphics = Graphics[Text[Style[name, opts], coordinates]];
+    textGraphics = Graphics[Text[Sow @ Style[name, opts], coordinates]];
     rectangle = Graphics[{
         EdgeForm[Thickness[0.0025]], White,
         Rectangle[{First[coordinates] - width / 2, Last[coordinates] - height / 2}, {First[coordinates] + width / 2, Last[coordinates] + height / 2}]
@@ -31,7 +31,7 @@ drawBinaryGate[{coordinates1_List, coordinates2_List}, name_, opts : OptionsPatt
     width = 4;
     height = 3;
     averageCoordinates = (coordinates1 + coordinates2) / 2;
-    textGraphics = Graphics[Text[Style[name, opts], averageCoordinates]];
+    textGraphics = Graphics[Text[Sow @ Style[name, opts], averageCoordinates]];
     rectangle = Graphics[{EdgeForm[Thickness[0.0025]], White,
         Rectangle[{First[coordinates1] - width / 2, Last[coordinates1] - height / 2}, {First[coordinates2] + width / 2, Last[coordinates2] + height / 2}]}];
     Show[rectangle, textGraphics]
@@ -151,24 +151,24 @@ drawMeasurementWire[positionIndices_List, opts : OptionsPattern[Style]] := Graph
 }]
 
 
-Options[drawGateGraphics] = {"LabelStyle" -> {FontSize -> 24, FontFamily -> "Times"}}
+Options[drawGateGraphics] = Options[Style]
 
-drawGateGraphics[gates_List, OptionsPattern[]] := Module[{
+drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
     width, height, orders, dimensions, graphicsList, index, positionIndices, gatePositionIndices,
     targetQuditsOrder, controlQuditsOrder, controlQuditsOrderTop, controlQuditsOrderBottom, controlQuditsTopCoordinates, controlQuditsBottomCoordinates,
     includeMeasurement = False,
-    styleOpts
+    labels,
+    styleOpts = {opts, FontSize -> 24, FontFamily -> "Times"}
 },
     width = 4;
     height = 3;
     orders = #["InputOrder"] & /@ gates;
     dimensions = First[gates]["InputDimensions"];
-    styleOpts = OptionValue["LabelStyle"];
 
     graphicsList = {};
     index = 1;
     positionIndices = ConstantArray[1, Max[Flatten[orders]]];
-    Do[
+    labels = #[[2, 1]] & @ Reap @ Do[
 
     If[ QuantumMeasurementOperatorQ[gates[[i]]],
         gatePositionIndices = Table[Max[positionIndices], {j, Min[orders[[i]]], Max[orders[[i]]]}];
@@ -256,6 +256,6 @@ drawGateGraphics[gates_List, OptionsPattern[]] := Module[{
     If[ TrueQ[includeMeasurement],
         PrependTo[graphicsList, drawMeasurementWire[positionIndices, styleOpts]]
     ];
-    graphicsList
+    {labels, positionIndices, graphicsList}
 ]
 

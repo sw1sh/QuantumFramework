@@ -5,10 +5,7 @@ Package["Wolfram`QuantumFramework`"]
 QuantumCircuitOperator /: MakeBoxes[qco_QuantumCircuitOperator /; QuantumCircuitOperatorQ[Unevaluated @ qco], format_] := Enclose[
 ConfirmQuiet @ BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
     qco,
-    Show[
-        qco["Diagram", "LabelStyle" -> {FontSize -> 7, FontFamily -> "Times"}],
-        ImageSize -> Dynamic[{Automatic, 7 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]}]
-    ], {
+    Magnify[qco["Diagram", FontSize -> 12], .2], {
         {
             BoxForm`SummaryItem[{"Gates: ", qco["Gates"]}]
         }
