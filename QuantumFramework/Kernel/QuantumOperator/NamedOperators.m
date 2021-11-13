@@ -67,7 +67,7 @@ QuantumOperator["Phase" | "P", args___] := QuantumOperator[{"Phase", Pi}, args]
 
 QuantumOperator[{"Phase" | "P", angle_, dimension_Integer : 2}, args___] := QuantumOperator[
     SparseArray[{{1, 1} -> 1, {dimension, dimension} -> Exp[I angle]}],
-    "Label" -> Superscript["Phase", angle],
+    "Label" -> "P"[angle],
     args
 ]
 
@@ -171,7 +171,7 @@ QuantumOperator[{"Fourier", dimension_Integer}, args___, order : (_ ? orderQ) : 
 QuantumOperator["InverseFourier", args___] := QuantumOperator[{"InverseFourier", 2}, args]
 
 QuantumOperator[{"InverseFourier", dimension_Integer}, args___, order : (_ ? orderQ) : {1}] := QuantumOperator[
-     SparseArray[
+    SparseArray[
         ({i_, j_} :> Exp[-2 Pi I (i - 1) (j - 1) / (dimension ^ Length[order])] / Sqrt[dimension ^ Length[order]]),
         {dimension ^ Length[order], dimension ^ Length[order]}
     ],

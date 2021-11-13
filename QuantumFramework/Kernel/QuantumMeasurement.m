@@ -145,7 +145,7 @@ QuantumMeasurementProp[qm_, "MixedOutcomes"] := If[
 
 QuantumMeasurementProp[qm_, "Distribution"] := CategoricalDistribution[
     qm["Outcomes"],
-    Chop @ qm["ProbabilitiesList"]
+    Chop @ N @ qm["ProbabilitiesList"]
 ]
 
 QuantumMeasurementProp[qm_, "DistributionInformation", args___] := Information[qm["Distribution"], args]

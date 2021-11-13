@@ -36,16 +36,22 @@ QuantumCircuitOperatorProp[QuantumCircuitOperator[operators_], "Operators"] := o
 
 QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[Join[Options[drawGateGraphics], Options[Graphics]]]] := Module[{
     labels, indices, graphics,
+    width, height,
     sizes,
+    imageWidth, imageHeight,
     scale = Dynamic[0.26 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]]
 },
     {labels, indices, graphics} = drawGateGraphics[qco["Operators"],
         FilterRules[{opts}, Options[drawGateGraphics]]
     ];
+    width = Max[indices];
+    height = qco["Arity"];
     sizes = Most @ Rasterize[#, "BoundingBox"] & /@ labels;
+    imageWidth = Max[width Max[sizes[[All, 1]] + 1, 64] scale, 512];
+    imageHeight = Max[height Max[sizes[[All, 2]] + 1, 64] scale, 256];
     Show[graphics,
         FilterRules[{opts}, Options[Graphics]],
-        ImageSize -> Max[Max[indices] Max[sizes[[All, 1]] + 1] scale, 200]
+        ImageSize -> If[width > height, {imageWidth, Automatic}, {Automatic, imageHeight}]
     ]
 ]
 

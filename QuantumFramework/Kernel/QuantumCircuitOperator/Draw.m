@@ -168,7 +168,7 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
     graphicsList = {};
     index = 1;
     positionIndices = ConstantArray[1, Max[Flatten[orders]]];
-    labels = #[[2, 1]] & @ Reap @ Do[
+    labels = First[#[[2]], {}] & @ Reap @ Do[
 
     If[ QuantumMeasurementOperatorQ[gates[[i]]],
         gatePositionIndices = Table[Max[positionIndices], {j, Min[orders[[i]]], Max[orders[[i]]]}];
@@ -233,12 +233,12 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
                 If[ gates[[i]]["Arity"] == 1,
                     drawUnaryGate[
                         {-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]},
-                        gates[[i]]["Label"] /. {Composition -> SmallCircle, "Controlled"[x_, ___] :> x} /. None :> Subscript["U", index++],
+                        gates[[i]]["Label"] /. {Composition -> SmallCircle, "Controlled"[x_, ___] :> x} /. None | CircleTimes[] :> Subscript["U", index++],
                         styleOpts
                     ],
                     drawBinaryGate[
                         {{-2 + 6 Max[gatePositionIndices], - 5 Max[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], - 5 Min[targetQuditsOrder]}},
-                        gates[[i]]["Label"] /. {Composition -> SmallCircle, "Controlled"[x_, ___] :> x} /. None :> Subscript["U", index++],
+                        gates[[i]]["Label"] /. {Composition -> SmallCircle, "Controlled"[x_, ___] :> x} /. None | CircleTimes[] :> Subscript["U", index++],
                         styleOpts
                     ]
                 ]
