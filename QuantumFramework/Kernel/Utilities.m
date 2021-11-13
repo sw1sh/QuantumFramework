@@ -15,6 +15,7 @@ PackageScope["identityMatrix"]
 PackageScope["kroneckerProduct"]
 PackageScope["projector"]
 PackageScope["eigenvectors"]
+PackageScope["pauliMatrix"]
 
 PackageScope["toggleSwap"]
 PackageScope["toggleShift"]
@@ -90,6 +91,38 @@ eigenvectors[matrix_, OptionsPattern[]] := Map[
     ][[
         If[TrueQ[OptionValue["Sort"]], Ordering[Eigenvalues[matrix]], All]
     ]]
+]
+
+
+pauliMatrix[n_] := pauliMatrix[n, 2]
+
+pauliMatrix[0, dimension_] := IdentityMatrix[dimension]
+
+pauliMatrix[2, dimension_] := With[{
+    s = (dimension - 1) / 2
+},
+    SparseArray[
+        {a_, b_} :> I (KroneckerDelta[a, b + 1] -  KroneckerDelta[a + 1, b]) Sqrt[(s + 1) (a + b - 1) - a b],
+        {dimension, dimension}
+    ]
+]
+
+pauliMatrix[2, dimension_] := With[{
+    s = (dimension - 1) / 2
+},
+    SparseArray[
+        {a_, b_} :> I (KroneckerDelta[a, b + 1] -  KroneckerDelta[a + 1, b]) Sqrt[(s + 1) (a + b - 1) - a b],
+        {dimension, dimension}
+    ]
+]
+
+pauliMatrix[3, dimension_] := With[{
+    s = (dimension - 1) / 2
+},
+    SparseArray[
+        {a_, b_} :> 2 (s + 1 - a) KroneckerDelta[a, b],
+        {dimension, dimension}
+    ]
 ]
 
 

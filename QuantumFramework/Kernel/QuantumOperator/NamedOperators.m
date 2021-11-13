@@ -221,48 +221,36 @@ QuantumOperator[{"SUM", dimension_Integer}, args___] := QuantumOperator[
 ]
 
 
+pauliMatrix[1, dimension_] := With[{
+    s = (dimension - 1) / 2
+},
+    SparseArray[
+        {a_, b_} :> (KroneckerDelta[a, b + 1] + KroneckerDelta[a + 1, b]) Sqrt[(s + 1) (a + b - 1) - a b],
+        {dimension, dimension}
+    ]
+]
+
 QuantumOperator[name : "X" | "Y" | "Z" | "PauliX" | "PauliY" | "PauliZ" | "NOT", args___] := QuantumOperator[{name, 2}, args]
 
-QuantumOperator[{"PauliX" | "X", dimension_Integer}, args___] := With[{
-    s = (dimension - 1) / 2
-},
-    QuantumOperator[
-        SparseArray[
-            {a_, b_} :> (KroneckerDelta[a, b + 1] + KroneckerDelta[a + 1, b]) Sqrt[(s + 1) (a + b - 1) - a b],
-            {dimension, dimension}
-        ],
-        dimension,
-        "Label" -> "X",
-        args
-    ]
+QuantumOperator[{"PauliX" | "X", dimension_Integer}, args___] := QuantumOperator[
+    pauliMatrix[1, dimension],
+    dimension,
+    "Label" -> "X",
+    args
 ]
 
-QuantumOperator[{"PauliY" | "Y", dimension_Integer}, args___] := With[{
-    s = (dimension - 1) / 2
-},
-    QuantumOperator[
-        SparseArray[
-            {a_, b_} :> I (KroneckerDelta[a, b + 1] -  KroneckerDelta[a + 1, b]) Sqrt[(s + 1) (a + b - 1) - a b],
-            {dimension, dimension}
-        ],
-        dimension,
-        "Label" -> "Y",
-        args
-    ]
+QuantumOperator[{"PauliY" | "Y", dimension_Integer}, args___] := QuantumOperator[
+    pauliMatrix[2, dimension],
+    dimension,
+    "Label" -> "Y",
+    args
 ]
 
-QuantumOperator[{"PauliZ" | "Z", dimension_Integer}, args___] := With[{
-    s = (dimension - 1) / 2
-},
-    QuantumOperator[
-        SparseArray[
-            {a_, b_} :> 2 (s + 1 - a) KroneckerDelta[a, b],
-            {dimension, dimension}
-        ],
-        dimension,
-        "Label" -> "Z",
-        args
-    ]
+QuantumOperator[{"PauliZ" | "Z", dimension_Integer}, args___] := QuantumOperator[
+    pauliMatrix[3, dimension],
+    dimension,
+    "Label" -> "Z",
+    args
 ]
 
 QuantumOperator[{"NOT", dimension_Integer}, args___] := QuantumOperator[{"X", dimension}, "Label" -> "NOT", args]
@@ -383,14 +371,45 @@ QuantumOperator[{"Uncurry", dims_List}, args___] :=
 QuantumOperator[name : "Curry" | {"Curry", ___}, args___] := QuantumOperator[name /. "Curry" -> "Uncurry", args]["ConjugateTranspose"]
 
 
-QuantumOperator["Spider", args___] := QuantumOperator[{"Spider"}, args]
+QuantumOperator[name : "ZSpider" | "XSpider" | "Spider", args___] := QuantumOperator[{name}, args]
 
-QuantumOperator[{"Spider", out_Integer : 1, in_Integer : 1}, args__ : "Computational"] := With[{
-    basis = QuantumBasis[QuditBasis[args, out], QuditBasis[args, in], "Label" -> "Spider"]
+QuantumOperator[{"ZSpider", out_Integer : 1, in_Integer : 1, phase_ : 0}, args___] := Module[{
+    phases = If[ListQ[phase], phase, {0, phase}],
+    dim, basis
+},
+    dim = Length[phases];
+    basis = QuantumBasis[QuditBasis[dim, out], QuditBasis[dim, in], "Label" -> "ZSpider"];
+    QuantumOperator[
+        QuantumState[Flatten @ SparseArray[Thread[Transpose[Table[Range[dim], basis["Qudits"]]] -> Exp[I phases]], basis["Dimensions"]], basis],
+        args,
+        Range[basis["OutputQudits"]], Range[basis["InputQudits"]]
+    ]
+]
+
+
+QuantumOperator[{"XSpider", params___}, args___] := With[{
+    zSpider = QuantumOperator[{"ZSpider", params}, args]
 },
     QuantumOperator[
-        QuantumState[SparseArray[{1 -> 1, -1 -> 1}, basis["Dimension"]], basis],
-        Range[out], Range[in]
+        QuantumOperator[zSpider, QuantumBasis[
+            QuditBasis[{"PauliX", First @ zSpider["Dimensions"]}, zSpider["OutputQudits"]],
+            QuditBasis[{"PauliX", First @ zSpider["Dimensions"]}, zSpider["InputQudits"]]]
+        ]["Matrix"],
+        zSpider["Basis"],
+        "Label" -> "XSpider",
+        zSpider["Order"]
+    ]
+]
+
+
+QuantumOperator[{"Spider", basis_ ? QuantumBasis, phase_ : 0}, args___] := With[{
+    zSpider = QuantumOperator[{"ZSpider", phase, basis["OutputQudits"], basis["InputQudits"]}, args]
+},
+    QuantumOperator[
+        QuantumOperator[zSpider, basis]["Matrix"],
+        zSpider["Basis"],
+        "Label" -> basis["Label"],
+        zSpider["Order"]
     ]
 ]
 

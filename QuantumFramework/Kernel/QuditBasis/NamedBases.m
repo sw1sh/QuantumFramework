@@ -35,34 +35,23 @@ QuditBasis["Bell", args___] := QuditBasis[
 ]
 
 
-QuditBasis["PauliX", args___] := QuditBasis[
-    AssociationThread[{
-            Subscript["\[Psi]", "x-"],
-            Subscript["\[Psi]", "x+"]
-        },
-        (1 / Sqrt[2]) {{-1, 1}, {1, 1}}
-    ],
-    args
-]
+QuditBasis[name : "PauliX" | "PauliY" | "PauliZ", args___] := QuditBasis[{name, 2}, args]
 
-QuditBasis["PauliY", args___] := QuditBasis[
-    AssociationThread[{
-            Subscript["\[Psi]", "y-"],
-            Subscript["\[Psi]", "y+"]
-        },
-        (1 / Sqrt[2]) {{I, 1}, {-I, 1}}
-    ],
-    args
-]
-
-QuditBasis["PauliZ", args___] := QuditBasis[
-    AssociationThread[{
-            Subscript["\[Psi]", "z-"],
-            Subscript["\[Psi]", "z+"]
-        },
-        Reverse @ IdentityMatrix[2]
-    ],
-    args
+QuditBasis[{name : "PauliX" | "PauliY" | "PauliZ", dim_Integer : 2}, args___] := With[{
+    es = Eigensystem[pauliMatrix[name /. {"PauliX" -> 1, "PauliY" -> 2, "PauliZ" -> 3}, dim]]
+},
+    QuditBasis[
+        AssociationThread[
+            Subscript["\[Psi]",
+                Subscript[
+                    ToLowerCase @ StringDelete[name, "Pauli"],
+                    If[# > 0, "+" <> ToString[#], ToString[#]] /. {"+1" -> "+", "-1" -> "-"}
+                ]
+            ] & /@ First[es],
+            (1 / Sqrt[dim]) Last[es]
+        ],
+        args
+    ]
 ]
 
 
