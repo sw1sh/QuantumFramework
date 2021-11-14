@@ -111,7 +111,7 @@ QuantumStateProp[qs_, "NormalizedStateVector"] := Normalize @ qs["StateVector"]
 
 QuantumStateProp[qs_, "NormalizedDensityMatrix"] := Enclose @ Confirm[normalizeMatrix @ qs["DensityMatrix"]]
 
-QuantumStateProp[qs_, "Operator"] := qs["Projector"]["Amplitudes"]
+QuantumStateProp[qs_, "Operator"] := QuantumOperator[qs["Projector"]]
 
 QuantumStateProp[qs_, "NormalizedOperator"] := qs["NormalizedProjector"]["Amplitudes"]
 

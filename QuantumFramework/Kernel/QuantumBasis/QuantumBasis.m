@@ -105,12 +105,18 @@ QuantumBasis[qb_ ? QuantumBasisQ, multiplicity_Integer, args___] := QuantumBasis
     args
 ]
 
-QuantumBasis[arg_, multiplicity_Integer, args___] := With[{
+QuantumBasis[arg_, multiplicity_Integer ? Positive, args___] := With[{
     bases = Table[QuantumBasis[arg, args], multiplicity]
 },
-    If[ Equal @@ bases,
-        QuantumBasis[QuantumTensorProduct[bases], "Label" -> First[bases]["Label"] ^ CircleTimes[multiplicity]],
-        QuantumTensorProduct[bases]
+    If[ multiplicity > 0,
+        If[ Equal @@ bases,
+            QuantumBasis[
+                    QuantumTensorProduct[bases],
+                "Label" -> If[multiplicity > 1, First[bases]["Label"] ^ CircleTimes[multiplicity], First[bases]["Label"]]
+            ],
+            QuantumTensorProduct[bases]
+        ],
+        QuantumBasis[args]
     ]
 ]
 

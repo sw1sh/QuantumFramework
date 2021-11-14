@@ -5,6 +5,7 @@ PackageScope["$QuantumStateNames"]
 
 
 $QuantumStateNames = {
+    "0", "Zero", "1", "One",
     "Plus", "Minus", "Left", "Right",
     "PsiPlus", "PsiMinus", "PhiPlus", "PhiMinus",
     "BasisState", "Register",
@@ -21,6 +22,10 @@ $QuantumStateNames = {
 
 QuantumState[name_ ? nameQ, basisName : Except[Alternatives @@ $QuantumBasisPictures, _ ? nameQ]] :=
     QuantumState[QuantumState[name], QuantumBasis[basisName]]
+
+QuantumState["0" | "Zero", args___] := QuantumState[{1, 0}, "Label" -> "0", args]
+
+QuantumState["1" | "One", args___] := QuantumState[{0, 1}, "Label" -> "1", args]
 
 QuantumState["Plus", args___] := QuantumState[Normalize @ {1, 1}, "Label" -> "+", args]
 
