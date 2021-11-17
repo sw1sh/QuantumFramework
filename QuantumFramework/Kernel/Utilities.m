@@ -98,11 +98,11 @@ pauliMatrix[n_] := pauliMatrix[n, 2]
 
 pauliMatrix[0, dimension_] := IdentityMatrix[dimension]
 
-pauliMatrix[2, dimension_] := With[{
+pauliMatrix[1, dimension_] := With[{
     s = (dimension - 1) / 2
 },
     SparseArray[
-        {a_, b_} :> I (KroneckerDelta[a, b + 1] -  KroneckerDelta[a + 1, b]) Sqrt[(s + 1) (a + b - 1) - a b],
+        {a_, b_} :> (KroneckerDelta[a, b + 1] + KroneckerDelta[a + 1, b]) Sqrt[(s + 1) (a + b - 1) - a b],
         {dimension, dimension}
     ]
 ]

@@ -71,15 +71,13 @@ QuditBasis[params_List] := QuantumTensorProduct @@ (QuditBasis /@ params)
 
 QuditBasis[
     name : _String | {_String, PatternSequence[] | PatternSequence[Except[_List], ___]} | _Integer | _Association,
-    multiplicity_Integer ? Positive, args___] :=
+    multiplicity_Integer ? NonNegative, args___] :=
     QuditBasis[QuditBasis[name, args], multiplicity, args]
 
-QuditBasis[_QuditBasis, 0] := QuditBasis[]
+QuditBasis[dimension_Integer, multiplicity_Integer ? NonNegative] := QuditBasis[QuditBasis[dimension], multiplicity]
 
-QuditBasis[dimension_Integer, multiplicity_Integer ? Positive] := QuditBasis[QuditBasis[dimension], multiplicity]
-
-QuditBasis[qb_QuditBasis ? QuditBasisQ, multiplicity_Integer ? Positive] :=
-    If[multiplicity > 1, QuantumTensorProduct[Table[qb, multiplicity]], qb]
+QuditBasis[qb_QuditBasis ? QuditBasisQ, multiplicity_Integer ? NonNegative] :=
+    If[multiplicity > 0, QuantumTensorProduct[Table[qb, multiplicity]], QuditBasis[]]
 
 
 (* basis cast *)

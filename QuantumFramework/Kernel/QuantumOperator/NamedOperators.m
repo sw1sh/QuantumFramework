@@ -16,7 +16,8 @@ $QuantumOperatorNames = {
     "Controlled", "Controlled0", "CX", "CY", "CZ", "CH", "CT", "CS", "CPHASE", "CNOT",
     "XX", "YY", "ZZ",
     "Toffoli", "Deutsch", "RandomUnitary",
-    "Spider", "Deutsch"
+    "Spider", "ZSpider", "XSpider",
+    "Deutsch"
 }
 
 
@@ -236,15 +237,6 @@ QuantumOperator[{"SUM", dimension_Integer}, args___] := QuantumOperator[QuantumO
 ]
 
 
-pauliMatrix[1, dimension_] := With[{
-    s = (dimension - 1) / 2
-},
-    SparseArray[
-        {a_, b_} :> (KroneckerDelta[a, b + 1] + KroneckerDelta[a + 1, b]) Sqrt[(s + 1) (a + b - 1) - a b],
-        {dimension, dimension}
-    ]
-]
-
 QuantumOperator[name : "X" | "Y" | "Z" | "PauliX" | "PauliY" | "PauliZ" | "NOT", args___] := QuantumOperator[{name, 2}, args]
 
 QuantumOperator[{"PauliX" | "X", dimension_Integer}, args___] := QuantumOperator[
@@ -379,9 +371,15 @@ QuantumOperator[{"ZSpider", out_Integer : 1, in_Integer : 1, phase_ : 0}, args__
     dim, basis
 },
     dim = Length[phases];
-    basis = QuantumBasis[QuditBasis[dim, out], QuditBasis[dim, in], "Label" -> "ZSpider"];
+    basis = QuantumBasis[QuditBasis[{"PauliZ", dim}, out], QuditBasis[{"PauliZ", dim}, in], "Label" -> "ZSpider"];
     QuantumOperator[
-        QuantumState[Flatten @ SparseArray[Thread[Transpose[Table[Range[dim], basis["Qudits"]]] -> Exp[I phases]], basis["Dimensions"]], basis],
+        QuantumState[
+            If[ basis["Dimension"] <= 1,
+                {Exp[I Last[phases]]}[[;; basis["Dimension"]]],
+                Flatten @ SparseArray[Thread[Transpose[Table[Range[dim], basis["Qudits"]]] -> Exp[I phases]], basis["Dimensions"]]
+            ],
+            basis
+        ],
         args,
         Range[basis["OutputQudits"]], Range[basis["InputQudits"]]
     ]
@@ -393,8 +391,8 @@ QuantumOperator[{"XSpider", params___}, args___] := With[{
 },
     QuantumOperator[
         QuantumOperator[zSpider, QuantumBasis[
-            QuditBasis[{"PauliX", First @ zSpider["Dimensions"]}, zSpider["OutputQudits"]],
-            QuditBasis[{"PauliX", First @ zSpider["Dimensions"]}, zSpider["InputQudits"]]]
+            QuditBasis[{"PauliX", First[zSpider["Dimensions"], 1]}, zSpider["OutputQudits"]],
+            QuditBasis[{"PauliX", First[zSpider["Dimensions"], 1]}, zSpider["InputQudits"]]]
         ]["Matrix"],
         zSpider["Basis"],
         "Label" -> "XSpider",
@@ -403,8 +401,13 @@ QuantumOperator[{"XSpider", params___}, args___] := With[{
 ]
 
 
-QuantumOperator[{"Spider", basis_ ? QuantumBasis, phase_ : 0}, args___] := With[{
-    zSpider = QuantumOperator[{"ZSpider", phase, basis["OutputQudits"], basis["InputQudits"]}, args]
+QuantumOperator[{"Spider", basis_ ? QuantumBasisQ, phase_ : 0}, args___] /;
+    Equal @@ basis["Dimensions"] || basis["OutputDimension"] == basis["InputDimension"] == 1 :=
+With[{
+    zSpider = QuantumOperator[
+        {"ZSpider", basis["OutputQudits"], basis["InputQudits"], PadLeft[If[ListQ[phase], phase, {phase}], First @ basis["OutputDimensions"]]},
+        args
+    ]
 },
     QuantumOperator[
         QuantumOperator[zSpider, basis]["Matrix"],
