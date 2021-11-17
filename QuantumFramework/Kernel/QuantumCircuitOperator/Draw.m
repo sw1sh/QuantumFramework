@@ -77,30 +77,30 @@ drawRootSwapGate[qudit1Coordinates_List, qudit2Coordinates_List, opts : OptionsP
     ]
 
 
-drawControlGateTop[coordinates_List, controlOrder_List, targetOrder_List] := Module[{blackCircleRadius, blackCircles, lines},
-    blackCircleRadius = 0.5;
-    blackCircles = Graphics[Table[Disk[coordinates[[i]], blackCircleRadius], {i, Length[controlOrder]}]];
+drawControlGateTop[coordinates_List, controlOrder_List, targetOrder_List, OptionsPattern["Color" -> Black]] := Module[{circleRadius, circles, lines},
+    circleRadius = 0.5;
+    circles = Graphics[Table[{EdgeForm[Black], FaceForm[OptionValue["Color"]], Disk[coordinates[[i]], circleRadius]}, {i, Length[controlOrder]}]];
     lines = Graphics[
         Table[
-            Line[{coordinates[[i]], {First[coordinates[[i]]], Last[coordinates[[i]]] + 5 (controlOrder[[i]]-Max[targetOrder])}}],
+            Line[{coordinates[[i]] + {0, - circleRadius}, {First[coordinates[[i]]], Last[coordinates[[i]]] + 5 (controlOrder[[i]] - Max[targetOrder])}}],
             {i, Length[controlOrder]}
         ]
     ];
-    Show[blackCircles, lines]
+    Show[circles, lines]
 ] /; (Length[coordinates] > 0 && Length[controlOrder] > 0 && Length[coordinates] == Length[controlOrder])
 
 
-drawControlGateBottom[coordinates_List, controlOrder_List, targetOrder_List] := Module[{blackCircleRadius, blackCircles, lines},
-    blackCircleRadius = 0.5;
-    blackCircles = Graphics[Table[Disk[coordinates[[i]], blackCircleRadius], {i, Length[controlOrder]}]];
+drawControlGateBottom[coordinates_List, controlOrder_List, targetOrder_List, OptionsPattern["Color" -> Black]] := Module[{circleRadius, circles, lines},
+    circleRadius = 0.5;
+    circles = Graphics[Table[{EdgeForm[Black], FaceForm[OptionValue["Color"]], Disk[coordinates[[i]], circleRadius]}, {i, Length[controlOrder]}]];
     lines = Graphics[
         Table[
-            Line[{coordinates[[i]], {First[coordinates[[i]]], Last[coordinates[[i]]] - 5 (Min[targetOrder]-controlOrder[[i]])}}],
+            Line[{coordinates[[i]] + {0, circleRadius}, {First[coordinates[[i]]], Last[coordinates[[i]]] - 5 (Min[targetOrder] - controlOrder[[i]])}}],
             {i, Length[controlOrder]}
         ]
     ];
-    Show[blackCircles, lines]
-] /;(Length[coordinates] > 0 && Length[controlOrder] > 0 && Length[coordinates] == Length[controlOrder])
+    Show[circles, lines]
+] /; (Length[coordinates] > 0 && Length[controlOrder] > 0 && Length[coordinates] == Length[controlOrder])
 
 
 drawMeasurementGate[coordinates_List, order_List, name_, opts : OptionsPattern[Style]] := Module[{width, height, radius, semiCircle, arrow, frame},
@@ -158,6 +158,7 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
     targetQuditsOrder, controlQuditsOrder, controlQuditsOrderTop, controlQuditsOrderBottom, controlQuditsTopCoordinates, controlQuditsBottomCoordinates,
     includeMeasurement = False,
     labels,
+    label, color,
     styleOpts = {opts, FontSize -> 24, FontFamily -> "Times"}
 },
     width = 4;
@@ -190,6 +191,8 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
         AppendTo[graphicsList, drawMeasurement[{-2 + 6 Max[gatePositionIndices], - 5 Min[orders[[i]]]}]];
         positionIndices = ConstantArray[Max[positionIndices] + 1, Length[positionIndices]];
     ];
+    {label, color} = gates[[i]]["Label"] /. {"Controlled"[x_, ___, "Zero"] :> {x, White}, "Controlled"[x_, ___] | x_ :> {x, Black}};
+
     If[ QuantumOperatorQ[gates[[i]]],
         gatePositionIndices = Table[positionIndices[[j]], {j, Min[orders[[i]]], Max[orders[[i]]]}];
         If[ MatchQ[gates[[i]]["Label"], "CX" | "CY" | "CZ" | "CNOT" | "CPHASE" | "CSWAP" | "Controlled"[__]],
@@ -211,10 +214,10 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
             controlQuditsTopCoordinates = Table[{-2 + 6 Max[gatePositionIndices], - 5 controlQuditsOrderTop[[j]]}, {j, Length[controlQuditsOrderTop]}];
             controlQuditsBottomCoordinates = Table[{-2 + 6 Max[gatePositionIndices], - 5 controlQuditsOrderBottom[[j]]}, {j, Length[controlQuditsOrderBottom]}];
             If[ Length[controlQuditsOrderTop] > 0,
-                AppendTo[graphicsList, drawControlGateBottom[controlQuditsTopCoordinates, controlQuditsOrderTop, targetQuditsOrder]]
+                AppendTo[graphicsList, drawControlGateBottom[controlQuditsTopCoordinates, controlQuditsOrderTop, targetQuditsOrder, "Color" -> color]]
             ];
             If[ Length[controlQuditsOrderBottom] > 0,
-                AppendTo[graphicsList, drawControlGateTop[controlQuditsBottomCoordinates, controlQuditsOrderBottom, targetQuditsOrder]]
+                AppendTo[graphicsList, drawControlGateTop[controlQuditsBottomCoordinates, controlQuditsOrderBottom, targetQuditsOrder, "Color" -> color]]
             ],
 
             targetQuditsOrder = orders[[i]]
@@ -222,7 +225,7 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
         AppendTo[
             graphicsList,
             Switch[
-                gates[[i]]["Label"] /. "Controlled"[x_, ___] :> x,
+                label,
                 "SWAP",
                 drawSwapGate[{-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], - 5 Last[targetQuditsOrder]}, styleOpts],
                 "RootSWAP",
@@ -233,12 +236,12 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
                 If[ gates[[i]]["Arity"] == 1,
                     drawUnaryGate[
                         {-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]},
-                        gates[[i]]["Label"] /. {Composition -> SmallCircle, "Controlled"[x_, ___] :> x} /. None | CircleTimes[] :> Subscript["U", index++],
+                       label /. Composition -> SmallCircle /. None | CircleTimes[] :> Subscript["U", index++],
                         styleOpts
                     ],
                     drawBinaryGate[
                         {{-2 + 6 Max[gatePositionIndices], - 5 Max[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], - 5 Min[targetQuditsOrder]}},
-                        gates[[i]]["Label"] /. {Composition -> SmallCircle, "Controlled"[x_, ___] :> x} /. None | CircleTimes[] :> Subscript["U", index++],
+                        label /. Composition -> SmallCircle /. None | CircleTimes[] :> Subscript["U", index++],
                         styleOpts
                     ]
                 ]

@@ -13,7 +13,7 @@ $QuantumOperatorNames = {
     "SUM", "RootNot",
     "X", "Y", "Z", "PauliX", "PauliY", "PauliZ", "H", "Hadamard",
     "SWAP", "RootSWAP", "CSWAP", "Fredkin",
-     "ControlledU", "CX", "CY", "CZ", "CH", "CT", "CS", "CPHASE", "CNOT",
+    "Controlled", "Controlled0", "CX", "CY", "CZ", "CH", "CT", "CS", "CPHASE", "CNOT",
     "XX", "YY", "ZZ",
     "Toffoli", "Deutsch", "RandomUnitary",
     "Spider", "Deutsch"
@@ -153,6 +153,17 @@ QuantumOperator[{"ControlledU" | "Controlled", qo_ ? QuantumOperatorQ, control_ 
         ]
     ]
 ]
+
+
+QuantumOperator["Controlled0" | {"Controlled0", params___}, args___] := With[{
+    op = QuantumOperator[{"Controlled", params}, args]
+},
+    QuantumOperator[
+        QuantumOperator["NOT", op["ControlOrder"]] @ op @ QuantumOperator["NOT", op["ControlOrder"]],
+        "Label" -> Insert[op["Label"], "Zero", 3]
+    ]
+]
+
 
 QuantumOperator["Fourier", args___] := QuantumOperator[{"Fourier", 2}, args]
 
