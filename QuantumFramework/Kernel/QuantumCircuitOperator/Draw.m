@@ -61,8 +61,7 @@ drawRootSwapGate[qudit1Coordinates_List, qudit2Coordinates_List, opts : OptionsP
         ];
         cross2 = Graphics[{
             Line[{qudit2Coordinates + {-1, -1}, qudit2Coordinates + {1, 1}}],
-            Line[{qudit2Coordinates + {1, -1}, qudit2Coordinates + {-1, 1}}]}]
-        ;
+            Line[{qudit2Coordinates + {1, -1}, qudit2Coordinates + {-1, 1}}]}];
         verticalLine = Graphics[Line[{qudit1Coordinates, qudit2Coordinates}]];
         averageCoordinates = (qudit1Coordinates + qudit2Coordinates) / 2;
         textGraphics = Graphics[Text[Style["1/2", opts], averageCoordinates]];
@@ -86,7 +85,7 @@ drawControlGateTop[coordinates_List, controlOrder_List, targetOrder_List, Option
             {i, Length[controlOrder]}
         ]
     ];
-    Show[circles, lines]
+    Show[lines, circles]
 ] /; (Length[coordinates] > 0 && Length[controlOrder] > 0 && Length[coordinates] == Length[controlOrder])
 
 
@@ -99,7 +98,7 @@ drawControlGateBottom[coordinates_List, controlOrder_List, targetOrder_List, Opt
             {i, Length[controlOrder]}
         ]
     ];
-    Show[circles, lines]
+    Show[lines, circles]
 ] /; (Length[coordinates] > 0 && Length[controlOrder] > 0 && Length[coordinates] == Length[controlOrder])
 
 

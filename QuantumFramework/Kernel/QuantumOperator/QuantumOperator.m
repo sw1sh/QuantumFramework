@@ -273,15 +273,31 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
     QuantumCircuitOperator[Append[qco["Operators"], qo]]
 
 
-QuantumOperator /: (qo1_QuantumOperator ? QuantumOperatorQ) + (qo2_QuantumOperator ? QuantumOperatorQ) /;
-    qo1["Dimension"] == qo2["Dimension"] && qo1["Order"] == qo2["Order"] :=
+expandQuditBasis[qb_QuditBasis, order1_ ? orderQ, order2_ ? orderQ, defaultDim_Integer : 2] := Enclose @ (
+    ConfirmAssert[Length[order1] == qb["Qudits"]];
+    QuantumTensorProduct[order2 /. Append[Thread[order1 -> qb["Decompose"]], _Integer -> QuditBasis[defaultDim]]]
+)
+
+QuantumOperator /: (qo1_QuantumOperator ? QuantumOperatorQ) + (qo2_QuantumOperator ? QuantumOperatorQ) := Enclose @ With[{
+    ordered1 = qo1[
+        With[{order = Union[qo1["InputOrder"], qo2["InputOrder"]]}, {"OrderedInput", order, expandQuditBasis[qo1["Input"], qo1["InputOrder"], order]}]][
+        With[{order = Union[qo1["OutputOrder"], qo2["OutputOrder"]]}, {"OrderedOutput", order, expandQuditBasis[qo1["Output"], qo1["OutputOrder"], order]}]
+    ],
+    ordered2 = qo2[
+        With[{order = Union[qo1["InputOrder"], qo2["InputOrder"]]}, {"OrderedInput", order, expandQuditBasis[qo2["Input"], qo2["InputOrder"], order]}]][
+        With[{order = Union[qo1["OutputOrder"], qo2["OutputOrder"]]}, {"OrderedOutput", order, expandQuditBasis[qo2["Output"], qo2["OutputOrder"], order]}]
+    ]
+},
+    ConfirmAssert[ordered1["Dimensions"] == ordered2["Dimensions"]];
     QuantumOperator[
         QuantumOperator[
-            qo1["MatrixRepresentation"] + qo2["MatrixRepresentation"],
-            QuantumBasis[qo1["OutputDimensions"], qo1["InputDimensions"]]
+            ordered1["MatrixRepresentation"] + ordered2["MatrixRepresentation"],
+            QuantumBasis[ordered1["OutputDimensions"], ordered2["InputDimensions"]]
         ],
-        qo1["Basis"]
+        ordered1["Basis"],
+        ordered1["Order"]
     ]
+]
 
 QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator] ...] /; MemberQ[Attributes[f], NumericFunction] :=
     Enclose @ QuantumOperator[ConfirmBy[MatrixFunction[f[left, #, right] &, qo["Matrix"]], MatrixQ], qo["Basis"], "Label" -> f[left, qo["Label"], right], qo["Order"]]

@@ -10,14 +10,16 @@ $QuantumOperatorNames = {
     "Identity", "Permutation", "Curry", "Uncurry",
     "Fourier", "InverseFourier",
     "XRotation", "YRotation", "ZRotation", "Phase", "P",
-    "SUM", "RootNot",
+    "Diagonal", "GlobalPhase",
+    "SUM", "RootNOT",
     "X", "Y", "Z", "PauliX", "PauliY", "PauliZ", "H", "Hadamard",
     "SWAP", "RootSWAP", "CSWAP", "Fredkin",
     "Controlled", "Controlled0", "CX", "CY", "CZ", "CH", "CT", "CS", "CPHASE", "CNOT",
     "XX", "YY", "ZZ",
     "Toffoli", "Deutsch", "RandomUnitary",
     "Spider", "ZSpider", "XSpider",
-    "Deutsch"
+    "Deutsch",
+    "Switch"
 }
 
 
@@ -71,6 +73,17 @@ QuantumOperator[{"Phase" | "P", angle_, dimension_Integer : 2}, args___] := Quan
     "Label" -> "P"[angle],
     args
 ]
+
+QuantumOperator["GlobalPhase", args___] := QuantumOperator[{"GlobalPhase", Pi}, args]
+
+QuantumOperator[{"GlobalPhase", angle_, dimension_Integer : 2}, args___] := QuantumOperator[{"Diagonal", Exp[I angle], dimension}, args]
+
+QuantumOperator[{"Diagonal", x_, dimension_Integer : 2}, args___] := QuantumOperator[
+    SparseArray[IdentityMatrix[dimension] x],
+    "Label" -> x,
+    args
+]
+
 
 
 QuantumOperator["S", args___] := QuantumOperator[{"Phase", Pi / 2}, "Label" -> "S", args]
@@ -271,7 +284,7 @@ QuantumOperator[{"RootNOT", dimension_Integer}, args___] := QuantumOperator[
         1 / 2
     ],
     dimension,
-    "Label" -> "RootNOT",
+    "Label" -> Sqrt["NOT"],
     args
 ]
 
@@ -305,7 +318,7 @@ QuantumOperator[{"XX", angle_}, args___] := QuantumOperator[
     },
         {4, 4}
     ],
-    "Label" -> "XX",
+    "Label" -> Subscript["R", "XX"][angle],
     args
 ]
 
@@ -316,7 +329,7 @@ QuantumOperator[{"YY", angle_}, args___] := QuantumOperator[
     },
         {4, 4}
     ],
-    "Label" -> "YY",
+    "Label" -> Subscript["R", "YY"][angle],
     args
 ]
 
@@ -327,7 +340,7 @@ QuantumOperator[{"ZZ", angle_}, args___] := QuantumOperator[
     },
         {4, 4}
     ],
-    "Label" -> "ZZ",
+    "Label" -> Subscript["R","ZZ"][angle],
     args
 ]
 
@@ -335,7 +348,10 @@ QuantumOperator[{"ZZ", angle_}, args___] := QuantumOperator[
 QuantumOperator["RandomUnitary", args___] := QuantumOperator[{"RandomUnitary", 2}, args]
 
 QuantumOperator[{"RandomUnitary", dimension_Integer}, args___, order : (_ ? orderQ) : {1}] :=
-    QuantumOperator[RandomVariate @ CircularUnitaryMatrixDistribution[dimension ^ Length[order]], dimension, Length[order], "Label" -> None, args, order]
+    QuantumOperator[
+        QuantumOperator[RandomVariate @ CircularUnitaryMatrixDistribution[dimension ^ Length[order]], dimension, Length[order], args, order],
+        "Label" -> None
+    ]
 
 
 QuantumOperator[{"Permutation", perm_Cycles}, args___] := QuantumOperator[{"Permutation", 2, perm}, args]
@@ -428,4 +444,25 @@ QuantumOperator[{"Deutsch", theta_}, order : _ ? orderQ : {1, 2, 3}] := With[{
         controlOrder
     }]
 ]
+
+
+QuantumOperator[{"Switch", a_ ? QuantumOperatorQ, b_ ? QuantumOperatorQ}, order : _ ? orderQ : {1, 2}] /;
+    a["InputDimension"] == a["OutputDimension"] == b["InputDimension"] == b["OutputDimension"] && Length[order] == 2 :=
+QuantumPartialTrace[
+	QuantumCircuitOperator[{
+		QuantumOperator["CSWAP", Prepend[order, Max[order] + 1]],
+		QuantumOperator[a, order[[{1}]], order[[{1}]]],
+		QuantumOperator[b, order[[{2}]], order[[{2}]]],
+		QuantumOperator[{"Controlled0", "SWAP"}, Prepend[order, Max[order] + 1]]
+	}]["CircuitOperator"],
+	{Max[order] + 1}
+]
+
+$upperCasesOperatorNames = AssociationThread[ToUpperCase @ $QuantumOperatorNames, $QuantumOperatorNames]
+
+QuantumOperator[name_String, args___] /; KeyExistsQ[$upperCasesOperatorNames, name] :=
+    QuantumOperator[$upperCasesOperatorNames[name], args]
+
+QuantumOperator[{name_String, params___}, args___] /; KeyExistsQ[$upperCasesOperatorNames, name] :=
+    QuantumOperator[{$upperCasesOperatorNames[name], params}, args]
 

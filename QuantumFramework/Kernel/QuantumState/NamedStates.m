@@ -37,7 +37,7 @@ QuantumState["Right", args___] := QuantumState[Normalize @ {1, -I}, "Label" -> "
 
 QuantumState["PhiPlus", args___] := QuantumState[Normalize @ {1, 0, 0, 1}, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(+\)]", args]
 
-QuantumState["PhiMinus", args___] := QuantumState[Normalize @ {1, 0, 0, -1}, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(-\)]"args]
+QuantumState["PhiMinus", args___] := QuantumState[Normalize @ {1, 0, 0, -1}, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(-\)]", args]
 
 QuantumState["PsiPlus", args___] := QuantumState[Normalize @ {0, 1, 1, 0}, "Label" -> "\*SubscriptBox[\[CapitalPsi], \(+\)]", args]
 

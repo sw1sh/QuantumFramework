@@ -42,7 +42,7 @@ QuantumHamiltonianOperator[{qo_ ? QuantumOperatorQ, params___}, args___] :=
 
 QuantumHamiltonianOperator[{"Ising", coefficientMatrix_List},
     {parameter_Symbol, initialParameter_, finalParameter_, parameterStep_},
-    order : (_ ? orderQ) : {1}] := Module[{
+    order : (_ ? orderQ) : {1, 2}] := Module[{
     qubitCount, couplingOrders, couplingTerms, individualTerms, hamiltonianMatrix
 },
     qubitCount = Length[order];
@@ -78,7 +78,7 @@ QuantumHamiltonianOperator[{"Ising", coefficientMatrix_List},
 
 QuantumHamiltonianOperator[{"TransverseIsing", coefficientMatrix_List},
     {parameter_Symbol, initialParameter_, finalParameter_, parameterStep_},
-    order : (_ ? orderQ) : {1}] := Module[{
+    order : (_ ? orderQ) : {1, 2}] := Module[{
     qubitCount, couplingOrders, couplingTerms, individualTerms, hamiltonianMatrix
 },
     qubitCount = Length[order];

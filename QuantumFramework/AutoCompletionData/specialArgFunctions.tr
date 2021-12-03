@@ -34,6 +34,10 @@
     "QuantumState" ->
         {
             {
+                "0",
+                "Zero",
+                "1",
+                "One",
                 "Plus",
                 "Minus",
                 "Left",
@@ -80,8 +84,10 @@
                 "ZRotation",
                 "Phase",
                 "P",
+                "Diagonal",
+                "GlobalPhase",
                 "SUM",
-                "RootNot",
+                "RootNOT",
                 "X",
                 "Y",
                 "Z",
@@ -94,7 +100,8 @@
                 "RootSWAP",
                 "CSWAP",
                 "Fredkin",
-                "ControlledU",
+                "Controlled",
+                "Controlled0",
                 "CX",
                 "CY",
                 "CZ",
@@ -110,7 +117,10 @@
                 "Deutsch",
                 "RandomUnitary",
                 "Spider",
-                "Deutsch"
+                "ZSpider",
+                "XSpider",
+                "Deutsch",
+                "Switch"
             },
             {
                 "Computational",

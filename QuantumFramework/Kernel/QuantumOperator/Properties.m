@@ -84,7 +84,7 @@ QuantumOperatorProp[qo_, "FullOutputOrder"] := If[qo["OutputDimension"] > 1,
     {}
 ]
 
-QuantumOperatorProp[qo_, "ControlOrder"] := FirstCase[qo["Label"], "Controlled"[_, order_] :> order, Missing["ControlOrder"], {0}]
+QuantumOperatorProp[qo_, "ControlOrder"] := FirstCase[qo["Label"], "Controlled"[_, order_, ___] :> order, Missing["ControlOrder"], {0}]
 
 QuantumOperatorProp[qo_, "TargetOrder"] := Enclose[DeleteCases[qo["InputOrder"], Alternatives @@ Confirm @ qo["ControlOrder"]], Missing["TargetOrder"] &]
 
@@ -191,7 +191,11 @@ QuantumOperatorProp[qo_, "Ordered" | "OrderedInput"] := qo[{"OrderedInput", Sort
 
 QuantumOperatorProp[qo_, "OrderedOutput"] := qo[{"OrderedOutput", Sort @ qo["FullOutputOrder"]}]
 
-QuantumOperatorProp[qo_, {"Ordered", from_Integer, to_Integer}] := qo[{"Ordered", Range[from, to]}]
+QuantumOperatorProp[qo_, {"OrderedOutput", from_Integer, to_Integer}] /; qo["OutputQudits"] == 1 :=
+    qo[{"OrderedOutput", Range[from, to], QuditBasis[qo["Output"], to - from + 1]}]
+
+QuantumOperatorProp[qo_, {"Ordered" | "OrderedInput", from_Integer, to_Integer}] /; qo["InputQudits"] == 1 :=
+    qo[{"OrderedInput", Range[from, to], QuditBasis[qo["Input"], to - from + 1]}]
 
 QuantumOperatorProp[qo_, {"Ordered", from_Integer, to_Integer, qb_ ? QuditBasisQ}] := qo[{"Ordered", Range[from, to], qb}]
 
