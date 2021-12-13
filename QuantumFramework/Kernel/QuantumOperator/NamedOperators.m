@@ -38,6 +38,8 @@ QuantumOperator[name_ ? nameQ, basisName : Except[Alternatives @@ $QuantumBasisP
     QuantumOperator[QuantumOperator[name], QuantumBasis[basisName]]
 
 
+QuantumOperator[] := QuantumOperator["Identity"]
+
 QuantumOperator["Identity", args___] := QuantumOperator[{"Identity", 2}, args]
 
 QuantumOperator[{"Identity", dimension_Integer}, args___] := QuantumOperator[IdentityMatrix[dimension], dimension, args]

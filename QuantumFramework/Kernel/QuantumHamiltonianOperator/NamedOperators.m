@@ -5,17 +5,17 @@ QuantumHamiltonianOperator[initialMatrixRepresentation_ -> finalMatrixRepresenta
     QuantumHamiltonianOperator[{"LinearInterpolation", initialMatrixRepresentation, finalMatrixRepresentation}, args]
 
 QuantumHamiltonianOperator[{"LinearInterpolation", initialMatrixRepresentation_, finalMatrixRepresentation_},
-   {parameter_, initialParameter_, finalParameter_, parameterStep_}, args___] :=
+   {parameter_, initialParameter_, finalParameter_}, args___] :=
     QuantumHamiltonianOperator[
         ((finalParameter - parameter) / (finalParameter - initialParameter)) *
             initialMatrixRepresentation + ((parameter - initialParameter) / (finalParameter - initialParameter)) *
         finalMatrixRepresentation,
-        {parameter, initialParameter, finalParameter, parameterStep},
+        {parameter, initialParameter, finalParameter},
         args
     ]
 
 QuantumHamiltonianOperator[{"EvolutionOperator", matrixRepresentation_ ? MatrixQ},
-    {parameter_Symbol, initialParameter_, finalParameter_, parameterStep_}, args___] := Module[{
+    {parameter_Symbol, initialParameter_, finalParameter_}, args___] := Module[{
     matrixSize, hamiltonianMatrix, matrixDerivative
 },
     matrixSize = Length[matrixRepresentation];
@@ -33,7 +33,7 @@ QuantumHamiltonianOperator[{"EvolutionOperator", matrixRepresentation_ ? MatrixQ
             ] /. {And -> List, Equal -> Rule} // Flatten,
             _Rule
         ];
-    QuantumHamiltonianOperator[hamiltonianMatrix, {parameter, initialParameter, finalParameter, parameterStep}, args]
+    QuantumHamiltonianOperator[hamiltonianMatrix, {parameter, initialParameter, finalParameter}, args]
 ]
 
 QuantumHamiltonianOperator[{qo_ ? QuantumOperatorQ, params___}, args___] :=
@@ -41,7 +41,7 @@ QuantumHamiltonianOperator[{qo_ ? QuantumOperatorQ, params___}, args___] :=
 
 
 QuantumHamiltonianOperator[{"Ising", coefficientMatrix_List},
-    {parameter_Symbol, initialParameter_, finalParameter_, parameterStep_},
+    {parameter_Symbol, initialParameter_, finalParameter_},
     order : (_ ? orderQ) : {1, 2}] := Module[{
     qubitCount, couplingOrders, couplingTerms, individualTerms, hamiltonianMatrix
 },
@@ -72,12 +72,12 @@ QuantumHamiltonianOperator[{"Ising", coefficientMatrix_List},
     ]["OrderedMatrixRepresentation"] & /@ Range[qubitCount];
     individualTerms = Total @ MapThread[Times, {Diagonal[coefficientMatrix], individualTerms}];
     hamiltonianMatrix = individualTerms + couplingTerms;
-    QuantumHamiltonianOperator[QuantumOperator[hamiltonianMatrix, order], {parameter, initialParameter, finalParameter, parameterStep}]
+    QuantumHamiltonianOperator[QuantumOperator[hamiltonianMatrix, order], {parameter, initialParameter, finalParameter}]
 ]
 
 
 QuantumHamiltonianOperator[{"TransverseIsing", coefficientMatrix_List},
-    {parameter_Symbol, initialParameter_, finalParameter_, parameterStep_},
+    {parameter_Symbol, initialParameter_, finalParameter_},
     order : (_ ? orderQ) : {1, 2}] := Module[{
     qubitCount, couplingOrders, couplingTerms, individualTerms, hamiltonianMatrix
 },
@@ -113,10 +113,6 @@ QuantumHamiltonianOperator[{"TransverseIsing", coefficientMatrix_List},
         ]["OrderedMatrixRepresentation"] & /@ Range[qubitCount];
     individualTerms = Total @ MapThread[Times, {Diagonal[coefficientMatrix], individualTerms}];
     hamiltonianMatrix = individualTerms + couplingTerms;
-    QuantumHamiltonianOperator[QuantumOperator[hamiltonianMatrix, order], {parameter, initialParameter, finalParameter, parameterStep}]
+    QuantumHamiltonianOperator[QuantumOperator[hamiltonianMatrix, order], {parameter, initialParameter, finalParameter}]
 ]
-
-
-QuantumHamiltonianOperator[args : Except[_ ? QuantumOperatorQ], range : {_Symbol, _, _, _}] :=
-    Enclose @ QuantumHamiltonianOperator[ConfirmBy[QuantumOperator[args], QuantumOperatorQ], range]
 

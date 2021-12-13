@@ -38,6 +38,10 @@ QuantumState /: MakeBoxes[qs_QuantumState /; Quiet @ QuantumStateQ[Unevaluated @
         {
             BoxForm`SummaryItem[{"Dimensions: ",
                 If[qs["InputQudits"] > 0, MapAt[Style[#, Bold] &, qs["Dimensions"], {- qs["InputQudits"] ;; }], qs["Dimensions"]]}]
+        },
+        {
+            BoxForm`SummaryItem[{"ParameterArity: ", qs["ParameterArity"]}],
+            BoxForm`SummaryItem[{"Parameters: ", qs["Parameters"]}]
         }
     },
     format,

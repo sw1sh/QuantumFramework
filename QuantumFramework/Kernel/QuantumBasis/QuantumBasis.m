@@ -33,7 +33,7 @@ QuantumBasis::dependentElements = "elements should be linearly independent";
 
 
 
-$QuantumBasisDataKeys = {"Input", "Output", "Picture", "Label"}
+$QuantumBasisDataKeys = {"Input", "Output", "Picture", "Label", "ParameterSpec"}
 
 
 quantumBasisQ[QuantumBasis[data_Association]] := Enclose[
@@ -47,6 +47,7 @@ Module[{
     ConfirmAssert[MemberQ[$QuantumBasisPictures, data["Picture"]], Message[QuantumBasis::picture]];
     (*ConfirmAssert[Length[inputElements] + Length[outputElements] > 0, Message[QuantumBasis::zeroDimension]];*)
 
+    ConfirmAssert[MatchQ[data["ParameterSpec"], {{_, _ ? NumericQ, _ ? NumericQ}...}]];
     True
 ],
 False &
@@ -87,12 +88,30 @@ QuantumBasis[params_List, args___] := QuantumTensorProduct[QuantumBasis[#, args]
 
 (* defaults *)
 QuantumBasis[data_Association ? (Keys /* Not @* ContainsExactly[$QuantumBasisDataKeys]), args___] :=
-    QuantumBasis[<|<|"Input" -> QuditBasis[], "Output" -> QuditBasis[], "Picture" -> "Schrödinger", "Label" -> None|>, data|>, args]
+    QuantumBasis[<|<|"Input" -> QuditBasis[], "Output" -> QuditBasis[], "Picture" -> "Schrödinger", "Label" -> None,
+    "ParameterSpec" -> {}|>, data|>, args]
 
 
 QuantumBasis[data_Association] /; AssociationQ[data["Input"]] := QuantumBasis[MapAt[QuditBasis, data, "Input"]]
 
 QuantumBasis[data_Association] /; AssociationQ[data["Output"]] := QuantumBasis[MapAt[QuditBasis, data, "Output"]]
+
+
+defaultParameterSpec[{p : Except[_List]}] := defaultParameterSpec[{p, 0, 1}]
+
+defaultParameterSpec[{p_, i_ ? NumericQ}] := defaultParameterSpec[{p, i, i + 1}]
+
+defaultParameterSpec[{p_, i_ ? NumericQ, f_ ? NumericQ}] := {{p, i, f}}
+
+defaultParameterSpec[ps_List] := Catenate[defaultParameterSpec /@ ps]
+
+(* defaultParameterSpec[spec : Except[{_List...}, _List]] := defaultParameterSpec[Take[spec, UpTo[3]]] *)
+
+defaultParameterSpec[p : Except[_List]] := defaultParameterSpec[{p}]
+
+
+QuantumBasis[data_Association] /; !MatchQ[data["ParameterSpec"], {{_, _, _}...}] :=
+    QuantumBasis[<|data, "ParameterSpec" -> defaultParameterSpec[data["ParameterSpec"]]|>]
 
 
 (* multiplicity *)

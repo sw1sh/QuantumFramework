@@ -23,6 +23,8 @@ $QuantumStateNames = {
 QuantumState[name_ ? nameQ, basisName : Except[Alternatives @@ $QuantumBasisPictures, _ ? nameQ]] :=
     QuantumState[QuantumState[name], QuantumBasis[basisName]]
 
+QuantumState[] := QuantumState["0"]
+
 QuantumState["0" | "Zero", args___] := QuantumState[{1, 0}, "Label" -> "0", args]
 
 QuantumState["1" | "One", args___] := QuantumState[{0, 1}, "Label" -> "1", args]

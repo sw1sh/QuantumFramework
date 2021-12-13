@@ -3,7 +3,7 @@ Package["Wolfram`QuantumFramework`"]
 
 
 QuantumHamiltonianOperator /: MakeBoxes[qho_QuantumHamiltonianOperator /; QuantumHamiltonianOperatorQ[Unevaluated @ qho], format_] := With[{
-    icon = Plot[Evaluate @ qho["Eigenvalues"], Evaluate @ qho["Range"],
+    icon = Plot[Evaluate @ qho["Eigenvalues"], Evaluate @ qho["ParameterSpec"],
         Axes -> False,
         ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},
         PlotRange -> All

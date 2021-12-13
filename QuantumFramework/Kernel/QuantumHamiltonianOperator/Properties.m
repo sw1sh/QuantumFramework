@@ -6,7 +6,7 @@ PackageScope["QuantumHamiltonianOperatorProp"]
 
 $QuantumHamiltonianOperatorProperties = {
     "QuantumOperator",
-    "Parameter", "InitialParameter", "FinalParameter", "ParameterStep",
+    "ParameterSpec", "Parameter", "InitialParameter", "FinalParameter",
     "InitialMatrixRepresentation",
     "FinalMatrixRepresentation",
     "InitialOrderedMatrixRepresentation",
@@ -40,26 +40,24 @@ QuantumHamiltonianOperator::undefprop = "QuantumHamiltonianOperator property `` 
 
 (* getters *)
 
-QuantumHamiltonianOperatorProp[_[op_, _], "QuantumOperator"] := op
+QuantumHamiltonianOperatorProp[_[op_], "QuantumOperator"] := op
 
-QuantumHamiltonianOperatorProp[_[_, {param_, _, _, _}], "Parameter"] := param
+QuantumHamiltonianOperatorProp[qho_, "ParameterSpec"] := First @ qho["Basis"]["ParameterSpec"]
 
-QuantumHamiltonianOperatorProp[_[_, {_, init_, _, _}], "InitialParameter"] := init
+QuantumHamiltonianOperatorProp[qho_, "Parameter"] := qho["ParameterSpec"][[1]]
 
-QuantumHamiltonianOperatorProp[_[_, {_, _, final_, _}], "FinalParameter"] := final
+QuantumHamiltonianOperatorProp[qho_, "InitialParameter"] := qho["ParameterSpec"][[2]]
 
-QuantumHamiltonianOperatorProp[_[_, {_, _, _, step_}], "ParameterStep"] := step
-
-
-QuantumHamiltonianOperatorProp[_[_, {param_, init_, final_, _}], "Range"] := {param, init, final}
+QuantumHamiltonianOperatorProp[qho_, "FinalParameter"] := qho["ParameterSpec"][[3]]
 
 
+QuantumHamiltonianOperatorProp[qho_, "Gap"] := qho[{"Gap", 100}]
 
-QuantumHamiltonianOperatorProp[qho_, "Gap"] :=
+QuantumHamiltonianOperatorProp[qho_, {"Gap", n_Integer ? Positive}] :=
     Module[ {eigenvalues, gap},
         eigenvalues = Sort[qho["Eigenvalues"]][[1 ;; 2]];
         gap = Abs[Differences[eigenvalues /. qho["Parameter"] -> #]] &;
-        First[gap[#]] & /@ Range[qho["InitialParameter"], qho["FinalParameter"], qho["ParameterStep"]]
+        First[gap[#]] & /@ Range[qho["InitialParameter"], qho["FinalParameter"], (qho["FinalParameter"] - qho["InitialParameter"]) / n]
     ]
 
 QuantumHamiltonianOperatorProp[qho_, {"Gap", parameterValue_}] :=
@@ -70,14 +68,14 @@ QuantumHamiltonianOperatorProp[qho_, {"Gap", parameterValue_}] :=
     ]
 
 QuantumHamiltonianOperatorProp[qho_, "MinimumGap"] := FindMinimum[
-     qho[{"Gap", qho["Parameter"]}], {qho["Parameter"], qho["InitialParameter"], qho["FinalParameter"]}
+     qho[{"Gap", qho["Parameter"]}], qho["ParameterSpec"]
 ]
 
 QuantumHamiltonianOperatorProp[qho_, "InitialGap"] := qho[{"Gap", qho["InitialParameter"]}]
 
 QuantumHamiltonianOperatorProp[qho_, "FinalGap"] :=  qho[{"Gap", qho["FinalParameter"]}]
 
-QuantumHamiltonianOperatorProp[qho_, {"MatrixRepresentation", param_}] := qho["MatrixRepresentation"] /. qho["Parameter"] -> param
+QuantumHamiltonianOperatorProp[qho_, {"MatrixRepresentation", param_}] := Normal[qho["MatrixRepresentation"]] /. qho["Parameter"] -> param
 
 QuantumHamiltonianOperatorProp[qho_, "InitialMatrixRepresentation"] := qho[{"MatrixRepresentation", qho["InitialParameter"]}]
 
@@ -104,7 +102,7 @@ QuantumHamiltonianOperatorProp[qho_, "EvolutionOperator"] := Module[{
                 NDSolve[
                     Join[equations, initialEquations],
                     Subscript["u", #][qho["Parameter"]] & /@ Range[qho["OutputDimension"] ^ 2],
-                    Evaluate @ qho["Range"]
+                    Evaluate @ qho["ParameterSpec"]
                 ],
                 qho["OutputDimension"]
             ],

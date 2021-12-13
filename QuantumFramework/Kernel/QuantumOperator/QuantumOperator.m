@@ -104,7 +104,7 @@ QuantumOperator[matrix_ ? MatrixQ, args___, order : _ ? orderQ | Automatic] := E
 },
     newOrder = order /. Automatic -> op["FullInputOrder"];
     If[ op["InputQudits"] < Length[newOrder],
-        QuantumOperator[{op, Ceiling[Length[newOrder], op["InputQudits"]] / op["InputQudits"]}, newOrder],
+        QuantumOperator[{op, Ceiling[Length[newOrder], op["InputQudits"]] / op["InputQudits"]}, {newOrder, newOrder}],
         QuantumOperator[op["State"], {Automatic, newOrder}]
     ]
 ]
@@ -171,8 +171,8 @@ QuantumOperator[qo_ ? QuantumOperatorQ, args : PatternSequence[Except[_ ? Quantu
 
 QuantumOperator[{qo : _ ? QuantumOperatorQ, multiplicity_Integer ? Positive}] := QuantumOperator[{qo, multiplicity}, Range[multiplicity]]
 
-QuantumOperator[{qo : _ ? QuantumOperatorQ, multiplicity_Integer ? Positive}, order_ ? orderQ] :=
-    QuantumOperator[QuantumTensorProduct @ Table[qo, multiplicity], order]
+QuantumOperator[{qo : _ ? QuantumOperatorQ, multiplicity_Integer ? Positive}, args__] :=
+    QuantumOperator[QuantumTensorProduct @ Table[qo, multiplicity], args]
 
 (* change of basis *)
 
@@ -307,4 +307,10 @@ QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOpera
 
 QuantumOperator /: Equal[qo : _QuantumOperator ... ] :=
     Equal @@ (#["Picture"] & /@ {qo}) && Equal @@ (#["Sort"]["MatrixRepresentation"] & /@ {qo})
+
+
+(* parameterization *)
+
+(qo_QuantumOperator ? QuantumOperatorQ)[ps___] /; Length[{ps}] <= qo["ParameterArity"] :=
+    QuantumOperator[qo["State"][ps], qo["Order"]]
 

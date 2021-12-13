@@ -27,7 +27,8 @@ $QuantumBasisProperties = {
      "Qudits", "InputQudits", "OutputQudits", "InputBasis", "OutputBasis",
      "Dual", "Transpose", "ConjugateTranspose",
      "Picture",
-     "Diagram"
+     "Diagram",
+     "ParameterArity", "Parameters", "InitialParameters", "FinalParameters"
 };
 
 QuantumBasis["Properties"] := DeleteDuplicates @ Join[$QuantumBasisProperties, $QuantumBasisDataKeys]
@@ -226,4 +227,12 @@ QuantumBasisProp[qb_, "Diagram", opts : OptionsPattern[QuantumDiagramGraphics]] 
         True, "Rectangle"
     ]
 ]
+
+QuantumBasisProp[qb_, "ParameterArity"] := Length[qb["ParameterSpec"]]
+
+QuantumBasisProp[qb_, "Parameters"] := qb["ParameterSpec"][[All, 1]]
+
+QuantumBasisProp[qb_, "InitialParameters"] := qb["ParameterSpec"][[All, 2]]
+
+QuantumBasisProp[qb_, "FinalParameters"] := qb["ParameterSpec"][[All, 3]]
 

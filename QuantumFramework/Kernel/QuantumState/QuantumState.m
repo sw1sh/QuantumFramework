@@ -191,3 +191,11 @@ QuantumState /: f_Symbol[left : _ ? NumericQ ..., qs_QuantumState, right : _ ? N
         QuantumBasis["Output" -> qs1["Output"], "Input" -> qs2["Input"], "Label" -> qs1["Label"] @* qs2["Label"]]
     ]
 
+
+(* parameterization *)
+
+(qs_QuantumState ? QuantumStateQ)[ps___] /; Length[{ps}] <= qs["ParameterArity"] :=
+    QuantumState[
+        Map[ReplaceAll[Thread[Take[qs["Parameters"], Length[{ps}]] -> {ps}]], qs["State"], {-1}],
+        QuantumBasis[qs["Basis"], "ParameterSpec" -> Drop[qs["ParameterSpec"], Length[{ps}]]]
+    ]

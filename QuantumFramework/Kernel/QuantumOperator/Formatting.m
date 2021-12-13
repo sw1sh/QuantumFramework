@@ -34,7 +34,11 @@ QuantumOperator /: MakeBoxes[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated 
                 BoxForm`SummaryItem[{"Unitary: ", qo["UnitaryQ"]}],
                 BoxForm`SummaryItem[{"Dimensions: ",
                     Row[{qo["InputDimensions"], "\[RightArrow]", qo["OutputDimensions"]}]}
-]
+                ]
+            },
+            {
+                BoxForm`SummaryItem[{"ParameterArity: ", qo["ParameterArity"]}],
+                BoxForm`SummaryItem[{"Parameters: ", qo["Parameters"]}]
             }
         },
         format,
