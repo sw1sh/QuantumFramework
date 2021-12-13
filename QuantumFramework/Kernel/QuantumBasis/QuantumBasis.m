@@ -37,9 +37,7 @@ $QuantumBasisDataKeys = {"Input", "Output", "Picture", "Label", "ParameterSpec"}
 
 
 quantumBasisQ[QuantumBasis[data_Association]] := Enclose[
-Module[{
-},
-    ConfirmAssert[ContainsExactly[Keys[data], $QuantumBasisDataKeys], Message[QuantumBasis::wrongData]];
+    ConfirmAssert[ContainsAll[Keys[data], $QuantumBasisDataKeys], Message[QuantumBasis::wrongData]];
 
     ConfirmAssert[QuditBasisQ[data["Input"]]];
     ConfirmAssert[QuditBasisQ[data["Output"]]];
@@ -48,9 +46,9 @@ Module[{
     (*ConfirmAssert[Length[inputElements] + Length[outputElements] > 0, Message[QuantumBasis::zeroDimension]];*)
 
     ConfirmAssert[MatchQ[data["ParameterSpec"], {{_, _ ? NumericQ, _ ? NumericQ}...}]];
-    True
-],
-False &
+    True,
+
+    False &
 ]
 
 quantumBasisQ[___] := False
@@ -69,7 +67,7 @@ QuantumBasis[picture : Alternatives @@ $QuantumBasisPictures] := QuantumBasis["C
 
 QuantumBasis[QuantumBasis[data_Association], picture : Alternatives @@ $QuantumBasisPictures] := QuantumBasis[<|data, "Picture" -> picture|>]
 
-QuantumBasis[QuantumBasis[data_Association], rules : _Rule ..] := QuantumBasis[<|data, rules|>]
+QuantumBasis[QuantumBasis[data_Association], rules : OptionsPattern[]] := QuantumBasis[<|data, rules|>]
 
 QuantumBasis[data_Association, args__] := Fold[QuantumBasis, QuantumBasis[data], {args}]
 
@@ -87,7 +85,7 @@ QuantumBasis[params_List, args___] := QuantumTensorProduct[QuantumBasis[#, args]
 
 
 (* defaults *)
-QuantumBasis[data_Association ? (Keys /* Not @* ContainsExactly[$QuantumBasisDataKeys]), args___] :=
+QuantumBasis[data_Association ? (Keys /* Not @* ContainsAll[$QuantumBasisDataKeys]), args___] :=
     QuantumBasis[<|<|"Input" -> QuditBasis[], "Output" -> QuditBasis[], "Picture" -> "Schrödinger", "Label" -> None,
     "ParameterSpec" -> {}|>, data|>, args]
 
@@ -130,7 +128,7 @@ QuantumBasis[arg_, multiplicity_Integer ? Positive, args___] := With[{
     If[ multiplicity > 0,
         If[ Equal @@ bases,
             QuantumBasis[
-                    QuantumTensorProduct[bases],
+                QuantumTensorProduct[bases],
                 "Label" -> If[multiplicity > 1, First[bases]["Label"] ^ CircleTimes[multiplicity], First[bases]["Label"]]
             ],
             QuantumTensorProduct[bases]
@@ -145,7 +143,7 @@ QuantumBasis[param : name_String | {name_String, ___}, args___] :=
 QuantumBasis[param : _ ? nameQ | _Integer, args___] :=
     QuantumBasis[<|"Output" -> QuditBasis[param]|>, args]
 
-QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) | _Rule) ...] := QuantumBasis["Computational", args]
+QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) | OptionsPattern[]) ...] := QuantumBasis["Computational", args]
 
 
 qb_QuantumBasis /; System`Private`HoldNotValidQ[qb] && quantumBasisQ[Unevaluated @ qb] := System`Private`HoldSetValid[qb]

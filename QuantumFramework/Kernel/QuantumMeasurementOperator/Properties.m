@@ -139,7 +139,8 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
                     tracedOperator["Output"]
                 ],
                 "Input" -> QuantumTensorProduct[inputBasis, tracedOperator["Input"]],
-                "Label" -> qmo["Label"]
+                "Label" -> qmo["Label"],
+                "ParameterSpec" -> qmo["ParameterSpec"]
             ]
         ];
 

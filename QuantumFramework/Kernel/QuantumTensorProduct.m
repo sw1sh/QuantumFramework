@@ -23,7 +23,8 @@ QuantumBasis[<|
     "Output" -> QuantumTensorProduct[qb1["Output"], qb2["Output"]],
     "Input" -> QuantumTensorProduct[qb1["Input"], qb2["Input"]],
     "Picture" -> qb1["Picture"],
-    "Label" -> Flatten @ CircleTimes[qb1["Label"], qb2["Label"]] /. None -> Sequence[]
+    "Label" -> Flatten @ CircleTimes[qb1["Label"], qb2["Label"]] /. None -> Sequence[],
+    "ParameterSpec" -> Join[qb1["ParameterSpec"], qb2["ParameterSpec"]]
 |>
 ]
 

@@ -5,30 +5,31 @@ PackageScope["QuantumBasisProp"]
 
 
 $QuantumBasisProperties = {
-     "ElementAssociation", "Association", "Elements",
-     "InputElementNames", "OutputElementNames", "ElementNames", "Names",
-     "NormalElementNames",
-     "InputElements", "OutputElements",
-     "InputElementDimensions", "OutputElementDimensions", "ElementDimensions", "ElementDimension",
-     "MatrixElementDimensions",
-     "OrthogonalElements",
-     "Projectors", "PureStates", "PureEffects", "PureMaps",
-     "InputSize", "OutputSize", "Size",
-     "InputRank", "OutputRank", "Rank", "Type",
-     "InputNameDimensions", "InputDimensions", "InputNameDimension", "InputDimension",
-     "OutputNameDimensions", "OutputDimensions", "OutputNameDimension", "OutputDimension",
-     "NameDimensions", "Dimensions", "Dimension",
-     "OutputBasis", "InputBasis", "QuditBasis", "HasInputQ",
-     "MatrixNameDimensions", "MatrixElementDimensions",
-     "TensorDimensions", "MatrixDimensions",
-     "InputTensor", "InputMatrix",
-     "OutputTensor", "OutputMatrix",
-     "TensorRepresentation", "Tensor", "MatrixRepresentation", "Matrix",
-     "Qudits", "InputQudits", "OutputQudits", "InputBasis", "OutputBasis",
-     "Dual", "Transpose", "ConjugateTranspose",
-     "Picture",
-     "Diagram",
-     "ParameterArity", "Parameters", "InitialParameters", "FinalParameters"
+    "Meta",
+    "ElementAssociation", "Association", "Elements",
+    "InputElementNames", "OutputElementNames", "ElementNames", "Names",
+    "NormalElementNames",
+    "InputElements", "OutputElements",
+    "InputElementDimensions", "OutputElementDimensions", "ElementDimensions", "ElementDimension",
+    "MatrixElementDimensions",
+    "OrthogonalElements",
+    "Projectors", "PureStates", "PureEffects", "PureMaps",
+    "InputSize", "OutputSize", "Size",
+    "InputRank", "OutputRank", "Rank", "Type",
+    "InputNameDimensions", "InputDimensions", "InputNameDimension", "InputDimension",
+    "OutputNameDimensions", "OutputDimensions", "OutputNameDimension", "OutputDimension",
+    "NameDimensions", "Dimensions", "Dimension",
+    "OutputBasis", "InputBasis", "QuditBasis", "HasInputQ",
+    "MatrixNameDimensions", "MatrixElementDimensions",
+    "TensorDimensions", "MatrixDimensions",
+    "InputTensor", "InputMatrix",
+    "OutputTensor", "OutputMatrix",
+    "TensorRepresentation", "Tensor", "MatrixRepresentation", "Matrix",
+    "Qudits", "InputQudits", "OutputQudits", "InputBasis", "OutputBasis",
+    "Dual", "Transpose", "ConjugateTranspose",
+    "Picture",
+    "Diagram",
+    "ParameterArity", "Parameters", "InitialParameters", "FinalParameters"
 };
 
 QuantumBasis["Properties"] := DeleteDuplicates @ Join[$QuantumBasisProperties, $QuantumBasisDataKeys]
@@ -53,6 +54,7 @@ QuantumBasisProp[_, "Properties"] := QuantumBasis["Properties"]
 
 QuantumBasisProp[QuantumBasis[data_Association], key_] /; KeyExistsQ[data, key] := data[key]
 
+QuantumBasisProp[QuantumBasis[data_Association], "Meta"] := Normal @ data[[Key /@ {"Picture", "Label", "ParameterSpec"}]]
 
 (* computed *)
 
@@ -197,7 +199,7 @@ QuantumBasisProp[qb_, {"Permute", perm_Cycles}] :=
         {"Split", toggleShift[PermutationList[perm, qb["Qudits"]], qb["OutputQudits"]]}
     ]
 
-QuantumBasisProp[qb_, {"Split", n_Integer}] := QuantumBasis @@ QuantumTensorProduct[qb["Output"], qb["Input"]][{"Split", n}]
+QuantumBasisProp[qb_, {"Split", n_Integer}] := QuantumBasis[##, qb["Meta"]] & @@ QuantumTensorProduct[qb["Output"], qb["Input"]][{"Split", n}]
 
 
 QuantumBasisProp[qb_, "Dagger" | "ConjugateTranspose"] := QuantumBasis[qb,
