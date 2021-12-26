@@ -44,6 +44,7 @@ QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[Join[Options[d
     {labels, indices, graphics} = drawGateGraphics[qco["Operators"],
         FilterRules[{opts}, Options[drawGateGraphics]]
     ];
+    graphics = graphics /. {Thickness[t_] :> Thickness[100 scale t], Arrowheads[s_] :> Arrowheads[0.1 scale s]};
     width = Max[indices];
     height = qco["Arity"];
     sizes = Most @ Rasterize[#, "BoundingBox"] & /@ labels;
