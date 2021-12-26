@@ -88,7 +88,7 @@ QuditBasis[source_QuditBasis, target_QuditBasis] := If[
     QuantumTensorProduct[target, source[{"DropDimension", target["Dimension"]}]]
 ]
 
-QuditBasis /: qb1_QuditBasis == qb2_QuditBasis := Values[qb1["Representations"]] === Values[qb2["Representations"]]
+QuditBasis /: qb1_QuditBasis == qb2_QuditBasis := Equal @@ Values /@ KeyIntersection[{qb1["Representations"], qb2["Representations"]}]
 
 
 (* formatting *)
