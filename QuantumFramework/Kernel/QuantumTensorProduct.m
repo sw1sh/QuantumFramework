@@ -31,6 +31,20 @@ QuantumBasis[<|
 
 (* state x state *)
 
+QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] /; qs1["Input"] == qs2["Input"] && qs1["Output"] == qs2["Output"] := Enclose[
+    ConfirmAssert[ConfirmBy[qs1, QuantumStateQ]["Picture"] === ConfirmBy[qs2, QuantumStateQ]["Picture"]];
+    profile["Kronecker"] @ QuantumState[
+        If[ qs1["StateType"] === qs2["StateType"] === "Vector",
+            Flatten[KroneckerProduct[
+                qs1["StateMatrix"],
+                qs2["StateMatrix"]
+            ]],
+            KroneckerProduct[qs1["DensityMatrix"], qs2["DensityMatrix"]]
+        ],
+        QuantumTensorProduct[qs1["Basis"], qs2["Basis"]]
+    ]
+]
+
 QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] := Enclose[
     ConfirmAssert[ConfirmBy[qs1, QuantumStateQ]["Picture"] === ConfirmBy[qs2, QuantumStateQ]["Picture"]];
     QuantumState[QuantumState[
