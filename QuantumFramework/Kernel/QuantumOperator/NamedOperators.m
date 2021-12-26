@@ -451,12 +451,13 @@ QuantumOperator[{"Deutsch", theta_}, order : _ ? orderQ : {1, 2, 3}] := With[{
 QuantumOperator[{"Switch", a_ ? QuantumOperatorQ, b_ ? QuantumOperatorQ}, order : _ ? orderQ : {1, 2}] /;
     a["InputDimension"] == a["OutputDimension"] == b["InputDimension"] == b["OutputDimension"] && Length[order] == 2 :=
 QuantumPartialTrace[
-	QuantumCircuitOperator[{
-		QuantumOperator["CSWAP", Prepend[order, Max[order] + 1]],
-		QuantumOperator[a, order[[{1}]], order[[{1}]]],
-		QuantumOperator[b, order[[{2}]], order[[{2}]]],
-		QuantumOperator[{"Controlled0", "SWAP"}, Prepend[order, Max[order] + 1]]
-	}]["CircuitOperator"],
+	QuantumOperator[
+        QuantumOperator[{"Controlled0", "SWAP"}, Prepend[order, Max[order] + 1]] @
+        QuantumOperator[b, order[[{2}]], order[[{2}]]] @
+        QuantumOperator[a, order[[{1}]], order[[{1}]]] @
+        QuantumOperator["CSWAP", Prepend[order, Max[order] + 1]],
+        "Label" -> "Switch"[a["Label"], b["Label"]]
+    ],
 	{Max[order] + 1}
 ]
 
