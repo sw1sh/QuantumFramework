@@ -230,6 +230,10 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
     ]
 
 
+(qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumOperatorQ] /; qo["Picture"] === op["Picture"] &&
+    ! IntersectingQ[qo["InputOrder"], op["InputOrder"]] && ! IntersectingQ[qo["OutputOrder"], op["OutputOrder"]]:=
+    QuantumTensorProduct[qo, op]
+
 (qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumOperatorQ] /; qo["Picture"] === op["Picture"] := Enclose @ Module[{
     top, bottom
 },
