@@ -294,6 +294,41 @@ QuantumOperatorProp[qo_, "Dagger" | "ConjugateTranspose"] := QuantumOperator[
 QuantumOperatorProp[qo_, "Dual"] := QuantumOperator[qo["State"]["Dual"], qo["Order"]]
 
 
+(* evolution *)
+
+QuantumOperatorProp[qho_, "EvolutionOperator"] /; qho["ParameterArity"] == 1 := Module[{
+    parameter = First @ qho["Parameters"],
+    initialParameter = First @ qho["InitialParameters"],
+    leftEquations, rightEquations, initialEquations, equations
+},
+        leftEquations = Flatten[
+            (1 / I) qho["MatrixRepresentation"] . Partition[
+                    Subscript["u", #][parameter] & /@ Range[qho["OutputDimension"] ^ 2],
+                    qho["OutputDimension"]
+                ]
+        ];
+        rightEquations = Subscript["u", #]'[parameter] & /@ Range[qho["OutputDimension"] ^ 2];
+        equations = Equal @@@ Transpose[{rightEquations, leftEquations}];
+        initialEquations = Equal @@@
+            Transpose @ {
+                Subscript["u", #][initialParameter] & /@ Range[qho["OutputDimension"] ^ 2],
+                Flatten[IdentityMatrix[qho["OutputDimension"]]]
+            };
+        QuantumOperator[
+            Values @ Partition[Flatten @
+                DSolve[
+                    Join[equations, initialEquations],
+                    Subscript["u", #][parameter] & /@ Range[qho["OutputDimension"] ^ 2],
+                    Evaluate @ parameter
+                ],
+                qho["OutputDimension"]
+            ],
+            "ParameterSpec" -> First @ qho["ParameterSpec"],
+            qho["Order"]
+        ]
+    ]
+
+
 (* state properties *)
 
 QuantumOperatorProp[qo_, args : PatternSequence[prop_String, ___] | PatternSequence[{prop_String, ___}, ___]] /;
