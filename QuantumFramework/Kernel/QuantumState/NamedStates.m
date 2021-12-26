@@ -25,9 +25,17 @@ QuantumState[name_ ? nameQ, basisName : Except[Alternatives @@ $QuantumBasisPict
 
 QuantumState[] := QuantumState["0"]
 
-QuantumState["0" | "Zero", args___] := QuantumState[{1, 0}, "Label" -> "0", args]
+QuantumState[""] := QuantumState[{}, QuantumBasis[1]]
 
-QuantumState["1" | "One", args___] := QuantumState[{0, 1}, "Label" -> "1", args]
+QuantumState["Zero", args___] := QuantumState["0", args]
+
+QuantumState["One", args___] := QuantumState["1", args]
+
+QuantumState[s_String /; StringMatchQ[s, DigitCharacter..], dim : (_Integer ? Positive) : 2, args___] := With[{
+    digits = Clip[Interpreter[DelimitedSequence["Digit", ""]] @ s, {0, dim - 1}]
+},
+    QuantumState[{"BasisState", digits}, dim, "Label" -> s, args]
+]
 
 QuantumState["Plus", args___] := QuantumState[Normalize @ {1, 1}, "Label" -> "+", args]
 
