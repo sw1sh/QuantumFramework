@@ -54,6 +54,8 @@ qbn_QuditName["DualQ"] := TrueQ[Lookup[Options[qbn], "Dual", False]]
 
 qbn_QuditName["Dual"] := QuditName[qbn, "Dual" -> Not @ qbn["DualQ"]]
 
+QuditName[$QuditIdentity, opts : OptionsPattern[QuditName]] /; TrueQ[Lookup[{opts}, "Dual", False]] := QuditName[]
+
 qbn_QuditName["Qudits"] := Length @ DeleteCases[QuditName[$QuditIdentity, ___]] @ Normal @ qbn
 
 qbn_QuditName["Pretty"] := simplifyName[CircleTimes @@ Normal[qbn]]
