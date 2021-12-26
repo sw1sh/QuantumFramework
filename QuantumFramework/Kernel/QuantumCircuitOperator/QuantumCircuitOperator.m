@@ -15,6 +15,8 @@ QuantumCircuitOperator[operators_, args__] := QuantumCircuitOperator[MapAt[Head[
 
 QuantumCircuitOperator[op_ ? QuantumFrameworkOperatorQ] := QuantumCircuitOperator[{op}]
 
+(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[op_ ? QuantumCircuitOperatorQ] :=
+    QuantumCircuitOperator[Join[op["Operators"], qco["Operators"]]]
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[op_ ? QuantumFrameworkOperatorQ] :=
     QuantumCircuitOperator[Prepend[qco["Operators"], op]]
