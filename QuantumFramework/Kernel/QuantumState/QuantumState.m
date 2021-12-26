@@ -136,7 +136,7 @@ QuantumState /: Equal[qs : _QuantumState ...] :=
 
 (* addition *)
 
-QuantumState /: (qs1_QuantumState ? QuantumStateQ) + (qs2_QuantumState ? QuantumStateQ) /; qs1["Dimension"] == qs2["Dimension"] :=
+addQuantumStates[qs1_QuantumState ? QuantumStateQ, qs2_QuantumState ? QuantumStateQ] /; qs1["Dimension"] == qs2["Dimension"] :=
     QuantumState[
         QuantumState[
             If[ qs1["StateType"] === qs2["StateType"] === "Vector",
@@ -147,6 +147,9 @@ QuantumState /: (qs1_QuantumState ? QuantumStateQ) + (qs2_QuantumState ? Quantum
         ],
         qs1["Basis"]
     ]
+
+QuantumState /: Plus[states : _QuantumState...] := Fold[addQuantumStates, {states}]
+
 
 (* multiplication *)
 
