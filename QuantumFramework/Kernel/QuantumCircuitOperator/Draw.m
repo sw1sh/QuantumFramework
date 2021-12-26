@@ -27,11 +27,13 @@ drawUnaryGate[coordinates_List, name_, opts : OptionsPattern[Style]] := Module[{
 ]
 
 
-drawBinaryGate[{coordinates1_List, coordinates2_List}, name_, opts : OptionsPattern[Style]] := Module[{width, height, averageCoordinates, textGraphics, rectangle},
+drawBinaryGate[{coordinates1_List, coordinates2_List}, name_, opts : OptionsPattern[Style]] := Module[{
+    width, height, averageCoordinates, textGraphics, rectangle
+},
     width = 4;
     height = 3;
     averageCoordinates = (coordinates1 + coordinates2) / 2;
-    textGraphics = Graphics[Text[Sow @ Style[name, opts], averageCoordinates]];
+    textGraphics = Graphics[Text[Sow @ Rotate[Style[name, opts], - Pi / 2], averageCoordinates]];
     rectangle = Graphics[{EdgeForm[Thickness[0.0025]], White,
         Rectangle[{First[coordinates1] - width / 2, Last[coordinates1] - height / 2}, {First[coordinates2] + width / 2, Last[coordinates2] + height / 2}]}];
     Show[rectangle, textGraphics]
@@ -134,7 +136,7 @@ drawWireGraphics[positionIndices_List, opts : OptionsPattern[Style]] := Module[{
     quditCount = Length[positionIndices];
     lineList = Table[
         Graphics[{
-            Text[Style[ToString[i], opts], {0, - 5 i - 1}],
+            Text[Style[ToString[i], opts], {0, - 5 i - 2}],
             Line[{{0, - 5 i}, {6 Max[positionIndices], - 5 i}}]
             }
         ],
@@ -143,7 +145,7 @@ drawWireGraphics[positionIndices_List, opts : OptionsPattern[Style]] := Module[{
 ]
 
 drawMeasurementWire[positionIndices_List, opts : OptionsPattern[Style]] := Graphics[{
-    Text[Style["c", opts], {0, - 1.25}],
+    Text[Style["c", opts], {0, - 2}],
     Thickness[0.0025],
     Line[{{0, -.125}, {6 Max[positionIndices], -.125}}],
     Line[{{0, 0.125}, {6 Max[positionIndices], .125}}]
