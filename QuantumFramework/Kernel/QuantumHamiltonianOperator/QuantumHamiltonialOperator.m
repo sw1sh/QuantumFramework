@@ -1,4 +1,4 @@
-Package["Wolfram`QuantumFramework`"]
+(* Package["Wolfram`QuantumFramework`"] *)
 
 PackageExport["QuantumHamiltonianOperator"]
 

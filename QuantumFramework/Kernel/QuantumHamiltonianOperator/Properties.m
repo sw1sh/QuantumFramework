@@ -97,16 +97,19 @@ QuantumHamiltonianOperatorProp[qho_, "EvolutionOperator"] := Module[{
                 Subscript["u", #][qho["InitialParameter"]] & /@ Range[qho["OutputDimension"] ^ 2],
                 Flatten[IdentityMatrix[qho["OutputDimension"]]]
             };
-        QuantumOperator[Values @
-            Partition[Flatten @
-                NDSolve[
-                    Join[equations, initialEquations],
-                    Subscript["u", #][qho["Parameter"]] & /@ Range[qho["OutputDimension"] ^ 2],
-                    Evaluate @ qho["ParameterSpec"]
+        QuantumHamiltonianOperator[
+            QuantumOperator[
+                Values @ Partition[Flatten @
+                    DSolve[
+                        Join[equations, initialEquations],
+                        Subscript["u", #][qho["Parameter"]] & /@ Range[qho["OutputDimension"] ^ 2],
+                        Evaluate @ qho["Parameter"]
+                    ],
+                    qho["OutputDimension"]
                 ],
-                qho["OutputDimension"]
+                qho["Order"]
             ],
-            qho["Order"]
+            qho["ParameterSpec"]
         ]
     ]
 
