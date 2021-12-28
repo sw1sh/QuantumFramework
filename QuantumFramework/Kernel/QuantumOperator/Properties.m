@@ -296,36 +296,76 @@ QuantumOperatorProp[qo_, "Dual"] := QuantumOperator[qo["State"]["Dual"], qo["Ord
 
 (* evolution *)
 
-QuantumOperatorProp[qho_, "EvolutionOperator"] /; qho["ParameterArity"] == 1 := Module[{
-    parameter = First @ qho["Parameters"],
-    initialParameter = First @ qho["InitialParameters"],
+QuantumOperatorProp[qo_, "EvolutionOperator", args___] /; qo["ParameterArity"] == 1 := Module[{
+    parameter = First @ qo["Parameters"],
+    initialParameter = First @ qo["InitialParameters"],
     leftEquations, rightEquations, initialEquations, equations
 },
         leftEquations = Flatten[
-            (1 / I) qho["MatrixRepresentation"] . Partition[
-                    Subscript["u", #][parameter] & /@ Range[qho["OutputDimension"] ^ 2],
-                    qho["OutputDimension"]
+            (1 / I) qo["MatrixRepresentation"] . Partition[
+                    Subscript["u", #][parameter] & /@ Range[qo["OutputDimension"] ^ 2],
+                    qo["OutputDimension"]
                 ]
         ];
-        rightEquations = Subscript["u", #]'[parameter] & /@ Range[qho["OutputDimension"] ^ 2];
+        rightEquations = Subscript["u", #]'[parameter] & /@ Range[qo["OutputDimension"] ^ 2];
         equations = Equal @@@ Transpose[{rightEquations, leftEquations}];
         initialEquations = Equal @@@
             Transpose @ {
-                Subscript["u", #][initialParameter] & /@ Range[qho["OutputDimension"] ^ 2],
-                Flatten[IdentityMatrix[qho["OutputDimension"]]]
+                Subscript["u", #][initialParameter] & /@ Range[qo["OutputDimension"] ^ 2],
+                Flatten[IdentityMatrix[qo["OutputDimension"]]]
             };
         QuantumOperator[
             Values @ Partition[Flatten @
                 DSolve[
                     Join[equations, initialEquations],
-                    Subscript["u", #][parameter] & /@ Range[qho["OutputDimension"] ^ 2],
-                    Evaluate @ parameter
+                    Subscript["u", #][parameter] & /@ Range[qo["OutputDimension"] ^ 2],
+                    Evaluate @ parameter,
+                    args
                 ],
-                qho["OutputDimension"]
+                qo["OutputDimension"]
             ],
-            "ParameterSpec" -> First @ qho["ParameterSpec"],
-            qho["Order"]
+            "ParameterSpec" -> First @ qo["ParameterSpec"],
+            qo["Order"]
         ]
+    ]
+
+QuantumOperatorProp[qo_, "NEvolutionOperator", args___] /; qo["ParameterArity"] == 1 := Module[{
+    parameter = First @ qo["Parameters"],
+    parameterSpec = First @ qo["ParameterSpec"],
+    initialParameter = First @ qo["InitialParameters"],
+    leftEquations, rightEquations, initialEquations, equations
+},
+        leftEquations = Flatten[
+            (1 / I) qo["MatrixRepresentation"] . Partition[
+                    Subscript["u", #][parameter] & /@ Range[qo["OutputDimension"] ^ 2],
+                    qo["OutputDimension"]
+                ]
+        ];
+        rightEquations = Subscript["u", #]'[parameter] & /@ Range[qo["OutputDimension"] ^ 2];
+        equations = Equal @@@ Transpose[{rightEquations, leftEquations}];
+        initialEquations = Equal @@@
+            Transpose @ {
+                Subscript["u", #][initialParameter] & /@ Range[qo["OutputDimension"] ^ 2],
+                Flatten[IdentityMatrix[qo["OutputDimension"]]]
+            };
+        QuantumOperator[
+            Values @ Partition[Flatten @
+                NDSolve[
+                    Join[equations, initialEquations],
+                    Subscript["u", #][parameter] & /@ Range[qo["OutputDimension"] ^ 2],
+                    Evaluate @ parameterSpec,
+                    args
+                ],
+                qo["OutputDimension"]
+            ],
+            "ParameterSpec" -> First @ qo["ParameterSpec"],
+            qo["Order"]
+        ]
+    ]
+
+QuantumOperatorProp[qo_, "EigenvaluePlot", args___] /; qo["ParameterArity"] == 1 :=
+    ReImPlot[Evaluate @ qo["Eigenvalues"], Evaluate @ First @ qo["ParameterSpec"],
+        args
     ]
 
 
