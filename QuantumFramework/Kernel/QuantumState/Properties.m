@@ -297,6 +297,8 @@ QuantumStateProp[qs_, {"Split", n_Integer : 0}] := With[{basis = qs["Basis"][{"S
 
 QuantumStateProp[qs_, "Numeric"] := QuantumState[N @ qs["State"], qs["Basis"]["Numeric"]]
 
+QuantumStateProp[qs_, "Chop"] := QuantumState[Chop @ qs["State"], qs["Basis"]]
+
 (* representations *)
 
 QuantumStateProp[qs_, "StateTensor"] := If[
