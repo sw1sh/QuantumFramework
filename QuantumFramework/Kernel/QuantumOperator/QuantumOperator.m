@@ -110,7 +110,7 @@ QuantumOperator[matrix_ ? MatrixQ, args___, order : _ ? orderQ | Automatic] := E
 ]
 
 QuantumOperator[matrix_ ? MatrixQ, args : PatternSequence[] | PatternSequence[___, Except[Automatic | _ ? orderQ]]] := Module[{
-    result
+    outMultiplicity, inMultiplicity, result
 },
     result = Enclose @ Module[{newMatrix = matrix, outputs, inputs,
         basis, newOutputQuditBasis, newInputQuditBasis, state},
@@ -119,19 +119,31 @@ QuantumOperator[matrix_ ? MatrixQ, args : PatternSequence[] | PatternSequence[__
         If[ basis["InputDimension"] == 1,
             basis = QuantumBasis[basis, "Input" -> basis["Output"]["Dual"]]
         ];
+        outMultiplicity = Log[basis["OutputDimension"], outputs];
+        inMultiplicity = Log[basis["InputDimension"], inputs];
+        If[
+            IntegerQ[outMultiplicity] && IntegerQ[inMultiplicity],
+            (* multiply existing basis *)
 
-        newOutputQuditBasis = QuantumTensorProduct[basis["Output"], QuditBasis[Ceiling[outputs / basis["OutputDimension"]] /. 1 -> Sequence[]]];
-        newInputQuditBasis = QuantumTensorProduct[basis["Input"], QuditBasis[Ceiling[inputs / basis["InputDimension"]] /. 1 -> Sequence[]]];
+            basis = QuantumBasis[basis,
+                "Output" -> QuditBasis[basis["Output"], outMultiplicity],
+                "Input" -> QuditBasis[basis["Input"], inMultiplicity]
+            ],
 
-        newMatrix = KroneckerProduct[
-            newMatrix,
-            IdentityMatrix[Max[Ceiling[outputs / newOutputQuditBasis["Dimension"]], Ceiling[inputs / newInputQuditBasis["Dimension"]]]][[
-                ;; Ceiling[outputs / newOutputQuditBasis["Dimension"]], ;; Ceiling[inputs / newInputQuditBasis["Dimension"]]
-            ]]
-        ];
-        basis = QuantumBasis[basis,
-            "Output" -> newOutputQuditBasis,
-            "Input" -> If[newInputQuditBasis["DualQ"], newInputQuditBasis, newInputQuditBasis["Dual"]]
+            (* add one extra qudit *)
+            newOutputQuditBasis = QuantumTensorProduct[basis["Output"], QuditBasis[Ceiling[outputs / basis["OutputDimension"]] /. 1 -> Sequence[]]];
+            newInputQuditBasis = QuantumTensorProduct[basis["Input"], QuditBasis[Ceiling[inputs / basis["InputDimension"]] /. 1 -> Sequence[]]];
+
+            newMatrix = KroneckerProduct[
+                newMatrix,
+                IdentityMatrix[Max[Ceiling[outputs / newOutputQuditBasis["Dimension"]], Ceiling[inputs / newInputQuditBasis["Dimension"]]]][[
+                    ;; Ceiling[outputs / newOutputQuditBasis["Dimension"]], ;; Ceiling[inputs / newInputQuditBasis["Dimension"]]
+                ]]
+            ];
+            basis = QuantumBasis[basis,
+                "Output" -> newOutputQuditBasis,
+                "Input" -> If[newInputQuditBasis["DualQ"], newInputQuditBasis, newInputQuditBasis["Dual"]]
+            ];
         ];
         state = ConfirmBy[
             QuantumState[
@@ -201,7 +213,7 @@ Enclose @ Module[{
     QuantumOperator[
         ConfirmBy[
             QuantumState[
-                qo["State"]["Computational"],
+                qo["State"],
                 newBasis
             ],
             QuantumStateQ,

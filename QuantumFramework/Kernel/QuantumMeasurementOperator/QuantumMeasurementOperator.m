@@ -54,10 +54,10 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args__, target_ ? orderQ] :=
     ]
 
 QuantumMeasurementOperator[tensor_ ? TensorQ /; 2 <= TensorRank[tensor] <= 3, args___, target : (_ ? orderQ) : {1}] :=
-    QuantumMeasurementOperator[QuantumOperator[tensor, target], "Label" -> "Eigen", args, target]
+    QuantumMeasurementOperator[QuantumOperator[tensor], "Label" -> "Eigen", args, target]
 
 QuantumMeasurementOperator[tensor_ ? TensorQ /; 2 <= TensorRank[tensor] <= 3, qb_ ? QuantumBasisQ, args___, target : (_ ? orderQ) : {1}] :=
-    QuantumMeasurementOperator[QuantumOperator[tensor, qb, target], "Label" -> "Eigen", args, target]
+    QuantumMeasurementOperator[QuantumOperator[tensor, qb], "Label" -> "Eigen", args, target]
 
 QuantumMeasurementOperator[
     args : PatternSequence[] |

@@ -152,5 +152,7 @@ qb_QuantumBasis /; System`Private`HoldNotValidQ[qb] && quantumBasisQ[Unevaluated
 (* equality *)
 
 QuantumBasis /: (qb1_QuantumBasis ? QuantumBasisQ) ==
-    (qb2_QuantumBasis ? QuantumBasisQ) := qb1["MatrixRepresentation"] == qb2["MatrixRepresentation"]
+    (qb2_QuantumBasis ? QuantumBasisQ) := qb1["Input"] == qb2["Input"] && qb1["Output"] == qb2["Output"]
+
+
 
