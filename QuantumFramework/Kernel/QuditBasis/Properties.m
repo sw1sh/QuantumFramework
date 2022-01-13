@@ -52,7 +52,7 @@ QuditBasisProp[qb_, "Association"] := Association @ Thread[qb["Names"] -> qb["El
 
 QuditBasisProp[qb_, "Size"] := If[Length[qb["Representations"]] > 0, Times @@ qb["Dimensions"], 0]
 
-QuditBasisProp[qb_, "ElementDimensions"] := Dimensions @ First[MaximalBy[qb["Elements"], ArrayDepth], 0]
+QuditBasisProp[qb_, "ElementDimensions"] := Values @ KeySort @ ResourceFunction["KeyGroupBy"][qb["Representations"], Last, Length]
 
 QuditBasisProp[qb_, "ElementDimension"] := If[qb["Size"] > 0, Times @@ qb["ElementDimensions"], 0]
 
