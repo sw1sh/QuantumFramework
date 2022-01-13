@@ -295,9 +295,6 @@ QuantumStateProp[qs_, {"Split", n_Integer : 0}] := With[{basis = qs["Basis"][{"S
     (* QuantumState[QuantumState[qs["Computational"]["State"], QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]], basis] *)
 ]
 
-QuantumStateProp[qs_, "Numeric"] := QuantumState[N @ qs["State"], qs["Basis"]["Numeric"]]
-
-QuantumStateProp[qs_, "Chop"] := QuantumState[Chop @ qs["State"], qs["Basis"]]
 
 (* representations *)
 

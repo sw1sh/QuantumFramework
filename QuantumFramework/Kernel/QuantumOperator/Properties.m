@@ -14,7 +14,7 @@ $QuantumOperatorProperties = {
     "OrderedTensorRepresentation", "OrderedTensor",
     "Arity", "MaxArity", "FullArity", "Range", "FullInputOrder", "InputQuditOrder", "OutputQuditOrder",
     "FirstOutputQudit", "LastOutputQudit", "FirstInputQudit", "LastInputQudit", "InputOrderQuditMapping",
-    "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors", "Projectors",
+    "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors", "Eigensystem", "Projectors",
     "ConjugateTranspose",
     "QuantumOperator", "Operator",
     "Computational",
@@ -276,8 +276,6 @@ QuantumOperatorProp[qo_, {"OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ}] 
     ][{"OrderOutputExtra", qo["FullOutputOrder"], order}]
 ]
 
-QuantumOperatorProp[qo_, "Numeric"] := QuantumOperator[qo["State"]["Numeric"], qo["Order"]]
-
 
 QuantumOperatorProp[qo_, "HermitianQ"] := HermitianMatrixQ[qo["Matrix"]]
 
@@ -285,7 +283,9 @@ QuantumOperatorProp[qo_, "UnitaryQ"] := UnitaryMatrixQ[qo["Matrix"]]
 
 QuantumOperatorProp[qo_, "Eigenvalues"] := Eigenvalues[qo["MatrixRepresentation"]]
 
-QuantumOperatorProp[qo_, "Eigenvectors"] := eigenvectors[qo["MatrixRepresentation"], "Sort" -> False, "Normalize" -> True]
+QuantumOperatorProp[qo_, "Eigenvectors", opts___] := eigenvectors[qo["MatrixRepresentation"], opts, "Sort" -> False, "Normalize" -> True]
+
+QuantumOperatorProp[qo_, "Eigensystem", opts___] := eigensystem[qo["MatrixRepresentation"], opts, "Sort" -> False, "Normalize" -> True]
 
 QuantumOperatorProp[qo_, "Projectors"] := projector /@ SparseArray @ Chop @ qo["Eigenvectors"]
 

@@ -89,6 +89,7 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
     trace,
     traceQudits,
     tracedOperator,
+    eigenvalues, eigenvectors, projectors,
     eigenBasis, outputBasis, inputBasis, operator
 },
     trace = Complement[qmo["InputOrder"], qmo["Target"]];
@@ -104,12 +105,15 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
             If[qmo["POVMQ"], {# + qmo["OutputQudits"] - qmo["InputQudits"], #} & /@ trace, trace]
         ];
 
+        {eigenvalues, eigenvectors} = profile["Eigensystem"] @ tracedOperator["Eigensystem", "Sort" -> True];
+        projectors = projector /@ eigenvectors;
+
         eigenBasis = QuditBasis[
             MapIndexed[
                 Interpretation[Tooltip[Style[#, Bold], StringTemplate["Eigenvalue ``"][First @ #2]], {#1, #2}] &,
-                Chop @ tracedOperator["Eigenvalues"]
+                eigenvalues
             ],
-            Chop @ tracedOperator["Eigenvectors"]
+            eigenvectors
         ];
 
         outputBasis = QuantumPartialTrace[qmo["Output"], Catenate @ Position[qmo["OutputOrder"], Alternatives @@ qmo["Target"]]];
@@ -117,7 +121,7 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
 
         (* construct *)
         operator = QuantumOperator[
-            SparseArray @ Map[kroneckerProduct @@ Append[IdentityMatrix /@ qmo["InputDimensions"][[traceQudits]], #] &, tracedOperator["Projectors"][[Ordering[tracedOperator["Eigenvalues"]]]]],
+            SparseArray @ Map[kroneckerProduct[IdentityMatrix[Times @@ qmo["InputDimensions"][[traceQudits]], SparseArray], #] &, projectors],
 
             QuantumBasis[
                 "Output" -> QuantumTensorProduct[
@@ -130,7 +134,7 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
         ];
 
         (* change back basis *)
-        operator = QuantumOperator[
+        operator = profile["basis change"] @ QuantumOperator[
             operator,
             QuantumBasis[
                 "Output" -> QuantumTensorProduct[
@@ -160,7 +164,7 @@ QuantumMeasurementOperatorProp[qmo_, "POVM"] := QuantumMeasurementOperator[qmo["
 
 (* operator properties *)
 
-QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | {"Ordered", __} | "Sort" | "Numeric" | "Computational"] :=
+QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | {"Ordered", __} | "Sort" | "Computational"] :=
     QuantumMeasurementOperator[qmo["QuantumOperator"][prop], qmo["Target"]]
 
 QuantumMeasurementOperatorProp[qmo_, args : PatternSequence[prop_String, ___] | PatternSequence[{prop_String, ___}, ___]] /;

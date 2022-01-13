@@ -13,6 +13,8 @@ QuantumMeasurementOperatorQ[___] := False
 
 (* constructors *)
 
+SetAttributes[QuantumMeasurementOperator, NHoldRest]
+
 QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, args___, target : (_ ? orderQ) : Automatic] := Enclose @ Module[{
     basis, op
 },

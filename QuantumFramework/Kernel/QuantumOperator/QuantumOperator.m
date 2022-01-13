@@ -20,6 +20,8 @@ QuantumOperatorQ[___] := False
 
 (* constructors *)
 
+SetAttributes[QuantumOperator, NHoldRest]
+
 QuantumOperator[qs_ ? QuantumStateQ] := QuantumOperator[qs,
     If[qs["InputDimension"] > 1, {Automatic, Range[qs["InputQudits"]]}, {Range[qs["OutputQudits"]], Automatic}]
 ]

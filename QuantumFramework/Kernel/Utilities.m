@@ -15,6 +15,7 @@ PackageScope["identityMatrix"]
 PackageScope["kroneckerProduct"]
 PackageScope["projector"]
 PackageScope["eigenvectors"]
+PackageScope["eigensystem"]
 PackageScope["pauliMatrix"]
 
 PackageScope["toggleSwap"]
@@ -91,6 +92,29 @@ eigenvectors[matrix_, OptionsPattern[]] := Map[
     ][[
         If[TrueQ[OptionValue["Sort"]], Ordering[Eigenvalues[matrix]], All]
     ]]
+]
+
+
+Options[eigensystem] = {"Sort" -> False, "Normalize" -> False, Chop -> False}
+
+eigensystem[matrix_, OptionsPattern[]] := Module[{values, vectors},
+    {values, vectors} = Enclose[
+        ConfirmBy[
+            If[ TrueQ[OptionValue[Chop]],
+                If[ Precision[matrix] === MachinePrecision,
+                    Eigensystem[matrix, ZeroTest -> (Chop[#1] == 0 &)],
+                    Eigensystem[Chop @ matrix]
+                ],
+                Eigensystem[matrix]
+            ],
+            MatchQ[{_ ? ListQ, _ ? MatrixQ}]
+        ],
+        Eigensystem[matrix] &
+    ];
+    If[ TrueQ[OptionValue["Sort"]], With[{ordering = Ordering[values]}, values = values[[ordering]]; vectors = vectors[[ordering]]]];
+    If[ TrueQ[OptionValue["Normalize"]], vectors = Normalize /@ vectors];
+
+    {values, vectors}
 ]
 
 

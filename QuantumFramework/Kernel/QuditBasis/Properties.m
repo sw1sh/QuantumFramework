@@ -153,4 +153,3 @@ QuditBasisProp[qb1_, {"Replace", order_ ? orderQ, qb2_ ? QuditBasisQ}] := Quantu
 
 QuditBasisProp[qb_, "Identity"] := qb
 
-QuditBasisProp[qb_, "Numeric"] := QuditBasis[N /@ qb["Representations"]]
