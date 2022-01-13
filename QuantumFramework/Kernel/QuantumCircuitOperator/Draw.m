@@ -234,7 +234,7 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
                 "NOT",
                 drawNotGate[{-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]}, styleOpts],
                 _,
-                If[ gates[[i]]["Arity"] == 1,
+                If[ gates[[i]]["TargetArity"] == 1,
                     drawUnaryGate[
                         {-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]},
                        label /. Composition -> SmallCircle /. None | CircleTimes[] :> Subscript["U", index++],

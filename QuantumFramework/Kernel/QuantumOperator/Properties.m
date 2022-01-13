@@ -86,7 +86,11 @@ QuantumOperatorProp[qo_, "FullOutputOrder"] := If[qo["OutputDimension"] > 1,
 
 QuantumOperatorProp[qo_, "ControlOrder"] := FirstCase[qo["Label"], "Controlled"[_, order_, ___] :> order, Missing["ControlOrder"], {0}]
 
-QuantumOperatorProp[qo_, "TargetOrder"] := Enclose[DeleteCases[qo["InputOrder"], Alternatives @@ Confirm @ qo["ControlOrder"]], Missing["TargetOrder"] &]
+QuantumOperatorProp[qo_, "TargetOrder"] := Enclose[DeleteCases[qo["InputOrder"], Alternatives @@ Confirm @ qo["ControlOrder"]], qo["InputOrder"] &]
+
+QuantumOperatorProp[qo_, "ControlArity"] := Length @ qo["ControlOrder"]
+
+QuantumOperatorProp[qo_, "TargetArity"] := Length @ qo["TargetOrder"]
 
 QuantumOperatorProp[qo_, "FirstInputQudit"] := Min @ qo["FullInputOrder"]
 
