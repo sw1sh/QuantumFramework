@@ -3,24 +3,24 @@ Package["Wolfram`QuantumFramework`"]
 
 
 QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; QuantumMeasurementOperatorQ[Unevaluated @ qmo], format_] := With[{
-    icon = MatrixPlot[
-        Enclose[
-            ConfirmAssert[qmo["Dimension"] < 2 ^ 11];
+    icon = If[
+        qmo["Dimension"] < 2 ^ 9,
+        MatrixPlot[
             Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]],
                 If[ qmo["POVMQ"],
                     ArrayReshape[
                         Nest[Mean, qmo["Ordered"]["TensorRepresentation"], qmo["Targets"]],
                         qmo["MatrixNameDimensions"] / {Times @@ Take[qmo["Dimensions"], qmo["Targets"]], 1}
                     ],
-                    Confirm[qmo["Ordered"]["MatrixRepresentation"]]
+                    qmo["Ordered"]["MatrixRepresentation"]
                 ],
                 {2}
             ],
-            RandomReal[{0, 1}, If[qmo["Dimension"] < 2 ^ 11, {qmo["Dimension"], qmo["Dimension"]}, {2 ^ 11, 2 ^ 11}]] &
+            ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},
+            Frame -> False,
+            FrameTicks -> None
         ],
-        ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},
-        Frame -> False,
-        FrameTicks -> None
+        RawBoxes @ $SparseArrayBox
     ]
 },
     BoxForm`ArrangeSummaryBox["QuantumMeasurementOperator", qmo,

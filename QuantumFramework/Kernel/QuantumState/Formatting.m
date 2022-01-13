@@ -3,15 +3,15 @@ Package["Wolfram`QuantumFramework`"]
 
 
 QuantumState /: MakeBoxes[qs_QuantumState /; Quiet @ QuantumStateQ[Unevaluated @ qs], format_] := Enclose[With[{
-    icon = MatrixPlot[
-        Enclose[
-            ConfirmAssert[qs["Dimension"] < 2 ^ 11];
-            Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], ConfirmBy[qs["MatrixRepresentation"], MatrixQ], {2}],
-            RandomReal[{0, 1}, If[qs["Dimension"] < 2 ^ 11, {qs["Dimension"], qs["Dimension"]}, {2 ^ 11, 2 ^ 11}]] &
+    icon = If[
+        qs["Dimension"] < 2 ^ 9,
+        MatrixPlot[
+            Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], qs["MatrixRepresentation"], {2}],
+            ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},
+            Frame -> False,
+            FrameTicks -> None
         ],
-        ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},
-        Frame -> False,
-        FrameTicks -> None
+        RawBoxes @ $SparseArrayBox
     ]
 },
     BoxForm`ArrangeSummaryBox["QuantumState", qs, icon,
