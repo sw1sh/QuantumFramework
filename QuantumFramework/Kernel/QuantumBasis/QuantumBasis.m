@@ -81,6 +81,8 @@ QuantumBasis[output : _QuditBasis | _List, input : _QuditBasis | _List, args___]
 
 QuantumBasis[output : _QuditBasis, args___] := QuantumBasis["Output" -> output, args]
 
+QuantumBasis[names : {_QuditName..}, args___] := QuantumBasis["Output" -> QuditBasis[names], args]
+
 QuantumBasis[params_List, args___] := QuantumTensorProduct[QuantumBasis[#, args] & /@ params]
 
 
