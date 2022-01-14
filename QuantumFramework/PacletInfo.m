@@ -4,8 +4,8 @@ PacletObject[
     "Description" -> "Perform analytic and numeric computation in Quantum Information Theory",
     "Creator" -> "Wolfram Research, Quantum Computation Framework team",
     "PublisherID" -> "Wolfram",
-    "Version" -> "1.0.1",
-    "WolframVersion" -> "12.3+",
+    "Version" -> "1.0.2",
+    "WolframVersion" -> "13.0+",
     "Extensions" -> {
       {
         "Kernel",
