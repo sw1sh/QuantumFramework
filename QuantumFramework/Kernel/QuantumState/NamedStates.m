@@ -135,3 +135,6 @@ QuantumState[{"Graph", graph_ ? GraphQ}, args___] := Module[{
     ]
 ]
 
+
+QuantumState[{"BlochVector", r_ /; VectorQ[r] && Length[r] == 3}] := QuantumState[1 / 2 (IdentityMatrix[2] + r . Table[PauliMatrix[i], {i, 3}])]
+
