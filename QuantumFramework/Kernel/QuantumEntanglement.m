@@ -4,26 +4,29 @@ PackageExport["QuantumEntangledQ"]
 PackageExport["QuantumEntanglementMonotone"]
 
 
+normalBipartition[biPartition_, qudits_] := Replace[biPartition, Automatic -> List /@ Range[qudits]]
 
-bipartitionComplement[biPartition_List, qudits_Integer] := Complement[Range[qudits], Join @@ biPartition]
+bipartitionComplement[biPartition_ : Automatic, qudits_Integer] :=
+    Complement[Range[qudits], Join @@ normalBipartition[biPartition, qudits]]
 
-bipartitionTrace[qs_ ? QuantumStateQ, biPartition_List] := QuantumPartialTrace[qs, bipartitionComplement[biPartition, qs["Qudits"]]]
+bipartitionTrace[qs_ ? QuantumStateQ, biPartition_ : Automatic] := QuantumPartialTrace[qs, bipartitionComplement[biPartition, qs["Qudits"]]]
 
-bipartitionReduce[qs_ ? QuantumStateQ, biPartition_List] :=
-    QuantumPartialTrace[qs, Join[First[biPartition], bipartitionComplement[biPartition, qs["Qudits"]]]]
+bipartitionReduce[qs_ ? QuantumStateQ, biPartition_ : Automatic] := With[{p = normalBipartition[biPartition, qs["Qudits"]]},
+    QuantumPartialTrace[qs, Join[First[p], bipartitionComplement[p, qs["Qudits"]]]]
+]
 
 
 
-QuantumEntangledQ[qs_ ? QuantumStateQ, biPartition_List : {{1}, {2}}] :=
+QuantumEntangledQ[qs_ ? QuantumStateQ, biPartition_ : Automatic] :=
     Enclose[ConfirmMatch[QuantumEntanglementMonotone[qs, biPartition, "Concurrence"], _ ? NumericQ] > 0, Indeterminate &]
 
 
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_List : {{1}, {2}}, name_ : "Concurrence"] :=
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, name_ : "Concurrence"] :=
     QuantumEntanglementMonotone[qs, biPartition, name]
 
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_List, "Concurrence"] := Module[{
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Concurrence"] := Module[{
     relevantState, twoQubitPauliY, concurrence
 },
 
@@ -46,27 +49,27 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_List, "Concurrence"
 ]
 
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_List, "Negativity"] :=
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Negativity"] :=
     (2 ^ QuantumEntanglementMonotone[qs, biPartition, "LogNegativity"] - 1) / 2
 
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_List, "LogNegativity"] :=
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "LogNegativity"] :=
     Chop @ Log[2, Total @ SingularValueList @
         bipartitionTrace[qs, biPartition][{"Transpose", Take[Ordering[biPartition], 1]}]["NormalizedDensityMatrix"]
     ]
 
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_List, "EntanglementEntropy"] :=
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "EntanglementEntropy"] :=
     If[ bipartitionTrace[qs, biPartition]["PureStateQ"],
         bipartitionReduce[qs, biPartition]["VonNeumannEntropy"],
         Indeterminate
     ]
 
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_List, "RenyiEntanglementEntropy"] :=
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "RenyiEntanglementEntropy"] :=
     QuantumEntanglementMonotone[qs, biPartition, {"RenyiEntanglementEntropy", 1 / 2}]
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_List, {"RenyiEntanglementEntropy", alpha_}] :=
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, {"RenyiEntanglementEntropy", alpha_}] :=
     If[ bipartitionTrace[qs, biPartition]["PureStateQ"],
         (1 / (1 - alpha)) Log[2, Total[Select[Re[Eigenvalues[MatrixPower[bipartitionReduce[qs, biPartition]["NormalizedDensityMatrix"], alpha]]], # > 0 &]]],
         Indeterminate
