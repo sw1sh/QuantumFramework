@@ -5,7 +5,6 @@ PackageScope["QuantumBasisProp"]
 
 
 $QuantumBasisProperties = {
-    "Meta",
     "ElementAssociation", "Association", "Elements",
     "InputElementNames", "OutputElementNames", "ElementNames", "Names",
     "NormalElementNames",

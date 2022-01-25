@@ -10,7 +10,7 @@ $QuantumMeasurementOperatorProperties = {
     "OrderedMatrixRepresentation", "OrderedPOVMElements",
     "Arity", "Eigenqudits", "Dimensions", "Order", "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors",
     "ProjectionQ", "POVMQ",
-    "SuperOperator"
+    "POVM"
 };
 
 
