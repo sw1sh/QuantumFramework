@@ -456,7 +456,7 @@ QuantumPartialTrace[
         QuantumOperator[b, order[[{2}]], order[[{2}]]] @
         QuantumOperator[a, order[[{1}]], order[[{1}]]] @
         QuantumOperator["CSWAP", Prepend[order, Max[order] + 1]],
-        "Label" -> "Switch"[a["Label"], b["Label"]]
+        "Label" -> "\[ScriptCapitalS]"[a["Label"], b["Label"]]
     ],
 	{Max[order] + 1}
 ]
