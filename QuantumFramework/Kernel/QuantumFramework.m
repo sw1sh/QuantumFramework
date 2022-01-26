@@ -8,3 +8,5 @@ QuantumFrameworkOperatorQ[op_] := QuantumOperatorQ[op] || QuantumMeasurementOper
 
 $QuantumFrameworkPropCache = True
 
+FrontEndExecute[FE`systemQ[FE`s_] := StringMatchQ[Quiet[Check[Context[FE`s], ""]], "System`" | "Wolfram`QuantumFramework`"]]
+
