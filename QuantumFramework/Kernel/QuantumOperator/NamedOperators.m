@@ -42,11 +42,11 @@ QuantumOperator[] := QuantumOperator["Identity"]
 
 QuantumOperator["Identity", args___] := QuantumOperator[{"Identity", 2}, args]
 
-QuantumOperator[{"Identity", dimension_Integer}, args___] := QuantumOperator[IdentityMatrix[dimension], dimension, args]
-
 QuantumOperator[{"Identity", dims_List}, args___] := QuantumOperator[{"Permutation", dims, Cycles[{{}}]}, args]
 
-QuantumOperator[{"Identity", qb_ ? QuditBasisQ}, args___] := QuantumOperator[IdentityMatrix[qb["Dimension"]], qb, args]
+QuantumOperator[{"Identity", qb_ ? QuditBasisQ}, args___] := QuantumOperator[{"Identity", qb["Dimensions"]}, args]
+
+QuantumOperator[{"Identity", dimension_Integer}, args___] := QuantumOperator[IdentityMatrix[dimension], dimension, "Label" -> "I", args]
 
 
 QuantumOperator[name : "XRotation" | "YRotation" | "ZRotation", args___] :=  QuantumOperator[{name, Pi / 2}, args]
@@ -151,6 +151,10 @@ QuantumOperator[{"ControlledU" | "Controlled", params : PatternSequence[Except[_
     ]
 
 QuantumOperator[{"ControlledU" | "Controlled", qo_ ? QuantumOperatorQ}, args___] := QuantumOperator[{"ControlledU", qo, {qo["LastInputQudit"] + 1}}, args]
+
+QuantumOperator[{"ControlledU" | "Controlled", qo_ ? QuantumOperatorQ, control___}, args___, target_ ? orderQ] :=
+    QuantumOperator[{"Controlled", QuantumOperator[qo, target], control}, args]
+
 
 QuantumOperator[{"ControlledU" | "Controlled", qo_ ? QuantumOperatorQ, control_ ? orderQ}, args___] := Enclose @ With[{controls = Length[control]},
     (*ConfirmAssert[! IntersectingQ[qo["Order"], control], "Target and control qudits shouldn't intersect"];*)
@@ -351,8 +355,7 @@ QuantumOperator["RandomUnitary", args___] := QuantumOperator[{"RandomUnitary", 2
 
 QuantumOperator[{"RandomUnitary", dimension_Integer}, args___, order : (_ ? orderQ) : {1}] :=
     QuantumOperator[
-        QuantumOperator[RandomVariate @ CircularUnitaryMatrixDistribution[dimension ^ Length[order]], dimension, Length[order], args, order],
-        "Label" -> None
+           RandomVariate @ CircularUnitaryMatrixDistribution[dimension ^ Length[order]], dimension, Length[order], "Label" -> None, args, order
     ]
 
 
