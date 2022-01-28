@@ -58,9 +58,9 @@ QuantumBasisProp[QuantumBasis[data_Association], "Meta"] := Normal @ data[[Key /
 (* computed *)
 
 
-QuantumBasisProp[qb_, "InputElementNames"] := qb["Input"]["Names"]
+QuantumBasisProp[qb_, "InputElementNames", pos_ : All] := qb["Input"]["Names", pos]
 
-QuantumBasisProp[qb_, "OutputElementNames"] := qb["Output"]["Names"]
+QuantumBasisProp[qb_, "OutputElementNames", pos_ : All] := qb["Output"]["Names", pos]
 
 QuantumBasisProp[qb_, "InputElements"] := qb["Input"]["Elements"]
 
@@ -69,6 +69,9 @@ QuantumBasisProp[qb_, "OutputElements"] := qb["Output"]["Elements"]
 
 QuantumBasisProp[qb_, "ElementNames" | "Names"] :=
     QuantumTensorProduct @@@ Tuples[{qb["OutputElementNames"], qb["InputElementNames"]}]
+
+QuantumBasisProp[qb_, "ElementNames" | "Names", outPos : {_Integer ..} : All, inPos : {_Integer ..} : All] :=
+    QuantumTensorProduct @@@ Tuples[{qb["OutputElementNames", outPos], qb["InputElementNames", inPos]}]
 
 QuantumBasisProp[qb_, "Elements"] := ArrayReshape[Transpose[
     TensorProduct[qb["OutputElements"], qb["InputElements"]],

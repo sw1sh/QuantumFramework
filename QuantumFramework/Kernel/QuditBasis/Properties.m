@@ -39,6 +39,17 @@ QuditBasisProp[qb_, "Names"] := If[Length[qb["Representations"]] > 0,
     {}
 ]
 
+QuditBasisProp[qb_, "Names", pos_ : All] := If[Length[qb["Representations"]] > 0,
+    With[{values = Values @ KeySort @ ResourceFunction["KeyGroupBy"][qb["Representations"], Last, Keys[#][[All, 1]] &]},
+        QuditName[#]["Group"] & /@ If[ pos === All,
+            Tuples[values],
+            (* MapThread[Part, {values, 1 + ResourceFunction["TupleFromIndex"][#, Length[values]]}] & /@ pos *)
+            MapThread[Part, {values, #}] & /@ Tuples[Range[Length @ #] & /@ values][[pos]]
+        ]
+    ],
+    {}
+]
+
 QuditBasisProp[qb_, "NameRank"] := Count[qb["Dimensions"], Except[1]]
 
 QuditBasisProp[qb_, "NameTensor"] := ArrayReshape[qb["Names"], qb["Dimensions"]]
