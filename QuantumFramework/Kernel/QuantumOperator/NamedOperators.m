@@ -134,15 +134,20 @@ QuantumOperator["CT", args___] := QuantumOperator[{"ControlledU", "T"}, args]
 QuantumOperator["CS", args___] := QuantumOperator[{"ControlledU", "S"}, args]
 
 
-QuantumOperator[{"ControlledU" | "Controlled", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___], control_ ? orderQ}, args___] :=
-    With[{op = QuantumOperator[params]}, QuantumOperator[{"ControlledU", QuantumOperator[op, Max[control] + op["InputOrder"]], control}, args]]
+QuantumOperator[{"ControlledU" | "Controlled", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___], control_ ? orderQ, control0 : _ ? orderQ : {}}, args___] :=
+    With[{op = QuantumOperator[params]}, QuantumOperator[{"ControlledU", QuantumOperator[op, Max[control] + op["InputOrder"]], control, control0}, args]]
 
-QuantumOperator[{"ControlledU" | "Controlled", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___], control_ ? orderQ}, args___, target_ ? orderQ] :=
-    QuantumOperator[{"ControlledU", QuantumOperator[params, target], control}, args]
+QuantumOperator[{"ControlledU" | "Controlled", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___], control_ ? orderQ, control0 : _ ? orderQ : {}}, args___, target_ ? orderQ] :=
+    QuantumOperator[{"ControlledU", QuantumOperator[params, target], control, control0}, args]
 
 QuantumOperator[{"ControlledU" | "Controlled", params : PatternSequence[___, Except[_ ? orderQ]]}, args___, order_ ? orderQ] :=
     With[{op = QuantumOperator[params, Rest @ order /. {} -> {First @ order + 1}]},
         QuantumOperator[{"ControlledU", op, {First @ order}}, args]
+    ]
+
+QuantumOperator[{"Controlled0", params : PatternSequence[___, Except[_ ? orderQ]]}, args___, order_ ? orderQ] :=
+    With[{op = QuantumOperator[params, Rest @ order /. {} -> {First @ order + 1}]},
+        QuantumOperator[{"Controlled", op, {}, {First @ order}}, args]
     ]
 
 QuantumOperator[{"ControlledU" | "Controlled", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___]}, args___] := Enclose @
@@ -156,33 +161,41 @@ QuantumOperator[{"ControlledU" | "Controlled", qo_ ? QuantumOperatorQ, control__
     QuantumOperator[{"Controlled", QuantumOperator[qo, target], control}, args]
 
 
-QuantumOperator[{"ControlledU" | "Controlled", qo_ ? QuantumOperatorQ, control_ ? orderQ}, args___] := Enclose @ With[{controls = Length[control]},
+QuantumOperator[{"ControlledU" | "Controlled", qo_ ? QuantumOperatorQ, control1_ ? orderQ, control0 : _ ? orderQ : {}}, args___] := Enclose @ With[{
+    controls1 = Length[control1],
+    controls0 = Length[control0],
+    control = Join[control1, control0]
+},
     (*ConfirmAssert[! IntersectingQ[qo["Order"], control], "Target and control qudits shouldn't intersect"];*)
     QuantumOperator[
-        ResourceFunction["BlockDiagonalMatrix"][IdentityMatrix[(2 ^ controls - 1) qo["OutputDimension"]], qo["Matrix"]],
-        QuantumTensorProduct[QuantumBasis[QuditBasis[2, controls], QuditBasis[2, controls]], qo["Basis"]],
-        "Label" -> "Controlled"[qo["Label"], control],
+        ResourceFunction["BlockDiagonalMatrix"][
+            identityMatrix[(2 ^ controls1 - 1) qo["OutputDimension"]],
+            qo["Matrix"],
+            identityMatrix[(2 ^ controls0 - 1) 2 ^ controls1 qo["OutputDimension"]]
+        ],
+        QuantumTensorProduct[
+            QuantumBasis[QuditBasis[2, controls1], QuditBasis[2, controls1]],
+            qo["Basis"],
+            QuantumBasis[QuditBasis[2, controls0], QuditBasis[2, controls0]]
+        ],
+        "Label" -> "Controlled"[qo["Label"], control1, control0],
         args,
-        Join[control,
+        Join[
+            control1,
             If[ IntersectingQ[control, qo["FullInputOrder"]],
                 With[{order = Complement[Range @@ MinMax[Join[control, qo["FullInputOrder"]]], control]},
                     Join[order, Max[qo["FullInputOrder"], control] + Range[qo["Arity"] - Length[order]]]
                 ],
                 qo["InputOrder"]
-            ]
+            ],
+            control0
         ]
     ]
 ]
 
 
-QuantumOperator["Controlled0" | {"Controlled0", params___}, args___] := With[{
-    op = QuantumOperator[{"Controlled", params}, args]
-},
-    QuantumOperator[
-        QuantumOperator["NOT", op["ControlOrder"]] @ op @ QuantumOperator["NOT", op["ControlOrder"]],
-        "Label" -> Insert[op["Label"], "Zero", 3]
-    ]
-]
+QuantumOperator["Controlled0" | {"Controlled0", params___, control : _ ? orderQ : {}}, args___] :=
+    QuantumOperator[{"Controlled", params, {}, control}, args]
 
 
 QuantumOperator["Fourier", args___] := QuantumOperator[{"Fourier", 2}, args]

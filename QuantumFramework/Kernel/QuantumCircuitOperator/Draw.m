@@ -78,9 +78,9 @@ drawRootSwapGate[qudit1Coordinates_List, qudit2Coordinates_List, opts : OptionsP
     ]
 
 
-drawControlGateTop[coordinates_List, controlOrder_List, targetOrder_List, OptionsPattern["Color" -> Black]] := Module[{circleRadius, circles, lines},
+drawControlGateTop[coordinates_List, controlOrder_List, targetOrder_List, OptionsPattern["Colors" -> {Black}]] := Module[{circleRadius, circles, lines},
     circleRadius = 0.5;
-    circles = Graphics[Table[{EdgeForm[Black], FaceForm[OptionValue["Color"]], Disk[coordinates[[i]], circleRadius]}, {i, Length[controlOrder]}]];
+    circles = Graphics[Table[{EdgeForm[Black], FaceForm[OptionValue["Colors"][[i]]], Disk[coordinates[[i]], circleRadius]}, {i, Length[controlOrder]}]];
     lines = Graphics[
         Table[
             Line[{coordinates[[i]] + {0, - circleRadius}, {First[coordinates[[i]]], Last[coordinates[[i]]] + 5 (controlOrder[[i]] - Max[targetOrder])}}],
@@ -91,9 +91,9 @@ drawControlGateTop[coordinates_List, controlOrder_List, targetOrder_List, Option
 ] /; (Length[coordinates] > 0 && Length[controlOrder] > 0 && Length[coordinates] == Length[controlOrder])
 
 
-drawControlGateBottom[coordinates_List, controlOrder_List, targetOrder_List, OptionsPattern["Color" -> Black]] := Module[{circleRadius, circles, lines},
+drawControlGateBottom[coordinates_List, controlOrder_List, targetOrder_List, OptionsPattern["Colors" -> {Black}]] := Module[{circleRadius, circles, lines},
     circleRadius = 0.5;
-    circles = Graphics[Table[{EdgeForm[Black], FaceForm[OptionValue["Color"]], Disk[coordinates[[i]], circleRadius]}, {i, Length[controlOrder]}]];
+    circles = Graphics[Table[{EdgeForm[Black], FaceForm[OptionValue["Colors"][[i]]], Disk[coordinates[[i]], circleRadius]}, {i, Length[controlOrder]}]];
     lines = Graphics[
         Table[
             Line[{coordinates[[i]] + {0, circleRadius}, {First[coordinates[[i]]], Last[coordinates[[i]]] - 5 (Min[targetOrder] - controlOrder[[i]])}}],
@@ -156,10 +156,13 @@ Options[drawGateGraphics] = Options[Style]
 
 drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
     width, height, orders, dimensions, graphicsList, index, positionIndices, gatePositionIndices,
-    targetQuditsOrder, controlQuditsOrder, controlQuditsOrderTop, controlQuditsOrderBottom, controlQuditsTopCoordinates, controlQuditsBottomCoordinates,
+    targetQuditsOrder,
+    controlQuditsOrder,
+    controlQuditsOrderTop, controlQuditsOrderBottom,
+    controlQuditsTopCoordinates, controlQuditsBottomCoordinates,
     includeMeasurement = False,
     labels,
-    label, color,
+    label, colors, bottomColors, topColors,
     styleOpts = {opts, FontSize -> 24, FontFamily -> "Times"}
 },
     width = 4;
@@ -192,33 +195,40 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
         AppendTo[graphicsList, drawMeasurement[{-2 + 6 Max[gatePositionIndices], - 5 Min[orders[[i]]]}]];
         positionIndices = ConstantArray[Max[positionIndices] + 1, Length[positionIndices]];
     ];
-    {label, color} = gates[[i]]["Label"] /. {"Controlled"[x_, ___, "Zero"] :> {x, White}, "Controlled"[x_, ___] | x_ :> {x, Black}};
+    label = Replace[gates[[i]]["Label"], "Controlled"[x_, ___] :> x];
 
     If[ QuantumOperatorQ[gates[[i]]],
         gatePositionIndices = Table[positionIndices[[j]], {j, Min[orders[[i]]], Max[orders[[i]]]}];
         If[ MatchQ[gates[[i]]["Label"], "CX" | "CY" | "CZ" | "CNOT" | "CPHASE" | "CSWAP" | "Controlled"[__]],
             If[ MatchQ[gates[[i]]["Label"], "Controlled"[__]],
-                controlQuditsOrder = If[Length[gates[[i]]["Label"]] > 1, gates[[i]]["Label"][[2]], orders[[i]][[;; 1]]];
+                controlQuditsOrder = If[Length[gates[[i]]["Label"]] > 1, Join @@ List @@ gates[[i]]["Label"][[2 ;; ]], orders[[i]][[;; 1]]];
+                colors = Join[Table[Black, Length[gates[[i]]["Label"][[2]]]], Table[White, Length[gates[[i]]["Label"][[3]]]]];
                 targetQuditsOrder = Complement[orders[[i]], controlQuditsOrder],
                 targetQuditsOrder = Rest @ orders[[i]];
-                controlQuditsOrder = {First @ orders[[i]]}
+                controlQuditsOrder = {First @ orders[[i]]};
+                colors = {Black}
             ];
             controlQuditsOrderTop = {};
             controlQuditsOrderBottom = {};
+            topColors = {};
+            bottomColors = {};
             Do[ Which[
                 controlQuditsOrder[[j]] > Max[targetQuditsOrder],
-                AppendTo[controlQuditsOrderTop, controlQuditsOrder[[j]]],
+                AppendTo[controlQuditsOrderTop, controlQuditsOrder[[j]]];
+                AppendTo[topColors, colors[[j]]],
                 controlQuditsOrder[[j]] < Min[targetQuditsOrder],
-                AppendTo[controlQuditsOrderBottom, controlQuditsOrder[[j]]]],
+                AppendTo[controlQuditsOrderBottom, controlQuditsOrder[[j]]];
+                AppendTo[bottomColors, colors[[j]]]
+            ],
                 {j, Length[controlQuditsOrder]}
             ];
             controlQuditsTopCoordinates = Table[{-2 + 6 Max[gatePositionIndices], - 5 controlQuditsOrderTop[[j]]}, {j, Length[controlQuditsOrderTop]}];
             controlQuditsBottomCoordinates = Table[{-2 + 6 Max[gatePositionIndices], - 5 controlQuditsOrderBottom[[j]]}, {j, Length[controlQuditsOrderBottom]}];
             If[ Length[controlQuditsOrderTop] > 0,
-                AppendTo[graphicsList, drawControlGateBottom[controlQuditsTopCoordinates, controlQuditsOrderTop, targetQuditsOrder, "Color" -> color]]
+                AppendTo[graphicsList, drawControlGateBottom[controlQuditsTopCoordinates, controlQuditsOrderTop, targetQuditsOrder, "Colors" -> topColors]]
             ];
             If[ Length[controlQuditsOrderBottom] > 0,
-                AppendTo[graphicsList, drawControlGateTop[controlQuditsBottomCoordinates, controlQuditsOrderBottom, targetQuditsOrder, "Color" -> color]]
+                AppendTo[graphicsList, drawControlGateTop[controlQuditsBottomCoordinates, controlQuditsOrderBottom, targetQuditsOrder, "Colors" -> bottomColors]]
             ],
 
             targetQuditsOrder = orders[[i]]
