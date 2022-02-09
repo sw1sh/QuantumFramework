@@ -10,6 +10,7 @@ $QuantumStateProperties = {
      "NormalizedState", "NormalizedAmplitudes", "NormalizedStateVector", "NormalizedDensityMatrix",
      "Entropy", "VonNeumannEntropy",
      "Purity", "Type", "PureStateQ", "MixedStateQ",
+     "Norm", "NormalizedQ",
      "BlochSphericalCoordinates", "BlochCartesianCoordinates",
      "BlochPlot",
      "Projector", "NormalizedProjector",
@@ -78,7 +79,7 @@ QuantumStateProp[qs_, "StateVector"] := Module[{result},
         qs["StateType"] === "Vector",
         qs["State"],
         qs["PureStateQ"],
-        First @ Pick[qs["Eigenvectors"], ConfirmBy[Map[# =!= 0 &, Chop[qs["Eigenvalues"]]], Apply[Or]]],
+        First @ Pick[qs["Eigenvectors", "Normalize" -> qs["NormalizedQ"]], ConfirmBy[Map[# =!= 0 &, Chop[qs["Eigenvalues"]]], Apply[Or]]],
         True,
         Message[QuantumState::notpure]; $Failed
     ];
@@ -94,13 +95,17 @@ QuantumStateProp[qs_, "Probabilities"] := Simplify /@ (qs["Weights"] / Total[qs[
 
 QuantumStateProp[qs_, "Distribution"] := CategoricalDistribution[qs["Names"], qs["Probabilities"]]
 
-QuantumStateProp[qs_, "Formula", OptionsPattern["Normalize" -> False]] :=
+QuantumStateProp[qs_, "Formula", OptionsPattern["Normalize" -> False]] /; qs["PureStateQ"] :=
     With[{v = SparseArray @ qs[If[TrueQ[OptionValue["Normalize"]], "NormalizedStateVector", "StateVector"]]},
         qs["Names", Catenate @ v["ExplicitPositions"]] . v["ExplicitValues"]
     ]
 
 
 (* normalization *)
+
+QuantumStateProp[qs_, "Norm"] := If[qs["StateType"] === "Vector", Norm["StateVector"], Tr @ qs["DensityMatrix"]]
+
+QuantumStateProp[qs_, "NormalizedQ"] := qs["Norm"] == 1
 
 QuantumStateProp[qs_, "NormalizedState"] := With[{state = qs["State"]},
     QuantumState[
@@ -139,9 +144,9 @@ QuantumStateProp[qs_, "MatrixDimensions"] := {qs["Dimension"], qs["Dimension"]}
 
 QuantumStateProp[qs_, "Eigenvalues"] := Eigenvalues[qs["DensityMatrix"]]
 
-QuantumStateProp[qs_, "Eigenvectors"] := eigenvectors[qs["DensityMatrix"]]
+QuantumStateProp[qs_, "Eigenvectors", opts___] := eigenvectors[qs["DensityMatrix"], opts]
 
-QuantumStateProp[qs_, "Eigenstates"] := QuantumState[#, qs["Basis"]] & /@ qs["Eigenvectors"]
+QuantumStateProp[qs_, "Eigenstates", opts___] := QuantumState[#, qs["Basis"]] & /@ qs["Eigenvectors", opts]
 
 
 (* entropy *)
