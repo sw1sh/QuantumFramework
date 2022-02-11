@@ -28,7 +28,7 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, args__
             QuantumOperator[
                 PadRight[eigenvalues, basis["Dimension"]] . basis["Projectors"],
                 QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]],
-                target
+                # - Min[#, 1] + 1 &[Max[target] - Reverse @ Range[basis["OutputQudits"]] + 1]
             ],
             basis
         ],
@@ -107,21 +107,27 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? orderQ] /; qo["Inpu
     op = qmo["SuperOperator"]
 },
     QuantumMeasurement[
-        QuantumState[
+        QuantumOperator[#, "Label" -> qmo["Label"][qs["Label"]]] & @ QuantumOperator[
             ConfirmBy[
                 QuantumOperator[op,
+                    (* shove away eigen qudits to the left *)
                     ReplacePart[op["FullOutputOrder"], Thread[List /@ Range[qudits] -> 1 - Reverse @ Range[qudits]]],
-                    op["InputOrder"]
+                    op["FullInputOrder"] - Max[Max[op["FullInputOrder"]] - qs["OutputQudits"], 0]
                 ][
-                    {"OrderedInput", Range[qs["OutputQudits"]], qs["Output"]}
+                    {
+                        "OrderedInput",
+                        Range @ qs["OutputQudits"],
+                        qs["Output"]
+                    }
                 ] @ qs,
                 QuantumStateQ
-            ][
-                {"Split", qudits}
-            ],
-            "Label" -> qmo["Label"][qs["Label"]]
+            ][{"Split", qudits}],
+            Max[op["FullInputOrder"]] - Reverse @ Range[qs["OutputQudits"]] + 1, op["FullOutputOrder"]
         ],
-        If[op["OutputQudits"] <= op["InputQudits"], Range[qmo["Eigenqudits"]], qmo["Target"]]
+        If[ op["OutputQudits"] <= op["InputQudits"],
+            Range[qmo["Eigenqudits"]],
+            qmo["Target"]
+        ]
     ]
 ]
 
@@ -181,10 +187,12 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? orderQ] /; qo["Inpu
             result,
             Union[qmo["Target"], qm["Target"]]
         ],
-        QuantumMeasurement[
-            QuantumState[
-                result["State"][{"Split", qmo["Eigenqudits"] + qm["Eigenqudits"]}],
-                "Label" -> qmo["Label"][qm["Label"]]
+        QuantumMeasurement @ QuantumMeasurementOperator[QuantumOperator[
+                QuantumState[
+                    result["State"][{"Split", qmo["Eigenqudits"] + qm["Eigenqudits"]}],
+                    "Label" -> qmo["Label"][qm["Label"]]
+                ],
+                TakeDrop[result["FullOutputOrder"], qmo["Eigenqudits"] + qm["Eigenqudits"]]
             ],
             Union[qmo["Target"], qm["Target"]]
         ]

@@ -104,7 +104,8 @@ QuantumOperator[matrix_ ? MatrixQ, args___, order : _ ? orderQ | Automatic] := E
     op = ConfirmBy[QuantumOperator[matrix, args], QuantumOperatorQ],
     newOrder
 },
-    newOrder = order /. Automatic -> op["FullInputOrder"];
+    newOrder = Replace[order, Automatic -> op["FullInputOrder"]];
+    newOrder = PadRight[newOrder, op["InputQudits"], Drop[op["FullInputOrder"], Length[newOrder]]];
     If[ op["InputQudits"] < Length[newOrder],
         QuantumOperator[{op, Ceiling[Length[newOrder], op["InputQudits"]] / op["InputQudits"]}, {newOrder, newOrder}],
         QuantumOperator[op["State"], {Automatic, newOrder}]
@@ -155,7 +156,7 @@ QuantumOperator[matrix_ ? MatrixQ, args : PatternSequence[] | PatternSequence[__
             QuantumStateQ,
             Message[QuantumOperator::invalidState]
         ];
-        QuantumOperator[state]
+        QuantumOperator[state, {Range[basis["OutputQudits"]], Range[basis["InputQudits"]]}]
     ];
     result /; !FailureQ[Unevaluted @ result]
 ]
@@ -238,14 +239,21 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] /; qo["Picture"] === qo["Picture"] && (
     qs["Picture"] =!= "Heisenberg" || Message[QuantumOperator::incompatiblePictures, qo["Picture"], qs["Picture"]]) :=
-    If[ qs["PureStateQ"],
-        qo[QuantumOperator[qs]]["Sort"]["State"],
-        qo[QuantumOperator[qs["Pure"][{"Split", qs["Qudits"]}]] @ qo["Dagger"]]["Sort"]["Mixed"]
+With[{order = PadRight[
+        Take[qo["FullInputOrder"], UpTo @ qs["OutputQudits"]],
+        qs["OutputQudits"],
+        Complement[Range[Min[qo["FullInputOrder"]], Max[qo["FullInputOrder"]] + qs["OutputQudits"]], qo["FullInputOrder"]]
     ]
-
+},
+    If[ qs["PureStateQ"],
+        qo[QuantumOperator[qs, order]]["Sort"]["State"],
+        qo[QuantumOperator[qs["Pure"][{"Split", qs["Qudits"]}], order] @ qo["Dagger"]]["Sort"]["Mixed"]
+    ]
+]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumOperatorQ] /; qo["Picture"] === op["Picture"] &&
-    ! IntersectingQ[qo["InputOrder"], op["InputOrder"]] && ! IntersectingQ[qo["OutputOrder"], op["OutputOrder"]]:=
+    ! IntersectingQ[qo["InputOrder"], op["OutputOrder"]] &&
+    ! IntersectingQ[qo["OutputOrder"], op["OutputOrder"]] && ! IntersectingQ[qo["InputOrder"], op["InputOrder"]] :=
     QuantumTensorProduct[qo, op]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumOperatorQ] /; qo["Picture"] === op["Picture"] := Enclose @ Module[{
@@ -276,7 +284,6 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
     ];
 
     ConfirmAssert[top["InputDimension"] == bottom["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
-
     QuantumOperator[top["State"] @ bottom["State"], top["OutputOrder"], bottom["InputOrder"]]
 ]
 

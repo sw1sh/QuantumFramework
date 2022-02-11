@@ -5,7 +5,7 @@ PackageExport["QuantumMeasurement"]
 PackageScope["QuantumMeasurementQ"]
 
 
-QuantumMeasurementQ[QuantumMeasurement[qs_ ? QuantumStateQ, _ ? orderQ]] := qs["OutputQudits"] <= qs["InputQudits"]
+QuantumMeasurementQ[QuantumMeasurement[qmo_ ? QuantumMeasurementOperatorQ]] := qmo["OutputQudits"] <= qmo["InputQudits"]
 
 QuantumMeasurementQ[___] := False
 
@@ -14,6 +14,10 @@ qm_QuantumMeasurement["ValidQ"] := QuantumMeasurementQ[qm]
 
 
 (* constructors *)
+
+QuantumMeasurement[qs_ ? QuantumStateQ, target_ ? orderQ] := QuantumMeasurement[QuantumMeasurementOperator[qs["Operator"], target]]
+
+QuantumMeasurement[qo_ ? QuantumFrameworkOperatorQ, target_ ? orderQ] := QuantumMeasurement[QuantumMeasurementOperator[qo, target]]
 
 QuantumMeasurement[proba_Association, states : {_ ? QuantumStateQ..}] /;
     Length[proba] == Length[states] && Equal @@ Map[#["Dimensions"] &, states] :=
@@ -47,7 +51,7 @@ QuantumMeasurement[
 (* properties *)
 
 $QuantumMeasurementProperties = {
-    "State",
+    "QuantumOperator",
     "Distribution",
     "Outcomes", "Probabilities",
     "Mean", "States", "StateAssociation",
@@ -56,7 +60,8 @@ $QuantumMeasurementProperties = {
 };
 
 
-QuantumMeasurement["Properties"] := QuantumMeasurement["Properties"] = DeleteDuplicates @ Join[$QuantumMeasurementProperties, QuantumState["Properties"]]
+QuantumMeasurement["Properties"] := QuantumMeasurement["Properties"] =
+    DeleteDuplicates @ Join[$QuantumMeasurementProperties, QuantumMeasurementOperator["Properties"]]
 
 
 QuantumMeasurement::undefprop = "QuantumMeasurement property `` is undefined for this basis";
@@ -71,31 +76,25 @@ QuantumMeasurement::undefprop = "QuantumMeasurement property `` is undefined for
     ] /; !MatchQ[result, _QuantumMeasurementProp] || Message[QuantumMeasurement::undefprop, prop]
 ]
 
-QuantumMeasurement[qm_QuantumMeasurement, args___] := QuantumMeasurement[QuantumState[qm["State"], args], qm["Target"]]
+QuantumMeasurement[qm_QuantumMeasurement, args___] := QuantumMeasurement[QuantumMeasurementOperator[qm["QuantumOperator"], args]]
 
 
-QuantumMeasurementProp[qm_, "Properties"] := DeleteDuplicates @ Join[$QuantumMeasurementProperties, qm["State"]["Properties"]]
+QuantumMeasurementProp[qm_, "Properties"] := DeleteDuplicates @ Join[$QuantumMeasurementProperties, qm["QuantumOperator"]["Properties"]]
 
-QuantumMeasurementProp[QuantumMeasurement[qs_, _], "State"] := qs
+QuantumMeasurementProp[QuantumMeasurement[qmo_], "QuantumOperator" | "Operator"] := qmo
 
-QuantumMeasurementProp[QuantumMeasurement[_, target_], "Target"] := target
-
-QuantumMeasurementProp[qm_, "TargetBasis"] := qm["Input"][{"Extract", qm["Target"]}]["Dual"]
+QuantumMeasurementProp[qm_, "TargetBasis"] := qm["Input"][{"Extract", qm["TargetIndex"]}]["Dual"]
 
 QuantumMeasurementProp[qm_, "CanonicalBasis"] := QuantumBasis[qm["TargetBasis"], qm["Input"]["Dual"]]
 
-QuantumMeasurementProp[qm_, "Canonical"] := QuantumMeasurement[
-    QuantumState[qm["State"], qm["CanonicalBasis"]],
-    qm["Target"]
-]
+QuantumMeasurementProp[qm_, "Canonical"] := QuantumMeasurement @
+    QuantumMeasurementOperator[qm["Operator"], qm["CanonicalBasis"], qm["Target"]]
+
 
 QuantumMeasurementProp[qm_, "Computational"] := QuantumMeasurement[
-    qm["State"]["Computational"],
+    qm["Operator"]["Computational"],
     qm["Target"]
 ]
-
-QuantumMeasurementProp[qm_, "Operator"] := QuantumOperator[qm["State"], Range[1 - qm["Targets"], 0], Range[qm["InputQudits"]]]
-
 
 QuantumMeasurementProp[qm_, "Arity" | "Targets"] := Length @ qm["Target"]
 
@@ -132,7 +131,7 @@ QuantumMeasurementProp[qm_, "Outcomes"] := Which[
     MatchQ[qm["Label"], "Eigen" | "Eigen"[__]],
     qm["Eigenvalues"],
     MatchQ[qm["Label"], "Computational" | "Computational"[__]],
-    QuditBasis[qm["InputDimensions"][[ qm["Target"] ]]]["Names"],
+    QuditBasis[qm["InputDimensions"][[ qm["TargetIndex"] ]]]["Names"],
     True,
     qm["Canonical"]["Output"]["Names"]
 ]
@@ -145,7 +144,7 @@ QuantumMeasurementProp[qm_, "MixedOutcomes"] := If[
 
 QuantumMeasurementProp[qm_, "Distribution"] := CategoricalDistribution[
     qm["Outcomes"],
-    Chop @ N @ qm["ProbabilitiesList"]
+    Normal @ Chop @ N @ qm["ProbabilitiesList"]
 ]
 
 QuantumMeasurementProp[qm_, "DistributionInformation", args___] := Information[qm["Distribution"], args]
@@ -183,10 +182,10 @@ QuantumMeasurementProp[qm_, {"SimulatedStateMeasurement", n_}] := Part[qm["State
 QuantumMeasurementProp[qm_, "MeanState"] := qm["Mean"] /. qm["StateAssociation"]
 
 
-(* state properties *)
+(* qmo properties *)
 
 QuantumMeasurementProp[qm_, prop_ ? propQ, args___] /;
-    MatchQ[prop, Alternatives @@ Intersection[qm["State"]["Properties"], qm["Properties"]]] := qm["State"][prop, args]
+    MatchQ[prop, Alternatives @@ Intersection[qm["QuantumOperator"]["Properties"], qm["Properties"]]] := qm["QuantumOperator"][prop, args]
 
 
 (* equality *)

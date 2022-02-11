@@ -12,7 +12,7 @@ $QuantumOperatorProperties = {
     "Ordered", "OrderedInput", "OrderedOutput", "SortInput", "SortOutput", "Sort",
     "OrderedMatrixRepresentation", "OrderedMatrix",
     "OrderedTensorRepresentation", "OrderedTensor",
-    "Arity", "MaxArity", "FullArity", "Range", "FullInputOrder", "InputQuditOrder", "OutputQuditOrder",
+    "Arity", "MaxArity", "FullArity", "Range", "FullInputOrder", "FullOutputOrder", "InputQuditOrder", "OutputQuditOrder",
     "FirstOutputQudit", "LastOutputQudit", "FirstInputQudit", "LastInputQudit", "InputOrderQuditMapping",
     "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors", "Eigensystem", "Projectors",
     "ConjugateTranspose",

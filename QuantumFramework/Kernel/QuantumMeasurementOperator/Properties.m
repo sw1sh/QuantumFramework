@@ -6,11 +6,12 @@ PackageScope["QuantumMeasurementOperatorProp"]
 
 $QuantumMeasurementOperatorProperties = {
     "QuantumOperator", "Target",
+    "TargetIndex",
     "Operator", "Basis", "MatrixRepresentation", "POVMElements",
     "OrderedMatrixRepresentation", "OrderedPOVMElements",
     "Arity", "Eigenqudits", "Dimensions", "Order", "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors",
     "ProjectionQ", "POVMQ",
-    "POVM"
+    "SuperOperator", "POVM"
 };
 
 
@@ -43,6 +44,8 @@ QuantumMeasurementOperatorProp[_[op_, _], "Operator" | "QuantumOperator"] := op
 QuantumMeasurementOperatorProp[_[_, target_], "Target"] := target
 
 QuantumMeasurementOperatorProp[qmo_, "Targets"] := Length[qmo["Target"]]
+
+QuantumMeasurementOperatorProp[qmo_, "TargetIndex"] := Catenate @ Lookup[PositionIndex[qmo["FullInputOrder"]], qmo["Target"]]
 
 QuantumMeasurementOperatorProp[qmo_, "TargetDimensions"] :=
     Extract[qmo["InputDimensions"], Position[qmo["FullInputOrder"], Alternatives @@ qmo["Target"]] ]
@@ -151,11 +154,11 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
         (* permute and set order *)
         QuantumOperator[
             operator[
-                {"PermuteOutput", InversePermutation @ FindPermutation[Prepend[1 + Join[traceQudits, qmo["Target"]], 1]]}
+                {"PermuteOutput", InversePermutation @ FindPermutation[Prepend[1 + Join[traceQudits, qmo["Target"] - Min[qmo["InputOrder"]] + 1], 1]]}
             ][
-                {"PermuteInput", InversePermutation @ FindPermutation[Join[traceQudits, qmo["Target"]]]}
+                {"PermuteInput", InversePermutation @ FindPermutation[Join[traceQudits, qmo["Target"] - Min[qmo["InputOrder"]] + 1]]}
             ],
-            {Automatic, qmo["OutputOrder"]}
+            {Automatic, qmo["InputOrder"]}
         ]
     ]
 ]
