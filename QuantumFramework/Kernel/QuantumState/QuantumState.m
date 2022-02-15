@@ -63,7 +63,8 @@ QuantumState["Eigenvalues" -> eigenvalues_ ? VectorQ, basisArgs___] := With[{
 
 (* expand basis *)
 
-QuantumState[state_, args : Except[_ ? QuantumBasisQ]] := Enclose @ QuantumState[state, ConfirmBy[QuantumBasis[args], QuantumBasisQ]]
+QuantumState[state : Except[_ ? QuantumStateQ], args : Except[_ ? QuantumBasisQ]] :=
+    Enclose @ QuantumState[state, ConfirmBy[QuantumBasis[args], QuantumBasisQ]]
 
 QuantumState[state_ ? stateQ, basis_ ? QuantumBasisQ] := QuantumState[
     state,

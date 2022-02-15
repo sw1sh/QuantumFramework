@@ -114,6 +114,9 @@ QuantumBasis[data_Association] /; !MatchQ[data["ParameterSpec"], {{_, _, _}...}]
     QuantumBasis[<|data, "ParameterSpec" -> defaultParameterSpec[data["ParameterSpec"]]|>]
 
 
+QuantumBasis[qb_ ? QuantumBasisQ] := qb
+
+
 (* multiplicity *)
 
 QuantumBasis[qb_ ? QuantumBasisQ, 1, args___] := QuantumBasis[qb, args]

@@ -88,7 +88,7 @@ QuantumMeasurementProp[qm_, "TargetBasis"] := qm["Input"][{"Extract", qm["Target
 QuantumMeasurementProp[qm_, "CanonicalBasis"] := QuantumBasis[qm["TargetBasis"], qm["Input"]["Dual"]]
 
 QuantumMeasurementProp[qm_, "Canonical"] := QuantumMeasurement @
-    QuantumMeasurementOperator[qm["Operator"], qm["CanonicalBasis"], qm["Target"]]
+    QuantumMeasurementOperator[qm["QuantumOperator"]["Operator"], qm["CanonicalBasis"], qm["Target"]]
 
 
 QuantumMeasurementProp[qm_, "Computational"] := QuantumMeasurement[

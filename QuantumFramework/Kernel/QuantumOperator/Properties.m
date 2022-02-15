@@ -154,8 +154,7 @@ QuantumOperatorProp[qo_, {"OrderInputExtra", inputSource_ ? orderQ, inputTarget_
     outputTarget = qo["FullOutputOrder"] /. Thread[Permute[qo["FullInputOrder"], inputPerm] -> inputTarget];
     QuantumOperator[
         qo[{"PermuteInput", inputPerm}],
-        outputTarget,
-        Sort @ inputTarget
+        {outputTarget, Sort @ inputTarget}
     ]
 ]
 
@@ -168,8 +167,7 @@ QuantumOperatorProp[qo_, {"OrderOutputExtra", outputSource_ ? orderQ, outputTarg
     inputTarget = qo["FullInputOrder"] /. Thread[Permute[qo["FullOutputOrder"], outputPerm] -> outputTarget];
     QuantumOperator[
         qo[{"PermuteOutput", outputPerm}],
-        Sort @ outputTarget,
-        inputTarget
+        {Sort @ outputTarget, inputTarget}
     ]
 ]
 
@@ -177,16 +175,14 @@ QuantumOperatorProp[qo_, "SortInput"] := QuantumOperator[qo[{
     "PermuteInput",
     InversePermutation @ FindPermutation[qo["FullInputOrder"]]
 }],
-    qo["OutputOrder"],
-    Sort @ qo["InputOrder"]
+    {qo["OutputOrder"], Sort @ qo["InputOrder"]}
 ]
 
 QuantumOperatorProp[qo_, "SortOutput"] := QuantumOperator[qo[{
     "PermuteOutput",
     InversePermutation @ FindPermutation[qo["FullOutputOrder"]]
 }],
-    Sort @ qo["OutputOrder"],
-    qo["InputOrder"]
+    {Sort @ qo["OutputOrder"], qo["InputOrder"]}
 ]
 
 QuantumOperatorProp[qo_, "Sort"] := qo["SortOutput"]["SortInput"]
@@ -329,8 +325,8 @@ QuantumOperatorProp[qo_, "EvolutionOperator", args___] /; qo["ParameterArity"] =
                 ],
                 qo["OutputDimension"]
             ],
-            "ParameterSpec" -> First @ qo["ParameterSpec"],
-            qo["Order"]
+            qo["Order"],
+            "ParameterSpec" -> First @ qo["ParameterSpec"]
         ]
     ]
 
@@ -363,8 +359,8 @@ QuantumOperatorProp[qo_, "NEvolutionOperator", args___] /; qo["ParameterArity"] 
                 ],
                 qo["OutputDimension"]
             ],
-            "ParameterSpec" -> First @ qo["ParameterSpec"],
-            qo["Order"]
+            qo["Order"],
+            "ParameterSpec" -> First @ qo["ParameterSpec"]
         ]
     ]
 

@@ -95,6 +95,8 @@ QuantumState["RandomPure", args : PatternSequence[Except[_ ? QuantumBasisQ], ___
 QuantumState["RandomPure", qb_ ? QuantumBasisQ] :=
     QuantumState[Flatten @ RandomComplex[{-1 - I, 1 + I}, qb["Dimensions"]], qb]
 
+QuantumState["RandomPure"] := QuantumState["RandomPure", QuantumBasis[]]
+
 
 QuantumState["GHZ", args___] := QuantumState[{"GHZ", 3}, args]
 

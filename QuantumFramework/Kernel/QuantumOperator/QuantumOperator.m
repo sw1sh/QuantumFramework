@@ -9,7 +9,7 @@ PackageScope["QuantumOperatorQ"]
 QuantumOperator::invalidInputOrder = "input order should be a list of distinct input qudit positions"
 QuantumOperator::invalidOutputOrder = "output order should be a list of distinct output qudit positions"
 
-QuantumOperatorQ[QuantumOperator[qs_, {outputOrder_, inputOrder_}]] :=
+QuantumOperatorQ[QuantumOperator[qs_, {outputOrder_ ? orderQ, inputOrder_ ? orderQ}]] :=
     QuantumStateQ[qs] &&
     (orderQ[outputOrder] || (Message[QuantumOperator::invalidOutputOrder]; False)) &&
     (orderQ[inputOrder] || (Message[QuantumOperator::invalidInputOrder]; False))
@@ -22,30 +22,45 @@ QuantumOperatorQ[___] := False
 
 SetAttributes[QuantumOperator, NHoldRest]
 
-QuantumOperator[qs_ ? QuantumStateQ] := QuantumOperator[qs,
-    If[qs["InputDimension"] > 1, {Automatic, Range[qs["InputQudits"]]}, {Range[qs["OutputQudits"]], Automatic}]
-]
+QuantumOperator[arg : _ ? QuantumStateQ, order : {_ ? orderQ, _ ? orderQ}, opts__] :=
+    QuantumOperator[QuantumState[arg, opts], order]
 
-QuantumOperator[arg : _ ? QuantumStateQ, order : _ ? orderQ | Automatic] := QuantumOperator[arg, {Automatic, order}]
+QuantumOperator[qs_ ? QuantumStateQ] :=
+    QuantumOperator[
+        qs,
+        If[qs["InputDimension"] > 1, {Automatic, Range[qs["InputQudits"]]}, {Range[qs["OutputQudits"]], Automatic}]
+    ]
 
-QuantumOperator[arg : _ ? QuantumStateQ, outputOrder_, inputOrder_] := QuantumOperator[arg, {outputOrder, inputOrder}]
+QuantumOperator[arg : _ ? QuantumStateQ, outputOrder : _ ? orderQ | Automatic, inputOrder : _ ? orderQ | Automatic, opts___] :=
+    QuantumOperator[QuantumState[arg, opts], {outputOrder, inputOrder}]
 
-QuantumOperator[qs_ ? QuantumStateQ, {Automatic, order_ ? orderQ}] := QuantumOperator[qs,
-    {
-        Reverse @ Take[Join[Reverse @ order, Min[order] - Range[qs["OutputQudits"] - qs["InputQudits"]]], UpTo @ qs["OutputQudits"]],
-        order
-    }
-]
-
-QuantumOperator[qs_ ? QuantumStateQ, {order_ ? orderQ, Automatic}] := QuantumOperator[qs,
-    {
-        order,
-        Reverse @ Take[Join[Reverse @ order, Min[order] - Range[qs["InputQudits"] - qs["OutputQudits"]]], UpTo @ qs["InputQudits"]]
-    }
-]
+QuantumOperator[arg : _ ? QuantumStateQ, order : _ ? orderQ | Automatic] :=
+    QuantumOperator[arg, {Automatic, order}]
 
 
-QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, args___, order : (_ ? orderQ) : {1}] := Module[{
+
+QuantumOperator[qs_ ? QuantumStateQ, {Automatic, order_ ? orderQ}, opts___] :=
+    QuantumOperator[
+        qs,
+        {
+            Reverse @ Take[Join[Reverse @ order, Min[order] - Range[qs["OutputQudits"] - qs["InputQudits"]]], UpTo @ qs["OutputQudits"]],
+            order
+        },
+        opts
+    ]
+
+QuantumOperator[qs_ ? QuantumStateQ, {order_ ? orderQ, Automatic}, opts___] :=
+    QuantumOperator[
+        qs,
+        {
+            order,
+            Reverse @ Take[Join[Reverse @ order, Min[order] - Range[qs["InputQudits"] - qs["OutputQudits"]]], UpTo @ qs["InputQudits"]]
+        },
+        opts
+    ]
+
+
+QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, order : (_ ? orderQ) : {1}, opts___] := Module[{
     dimensions = TensorDimensions[tensor],
     rank,
     basis,
@@ -53,7 +68,7 @@ QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, args___, order : (_
 },
     rank = Max[Length[dimensions], Max[order] - Min[order] + 1];
     {outputDimension, inputDimension} = Times @@@ TakeDrop[dimensions, rank - Length[order]];
-    basis = QuantumBasis[args];
+    basis = QuantumBasis[opts];
     If[ basis["OutputDimension"] != outputDimension,
         basis = QuantumBasis[basis, "Output" -> QuditBasis[dimensions[[;; - Length[order] - 1]]]]
     ];
@@ -62,12 +77,12 @@ QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, args___, order : (_
     ];
     QuantumOperator[
         ArrayReshape[tensor, {outputDimension, inputDimension}],
-        basis,
-        order
+        order,
+        basis
     ]
 ]
 
-QuantumOperator[assoc_Association, args___, order : (_ ? orderQ) : {1}] := Enclose @ Module[{
+QuantumOperator[assoc_Association, order : (_ ? orderQ) : {1}, opts___] := Enclose @ Module[{
     quditBasis,
     basis,
     tensorDimensions
@@ -78,7 +93,7 @@ QuantumOperator[assoc_Association, args___, order : (_ ? orderQ) : {1}] := Enclo
             With[{counts = #1, i = First[#2]}, MapIndexed[{#1, i} -> UnitVector[Max[counts], First[#2]] &, Keys @ counts]] &,
             Counts /@ Transpose[ConfirmBy[Keys[assoc], MatrixQ]]
         ],
-        args
+        opts
     ];
     ConfirmAssert[Length[assoc] > 0 && Equal @@ TensorDimensions /@ assoc];
     ConfirmAssert[EvenQ @ quditBasis["Qudits"]];
@@ -97,33 +112,35 @@ QuantumOperator[assoc_Association, args___, order : (_ ? orderQ) : {1}] := Enclo
 
 QuantumOperator::invalidState = "invalid state specification";
 
-QuantumOperator[matrix_ ? MatrixQ, args___, order : {_ ? orderQ | Automatic, _ ? orderQ | Automatic}] :=
-    QuantumOperator[QuantumOperator[matrix, args]["State"], order]
 
-QuantumOperator[matrix_ ? MatrixQ, args___, order : _ ? orderQ | Automatic] := Enclose @ Module[{
-    op = ConfirmBy[QuantumOperator[matrix, args], QuantumOperatorQ],
-    newOrder
+QuantumOperator[matrix_ ? MatrixQ, order : _ ? autoOrderQ, opts___] := Enclose @ Module[{
+    op = ConfirmBy[QuantumOperator[matrix, opts], QuantumOperatorQ],
+    newOutputOrder, newInputOrder
 },
-    newOrder = Replace[order, Automatic -> op["FullInputOrder"]];
-    newOrder = PadRight[newOrder, op["InputQudits"], Drop[op["FullInputOrder"], Length[newOrder]]];
-    If[ op["InputQudits"] < Length[newOrder],
-        QuantumOperator[{op, Ceiling[Length[newOrder], op["InputQudits"]] / op["InputQudits"]}, {newOrder, newOrder}],
-        QuantumOperator[op["State"], {Automatic, newOrder}]
+    {newOutputOrder, newInputOrder} = Replace[order, {
+        o : Except[{_ ? orderQ | Automatic, _ ? orderQ | Automatic}] :> {op["OutputOrder"], Replace[o, Automatic -> op["InputOrder"]]},
+        Automatic -> op["Order"]
+    }];
+    newInputOrder = PadRight[newInputOrder, op["InputQudits"], Drop[op["FullInputOrder"], UpTo @ Length[newInputOrder]]];
+    newOutputOrder = newOutputOrder - Min[newOutputOrder] + Min[newInputOrder];
+    If[ op["InputQudits"] < Length[newInputOrder],
+        QuantumOperator[{op, Ceiling[Length[newInputOrder], op["InputQudits"]] / op["InputQudits"]}, {newOutputOrder, newInputOrder}],
+        QuantumOperator[op["State"], {newOutputOrder, newInputOrder}]
     ]
 ]
 
-QuantumOperator[matrix_ ? MatrixQ, args : PatternSequence[] | PatternSequence[___, Except[Automatic | _ ? orderQ]]] := Module[{
+QuantumOperator[matrix_ ? MatrixQ, opts___] := Module[{
     outMultiplicity, inMultiplicity, result
 },
     result = Enclose @ Module[{newMatrix = matrix, outputs, inputs,
         basis, newOutputQuditBasis, newInputQuditBasis, state},
         {outputs, inputs} = Dimensions[newMatrix];
-        basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ, "Invalid basis"];
+        basis = ConfirmBy[QuantumBasis[opts], QuantumBasisQ, "Invalid basis"];
         If[ basis["InputDimension"] == 1,
             basis = QuantumBasis[basis, "Input" -> basis["Output"]["Dual"]]
         ];
-        outMultiplicity = Log[basis["OutputDimension"], outputs];
-        inMultiplicity = Log[basis["InputDimension"], inputs];
+        outMultiplicity = Quiet @ Log[basis["OutputDimension"], outputs];
+        inMultiplicity = Quiet @ Log[basis["InputDimension"], inputs];
         If[
             IntegerQ[outMultiplicity] && IntegerQ[inMultiplicity],
             (* multiply existing basis *)
@@ -174,37 +191,40 @@ QuantumOperator[qo_ ? QuantumOperatorQ, order : {_ ? orderQ | Automatic, _ ? ord
     QuantumOperator[qo["State"], order]
 
 
-QuantumOperator[qo_ ? QuantumOperatorQ, args : PatternSequence[Except[_ ? QuantumBasisQ], ___],
+QuantumOperator[qo_ ? QuantumOperatorQ, opts : PatternSequence[Except[_ ? QuantumBasisQ], ___],
     outputOrder : (_ ? orderQ | Automatic), inputOrder : (_ ? orderQ | Automatic)] := Enclose @
-    QuantumOperator[qo, ConfirmBy[QuantumBasis[qo["Basis"], args], QuantumBasisQ], {outputOrder, inputOrder}]
+    QuantumOperator[qo, {outputOrder, inputOrder}, ConfirmBy[QuantumBasis[qo["Basis"], opts], QuantumBasisQ]]
 
-QuantumOperator[qo_ ? QuantumOperatorQ, args : PatternSequence[Except[_ ? QuantumBasisQ], ___], order : (_ ? orderQ | Automatic)] := Enclose @
-    QuantumOperator[qo, ConfirmBy[QuantumBasis[qo["Basis"], args], QuantumBasisQ], {qo["OutputOrder"], order}]
+QuantumOperator[qo_ ? QuantumOperatorQ, order : (_ ? orderQ | Automatic), opts : PatternSequence[Except[_ ? QuantumBasisQ], ___]] := Enclose @
+    QuantumOperator[qo, {qo["OutputOrder"], order}, ConfirmBy[QuantumBasis[qo["Basis"], opts], QuantumBasisQ]]
 
-QuantumOperator[qo_ ? QuantumOperatorQ, args : PatternSequence[Except[_ ? QuantumBasisQ], ___]] := Enclose @
-    QuantumOperator[qo, ConfirmBy[QuantumBasis[qo["Basis"], args], QuantumBasisQ]]
+QuantumOperator[qo_ ? QuantumOperatorQ, order : _ ? autoOrderQ, opts : PatternSequence[Except[_ ? QuantumBasisQ], ___]] := Enclose @
+    QuantumOperator[qo, order, ConfirmBy[QuantumBasis[qo["Basis"], opts], QuantumBasisQ]]
+
+QuantumOperator[qo_ ? QuantumOperatorQ, opts : PatternSequence[Except[_ ? autoOrderQ | _ ? QuantumBasisQ], ___]] := Enclose @
+    QuantumOperator[qo, qo["Order"], ConfirmBy[QuantumBasis[qo["Basis"], opts], QuantumBasisQ]]
 
 QuantumOperator[{qo : _ ? QuantumOperatorQ, multiplicity_Integer ? Positive}] := QuantumOperator[{qo, multiplicity}, Range[multiplicity]]
 
-QuantumOperator[{qo : _ ? QuantumOperatorQ, multiplicity_Integer ? Positive}, args__] :=
-    QuantumOperator[QuantumTensorProduct @ Table[qo, multiplicity], args]
+QuantumOperator[{qo : _ ? QuantumOperatorQ, multiplicity_Integer ? Positive}, opts__] :=
+    QuantumOperator[QuantumTensorProduct @ Table[qo, multiplicity], opts]
 
 (* change of basis *)
 
 QuantumOperator[qo_ ? QuantumOperatorQ] := qo["Computational"]
 
-QuantumOperator[qo_ ? QuantumOperatorQ, name_ ? nameQ, args___] := QuantumOperator[qo, QuantumBasis[name], args]
+QuantumOperator[qo_ ? QuantumOperatorQ, name_ ? nameQ, opts___] := QuantumOperator[qo, QuantumBasis[name], opts]
 
+QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ] := QuantumOperator[qo, qo["Order"], qb]
 
-QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ, args___,
-    order : _ ? orderQ | Automatic | {_ ? orderQ | Automatic, _ ? orderQ | Automatic}] :=
+QuantumOperator[qo_ ? QuantumOperatorQ, order : _ ? autoOrderQ, qb_ ? QuantumBasisQ, opts___] :=
 Enclose @ Module[{
     newBasis
 },
     newBasis = If[
         qb["InputDimension"] == 1 && qo["InputDimension"] > 1,
-        QuantumBasis[qb, "Input" -> qb["Output"]["Dual"], args],
-        QuantumBasis[qb, args]
+        QuantumBasis[qb, "Input" -> qb["Output"]["Dual"], opts],
+        QuantumBasis[qb, opts]
     ];
 
     newBasis = QuantumBasis[qb,
@@ -226,12 +246,9 @@ Enclose @ Module[{
     ]
 ]
 
-QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ,
-    args : PatternSequence[] | PatternSequence[___, Except[_ ? orderQ | Automatic | {_ ? orderQ | Automatic, _ ? orderQ | Automatic}]]] :=
-    QuantumOperator[qo, qb, args, qo["Order"]]
-
-QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ, args___, outputOrder_ ? orderQ | Automatic, inputOrder_ ? orderQ | Automatic] :=
-    QuantumOperator[qo, qb, args, {outputOrder, inputOrder}]
+QuantumOperator[qo_ ? QuantumOperatorQ,
+    outputOrder : _ ? orderQ | Automatic : Automatic, inputOrder : _ ? orderQ | Automatic : Automatic, qb_ ? QuantumBasisQ, opts___] :=
+    QuantumOperator[qo, {outputOrder, inputOrder}, qb, opts]
 
 (* composition *)
 
@@ -240,7 +257,7 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 (qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] /; qo["Picture"] === qo["Picture"] && (
     qs["Picture"] =!= "Heisenberg" || Message[QuantumOperator::incompatiblePictures, qo["Picture"], qs["Picture"]]) :=
 With[{order = PadRight[
-        Take[qo["FullInputOrder"], UpTo @ qs["OutputQudits"]],
+        Take[Range @@ MinMax @ qo["FullInputOrder"], UpTo @ qs["OutputQudits"]],
         qs["OutputQudits"],
         Complement[Range[Min[qo["FullInputOrder"]], Max[qo["FullInputOrder"]] + qs["OutputQudits"]], qo["FullInputOrder"]]
     ]
@@ -282,7 +299,6 @@ With[{order = PadRight[
             top = top[{"OrderedInput", order, basis}];
         ]
     ];
-
     ConfirmAssert[top["InputDimension"] == bottom["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
     QuantumOperator[top["State"] @ bottom["State"], top["OutputOrder"], bottom["InputOrder"]]
 ]
@@ -321,13 +337,13 @@ addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator 
             ordered1["MatrixRepresentation"] + ordered2["MatrixRepresentation"],
             QuantumBasis[ordered1["OutputDimensions"], ordered2["InputDimensions"]]
         ],
-        ordered1["Basis"],
-        ordered1["Order"]
+        ordered1["Order"],
+        ordered1["Basis"]
     ]
 ]
 
 QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator] ...] /; MemberQ[Attributes[f], NumericFunction] :=
-    Enclose @ QuantumOperator[ConfirmBy[MatrixFunction[f[left, #, right] &, qo["Matrix"]], MatrixQ], qo["Basis"], "Label" -> f[left, qo["Label"], right], qo["Order"]]
+    Enclose @ QuantumOperator[ConfirmBy[MatrixFunction[f[left, #, right] &, qo["Matrix"]], MatrixQ], qo["Order"], qo["Basis"], "Label" -> f[left, qo["Label"], right]]
 
 
 (* equality *)
