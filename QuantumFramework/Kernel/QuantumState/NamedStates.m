@@ -11,11 +11,12 @@ $QuantumStateNames = {
     "BasisState", "Register",
     "UniformSuperposition",
     "UniformMixture",
-    "RandomPure",
+    "RandomPure", "RandomMixed",
     "GHZ",
     "W",
     "Werner",
-    "Graph"
+    "Graph",
+    "BlochVector"
 }
 
 (*QuantumState[name_ ? nameQ, args : PatternSequence[] | Except[PatternSequence[_Integer ? Positive, ___]]] := QuantumState[name, 2, args]*)
@@ -93,9 +94,24 @@ QuantumState[{"RandomPure", subsystemCount_Integer}, dimension : (_Integer ? Pos
 QuantumState["RandomPure", args : PatternSequence[Except[_ ? QuantumBasisQ], ___]] :=  QuantumState["RandomPure", QuantumBasis[args]]
 
 QuantumState["RandomPure", qb_ ? QuantumBasisQ] :=
-    QuantumState[Flatten @ RandomComplex[{-1 - I, 1 + I}, qb["Dimensions"]], qb]
+    QuantumState[RandomComplex[{-1 - I, 1 + I}, qb["Dimension"]], qb]
 
 QuantumState["RandomPure"] := QuantumState["RandomPure", QuantumBasis[]]
+
+
+QuantumState[{"RandomMixed", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
+    With[{m = RandomComplex[{-1 - I, 1 + I}, Table[dimension ^ subsystemCount, 2]]},
+        QuantumState[m . ConjugateTranspose[m], dimension, args]
+    ]
+
+QuantumState["RandomMixed", args : PatternSequence[Except[_ ? QuantumBasisQ], ___]] :=  QuantumState["RandomMixed", QuantumBasis[args]]
+
+QuantumState["RandomMixed", qb_ ? QuantumBasisQ] :=
+    With[{m = RandomComplex[{-1 - I, 1 + I}, Table[qb["Dimension"], 2]]},
+        QuantumState[m . ConjugateTranspose[m], qb]
+    ]
+
+QuantumState["RandomMixed"] := QuantumState["RandomMixed", QuantumBasis[]]
 
 
 QuantumState["GHZ", args___] := QuantumState[{"GHZ", 3}, args]

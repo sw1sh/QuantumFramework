@@ -51,10 +51,12 @@
                 "UniformSuperposition",
                 "UniformMixture",
                 "RandomPure",
+                "RandomMixed",
                 "GHZ",
                 "W",
                 "Werner",
-                "Graph"
+                "Graph",
+                "BlochVector"
             },
             {
                 "Computational",

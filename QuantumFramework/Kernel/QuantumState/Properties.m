@@ -96,8 +96,8 @@ QuantumStateProp[qs_, "Probabilities"] := Simplify /@ (qs["Weights"] / Total[qs[
 QuantumStateProp[qs_, "Distribution"] := CategoricalDistribution[qs["Names"], qs["Probabilities"]]
 
 QuantumStateProp[qs_, "Formula", OptionsPattern["Normalize" -> False]] /; qs["PureStateQ"] :=
-    With[{v = SparseArray @ qs[If[TrueQ[OptionValue["Normalize"]], "NormalizedStateVector", "StateVector"]]},
-        qs["Names", Catenate @ v["ExplicitPositions"]] . v["ExplicitValues"]
+    With[{v = SparseArray @ qs[If[TrueQ[OptionValue["Normalize"]], "NormalizedStateVector", "StateVector"]], d = qs["OutputDimension"]},
+        With[{pos = Catenate @ v["ExplicitPositions"]}, qs["Names", Thread[{Mod[pos - 1, d] + 1, Quotient[pos - 1, d] + 1}]]] . v["ExplicitValues"]
     ]
 
 

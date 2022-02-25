@@ -23,7 +23,16 @@ QuantumBasis[<|
     "Output" -> QuantumTensorProduct[qb1["Output"], qb2["Output"]],
     "Input" -> QuantumTensorProduct[qb1["Input"], qb2["Input"]],
     "Picture" -> qb1["Picture"],
-    "Label" -> Flatten @ CircleTimes[qb1["Label"], qb2["Label"]] /. None -> Sequence[],
+    "Label" ->
+        Replace[
+            {qb1["Label"], qb2["Label"]},
+            {
+                {OrderlessPatternSequence[Superscript[a_, CircleTimes[q_Integer]], a_]} :> Superscript[a, CircleTimes[q + 1]],
+                {Superscript[a_, CircleTimes[q_Integer]], Superscript[a_, CircleTimes[r_Integer]]} :> Superscript[a, CircleTimes[q + r]],
+                {a_, a_} :> Superscript[a, CircleTimes[2]],
+                {a_, b_} :> Flatten @ CircleTimes[a, b] /. None -> Sequence[]
+            }
+        ],
     "ParameterSpec" -> Join[qb1["ParameterSpec"], qb2["ParameterSpec"]]
 |>
 ]
@@ -67,14 +76,16 @@ QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] := Enclose[
 QuantumTensorProduct[qo1_QuantumOperator, qo2_QuantumOperator] :=
     QuantumOperator[
         QuantumTensorProduct[qo1["State"], qo2["State"]],
-        If[ IntersectingQ[qo1["OutputOrder"], qo2["OutputOrder"]],
-            Join[qo1["OutputOrder"], qo1["LastOutputQudit"] - qo2["FirstOutputQudit"] + qo2["OutputOrder"] + 1],
-            Join[qo1["OutputOrder"], qo2["OutputOrder"]]
-        ],
-        If[ IntersectingQ[qo1["InputOrder"], qo2["InputOrder"]],
-            Join[qo1["InputOrder"], qo1["LastInputQudit"] - qo2["FirstInputQudit"] + qo2["InputOrder"] + 1],
-            Join[qo1["InputOrder"], qo2["InputOrder"]]
-        ]
+        {
+            If[ IntersectingQ[qo1["OutputOrder"], qo2["OutputOrder"]],
+                Join[qo1["OutputOrder"], qo1["LastOutputQudit"] - qo2["FirstOutputQudit"] + qo2["OutputOrder"] + 1],
+                Join[qo1["OutputOrder"], qo2["OutputOrder"]]
+            ],
+            If[ IntersectingQ[qo1["InputOrder"], qo2["InputOrder"]],
+                Join[qo1["InputOrder"], qo1["LastInputQudit"] - qo2["FirstInputQudit"] + qo2["InputOrder"] + 1],
+                Join[qo1["InputOrder"], qo2["InputOrder"]]
+            ]
+        }
     ]
 
 

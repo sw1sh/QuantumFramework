@@ -132,12 +132,28 @@ drawMeasurement[coordinates_] := Module[{width = 4},
 ]
 
 
-drawWireGraphics[positionIndices_List, opts : OptionsPattern[Style]] := Module[{quditCount, lineList},
+jumpLine[x_, y_, jumps_, dy_ : 1, step_ : 6] := With[{
+    points = {
+        {0, y},
+        Splice[
+            Splice[
+                MapAt[step # &, {All, 1}] @
+                {{# - .5, y}, {# - .45, y}, {# - .125, y - dy}, {# + .125, y - dy}, {# + .45, y}, {# + .5, y}}
+            ] & /@ jumps
+        ],
+        {x, y}
+    }
+},
+    BSplineCurve[points, SplineDegree -> 3]
+]
+
+drawWireGraphics[positionIndices_List, jumpWires_List, opts : OptionsPattern[Style]] := Module[{quditCount, lineList},
     quditCount = Length[positionIndices];
     lineList = Table[
         Graphics[{
             Text[Style[ToString[i], opts], {0, - 5 i - 2}],
-            Line[{{0, - 5 i}, {6 Max[positionIndices], - 5 i}}]
+            jumpLine[6 Max[positionIndices], - 5 i, Select[jumpWires, #[[1]] == i &][[All, 2]] - .375]
+            (* Line[{{0, - 5 i}, {6 Max[positionIndices], - 5 i}}] *)
             }
         ],
         {i, Range[quditCount]}
@@ -155,7 +171,7 @@ drawMeasurementWire[positionIndices_List, opts : OptionsPattern[Style]] := Graph
 Options[drawGateGraphics] = Options[Style]
 
 drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
-    width, height, orders, dimensions, graphicsList, index, positionIndices, gatePositionIndices,
+    width, height, orders, targetOrders, dimensions, graphicsList, index, positionIndices, gatePositionIndices,
     targetQuditsOrder,
     controlQuditsOrder,
     controlQuditsOrderTop, controlQuditsOrderBottom,
@@ -163,11 +179,13 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
     includeMeasurement = False,
     labels,
     label, colors, bottomColors, topColors,
-    styleOpts = {opts, FontSize -> 24, FontFamily -> "Times"}
+    styleOpts = {opts, FontSize -> 24, FontFamily -> "Times"},
+    jumpWires = {}
 },
     width = 4;
     height = 3;
     orders = #["InputOrder"] & /@ gates;
+    targetOrders = #["TargetOrder"] & /@ gates;
     dimensions = First[gates]["InputDimensions"];
 
     graphicsList = {};
@@ -175,6 +193,9 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
     positionIndices = ConstantArray[1, Max[Flatten[orders]]];
     labels = First[#[[2]], {}] & @ Reap @ Do[
 
+    With[{pos = Complement[Range[Min[targetOrders[[i]]], Max[targetOrders[[i]]]], targetOrders[[i]]]},
+        If[Length[pos] > 0, jumpWires = Join[jumpWires, Thread[pos -> Max @ positionIndices[[Join[targetOrders[[i]], pos]]]]]]
+    ];
     If[ QuantumMeasurementOperatorQ[gates[[i]]],
         gatePositionIndices = Table[Max[positionIndices], {j, Min[orders[[i]]], Max[orders[[i]]]}];
         includeMeasurement = True;
@@ -266,7 +287,7 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
         Do[positionIndices[[j]]=positionIndices[[orders[[i, First[First[Position[gatePositionIndices, Max[gatePositionIndices]]]]]]]], {j, Min[orders[[i]]],
         Max[orders[[i]]]}]
     *)
-    PrependTo[graphicsList, drawWireGraphics[positionIndices, styleOpts]];
+    PrependTo[graphicsList, drawWireGraphics[positionIndices, jumpWires, styleOpts]];
     If[ TrueQ[includeMeasurement],
         PrependTo[graphicsList, drawMeasurementWire[positionIndices, styleOpts]]
     ];

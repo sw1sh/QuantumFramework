@@ -172,14 +172,14 @@ QuantumOperator[{"ControlledU" | "Controlled", qo_ ? QuantumOperatorQ, control1_
             identityMatrix[(2 ^ controls0 - 1) 2 ^ controls1 qo["OutputDimension"]]
         ],
         With[{order = Join[
+            control0,
             control1,
             If[ IntersectingQ[control, qo["FullInputOrder"]],
                 With[{order = Complement[Range @@ MinMax[Join[control, qo["FullInputOrder"]]], control]},
                     Join[order, Max[qo["FullInputOrder"], control] + Range[qo["Arity"] - Length[order]]]
                 ],
                 qo["InputOrder"]
-            ],
-            control0
+            ]
         ]},
             {order, order}
         ],
@@ -272,27 +272,18 @@ QuantumOperator[{"SUM", dimension_Integer}, opts___] := QuantumOperator[QuantumO
 QuantumOperator[name : "X" | "Y" | "Z" | "PauliX" | "PauliY" | "PauliZ" | "NOT", opts___] := QuantumOperator[{name, 2}, opts]
 
 QuantumOperator[{"PauliX" | "X", dimension_Integer}, order : _ ? orderQ : {1}, opts___] := QuantumOperator[
-    pauliMatrix[1, dimension],
-    order,
-    dimension,
-    opts,
-    "Label" -> "X"
+    {QuantumOperator[pauliMatrix[1, dimension], dimension, opts, "Label" -> "X"], Length[order]},
+    {order, order}
 ]
 
 QuantumOperator[{"PauliY" | "Y", dimension_Integer}, order : _ ? orderQ : {1}, opts___] := QuantumOperator[
-    pauliMatrix[2, dimension],
-    order,
-    dimension,
-    opts,
-    "Label" -> "Y"
+    {QuantumOperator[pauliMatrix[2, dimension], dimension, opts, "Label" -> "Y"], Length[order]},
+    {order, order}
 ]
 
 QuantumOperator[{"PauliZ" | "Z", dimension_Integer}, order : _ ? orderQ : {1}, opts___] := QuantumOperator[
-    pauliMatrix[3, dimension],
-    order,
-    dimension,
-    opts,
-    "Label" -> "Z"
+    {QuantumOperator[pauliMatrix[3, dimension], dimension, opts, "Label" -> "Z"], Length[order]},
+    {order, order}
 ]
 
 QuantumOperator[{"NOT", dimension_Integer}, opts___] := QuantumOperator[{"X", dimension}, opts, "Label" -> "NOT"]
@@ -312,15 +303,15 @@ QuantumOperator[{"RootNOT", dimension_Integer}, order : _ ? orderQ : {1}, opts__
 ]
 
 
-QuantumOperator["Hadamard" | "H", opts___] := QuantumOperator[HadamardMatrix[2], opts, "Label" -> "H"]
+QuantumOperator["Hadamard" | "H", order : _ ? orderQ : {1}, opts___] := QuantumOperator[{"H", Length @ order}, order, opts]
 
 QuantumOperator[{"Hadamard" | "H", qudits_Integer ? Positive}, opts : PatternSequence[] | PatternSequence[___, Except[_ ? orderQ]]] :=
     QuantumOperator[{"H", qudits}, Range[qudits], opts]
 
 QuantumOperator[{"Hadamard" | "H", qudits_Integer ? Positive}, order_ ? orderQ, opts___] :=
     QuantumOperator[
-        QuantumTensorProduct[Table[QuantumOperator["Hadamard", opts], qudits]],
-        order,
+        QuantumTensorProduct[Table[QuantumOperator[HadamardMatrix[2], opts], qudits]],
+        {order, order},
         "Label" -> If[qudits > 1, Superscript["H", CircleTimes[qudits]], "H"]
     ]
 

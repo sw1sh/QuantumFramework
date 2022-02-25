@@ -35,6 +35,14 @@ QuantumBasis::dependentElements = "elements should be linearly independent";
 
 $QuantumBasisDataKeys = {"Input", "Output", "Picture", "Label", "ParameterSpec"}
 
+$QuantumBasisDefaults = {
+    "Input" -> QuditBasis[],
+    "Output" -> QuditBasis[],
+    "Picture" -> "Schrödinger",
+    "Label" -> None,
+    "ParameterSpec" -> {}
+}
+
 
 quantumBasisQ[QuantumBasis[data_Association]] := Enclose[
     ConfirmAssert[ContainsAll[Keys[data], $QuantumBasisDataKeys], Message[QuantumBasis::wrongData]];
@@ -67,9 +75,9 @@ QuantumBasis[picture : Alternatives @@ $QuantumBasisPictures] := QuantumBasis["C
 
 QuantumBasis[QuantumBasis[data_Association], picture : Alternatives @@ $QuantumBasisPictures] := QuantumBasis[<|data, "Picture" -> picture|>]
 
-QuantumBasis[QuantumBasis[data_Association], rules : OptionsPattern[]] := QuantumBasis[<|data, rules|>]
+QuantumBasis[QuantumBasis[data_Association], rules : OptionsPattern[$QuantumBasisDefaults]] := QuantumBasis[<|data, Reverse @ {rules}|>]
 
-QuantumBasis[data_Association, args__] := Fold[QuantumBasis, QuantumBasis[data], {args}]
+QuantumBasis[data_Association, args__] := Fold[QuantumBasis, QuantumBasis[data], Reverse @ {args}]
 
 
 (* construction *)
@@ -88,8 +96,7 @@ QuantumBasis[params_List, args___] := QuantumTensorProduct[QuantumBasis[#, args]
 
 (* defaults *)
 QuantumBasis[data_Association ? (Keys /* Not @* ContainsAll[$QuantumBasisDataKeys]), args___] :=
-    QuantumBasis[<|<|"Input" -> QuditBasis[], "Output" -> QuditBasis[], "Picture" -> "Schrödinger", "Label" -> None,
-    "ParameterSpec" -> {}|>, data|>, args]
+    QuantumBasis[<|$QuantumBasisDefaults, data|>, args]
 
 
 QuantumBasis[data_Association] /; AssociationQ[data["Input"]] := QuantumBasis[MapAt[QuditBasis, data, "Input"]]

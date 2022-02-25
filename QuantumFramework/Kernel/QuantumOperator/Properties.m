@@ -326,6 +326,7 @@ QuantumOperatorProp[qo_, "EvolutionOperator", args___] /; qo["ParameterArity"] =
                 qo["OutputDimension"]
             ],
             qo["Order"],
+            qo["Basis"],
             "ParameterSpec" -> First @ qo["ParameterSpec"]
         ]
     ]
