@@ -73,7 +73,7 @@ QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, order : (_ ? orderQ
         basis = QuantumBasis[basis, "Output" -> QuditBasis[dimensions[[;; - Length[order] - 1]]]]
     ];
     If[ basis["InputDimension"] != inputDimension,
-        basis = QuantumBasis[basis, "Input" -> QuditBasis[dimensions[[- Length[order] ;;]]]]
+        basis = QuantumBasis[basis, "Input" -> QuditBasis[dimensions[[- Length[order] ;;]]]["Dual"]]
     ];
     QuantumOperator[
         ArrayReshape[tensor, {outputDimension, inputDimension}],
@@ -156,10 +156,10 @@ QuantumOperator[matrix_ ? MatrixQ, args___, opts : OptionsPattern[]] := Module[{
             newOutputQuditBasis = QuantumTensorProduct[basis["Output"], QuditBasis[Ceiling[outputs / basis["OutputDimension"]] /. 1 -> Sequence[]]];
             newInputQuditBasis = QuantumTensorProduct[basis["Input"], QuditBasis[Ceiling[inputs / basis["InputDimension"]] /. 1 -> Sequence[]]];
 
-            newMatrix = KroneckerProduct[
+            newMatrix = kroneckerProduct[
                 newMatrix,
-                IdentityMatrix[Max[Ceiling[outputs / newOutputQuditBasis["Dimension"]], Ceiling[inputs / newInputQuditBasis["Dimension"]]]][[
-                    ;; Ceiling[outputs / newOutputQuditBasis["Dimension"]], ;; Ceiling[inputs / newInputQuditBasis["Dimension"]]
+                Replace[{} -> {{1}}] @ identityMatrix[Max[newOutputQuditBasis["Dimension"] - outputs, newInputQuditBasis["Dimension"] - inputs, 0]][[
+                    ;; Max[newOutputQuditBasis["Dimension"] - outputs, 0], ;; Max[newInputQuditBasis["Dimension"] - inputs, 0]
                 ]]
             ];
             basis = QuantumBasis[basis,

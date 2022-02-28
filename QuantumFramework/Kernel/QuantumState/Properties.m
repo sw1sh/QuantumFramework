@@ -235,7 +235,7 @@ QuantumStateProp[qs_, "Normalized" | "NormalizedState"] :=
 
 QuantumStateProp[qs_, "Pure"] := If[qs["PureStateQ"],
     qs,
-    QuantumState[Flatten @ qs["DensityMatrix"], QuantumTensorProduct[qs["Basis"], qs["Basis"]["Dagger"]]][{"Split", 2 qs["Qudits"]}]
+    QuantumState[Flatten @ qs["DensityMatrix"], QuantumTensorProduct[qs["Basis"], qs["Basis"]["Dagger"]]][{"Split", 2 qs["OutputQudits"]}]
 ]
 
 QuantumStateProp[qs_, "Mixed"] := Which[
@@ -254,7 +254,9 @@ QuantumStateProp[qs_, "Mixed"] := Which[
 
 QuantumStateProp[qs_, "MatrixState"] := If[qs["StateType"] === "Matrix", qs, QuantumState[qs["DensityMatrix"], qs["Basis"]]]
 
-QuantumStateProp[qs_, "Transpose"] := QuantumState[If[qs["PureStateQ"], Flatten, Identity] @ Transpose[qs["StateMatrix"]], qs["Basis"]["Transpose"]]
+QuantumStateProp[qs_, "Transpose"] := With[{qb = qs["Basis"]["Transpose"]},
+    QuantumState[If[qs["StateType"] === "Vector", Flatten, ArrayReshape[#, qb["MatrixDimensions"]] &] @ Transpose[qs["StateMatrix"]], qb]
+]
 
 QuantumStateProp[qs_, {"Transpose", qudits : {_Integer...}}] := QuantumState[
     ArrayReshape[
@@ -266,11 +268,15 @@ QuantumStateProp[qs_, {"Transpose", qudits : {_Integer...}}] := QuantumState[
 
 QuantumStateProp[qs_, {"Trace", qudits : {_Integer...}}] := QuantumPartialTrace[qs, qudits]
 
-QuantumStateProp[qs_, "Conjugate" | "Dual"] := QuantumState[If[qs["PureStateQ"], Flatten, Identity] @ Conjugate[qs["StateMatrix"]], qs["Basis"]["Dual"]]
+QuantumStateProp[qs_, "Conjugate" | "Dual"] := With[{qb = qs["Basis"]["Dual"]},
+    QuantumState[If[qs["StateType"] === "Vector", Flatten, ArrayReshape[#, qb["MatrixDimensions"]] &] @ Conjugate[qs["StateMatrix"]], qb]
+]
 
-QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := QuantumState[
-    If[qs["PureStateQ"], Flatten, Identity] @ ConjugateTranspose[qs["StateMatrix"]],
-    qs["Basis"]["ConjugateTranspose"]
+QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := With[{qb = qs["Basis"]["ConjugateTranspose"]},
+    QuantumState[
+        If[qs["StateType"] === "Vector", Flatten, ArrayReshape[#, qb["MatrixDimensions"]] &] @ ConjugateTranspose[qs["StateMatrix"]],
+        qb
+    ]
 ]
 
 

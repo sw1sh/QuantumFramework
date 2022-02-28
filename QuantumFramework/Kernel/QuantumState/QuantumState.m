@@ -182,7 +182,7 @@ QuantumState /: f_Symbol[left : _ ? NumericQ ..., qs_QuantumState, right : _ ? N
 (qs1_QuantumState ? QuantumStateQ)[(qs2_QuantumState ? QuantumStateQ)] /; qs1["Input"] == qs2["Output"] := QuantumState[
     Simplify @ Flatten[qs1["Pure"]["StateMatrix"] . qs2["Pure"]["StateMatrix"]],
     QuantumBasis[
-        "Output" -> qs1["Output"], "Input" -> qs2["Input"],
+        "Output" -> qs1["Pure"]["Output"], "Input" -> qs2["Pure"]["Input"],
         "Label" -> qs1["Label"] @* qs2["Label"],
         "ParameterSpec" -> Join[qs2["ParameterSpec"], qs1["ParameterSpec"]]
     ]
