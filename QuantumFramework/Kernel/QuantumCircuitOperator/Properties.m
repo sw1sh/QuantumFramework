@@ -23,7 +23,7 @@ qds_QuantumCircuitOperator["ValidQ"] := QuantumCircuitOperatorQ[qds]
 QuantumCircuitOperator::undefprop = "property `` is undefined for this circuit";
 
 (qds_QuantumCircuitOperator[prop_ ? propQ, args___]) /; QuantumCircuitOperatorQ[qds] := With[{
-    result = Check[QuantumCircuitOperatorProp[qds, prop, args], $Failed]
+    result = QuantumCircuitOperatorProp[qds, prop, args]
 },
     If[ TrueQ[$QuantumFrameworkPropCache] && ! MemberQ[{"Operators", "Diagram", "Qiskit", "QiskitCircuit"}, propName[prop]],
         QuantumCircuitOperatorProp[qds, prop, args] = result,

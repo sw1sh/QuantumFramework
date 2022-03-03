@@ -147,28 +147,66 @@ jumpLine[x_, y_, jumps_, dy_ : 1, step_ : 6] := With[{
     BSplineCurve[points, SplineDegree -> 3]
 ]
 
-drawWireGraphics[positionIndices_List, jumpWires_List, opts : OptionsPattern[Style]] := Module[{quditCount, lineList},
+
+Options[drawWireGraphics] = Join[Options[Style], {
+    "WireLabels" -> Automatic
+}]
+
+drawWireGraphics[positionIndices_List, jumpWires_List, opts : OptionsPattern[]] := Module[{
+    quditCount,
+    lines,
+    labels
+},
     quditCount = Length[positionIndices];
-    lineList = Table[
-        Graphics[{
-            Text[Style[ToString[i], opts], {0, - 5 i - 2}],
+    labels = Replace[OptionValue["WireLabels"], {l : Placed[Automatic, _] :> Table[l, quditCount], Automatic -> Range[quditCount]}];
+    labels = MapIndexed[{label, index} |-> With[{i = First @ index},
+        Replace[label, {
+            Placed[l_, p_] :>
+                Text[
+                    Style[Replace[l, Automatic -> i], FilterRules[{opts}, Options[Style]]],
+                    Replace[p, {
+                        Above -> {0, - 5 i + 2},
+                        Below -> {0, - 5 i - 2},
+                        Automatic | Left -> {-1 , - 5 i},
+                        Right -> {6 Max[positionIndices] + 1, - 5 i}
+                    }]
+                ],
+            l_ :> Text[Style[l, FilterRules[{opts}, Options[Style]]], {-1 , - 5 i}]
+        }
+        ]
+    ],
+        labels
+    ];
+    lines = Table[
+        {
             jumpLine[6 Max[positionIndices], - 5 i, Select[jumpWires, #[[1]] == i &][[All, 2]] - .375]
             (* Line[{{0, - 5 i}, {6 Max[positionIndices], - 5 i}}] *)
-            }
-        ],
+        },
         {i, Range[quditCount]}
-    ]
+    ];
+    Graphics @ Join[lines, labels]
 ]
 
-drawMeasurementWire[positionIndices_List, opts : OptionsPattern[Style]] := Graphics[{
-    Text[Style["c", opts], {0, - 2}],
+
+Options[drawMeasurementWire] = Join[Options[Style], {"MeasurementWireLabel" -> "c", "MeasurementWireLabelPosition" -> Automatic}]
+
+drawMeasurementWire[positionIndices_List, opts : OptionsPattern[]] := Graphics[{
+    Text[
+        Style[OptionValue["MeasurementWireLabel"], FilterRules[{opts}, Options[Style]]],
+        Replace[OptionValue["MeasurementWireLabelPosition"], {
+            Above -> {0, 2},
+            Below -> {0, -2},
+            Left | Automatic -> {- 1, 0},
+            Right -> {6 Max[positionIndices] + 1, 0}
+        }]
+    ],
     Thickness[0.0025],
     Line[{{0, -.125}, {6 Max[positionIndices], -.125}}],
     Line[{{0, 0.125}, {6 Max[positionIndices], .125}}]
 }]
 
 
-Options[drawGateGraphics] = Options[Style]
+Options[drawGateGraphics] = Join[Options[Style], Options[drawWireGraphics], Options[drawMeasurementWire]]
 
 drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
     width, height, orders, targetOrders, dimensions, graphicsList, index, positionIndices, gatePositionIndices,
@@ -179,7 +217,7 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
     includeMeasurement = False,
     labels,
     label, colors, bottomColors, topColors,
-    styleOpts = {opts, FontSize -> 24, FontFamily -> "Times"},
+    styleOpts = Join[FilterRules[{opts}, Options[Style]], {FontSize -> 24, FontFamily -> "Times"}],
     jumpWires = {}
 },
     width = 4;
@@ -287,9 +325,9 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
         Do[positionIndices[[j]]=positionIndices[[orders[[i, First[First[Position[gatePositionIndices, Max[gatePositionIndices]]]]]]]], {j, Min[orders[[i]]],
         Max[orders[[i]]]}]
     *)
-    PrependTo[graphicsList, drawWireGraphics[positionIndices, jumpWires, styleOpts]];
+    PrependTo[graphicsList, drawWireGraphics[positionIndices, jumpWires, styleOpts, FilterRules[{opts}, Options[drawWireGraphics]]]];
     If[ TrueQ[includeMeasurement],
-        PrependTo[graphicsList, drawMeasurementWire[positionIndices, styleOpts]]
+        PrependTo[graphicsList, drawMeasurementWire[positionIndices, styleOpts, FilterRules[{opts}, Options[drawMeasurementWire]]]]
     ];
     {labels, positionIndices, graphicsList}
 ]

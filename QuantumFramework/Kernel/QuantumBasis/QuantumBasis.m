@@ -66,6 +66,7 @@ QuantumBasisQ[qb : QuantumBasis[_Association]] := System`Private`ValidQ[qb]
 
 QuantumBasisQ[___] := False
 
+SetAttributes[QuantumBasis, NHoldAll]
 
 (* mutation *)
 
