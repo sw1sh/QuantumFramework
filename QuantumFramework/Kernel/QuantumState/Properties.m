@@ -183,7 +183,7 @@ QuantumStateProp[qs_, "Purity"] := Enclose[
 QuantumStateProp[qs_, "Type"] := Which[
     TrueQ[qs["Purity"] == 1],
     "Pure",
-    PositiveSemidefiniteMatrixQ[qs["DensityMatrix"]],
+    PositiveSemidefiniteMatrixQ[N @ qs["DensityMatrix"]],
     "Mixed",
     True,
     "Unknown"

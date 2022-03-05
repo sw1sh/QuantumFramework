@@ -15,6 +15,7 @@ PackageScope["tensorToVector"]
 PackageScope["identityMatrix"]
 PackageScope["kroneckerProduct"]
 PackageScope["projector"]
+PackageScope["MatrixPartialTrace"]
 PackageScope["eigenvectors"]
 PackageScope["eigensystem"]
 PackageScope["pauliMatrix"]
@@ -74,6 +75,14 @@ kroneckerProduct[ts___] := Fold[If[ArrayQ[#1] && ArrayQ[#2], KroneckerProduct[##
 
 
 projector[v_] := KroneckerProduct[v, Conjugate[v]]
+
+
+MatrixPartialTrace[matrix_, trace_, dimensions_] := ArrayReshape[
+    TensorContract[
+        ArrayReshape[matrix, Join[dimensions, dimensions]], Thread[{trace, trace + Length[dimensions]}]
+    ],
+    Table[Times @@ Delete[dimensions, List /@ trace], 2]
+]
 
 
 Options[eigenvectors] = {"Sort" -> False, "Normalize" -> False, Chop -> False}

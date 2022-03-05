@@ -302,7 +302,7 @@ With[{order = PadRight[
         ]
     ];
     ConfirmAssert[top["InputDimension"] == bottom["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
-    QuantumOperator[top["State"] @ bottom["State"], top["OutputOrder"], bottom["InputOrder"]]
+    QuantumOperator[top["State"] @ bottom["State"], {top["OutputOrder"], bottom["InputOrder"]}]
 ]
 
 

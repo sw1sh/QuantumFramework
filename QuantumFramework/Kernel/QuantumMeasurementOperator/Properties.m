@@ -5,7 +5,7 @@ PackageScope["QuantumMeasurementOperatorProp"]
 
 
 $QuantumMeasurementOperatorProperties = {
-    "QuantumOperator", "Target",
+    "QuantumOperator", "Target", "Targets",
     "TargetIndex",
     "Operator", "Basis", "MatrixRepresentation", "POVMElements",
     "OrderedMatrixRepresentation", "OrderedPOVMElements",
