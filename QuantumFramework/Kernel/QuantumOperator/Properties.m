@@ -232,14 +232,14 @@ QuantumOperatorProp[qo_, {"OrderedOutput", order_ ? orderQ}] := Enclose @ With[{
 QuantumOperatorProp[qo_, {"OrderedInput", qb_ ? QuditBasisQ}] := qo[{"OrderedInput", qo["FullInputOrder"], qb}]
 
 QuantumOperatorProp[qo_, {"OrderedInput", order_ ? orderQ, qb_ ? QuditBasisQ}] := Enclose @ With[{
-    arity = Length[order]
+    arity = Length[order], pos = Catenate @ Position[order, Alternatives @@ qo["FullInputOrder"]]
 },
     ConfirmAssert[ContainsAll[order, qo["FullInputOrder"]], "Given order should contain all operator order qudits"];
     ConfirmAssert[arity <= qb["Qudits"], "Order size should be less than or equal to number of qudits"];
     If[ arity > qo["InputQudits"],
         QuantumTensorProduct[
-            qo,
-            With[{iqb = qb[{"Delete", Catenate @ Position[order, Alternatives @@ qo["FullInputOrder"]]}]},
+            QuantumOperator[qo, "Input" -> qb[{"Extract", pos}]],
+            With[{iqb = qb[{"Delete", pos}]},
                 QuantumOperator[
                     QuantumOperator[{"Identity", iqb}],
                     Automatic,
@@ -247,21 +247,21 @@ QuantumOperatorProp[qo_, {"OrderedInput", order_ ? orderQ, qb_ ? QuditBasisQ}] :
                 ]
             ]
         ],
-        qo
+        QuantumOperator[qo, "Input" -> qb[{"Extract", pos}]]
     ][{"OrderInputExtra", qo["FullInputOrder"], order}]
 ]
 
 QuantumOperatorProp[qo_, {"OrderedOutput", qb_ ? QuditBasisQ}] := qo[{"OrderedOutput", qo["FullOutputOrder"], qb}]
 
 QuantumOperatorProp[qo_, {"OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ}] := Enclose @ With[{
-    arity = Length[order]
+    arity = Length[order], pos = Catenate @ Position[order, Alternatives @@ qo["FullOutputOrder"]]
 },
     ConfirmAssert[ContainsAll[order, qo["FullOutputOrder"]], "Given order should contain all operator order qudits"];
     ConfirmAssert[arity <= qb["Qudits"], "Order size should be less than or equal to number of qudits"];
     If[ arity > qo["OutputQudits"],
         QuantumTensorProduct[
-            qo,
-            With[{iqb = qb[{"Delete", Catenate @ Position[order, Alternatives @@ qo["FullOutputOrder"]]}]},
+            QuantumOperator[qo, "Output" -> qb[{"Extract", pos}]],
+            With[{iqb = qb[{"Delete", pos}]},
                 QuantumOperator[
                     QuantumOperator[{"Identity", iqb}],
                     Max[qo["LastOutputQudit"], qo["LastInputQudit"]] + Range @ iqb["Qudits"],
@@ -269,7 +269,7 @@ QuantumOperatorProp[qo_, {"OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ}] 
                 ]
             ]
         ],
-        qo
+        QuantumOperator[qo, "Output" -> qb[{"Extract", pos}]]
     ][{"OrderOutputExtra", qo["FullOutputOrder"], order}]
 ]
 

@@ -44,7 +44,10 @@ QuantumOperator["Identity", opts___] := QuantumOperator[{"Identity", 2}, opts]
 
 QuantumOperator[{"Identity", dims_List}, opts___] := QuantumOperator[{"Permutation", dims, Cycles[{{}}]}, opts]
 
-QuantumOperator[{"Identity", qb_ ? QuditBasisQ}, opts___] := QuantumOperator[{"Identity", qb["Dimensions"]}, opts]
+QuantumOperator[{"Identity", qb_ ? QuditBasisQ}, opts___] := QuantumOperator[
+    QuantumOperator[{"Identity", qb["Dimensions"]}, opts],
+    "Output" -> qb, "Input" -> qb["Dual"]
+]
 
 QuantumOperator[{"Identity", dimension_Integer}, opts___] := QuantumOperator[IdentityMatrix[dimension], dimension, opts, "Label" -> "I"]
 
@@ -355,7 +358,7 @@ QuantumOperator[{"ZZ", angle_}, opts___] := QuantumOperator[
         {4, 4}
     ],
     opts,
-    "Label" -> Subscript["R","ZZ"][angle]
+    "Label" -> Subscript["R", "ZZ"][angle]
 ]
 
 
