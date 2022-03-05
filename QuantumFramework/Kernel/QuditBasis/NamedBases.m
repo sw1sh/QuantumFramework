@@ -6,6 +6,7 @@ PackageScope["$QuditBasisNames"]
 $QuditBasisNames = {
     "Computational",
     "PauliX", "PauliY", "PauliZ",
+    "X", "Y", "Z",
     "Bell",
     "Fourier",
     "Identity",
@@ -34,6 +35,10 @@ QuditBasis["Bell", args___] := QuditBasis[
     args
 ]
 
+
+QuditBasis[name : "X" | "Y" | "Z", args___] := QuditBasis["Pauli" <> name, args]
+
+QuditBasis[{name : "X" | "Y" | "Z", dim_Integer : 2}, args___] := QuditBasis[{"Pauli" <> name, dim}, args]
 
 QuditBasis[name : "PauliX" | "PauliY" | "PauliZ", args___] := QuditBasis[{name, 2}, args]
 
