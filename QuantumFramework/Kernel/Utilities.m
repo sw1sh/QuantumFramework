@@ -8,6 +8,7 @@ PackageScope["propName"]
 PackageScope["stateQ"]
 PackageScope["orderQ"]
 PackageScope["autoOrderQ"]
+PackageScope["targetQ"]
 PackageScope["measurementReprQ"]
 
 PackageScope["normalizeMatrix"]
@@ -51,6 +52,8 @@ stateQ[state_] := !nameQ[state] && VectorQ[state] && Length[state] > 0 || Square
 orderQ[order_] := VectorQ[order, IntegerQ] && DuplicateFreeQ[order]
 
 autoOrderQ[order_] := MatchQ[order, _ ? orderQ | Automatic | {_ ? orderQ | Automatic, _ ? orderQ | Automatic}]
+
+targetQ[target_] := VectorQ[target, IntegerQ]
 
 measurementReprQ[state_] := TensorQ[state] && MemberQ[{2, 3}, TensorRank[state]]
 

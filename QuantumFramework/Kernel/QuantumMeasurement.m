@@ -5,7 +5,7 @@ PackageExport["QuantumMeasurement"]
 PackageScope["QuantumMeasurementQ"]
 
 
-QuantumMeasurementQ[QuantumMeasurement[qmo_ ? QuantumMeasurementOperatorQ]] := qmo["OutputQudits"] <= qmo["InputQudits"]
+QuantumMeasurementQ[QuantumMeasurement[qmo_ ? QuantumMeasurementOperatorQ]] := True
 
 QuantumMeasurementQ[___] := False
 
@@ -15,9 +15,9 @@ qm_QuantumMeasurement["ValidQ"] := QuantumMeasurementQ[qm]
 
 (* constructors *)
 
-QuantumMeasurement[qs_ ? QuantumStateQ, target_ ? orderQ] := QuantumMeasurement[QuantumMeasurementOperator[qs["Operator"], target]]
+QuantumMeasurement[qs_ ? QuantumStateQ, target_ ? targetQ] := QuantumMeasurement[QuantumMeasurementOperator[qs["Operator"], target]]
 
-QuantumMeasurement[qo_ ? QuantumFrameworkOperatorQ, target_ ? orderQ] := QuantumMeasurement[QuantumMeasurementOperator[qo, target]]
+QuantumMeasurement[qo_ ? QuantumFrameworkOperatorQ, target_ ? targetQ] := QuantumMeasurement[QuantumMeasurementOperator[qo, target]]
 
 QuantumMeasurement[proba_Association, states : {_ ? QuantumStateQ..}] /;
     Length[proba] == Length[states] && Equal @@ Map[#["Dimensions"] &, states] :=
@@ -145,6 +145,11 @@ QuantumMeasurementProp[qm_, "MixedOutcomes"] := If[
 QuantumMeasurementProp[qm_, "Distribution"] := CategoricalDistribution[
     qm["Outcomes"],
     Normal @ Chop @ N @ qm["ProbabilitiesList"]
+]
+
+QuantumMeasurementProp[qm_, "Probabilities"] := AssociationThread[
+    qm["Outcomes"],
+    Normal @ qm["ProbabilitiesList"]
 ]
 
 QuantumMeasurementProp[qm_, "DistributionInformation", args___] := Information[qm["Distribution"], args]
