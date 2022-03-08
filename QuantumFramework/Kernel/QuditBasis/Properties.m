@@ -155,11 +155,11 @@ QuditBasisProp[qb1_, {"Insert", n_Integer, qb2_ ? QuditBasisQ}] := QuantumTensor
 
 QuditBasisProp[_, {"Extract", {}}] := QuditBasis[]
 
-QuditBasisProp[qb_, {"Extract", order_ ? orderQ}] := QuantumTensorProduct @ Extract[qb["Decompose"], List /@ order]
+QuditBasisProp[qb_, {"Extract", pos : {_Integer ..}}] := QuantumTensorProduct @ Extract[qb["Decompose"], List /@ pos]
 
-QuditBasisProp[qb1_, {"Replace", order_ ? orderQ, qb2_ ? QuditBasisQ}] := QuantumTensorProduct @ Permute[
-    Join[Delete[qb1["Decompose"], List /@ order], qb2["Decompose"]],
-    PermutationCycles @ Join[Delete[Range[qb1["Qudits"]], List /@ order], order]
+QuditBasisProp[qb1_, {"Replace", pos : {_Integer ..}, qb2_ ? QuditBasisQ}] := QuantumTensorProduct @ Permute[
+    Join[Delete[qb1["Decompose"], List /@ pos], qb2["Decompose"]],
+    PermutationCycles @ Join[Delete[Range[qb1["Qudits"]], List /@ pos], pos]
 ]
 
 QuditBasisProp[qb_, "Identity"] := qb
