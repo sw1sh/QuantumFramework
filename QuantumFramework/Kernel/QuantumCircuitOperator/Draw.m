@@ -158,7 +158,7 @@ drawWireGraphics[positionIndices_List, jumpWires_List, opts : OptionsPattern[]] 
     labels
 },
     quditCount = Length[positionIndices];
-    labels = Replace[OptionValue["WireLabels"], {l : Placed[Automatic, _] :> Table[l, quditCount], Automatic -> Range[quditCount]}];
+    labels = Replace[OptionValue["WireLabels"], {l : Placed[Automatic, _] :> Table[l, quditCount], Automatic -> Range[quditCount], None -> {}}];
     labels = MapIndexed[{label, index} |-> With[{i = First @ index},
         Replace[label, {
             Placed[l_, p_] :>
@@ -188,18 +188,25 @@ drawWireGraphics[positionIndices_List, jumpWires_List, opts : OptionsPattern[]] 
 ]
 
 
-Options[drawMeasurementWire] = Join[Options[Style], {"MeasurementWireLabel" -> "c", "MeasurementWireLabelPosition" -> Automatic}]
+Options[drawMeasurementWire] = Join[Options[Style], {"MeasurementWireLabel" -> "c"}]
 
 drawMeasurementWire[positionIndices_List, opts : OptionsPattern[]] := Graphics[{
-    Text[
-        Style[OptionValue["MeasurementWireLabel"], FilterRules[{opts}, Options[Style]]],
-        Replace[OptionValue["MeasurementWireLabelPosition"], {
-            Above -> {0, 2},
-            Below -> {0, -2},
-            Left | Automatic -> {- 1, 0},
-            Right -> {6 Max[positionIndices] + 1, 0}
-        }]
-    ],
+    Replace[
+        OptionValue["MeasurementWireLabel"], {
+        Placed[label_, pos_] :> Text[
+            Style[Replace[label, None -> ""], FilterRules[{opts}, Options[Style]]],
+            Replace[pos, {
+                Above -> {0, 2},
+                Below -> {0, -2},
+                Left | Automatic -> {- 1, 0},
+                Right -> {6 Max[positionIndices] + 1, 0}
+            }]
+        ],
+        label_ :> Text[
+            Style[Replace[label, None -> ""], FilterRules[{opts}, Options[Style]]],
+            {- 1, 0}
+        ]
+    }],
     Thickness[0.0025],
     Line[{{0, -.125}, {6 Max[positionIndices], -.125}}],
     Line[{{0, 0.125}, {6 Max[positionIndices], .125}}]
