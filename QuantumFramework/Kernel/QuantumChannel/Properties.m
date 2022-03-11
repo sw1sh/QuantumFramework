@@ -1,7 +1,5 @@
 Package["Wolfram`QuantumFramework`"]
 
-PackageScope["QuantumChannelProp"]
-
 
 
 $QuantumChannelProperties = {

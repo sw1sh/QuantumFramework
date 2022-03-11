@@ -1,7 +1,5 @@
 Package["Wolfram`QuantumFramework`"]
 
-PackageScope["QuantumStateProp"]
-
 
 
 $QuantumStateProperties = {
@@ -23,7 +21,7 @@ $QuantumStateProperties = {
      "Formula"
 };
 
-QuantumState["Properties"] := QuantumState["Properties"] = DeleteDuplicates @ Join[$QuantumStateProperties, QuantumBasis["Properties"]]
+QuantumState["Properties"] := DeleteDuplicates @ Join[$QuantumStateProperties, QuantumBasis["Properties"]]
 
 
 qs_QuantumState["ValidQ"] := QuantumStateQ[qs]
