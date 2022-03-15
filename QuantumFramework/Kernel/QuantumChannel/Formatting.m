@@ -21,20 +21,17 @@ QuantumChannel /: MakeBoxes[qc_QuantumChannel /; QuantumChannelQ[Unevaluated @ q
                 BoxForm`SummaryItem[{"Arity: ", qc["Arity"]}]
             },
             {
-                BoxForm`SummaryItem[{"Dimension: ", Row[{qc["InputDimension"], "\[RightArrow]", qc["OutputDimension"]}]}],
-                BoxForm`SummaryItem[{"Qudits: ", Row[{qc["InputQudits"], "\[RightArrow]", qc["OutputQudits"]}]}]
+                BoxForm`SummaryItem[{"Dimension: ", Row[{qc["InputDimension"]}]}],
+                BoxForm`SummaryItem[{"Qudits: ", Row[{qc["InputQudits"]}]}]
             }
         },
         {
             {
-                BoxForm`SummaryItem[{"Hermitian: ", qc["HermitianQ"]}],
-                BoxForm`SummaryItem[{"Order: ", Row[{qc["InputOrder"], "\[RightArrow]", qc["OutputOrder"]}]}]
+                BoxForm`SummaryItem[{"Trace preserving: ", qc["TracePreservingQ"]}]
             },
             {
-                BoxForm`SummaryItem[{"Unitary: ", qc["UnitaryQ"]}],
-                BoxForm`SummaryItem[{"Dimensions: ",
-                    Row[{qc["InputDimensions"], "\[RightArrow]", qc["OutputDimensions"]}]}
-                ]
+                BoxForm`SummaryItem[{"Order: ", Row[{qc["InputOrder"]}]}],
+                BoxForm`SummaryItem[{"Dimensions: ", Row[{qc["InputDimensions"]}]}]
             },
             {
                 BoxForm`SummaryItem[{"ParameterArity: ", qc["ParameterArity"]}],

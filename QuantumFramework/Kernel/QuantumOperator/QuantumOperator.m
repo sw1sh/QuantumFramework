@@ -3,7 +3,7 @@ Package["Wolfram`QuantumFramework`"]
 PackageExport["QuantumOperator"]
 
 PackageScope["QuantumOperatorQ"]
-
+PackageScope["StackQuantumOperators"]
 
 
 QuantumOperator::invalidInputOrder = "input order should be a list of distinct input qudit positions"
@@ -358,4 +358,13 @@ QuantumOperator /: Equal[qo : _QuantumOperator ... ] :=
 
 (qo_QuantumOperator ? QuantumOperatorQ)[ps___] /; Length[{ps}] <= qo["ParameterArity"] :=
     QuantumOperator[qo["State"][ps], qo["Order"]]
+
+
+
+StackQuantumOperators[ops : {_ ? QuantumOperatorQ ..}, name_ : "E"] := With[{basis = First[ops]["Basis"]},
+    QuantumOperator[QuantumOperator[#, basis]["Matrix"] & /@ ops,
+        "Output" -> QuantumTensorProduct[QuditBasis[Subscript[name, #] & /@ Range @ Length @ ops], basis["Output"]],
+        "Input" -> basis["Input"]
+    ]
+]
 

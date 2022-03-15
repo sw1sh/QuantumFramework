@@ -4,7 +4,10 @@ Package["Wolfram`QuantumFramework`"]
 
 $QuantumChannelProperties = {
     "QuantumOperator",
-    "Operator"
+    "Operator",
+    "TraceOrder", "TraceQudits",
+    "Trace",
+    "TracePreservingQ"
 };
 
 
@@ -33,6 +36,17 @@ QuantumChannelProp[qc_, "Properties"] :=
 (* getters *)
 
 QuantumChannelProp[_[op_], "Operator" | "QuantumOperator"] := op
+
+
+QuantumChannelProp[qc_, "TraceOrder"] := Take[qc["FullOutputOrder"], qc["OutputQudits"] - qc["InputQudits"]]
+
+QuantumChannelProp[qc_, "TraceQudits"] := Length @ qc["TraceOrder"]
+
+QuantumChannelProp[qc_, "Trace"] := QuantumPartialTrace[qc["Operator"] @ qc["Operator"]["Dagger"], qc["TraceOrder"]]
+
+QuantumChannelProp[qc_, "TracePreservingQ"] := With[{m = Chop @ qc["Trace"]["MatrixRepresentation"]},
+    If[MatrixQ[m, NumericQ], m == IdentityMatrix[Length @ m], Undefined]
+]
 
 
 (* operator properties *)

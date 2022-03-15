@@ -263,7 +263,7 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
     ];
     label = Replace[gates[[i]]["Label"], "Controlled"[x_, ___] :> x];
 
-    If[ QuantumOperatorQ[gates[[i]]],
+    If[ QuantumOperatorQ[gates[[i]]] || QuantumChannelQ[gates[[i]]],
         gatePositionIndices = Table[positionIndices[[j]], {j, Min[orders[[i]]], Max[orders[[i]]]}];
         If[ MatchQ[gates[[i]]["Label"], "CX" | "CY" | "CZ" | "CNOT" | "CPHASE" | "CSWAP" | "Controlled"[__]],
             If[ MatchQ[gates[[i]]["Label"], "Controlled"[__]],

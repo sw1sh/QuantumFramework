@@ -4,7 +4,10 @@ PackageScope["QuantumFrameworkOperatorQ"]
 PackageScope["$QuantumFrameworkPropCache"]
 
 
-QuantumFrameworkOperatorQ[op_] := QuantumOperatorQ[op] || QuantumMeasurementOperatorQ[op] || QuantumCircuitOperatorQ[op]
+QuantumFrameworkOperatorQ[op_] := QuantumOperatorQ[op] ||
+    QuantumMeasurementOperatorQ[op] ||
+    QuantumChannelQ[op] ||
+    QuantumCircuitOperatorQ[op]
 
 $QuantumFrameworkPropCache = True
 
