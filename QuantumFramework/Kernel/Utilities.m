@@ -68,7 +68,7 @@ tensorToVector[t_] := {t}
 
 identityMatrix[0] := {{}}
 
-identityMatrix[n_] := IdentityMatrix[n]
+identityMatrix[n_] := IdentityMatrix[n, SparseArray]
 
 
 normalizeMatrix[matrix_] := Enclose[ConfirmQuiet[matrix / Tr[matrix], Power::infy]] (*SparseArray[{i_, i_} -> 1 / Tr[matrix], Dimensions[matrix], 1]*)

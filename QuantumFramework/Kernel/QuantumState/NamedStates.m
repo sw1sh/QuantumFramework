@@ -85,7 +85,7 @@ QuantumState[{"UniformSuperposition", subsystemCount_Integer}, dimension : (_Int
 QuantumState["UniformMixture", args___] := QuantumState[{"UniformMixture", 1}, args]
 
 QuantumState[{"UniformMixture", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
-    QuantumState[IdentityMatrix[dimension ^ subsystemCount], dimension, args]
+    QuantumState[identityMatrix[dimension ^ subsystemCount], dimension, args]
 
 
 QuantumState[{"RandomPure", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
@@ -133,7 +133,7 @@ QuantumState[{"Werner", relativeWeight_}, args___] := Module[{
 },
     phiMinus = {1, 0, 0, -1};
     phiMinusDensityMatrix = SparseArray[ConjugateTranspose[{phiMinus}]] . SparseArray[{phiMinus}];
-    densityMatrix = (relativeWeight phiMinusDensityMatrix) + ((1 - relativeWeight) / 4) IdentityMatrix[4];
+    densityMatrix = (relativeWeight phiMinusDensityMatrix) + ((1 - relativeWeight) / 4) identityMatrix[4];
     QuantumState[densityMatrix, args]
 ]
 
@@ -158,5 +158,5 @@ QuantumState[{"Graph", graph_ ? GraphQ}, args___] := Module[{
 
 
 QuantumState[{"BlochVector", r_ /; VectorQ[r] && Length[r] == 3}] :=
-    QuantumState[1 / 2 (IdentityMatrix[2] + r . Table[PauliMatrix[i], {i, 3}])]
+    QuantumState[1 / 2 (identityMatrix[2] + r . Table[PauliMatrix[i], {i, 3}])]
 

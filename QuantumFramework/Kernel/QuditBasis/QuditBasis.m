@@ -50,8 +50,8 @@ QuditBasis[assoc_Association] /; ! AllTrue[Keys[assoc], MatchQ[{_QuditName, _Int
 QuditBasis[names : {Except[_Integer | (name_String | {name_String, ___} /; MemberQ[$QuditBasisNames, name])] ..}] :=
     QuditBasis[names, IdentityMatrix[Length[names]]]
 
-QuditBasis[names_List, elements_List] :=
-    QuditBasis[AssociationThread[names, elements]]
+QuditBasis[names_List, elements_ ? ArrayQ] :=
+    QuditBasis[AssociationThread[names, Normal @ elements]]
 
 QuditBasis[elements_Association] /; Not @ AllTrue[elements, NumericQ[#] || SparseArrayQ[#] &] :=
     QuditBasis[Map[If[NumericQ[#], #, SparseArray[#]] &, elements]]

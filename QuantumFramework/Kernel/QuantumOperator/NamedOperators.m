@@ -377,7 +377,7 @@ QuantumOperator[{"Permutation", dim_Integer, perm_Cycles}, opts___] := QuantumOp
 QuantumOperator[{"Permutation", dims_List, perm_Cycles}] := QuantumOperator[{"Permutation", dims, perm}, Range[Length[dims]]]
 
 QuantumOperator[{"Permutation", dims_List, perm_Cycles}, order_ ? orderQ] := QuantumOperator[
-    TensorTranspose[ArrayReshape[kroneckerProduct @@ IdentityMatrix /@ dims, Join[dims, dims]], perm],
+    TensorTranspose[ArrayReshape[kroneckerProduct @@ identityMatrix /@ dims, Join[dims, dims]], perm],
     order,
     QuantumBasis[QuditBasis[Permute[dims, perm]], QuditBasis[dims], "Label" -> Superscript["\[Pi]", Row @ PermutationList[perm]]]
 ]
@@ -388,7 +388,7 @@ QuantumOperator[{"Uncurry", dims_List}] := QuantumOperator[{"Uncurry", dims}, {1
 
 QuantumOperator[{"Uncurry", dims_List}, opts___] :=
     QuantumOperator[
-        QuantumOperator[IdentityMatrix[Times @@ dims], QuantumBasis[QuditBasis[Times @@ dims], QuditBasis[dims]["Dual"]]],
+        QuantumOperator[identityMatrix[Times @@ dims], QuantumBasis[QuditBasis[Times @@ dims], QuditBasis[dims]["Dual"]]],
         opts
     ]
 
