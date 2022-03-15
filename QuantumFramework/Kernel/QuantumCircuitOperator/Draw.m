@@ -160,19 +160,22 @@ drawWireGraphics[positionIndices_List, jumpWires_List, opts : OptionsPattern[]] 
     quditCount = Length[positionIndices];
     labels = Replace[OptionValue["WireLabels"], {l : Placed[Automatic, _] :> Table[l, quditCount], Automatic -> Range[quditCount], None -> {}}];
     labels = MapIndexed[{label, index} |-> With[{i = First @ index},
-        Replace[label, {
-            Placed[l_, p_] :>
-                Text[
-                    Style[Replace[l, Automatic -> i], FilterRules[{opts}, Options[Style]]],
-                    Replace[p, {
-                        Above -> {0, - 5 i + 2},
-                        Below -> {0, - 5 i - 2},
-                        Automatic | Left -> {-1 , - 5 i},
-                        Right -> {6 Max[positionIndices] + 1, - 5 i}
-                    }]
-                ],
-            l_ :> Text[Style[l, FilterRules[{opts}, Options[Style]]], {-1 , - 5 i}]
-        }
+        Map[
+            Replace[{
+                Placed[l_, p_] :>
+                    Text[
+                        Style[Replace[l, Automatic -> i], FilterRules[{opts}, Options[Style]]],
+                        Replace[p, {
+                            Above -> {0, - 5 i + 2},
+                            Below -> {0, - 5 i - 2},
+                            Automatic | Left -> {-1 , - 5 i},
+                            Right -> {6 Max[positionIndices] + 1, - 5 i}
+                        }]
+                    ],
+                l_ :> Text[Style[l, FilterRules[{opts}, Options[Style]]], {-1 , - 5 i}]
+                }
+            ],
+            Replace[label, l : Except[_List] :> {l}]
         ]
     ],
         labels
