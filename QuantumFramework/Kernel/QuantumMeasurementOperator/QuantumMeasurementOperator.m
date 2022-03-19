@@ -27,7 +27,7 @@ QuantumMeasurementOperator[target : _ ? targetQ] :=
 QuantumMeasurementOperator[] := QuantumMeasurementOperator[{1}]
 
 QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target : (_ ? targetQ) : Automatic, args___] := Enclose @ Module[{
-    basis, op
+    basis, op, order
 },
     basis = If[ target === Automatic,
         qb,
@@ -45,9 +45,11 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
         ],
         QuantumOperatorQ
     ];
+    order = Replace[target, Automatic -> op["FullInputOrder"]];
+    order = Join[order, Complement[op["FullInputOrder"], order]][[;; Length @ order]];
     QuantumMeasurementOperator[
-        op,
-        Replace[target, Automatic -> op["InputOrder"]],
+        QuantumOperator[op, {Automatic, order}],
+        order,
         args
     ]
 ]
@@ -115,9 +117,10 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? targetQ] /; !Contai
         Cases[qo["FullInputOrder"], Alternatives @@ target] /. {} -> Automatic
     ]
 
-QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? targetQ] /; qo["InputOrder"] != qo["FullInputOrder"] :=
+QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? targetQ] /;
+    qo["InputOrder"] != qo["FullInputOrder"] || qo["OutputOrder"] != qo["FullOutputOrder"] :=
     QuantumMeasurementOperator[
-        QuantumOperator[qo, qo["FullInputOrder"]],
+        QuantumOperator[qo, {qo["FullOutputOrder"], qo["FullInputOrder"]}],
         target
     ]
 

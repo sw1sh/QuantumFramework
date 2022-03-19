@@ -311,6 +311,16 @@ QuantumStateProp[qs_, {"Split", n_Integer : 0}] := With[{basis = qs["Basis"][{"S
 ]
 
 
+QuantumStateProp[qs_, {"UnstackOutput", n_Integer : 1}] /; 1 <= n <= qs["OutputQudits"] :=
+    Module[{state = If[n == 1, qs, qs[{"PermuteOutput", FindPermutation[RotateLeft[Range[qs["OutputQudits"]], n - 1]]}]], basis},
+        basis = QuantumBasis[state["Basis"], "Output" -> Last @ state["Output"][{"Split", 1}]];
+        QuantumState[#, basis] & /@ ArrayReshape[state["State"], {First @ state["Dimensions"], Times @@ Rest @ state["Dimensions"]}]
+    ]
+
+QuantumStateProp[qs_, {"UnstackInput", n_Integer : 1}] /; 1 <= n <= qs["InputQudits"] :=
+    #["Transpose"] & /@ qs["Transpose"][{"UnstackOutput", n}]
+
+
 (* representations *)
 
 QuantumStateProp[qs_, "StateTensor"] := If[

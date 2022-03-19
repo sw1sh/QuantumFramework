@@ -15,6 +15,7 @@ $QuantumOperatorProperties = {
     "FirstOutputQudit", "LastOutputQudit", "FirstInputQudit", "LastInputQudit", "InputOrderQuditMapping",
     "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors", "Eigensystem", "Projectors",
     "ConjugateTranspose",
+    "UnstackOutput", "UnstackInput",
     "QuantumOperator", "Operator",
     "Computational",
     "Dagger", "Dual"
@@ -273,6 +274,13 @@ QuantumOperatorProp[qo_, {"OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ}] 
 ]
 
 
+QuantumOperatorProp[qo_, {"UnstackOutput", n_Integer : 1}] :=
+    QuantumOperator[#, {Drop[qo["OutputOrder"], {n}], qo["InputOrder"]}] & /@ qo["State"][{"UnstackOutput", n}]
+
+QuantumOperatorProp[qo_, {"UnstackInput", n_Integer : 1}] :=
+    QuantumOperator[#, {qo["OutputOrder"], Drop[qo["InputOrder"], {n}]}] & /@ qo["State"][{"UnstackInput", n}]
+
+
 QuantumOperatorProp[qo_, "HermitianQ"] := HermitianMatrixQ[qo["Matrix"]]
 
 QuantumOperatorProp[qo_, "UnitaryQ"] := UnitaryMatrixQ[qo["Matrix"]]
@@ -296,39 +304,25 @@ QuantumOperatorProp[qo_, "Dual"] := QuantumOperator[qo["State"]["Dual"], qo["Ord
 
 (* evolution *)
 
-QuantumOperatorProp[qo_, "EvolutionOperator", args___] /; qo["ParameterArity"] == 1 := Module[{
-    parameter = First @ qo["Parameters"],
-    initialParameter = First @ qo["InitialParameters"],
-    leftEquations, rightEquations, initialEquations, equations
+QuantumOperatorProp[qo_, "EvolutionOperator", args___] /; qo["ParameterArity"] == 1 && qo["InputDimension"] == qo["OutputDimension"] :=
+With[{
+    parameter = First @ qo["Parameters"]
 },
-        leftEquations = Flatten[
-            (1 / I) qo["MatrixRepresentation"] . Partition[
-                    Subscript["u", #][parameter] & /@ Range[qo["OutputDimension"] ^ 2],
-                    qo["OutputDimension"]
-                ]
-        ];
-        rightEquations = Subscript["u", #]'[parameter] & /@ Range[qo["OutputDimension"] ^ 2];
-        equations = Equal @@@ Transpose[{rightEquations, leftEquations}];
-        initialEquations = Equal @@@
-            Transpose @ {
-                Subscript["u", #][initialParameter] & /@ Range[qo["OutputDimension"] ^ 2],
-                Flatten[IdentityMatrix[qo["OutputDimension"]]]
-            };
-        QuantumOperator[
-            Values @ Partition[Flatten @
-                DSolve[
-                    Join[equations, initialEquations],
-                    Subscript["u", #][parameter] & /@ Range[qo["OutputDimension"] ^ 2],
-                    Evaluate @ parameter,
-                    args
-                ],
-                qo["OutputDimension"]
-            ],
-            qo["Order"],
-            qo["Basis"],
-            "ParameterSpec" -> First @ qo["ParameterSpec"]
-        ]
+    QuantumOperator[
+        DSolveValue[
+            {
+                \[FormalU]'[parameter] == 1 / I qo["Matrix"] . \[FormalU][parameter],
+                \[FormalU][0] == IdentityMatrix[qo["InputDimension"]]
+            },
+            \[FormalU][parameter] \[Element] Matrices[qo["Dimensions"]],
+            parameter,
+            args
+        ],
+        qo["Order"],
+        qo["Basis"],
+        "ParameterSpec" -> First @ qo["ParameterSpec"]
     ]
+]
 
 QuantumOperatorProp[qo_, "NEvolutionOperator", args___] /; qo["ParameterArity"] == 1 := Module[{
     parameter = First @ qo["Parameters"],

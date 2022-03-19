@@ -48,6 +48,14 @@ QuantumChannelProp[qc_, "TracePreservingQ"] := With[{m = Chop @ qc["Trace"]["Mat
     If[MatrixQ[m, NumericQ], m == IdentityMatrix[Length @ m], Undefined]
 ]
 
+QuantumChannelProp[qc_, "EvolutionChannel"] := QuantumChannel[
+    (I #)["EvolutionOperator"] & /@  qc[{"UnstackOutput", 1}]
+]
+
+QuantumChannelProp[qc_, "NEvolutionChannel"] := QuantumChannel[
+    (I #)["NEvolutionOperator"] & /@  qc[{"UnstackOutput", 1}]
+]
+
 
 (* operator properties *)
 
