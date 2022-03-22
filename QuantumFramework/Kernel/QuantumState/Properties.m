@@ -21,7 +21,7 @@ $QuantumStateProperties = {
      "Formula"
 };
 
-QuantumState["Properties"] := DeleteDuplicates @ Join[$QuantumStateProperties, QuantumBasis["Properties"]]
+QuantumState["Properties"] := Union @ Join[$QuantumStateProperties, QuantumBasis["Properties"]]
 
 
 qs_QuantumState["ValidQ"] := QuantumStateQ[qs]
@@ -399,7 +399,7 @@ QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 :=  W
         ],
 
         With[{
-            u = Re[matrix[[1, 2]]], v = Im[matrix[[2, 1]]], w = matrix[[1, 1]] - matrix[[2, 2]]
+            u = 2 Re[matrix[[1, 2]]], v = 2 Im[matrix[[2, 1]]], w = matrix[[1, 1]] - matrix[[2, 2]]
         },
             {u, v, w}
         ]

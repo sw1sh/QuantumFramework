@@ -29,7 +29,7 @@ $QuantumBasisProperties = {
     "ParameterArity", "Parameters", "InitialParameters", "FinalParameters"
 };
 
-QuantumBasis["Properties"] := DeleteDuplicates @ Join[$QuantumBasisProperties, $QuantumBasisDataKeys]
+QuantumBasis["Properties"] := Union @ Join[$QuantumBasisProperties, $QuantumBasisDataKeys]
 
 qb_QuantumBasis["ValidQ"] := quantumBasisQ[qb]
 

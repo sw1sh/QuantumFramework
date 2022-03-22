@@ -21,11 +21,11 @@ $QuantumOperatorProperties = {
     "Dagger", "Dual"
 };
 
-QuantumOperator["Properties"] := DeleteDuplicates @ Join[$QuantumOperatorProperties, Complement[QuantumState["Properties"], {
+QuantumOperator["Properties"] := Union @ Join[$QuantumOperatorProperties, Complement[QuantumState["Properties"], {
     "BlochCartesianCoordinates", "BlochSphericalCoordinates", "BlochPlot"
 }]];
 
-QuantumOperatorProp[qo_, "Properties"] := DeleteDuplicates @ Join[QuantumOperator["Properties"], Complement[qo["State"]["Properties"], {
+QuantumOperatorProp[qo_, "Properties"] := Union @ Join[QuantumOperator["Properties"], Complement[qo["State"]["Properties"], {
     "BlochCartesianCoordinates", "BlochSphericalCoordinates", "BlochPlot"
 }]]
 

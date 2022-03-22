@@ -13,7 +13,7 @@ $QuantumMeasurementOperatorProperties = {
 };
 
 
-QuantumMeasurementOperator["Properties"] := DeleteDuplicates @ Join[
+QuantumMeasurementOperator["Properties"] := Union @ Join[
     $QuantumMeasurementOperatorProperties,
     $QuantumOperatorProperties
 ]

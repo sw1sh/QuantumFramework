@@ -22,7 +22,7 @@ qho_QuantumHamiltonianOperator["ValidQ"] := QuantumHamiltonianOperatorQ[qho]
 
 
 QuantumHamiltonianOperatorProp[qho_, "Properties"] :=
-    DeleteDuplicates @ Join[QuantumHamiltonianOperator["Properties"], qho["QuantumOperator"]["Properties"]]
+    Union @ Join[QuantumHamiltonianOperator["Properties"], qho["QuantumOperator"]["Properties"]]
 
 
 QuantumHamiltonianOperator::undefprop = "QuantumHamiltonianOperator property `` is undefined for this operator";

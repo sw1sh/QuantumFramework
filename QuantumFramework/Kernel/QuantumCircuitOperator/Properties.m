@@ -7,9 +7,9 @@ $QuantumCircuitOperatorProperties = {
 };
 
 
-QuantumCircuitOperator["Properties"] := $QuantumCircuitOperatorProperties
+QuantumCircuitOperator["Properties"] := Sort @ $QuantumCircuitOperatorProperties
 
-QuantumCircuitOperatorProp[qco_, "Properties"] := Enclose @ DeleteDuplicates @ Join[
+QuantumCircuitOperatorProp[qco_, "Properties"] := Enclose @ Union @ Join[
     QuantumCircuitOperator["Properties"],
     ConfirmBy[Last[qco["Operators"]], QuantumFrameworkOperatorQ]["Properties"]
 ]

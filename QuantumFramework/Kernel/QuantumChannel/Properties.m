@@ -11,7 +11,7 @@ $QuantumChannelProperties = {
 };
 
 
-QuantumChannel["Properties"] := DeleteDuplicates @ Join[
+QuantumChannel["Properties"] := Union @ Join[
     $QuantumChannelProperties,
     $QuantumOperatorProperties
 ]
@@ -30,7 +30,7 @@ QuantumChannel::undefprop = "QuantumChannel property `` is undefined for this ch
 ]
 
 QuantumChannelProp[qc_, "Properties"] :=
-    DeleteDuplicates @ Join[QuantumChannel["Properties"], qc["Operator"]["Properties"]]
+    Union @ Join[QuantumChannel["Properties"], qc["Operator"]["Properties"]]
 
 
 (* getters *)

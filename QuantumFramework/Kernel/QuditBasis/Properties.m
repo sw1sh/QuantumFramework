@@ -24,7 +24,7 @@ QuditBasis::undefprop = "QuditBasis property `` is undefined for this basis";
 ]
 
 
-QuditBasisProp[_, "Properties"] := QuditBasis["Properties"]
+QuditBasisProp[_, "Properties"] := Sort @ QuditBasis["Properties"]
 
 QuditBasisProp[QuditBasis[representations_], "Representations"] := representations
 
