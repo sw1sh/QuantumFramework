@@ -26,7 +26,7 @@ $QuantumOperatorNames = {
 pauliZGate = SparseArray[{j_, j_} :> Exp[(2 Pi I j / 2) + I Pi], {2, 2}];
 
 controlledZGate = ReplacePart[
-    IdentityMatrix[4],
+    identityMatrix[4],
     Thread[
         Flatten[Table[{i, j}, {i, 4 - Length[pauliZGate] + 1, 4}, {j, 4 - Length[pauliZGate] + 1, 4}], {2, 1}] ->
         Flatten[pauliZGate]
@@ -49,7 +49,7 @@ QuantumOperator[{"Identity", qb_ ? QuditBasisQ}, opts___] := QuantumOperator[
     "Output" -> qb, "Input" -> qb["Dual"]
 ]
 
-QuantumOperator[{"Identity", dimension_Integer}, opts___] := QuantumOperator[IdentityMatrix[dimension], dimension, opts, "Label" -> "I"]
+QuantumOperator[{"Identity", dimension_Integer}, opts___] := QuantumOperator[identityMatrix[dimension], dimension, opts, "Label" -> "I"]
 
 
 QuantumOperator[name : "XRotation" | "YRotation" | "ZRotation", opts___] :=  QuantumOperator[{name, Pi / 2}, opts]
@@ -82,7 +82,7 @@ QuantumOperator["GlobalPhase", opts___] := QuantumOperator[{"GlobalPhase", Pi}, 
 QuantumOperator[{"GlobalPhase", angle_, dimension_Integer : 2}, opts___] := QuantumOperator[{"Diagonal", Exp[I angle], dimension}, opts]
 
 QuantumOperator[{"Diagonal", x_, dimension_Integer : 2}, opts___] := QuantumOperator[
-    SparseArray[IdentityMatrix[dimension] x],
+    identityMatrix[dimension] x,
     opts,
     "Label" -> x
 ]
@@ -105,7 +105,7 @@ QuantumOperator[{"CPHASE", angle_, dimension_Integer : 2}, opts___] := QuantumOp
 
 
 controlledMatrix[matrix_ ? MatrixQ, dimension_Integer] := ReplacePart[
-    IdentityMatrix[dimension ^ 2],
+    identityMatrix[dimension ^ 2],
     Thread[
         Flatten[
             Table[{i, j},
@@ -211,7 +211,7 @@ QuantumOperator[{"Fourier", dimension_Integer}, opts___, order : (_ ? orderQ) : 
         dimension,
         Length[order]
     ],
-    order,
+    {order, order},
     opts,
     "Label" -> "QFT"
 ]
@@ -226,7 +226,7 @@ QuantumOperator[{"InverseFourier", dimension_Integer}, opts___, order : (_ ? ord
         dimension,
         Length[order]
     ],
-    order,
+    {order, order},
     opts,
     "Label" -> Superscript["QFT", "\[Dagger]"]
 ]
@@ -299,7 +299,7 @@ QuantumOperator[{"RootNOT", dimension_Integer}, order : _ ? orderQ : {1}, opts__
         SparseArray[({i_, j_} /; Mod[i - 1, dimension, 1] == j) -> 1, {dimension, dimension}],
         1 / 2
     ],
-    order,
+    {order, order},
     dimension,
     opts,
      "Label" -> Sqrt["NOT"]

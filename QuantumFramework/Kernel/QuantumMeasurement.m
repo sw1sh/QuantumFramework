@@ -205,7 +205,7 @@ QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement ? QuantumMeasurementQ, for
     icon = If[
         AllTrue[qm["Probabilities"], NumericQ],
         Show[
-            BarChart[qm["Probabilities"], Frame -> {{True, False}, {True, False}}, FrameTicks -> None],
+            BarChart[Chop /@ N @ qm["Probabilities"], Frame -> {{True, False}, {True, False}}, FrameTicks -> None],
             ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]}
         ],
         Graphics[{

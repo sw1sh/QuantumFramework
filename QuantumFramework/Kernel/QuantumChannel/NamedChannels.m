@@ -5,7 +5,7 @@ PackageScope["$QuantumChannelNames"]
 
 
 $QuantumChannelNames = {
-    "BitFlip", "PhaseFlip", "BitPhaseFlip", "Depolarize",
+    "BitFlip", "PhaseFlip", "BitPhaseFlip", "Depolarizing",
     "AmplitudeDamping", "GeneralizedAmplitudeDamping",
     "PhaseDamping"
 }
@@ -14,7 +14,7 @@ $QuantumChannelNames = {
 quantumChannel[args___] := With[{qo = QuantumOperator[args]}, QuantumChannel @
     QuantumOperator[
         qo,
-        {Automatic, qo["InputOrder"]},
+        {Prepend[qo["InputOrder"], 0], qo["InputOrder"]},
         "Output" -> QuditBasis @ KeyMap[Replace[{qn_QuditName, 1} :> {QuditName[Subscript["K", qn["Name"]]], 1}]] @
             qo["Output"]["Representations"]
     ]
@@ -47,14 +47,14 @@ QuantumChannel[{"PhaseFlip", p_}, args___] :=
 QuantumChannel[{"BitPhaseFlip", p_}, args___] :=
     quantumChannel[{Sqrt[p] IdentityMatrix[2], Sqrt[1 - p] {{0, -I}, {I ,0}}}, args, "Label" -> "BitPhaseFlip"]
 
-QuantumChannel[{"Depolarize", p_}, args___] :=
+QuantumChannel[{"Depolarizing", p_}, args___] :=
     quantumChannel[{
-        Sqrt[(1 - 3 p) / 4] IdentityMatrix[2],
+        Sqrt[1 - 3 p / 4] IdentityMatrix[2],
         Sqrt[p] (1 / 2) {{0, 1}, {1, 0}},
         Sqrt[p] (1 / 2) {{0, -I}, {I, 0}},
         Sqrt[p] (1 / 2) {{1, 0}, {0, -1}}
     },
         args,
-        "Label" -> "Depolarize"
+        "Label" -> "Depolarizing"
     ]
 

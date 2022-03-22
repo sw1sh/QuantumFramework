@@ -1,7 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
 PackageExport["QiskitCircuit"]
-PackageExport["QuantumCircuitOperatorToQiskit"]
+PackageScope["QuantumCircuitOperatorToQiskit"]
 
 
 

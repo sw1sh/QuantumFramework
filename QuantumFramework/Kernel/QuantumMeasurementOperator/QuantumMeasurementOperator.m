@@ -46,10 +46,10 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
         QuantumOperatorQ
     ];
     order = Replace[target, Automatic -> op["FullInputOrder"]];
-    order = Join[order, Complement[op["FullInputOrder"], order]][[;; Length @ order]];
+    order = Join[order, Complement[op["FullInputOrder"], order]];
     QuantumMeasurementOperator[
-        QuantumOperator[op, {Automatic, order}],
-        order,
+        QuantumOperator[op, {Automatic, Sort @ order}],
+        order[[;; Length @ target]],
         args
     ]
 ]
@@ -74,10 +74,10 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target : _ ? targetQ, args__]
     ]
 
 QuantumMeasurementOperator[tensor_ ? TensorQ /; 2 <= TensorRank[tensor] <= 3, target : (_ ? targetQ) : {1}, args___] :=
-    QuantumMeasurementOperator[QuantumOperator[tensor], target, "Label" -> "Eigen", args]
+    QuantumMeasurementOperator[QuantumOperator[tensor, args, "Label" -> "Eigen"], target]
 
 QuantumMeasurementOperator[tensor_ ? TensorQ /; 2 <= TensorRank[tensor] <= 3, qb_ ? QuantumBasisQ, target : (_ ? targetQ) : {1}, args___] :=
-    QuantumMeasurementOperator[QuantumOperator[tensor, qb], target, "Label" -> "Eigen", args]
+    QuantumMeasurementOperator[QuantumOperator[tensor, qb, args, "Label" -> "Eigen"], target]
 
 QuantumMeasurementOperator[
     qb_ ? QuantumBasisQ,

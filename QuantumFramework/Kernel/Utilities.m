@@ -135,7 +135,7 @@ eigensystem[matrix_, OptionsPattern[]] := Module[{values, vectors},
 
 pauliMatrix[n_] := pauliMatrix[n, 2]
 
-pauliMatrix[0, dimension_] := IdentityMatrix[dimension]
+pauliMatrix[0, dimension_] := identityMatrix[dimension]
 
 pauliMatrix[1, dimension_] := With[{
     s = (dimension - 1) / 2

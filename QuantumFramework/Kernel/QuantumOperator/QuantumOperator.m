@@ -60,7 +60,7 @@ QuantumOperator[qs_ ? QuantumStateQ, {order_ ? orderQ, Automatic}, opts___] :=
     ]
 
 
-QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, order : (_ ? orderQ) : {1}, args___, opts : OptionsPattern[]] := Module[{
+QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, order : (_ ? autoOrderQ) : {1}, args___, opts : OptionsPattern[]] := Module[{
     dimensions = TensorDimensions[tensor],
     rank,
     basis,
@@ -258,12 +258,7 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] /; qo["Picture"] === qo["Picture"] && (
     qs["Picture"] =!= "Heisenberg" || Message[QuantumOperator::incompatiblePictures, qo["Picture"], qs["Picture"]]) :=
-With[{order = PadRight[
-        Take[Range @@ MinMax @ qo["FullInputOrder"], UpTo @ qs["OutputQudits"]],
-        qs["OutputQudits"],
-        Complement[Range[Min[qo["FullInputOrder"]], Max[qo["FullInputOrder"]] + qs["OutputQudits"]], qo["FullInputOrder"]]
-    ]
-},
+With[{order = Range[qs["OutputQudits"]] + Max[Max[qo["FullInputOrder"]] - qs["OutputQudits"], 0]},
     If[ qs["PureStateQ"],
         qo[QuantumOperator[qs, order]]["Sort"]["State"],
         qo[QuantumOperator[qs["Pure"][{"Split", qs["Qudits"]}], order] @ qo["Dagger"]]["Sort"]["Mixed"]
@@ -361,10 +356,17 @@ QuantumOperator /: Equal[qo : _QuantumOperator ... ] :=
 
 
 
-StackQuantumOperators[ops : {_ ? QuantumOperatorQ ..}, name_ : "E"] := With[{basis = First[ops]["Basis"]},
-    QuantumOperator[QuantumOperator[#, basis]["Matrix"] & /@ ops,
-        "Output" -> QuantumTensorProduct[QuditBasis[Subscript[name, #] & /@ Range @ Length @ ops], basis["Output"]],
-        "Input" -> basis["Input"]
+StackQuantumOperators[ops : {_ ? QuantumOperatorQ ..}, name_ : "E"] := With[{
+    basis = First[ops]["Basis"],
+    order = MapAt[Prepend[#, Min[#] - 1] &, First[ops]["Order"], {1}]
+},
+    QuantumOperator[
+        QuantumOperator[
+            QuantumOperator[#, basis]["Matrix"] & /@ ops,
+            "Output" -> QuantumTensorProduct[QuditBasis[Subscript[name, #] & /@ Range @ Length @ ops], basis["Output"]],
+            "Input" -> basis["Input"]
+        ],
+        order
     ]
 ]
 

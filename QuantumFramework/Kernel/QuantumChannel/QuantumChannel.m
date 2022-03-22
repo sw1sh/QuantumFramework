@@ -14,8 +14,9 @@ QuantumChannelQ[___] := False
 
 QuantumChannel::incOp = "QuantumOperators should have identical orders"
 
-QuantumChannel[args_List] := With[{ops = QuantumOperator /@ args},
-    QuantumChannel[StackQuantumOperators[ops]] /; Equal @@ (#["Order"] & /@ ops) || Message[QuantumChannel::incOp]
+QuantumChannel[opArgs_List, args___] := With[{ops = QuantumOperator[#, args] & /@ opArgs},
+    QuantumChannel[QuantumOperator[StackQuantumOperators[ops], {Prepend[ops[[1]]["InputOrder"], 0], ops[[1]]["InputOrder"]}]]
+        /; Equal @@ (#["Order"] & /@ ops) || Message[QuantumChannel::incOp]
 ]
 
 
