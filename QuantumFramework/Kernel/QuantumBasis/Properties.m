@@ -24,6 +24,7 @@ $QuantumBasisProperties = {
     "TensorRepresentation", "Tensor", "MatrixRepresentation", "Matrix",
     "Qudits", "InputQudits", "OutputQudits", "InputBasis", "OutputBasis",
     "Dual", "Transpose", "ConjugateTranspose",
+    "Label", "LabelHead",
     "Picture",
     "Diagram",
     "ParameterArity", "Parameters", "InitialParameters", "FinalParameters"
@@ -55,6 +56,7 @@ QuantumBasisProp[QuantumBasis[data_Association], "Meta"] := Normal @ data[[Key /
 
 (* computed *)
 
+QuantumBasisProp[qb_, "LabelHead"] := NestWhile[Head, qb["Label"], MatchQ[Except[_String | _Symbol]]]
 
 QuantumBasisProp[qb_, "InputElementNames", pos_ : All] := qb["Input"]["Names", pos]
 

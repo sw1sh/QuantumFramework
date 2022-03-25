@@ -132,7 +132,7 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? targetQ] /;
     op = qmo["SuperOperator"]
 },
     QuantumMeasurement[
-        QuantumOperator[#, "Label" -> qmo["Label"][qs["Label"]]] & @ QuantumOperator[
+        QuantumOperator[#, "Label" -> "Eigen"] & @ QuantumOperator[
             ConfirmBy[
                 QuantumOperator[op,
                     (* shove away eigen qudits to the left *)
@@ -228,7 +228,7 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? targetQ] /;
         QuantumMeasurement @ QuantumMeasurementOperator[QuantumOperator[
                 result["State"][{"Split", qmo["Eigenqudits"] + qm["Eigenqudits"]}],
                 TakeDrop[result["FullOutputOrder"], qmo["Eigenqudits"] + qm["Eigenqudits"]],
-                "Label" -> qmo["Label"][qm["Label"]]
+                "Label" -> "Eigen"
             ],
             Sort @ Join[qm["Target"], qmo["Target"]]
         ]

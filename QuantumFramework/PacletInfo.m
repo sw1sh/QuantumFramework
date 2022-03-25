@@ -1,7 +1,7 @@
 PacletObject[
   <|
     "Name" -> "Wolfram/QuantumFramework",
-    "Description" -> "Perform analytic and numeric computation in Quantum information theory",
+    "Description" -> "Perform analytic and numeric quantum computations",
     "Creator" -> "Wolfram Research, Quantum Computation Framework team",
     "PublisherID" -> "Wolfram",
     "Version" -> "1.0.5",
