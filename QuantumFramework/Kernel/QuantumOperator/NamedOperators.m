@@ -49,7 +49,7 @@ QuantumOperator[{"Identity", qb_ ? QuditBasisQ}, opts___] := QuantumOperator[
     "Output" -> qb, "Input" -> qb["Dual"]
 ]
 
-QuantumOperator[{"Identity", dimension_Integer}, opts___] := QuantumOperator[identityMatrix[dimension], dimension, opts, "Label" -> "I"]
+QuantumOperator[{"Identity", dimension_Integer}, opts___] := QuantumOperator[identityMatrix[dimension], opts, dimension, "Label" -> "I"]
 
 
 QuantumOperator[name : "XRotation" | "YRotation" | "ZRotation", opts___] :=  QuantumOperator[{name, Pi / 2}, opts]
@@ -376,11 +376,12 @@ QuantumOperator[{"Permutation", dim_Integer, perm_Cycles}, opts___] := QuantumOp
 
 QuantumOperator[{"Permutation", dims_List, perm_Cycles}] := QuantumOperator[{"Permutation", dims, perm}, Range[Length[dims]]]
 
-QuantumOperator[{"Permutation", dims_List, perm_Cycles}, order_ ? orderQ] := QuantumOperator[
-    TensorTranspose[ArrayReshape[kroneckerProduct @@ identityMatrix /@ dims, Join[dims, dims]], perm],
-    order,
-    QuantumBasis[QuditBasis[Permute[dims, perm]], QuditBasis[dims], "Label" -> Superscript["\[Pi]", Row @ PermutationList[perm]]]
-]
+QuantumOperator[{"Permutation", dims_List, perm_Cycles}, args___] :=
+    QuantumOperator[
+        TensorTranspose[ArrayReshape[kroneckerProduct @@ identityMatrix /@ dims, Join[dims, dims]], perm],
+        args,
+        QuantumBasis[QuditBasis[Permute[dims, perm]], QuditBasis[dims], "Label" -> Superscript["\[Pi]", Row @ PermutationList[perm]]]
+    ]
 
 QuantumOperator["Uncurry", opts___] := QuantumOperator[{"Uncurry", {2, 2}}, opts]
 

@@ -25,7 +25,8 @@ PacletObject[
             "Wolfram`QuantumFramework`QuantumDistance",
             "Wolfram`QuantumFramework`QuantumEntanglementMonotone",
             "Wolfram`QuantumFramework`QuantumEntangledQ",
-            "Wolfram`QuantumFramework`QuantumWignerTransform"
+            "Wolfram`QuantumFramework`QuantumWignerTransform",
+            "Wolfram`QuantumFramework`QuantumChannel"
             (* "Wolfram`QuantumFramework`QuantumHamiltonianOperator" *)
         }
       },
