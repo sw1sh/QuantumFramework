@@ -139,17 +139,16 @@ QuantumState[{"Werner", relativeWeight_}, args___] := Module[{
 
 
 QuantumState[{"Graph", graph_ ? GraphQ}, args___] := Module[{
-    indexGraph, quditCount, uniformSuperposition, entanglements
+    indexGraph, quditCount, entanglements
 },
     indexGraph = IndexGraph[graph];
     quditCount = VertexCount[indexGraph];
-    uniformSuperposition = ConstantArray[1, 2 ^ quditCount];
     entanglements = OperatorApplied[Take][2] @* List @@@ EdgeList[indexGraph];
 
     QuantumState[
         Fold[
-            QuantumOperator["CZ", #2][{"OrderedMatrix", quditCount}] . #1 &,
-            uniformSuperposition,
+            QuantumOperator["CZ", #2] @ #1 &,
+            QuantumState[{"UniformSuperposition", quditCount}],
             entanglements
         ],
         args
