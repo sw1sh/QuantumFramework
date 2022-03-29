@@ -160,7 +160,7 @@ QuantumMeasurementProp[qm_, args :
     "TopProbabilities" | ("TopProbabilities" -> _Integer)] := qm["DistributionInformation", args]
 
 
-QuantumMeasurementProp[qm_, "Entropy"] := Quantity[qm["DistributionInformation", "Entropy"] / Log[2], "Bits"]
+QuantumMeasurementProp[qm_, "Entropy"] := TimeConstrained[Quantity[qm["DistributionInformation", "Entropy"] / Log[2], "Bits"], 1]
 
 QuantumMeasurementProp[qm_, "SimulatedMeasurement"] := RandomVariate[qm["Distribution"]]
 

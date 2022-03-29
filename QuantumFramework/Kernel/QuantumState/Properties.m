@@ -62,13 +62,19 @@ QuantumStateProp[qs_, "StateType"] := Which[
     "UnknownType"
 ]
 
+QuantumStateProp[qs_, "VectorQ"] := qs["StateType"] === "Vector"
+
+QuantumStateProp[qs_, "MatrixQ"] := qs["StateType"] === "Matrix"
+
+QuantumStateProp[qs_, "UnknownQ"] := qs["StateType"] === "UnknownType"
+
 
 (* amplitudes are only defined for pure states *)
 
 QuantumState::notpure = "is not a pure state";
 
-QuantumStateProp[qs_, "Amplitudes"] := Module[{result},
-    result = Enclose @ KeySort @ Association @ Thread[qs["ElementNames"] -> ConfirmBy[qs["StateVector"], VectorQ]];
+QuantumStateProp[qs_, "Amplitudes"] := Module[{pure = qs["Pure"], result},
+    result = Enclose @ KeySort @ Association @ Thread[pure["ElementNames"] -> ConfirmBy[pure["StateVector"], VectorQ]];
     result /; !FailureQ[result]
 ]
 
@@ -79,7 +85,7 @@ QuantumStateProp[qs_, "StateVector"] := Module[{result},
         qs["PureStateQ"],
         First @ Pick[qs["Eigenvectors", "Normalize" -> qs["NormalizedQ"]], ConfirmBy[Map[# =!= 0 &, Chop[qs["Eigenvalues"]]], Apply[Or]]],
         True,
-        Message[QuantumState::notpure]; $Failed
+        qs["Pure"]["State"]
     ];
     result /; !FailureQ[result]
 ]
@@ -101,14 +107,14 @@ QuantumStateProp[qs_, "Formula", OptionsPattern["Normalize" -> False]] /; qs["Pu
 
 (* normalization *)
 
-QuantumStateProp[qs_, "Norm"] := If[qs["StateType"] === "Vector", Norm["StateVector"], Tr @ qs["DensityMatrix"]]
+QuantumStateProp[qs_, "Norm"] := FullSimplify @ If[qs["StateType"] === "Vector", Norm[qs["StateVector"]], Tr @ qs["DensityMatrix"]]
 
 QuantumStateProp[qs_, "NormalizedQ"] := qs["Norm"] == 1
 
 QuantumStateProp[qs_, "NormalizedState"] := With[{state = qs["State"]},
     QuantumState[
         Switch[qs["StateType"], "Vector", Normalize[state], "Matrix", normalizeMatrix[state], _, state],
-        state["Basis"]
+        qs["Basis"]
     ]
 ]
 
@@ -231,10 +237,11 @@ QuantumStateProp[qs_, "SpectralBasis"] := QuantumState[
 QuantumStateProp[qs_, "Normalized" | "NormalizedState"] :=
     QuantumState[If[qs["StateType"] === "Vector", qs["NormalizedStateVector"], qs["NormalizedDensityMatrix"]], qs["Basis"]]
 
-QuantumStateProp[qs_, "Pure"] := If[qs["PureStateQ"],
-    qs,
-    QuantumState[Flatten @ qs["DensityMatrix"], QuantumTensorProduct[qs["Basis"], qs["Basis"]["Dagger"]]][{"Split", 2 qs["OutputQudits"]}]
-]
+QuantumStateProp[qs_, "Pure"] := If[qs["PureStateQ"], qs, qs["Double"]]
+
+QuantumStateProp[qs_, "Double"] :=
+    QuantumState[Flatten @ qs["DensityMatrix"], QuantumTensorProduct[qs["Basis"], qs["Basis"]["Dual"]]][{"Split", 2 qs["OutputQudits"]}]
+
 
 QuantumStateProp[qs_, "Mixed"] := Which[
     qs["MixedStateQ"],
@@ -332,14 +339,18 @@ QuantumStateProp[qs_, "StateTensor"] := If[
 QuantumStateProp[qs_, "StateMatrix"] := If[
     qs["PureStateQ"],
     ArrayReshape[qs["StateVector"], qs["MatrixNameDimensions"]],
-    ArrayReshape[Transpose[qs["StateTensor"], InversePermutation @ FindPermutation[
+    qs["TensorMatrix"]
+]
+
+QuantumStateProp[qs_, "TensorMatrix"] := ArrayReshape[
+    Transpose[qs["StateTensor"], InversePermutation @ FindPermutation[
         With[{input = Join[Range[qs["OutputQudits"]], qs["Qudits"] + Range[qs["OutputQudits"]]]},
             Join[input, Complement[Range[2 qs["Qudits"]], input]]
         ]
     ]],
         qs["MatrixNameDimensions"] ^ 2
-    ]
 ]
+
 
 QuantumStateProp[qs_, "Tensor"] := qs["Computational"]["StateTensor"]
 

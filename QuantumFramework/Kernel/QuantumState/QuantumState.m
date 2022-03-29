@@ -180,9 +180,20 @@ QuantumState /: f_Symbol[left : _ ? NumericQ ..., qs_QuantumState, right : _ ? N
 
 
 (qs1_QuantumState ? QuantumStateQ)[(qs2_QuantumState ? QuantumStateQ)] /; qs1["Input"] == qs2["Output"] := QuantumState[
-    Simplify @ Flatten[qs1["Pure"]["StateMatrix"] . qs2["Pure"]["StateMatrix"]],
+    Simplify @ Which[
+        qs1["VectorQ"] && qs2["VectorQ"],
+        Flatten[qs1["StateMatrix"] . qs2["StateMatrix"]],
+        qs1["MatrixQ"] && qs2["VectorQ"],
+        ArrayReshape[qs1["TensorMatrix"] . qs2["Double"]["StateMatrix"], Table[qs1["OutputDimension"] qs2["InputDimension"], 2]],
+        qs1["VectorQ"] && qs2["MatrixQ"],
+        ArrayReshape[qs1["Double"]["StateMatrix"] . qs2["TensorMatrix"], Table[qs1["OutputDimension"] qs2["InputDimension"], 2]],
+        qs1["MatrixQ"] && qs2["MatrixQ"],
+        ArrayReshape[qs1["TensorMatrix"] . qs2["TensorMatrix"], Table[qs1["OutputDimension"] qs2["InputDimension"], 2]],
+        True,
+        $Failed
+    ],
     QuantumBasis[
-        "Output" -> qs1["Pure"]["Output"], "Input" -> qs2["Pure"]["Input"],
+        "Output" -> qs1["Output"], "Input" -> qs2["Input"],
         "Label" -> qs1["Label"] @* qs2["Label"],
         "ParameterSpec" -> Join[qs2["ParameterSpec"], qs1["ParameterSpec"]]
     ]
@@ -191,7 +202,20 @@ QuantumState /: f_Symbol[left : _ ? NumericQ ..., qs_QuantumState, right : _ ? N
 (qs1_QuantumState ? QuantumStateQ)[(qs2_QuantumState ? QuantumStateQ)] /; qs1["InputDimension"] == qs2["OutputDimension"] :=
     QuantumState[
         QuantumState[
-            Simplify @ Flatten[qs1["PureMatrix"] . qs2["PureMatrix"]],
+            With[{qsc1 = qs1["Computational"], qsc2 = qs2["Computational"]},
+                Simplify @ Which[
+                    qsc1["VectorQ"] && qsc2["VectorQ"],
+                    Flatten[qsc1["StateMatrix"] . qsc2["StateMatrix"]],
+                    qsc1["MatrixQ"] && qsc2["VectorQ"],
+                    ArrayReshape[qsc1["TensorMatrix"] . qsc2["Double"]["StateMatrix"], Table[qsc1["OutputDimension"] qsc2["InputDimension"], 2]],
+                    qsc1["VectorQ"] && qsc2["MatrixQ"],
+                    ArrayReshape[qsc1["Double"]["StateMatrix"] . qsc2["TensorMatrix"], Table[qsc1["OutputDimension"] qsc2["InputDimension"], 2]],
+                    qsc1["MatrixQ"] && qsc2["MatrixQ"],
+                    ArrayReshape[qsc1["TensorMatrix"] . qsc2["TensorMatrix"], Table[qsc1["OutputDimension"] qsc2["InputDimension"], 2]],
+                    True,
+                    $Failed
+                ]
+            ],
             QuantumBasis["Output" -> QuditBasis[qs1["OutputDimensions"]], "Input" -> QuditBasis[qs2["InputDimensions"]]]
         ],
         QuantumBasis[
