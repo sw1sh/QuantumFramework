@@ -81,14 +81,23 @@ QuantumMeasurement[qm_QuantumMeasurement, args___] := QuantumMeasurement[Quantum
 
 QuantumMeasurementProp[qm_, "Properties"] := DeleteDuplicates @ Join[$QuantumMeasurementProperties, qm["QuantumOperator"]["Properties"]]
 
-QuantumMeasurementProp[QuantumMeasurement[qmo_], "QuantumOperator" | "Operator"] := qmo
+QuantumMeasurementProp[QuantumMeasurement[qmo_], "QuantumOperator"] := qmo
 
-QuantumMeasurementProp[qm_, "TargetBasis"] := qm["Input"][{"Extract", qm["TargetIndex"]}]["Dual"]
+QuantumMeasurementProp[qm_, "Operator"] :=
+    QuantumOperator[qm["QuantumOperator"]["Operator"], {Join[qm["OutputOrder"], qm["InputOrder"]], qm["InputOrder"]}]
 
-QuantumMeasurementProp[qm_, "CanonicalBasis"] := QuantumBasis[qm["TargetBasis"], qm["Input"]["Dual"]]
+QuantumMeasurementProp[qm_, "TargetBasis"] := qm["Output"][{"Extract", qm["Eigenqudits"] + qm["TargetIndex"]}]
 
-QuantumMeasurementProp[qm_, "Canonical"] := QuantumMeasurement @
-    QuantumMeasurementOperator[qm["QuantumOperator"]["Operator"], qm["CanonicalBasis"], qm["Target"]]
+QuantumMeasurementProp[qm_, "StateBasis"] :=
+    QuantumBasis["Output" -> Last @ qm["Output"][{"Split", qm["Eigenqudits"]}], "Input" -> qm["Input"]]
+
+QuantumMeasurementProp[qm_, "CanonicalBasis"] :=
+    QuantumBasis[QuantumTensorProduct[qm["TargetBasis"], qm["StateBasis"]["Output"]], qm["Input"]]
+
+QuantumMeasurementProp[qm_, "Canonical"] := QuantumMeasurement @ QuantumMeasurementOperator[
+    QuantumOperator[qm["State"], {Range[- qm["Targets"] + 1, 0], qm["InputOrder"]}, qm["CanonicalBasis"]],
+    qm["Target"]
+]
 
 
 QuantumMeasurementProp[qm_, "Computational"] := QuantumMeasurement[
@@ -96,31 +105,54 @@ QuantumMeasurementProp[qm_, "Computational"] := QuantumMeasurement[
     qm["Target"]
 ]
 
+
+QuantumMeasurementProp[qm_, "StateDual"] := qm["State"][{"Split", qm["Qudits"]}][{"PermuteOutput",
+    FindPermutation @ Catenate[{#1, #3, #2}] & @@
+        TakeList[Range[qm["Qudits"]], {qm["Eigenqudits"], qm["StateQudits"], qm["InputQudits"]}]
+}][{"Split", qm["Eigenqudits"] + qm["InputQudits"]}]
+
+
 QuantumMeasurementProp[qm_, "Arity" | "Targets"] := Length @ qm["Target"]
 
-QuantumMeasurementProp[qm_, "Eigenstate"] := QuantumPartialTrace[qm["State"][{"Split", qm["Qudits"]}], qm["OutputQudits"] + Range[qm["InputQudits"]]]
+QuantumMeasurementProp[qm_, "StateQudits"] := qm["OutputQudits"] - qm["Eigenqudits"]
 
-QuantumMeasurementProp[qm_, "Eigenqudits"] := qm["OutputQudits"]
+QuantumMeasurementProp[qm_, "StateDimensions"] := Drop[qm["Dimensions"], qm["Eigenqudits"]]
+
+QuantumMeasurementProp[qm_, "StateDimension"] := Times @@ qm["StateDimensions"]
+
+QuantumMeasurementProp[qm_, "EigenDimensions"] := Take[qm["OutputDimensions"], qm["Eigenqudits"]]
+
+QuantumMeasurementProp[qm_, "EigenDimension"] := Times @@ qm["EigenDimensions"]
+
+QuantumMeasurementProp[qm_, "Eigenstate"] :=
+    QuantumPartialTrace[qm["State"], qm["Eigenqudits"] + Range[qm["StateQudits"]]]
+
+QuantumMeasurementProp[qm_, "PureQ"] := TrueQ[qm["InputQudits"] == 0]
+
+QuantumMeasurementProp[qm_, "MixedQ"] := ! qm["PureQ"]
+
+QuantumMeasurementProp[qm_, "Eigenqudits"] := Length @ qm["OutputOrder"]
 
 QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumPartialTrace[
-    qm["State"][{"Split", qm["Qudits"]}],
-    Join[Range[qm["OutputQudits"]], qm["OutputQudits"] + Complement[Range[qm["InputQudits"]], qm["Target"]]]
+    qm["State"],
+    Join[Range[qm["Eigenqudits"]], qm["Eigenqudits"] + Complement[Range[qm["StateQudits"]], qm["Target"]]]
 ]
 
 QuantumMeasurementProp[qm_, "MixedStates"] := With[{rep = If[qm["PureStateQ"], 1, 2]},
     Which[
         MatchQ[qm["LabelHead"], "Eigen"],
-        QuantumState[ArrayReshape[#, Table[qm["InputDimension"], rep]], qm["Input"]["Dual"]] & /@ qm["StateMatrix"],
+        QuantumState[ArrayReshape[#, Table[qm["StateDimension"], rep]], qm["StateBasis"]] & /@
+            qm["StateDual"]["StateMatrix"],
         MatchQ[qm["LabelHead"], "Computational"],
-        QuantumState[QuantumState[ArrayReshape[#, Table[qm["InputDimension"], rep]], QuantumBasis[qm["InputDimensions"]]], QuantumBasis[qm["Input"]["Dual"]]] & /@
-            qm["Computational"]["StateMatrix"],
+        QuantumState[QuantumState[ArrayReshape[#, Table[qm["StateDimension"], rep]], QuantumBasis[qm["InputDimensions"]]], qm["StateBasis"]] & /@
+            qm["Computational"]["StateDual"]["StateMatrix"],
         True,
-        QuantumState[ArrayReshape[#, Table[qm["InputDimension"], rep]], QuantumBasis[qm["Input"]["Dual"]]] & /@
-            qm["Canonical"]["StateMatrix"]
+        QuantumState[ArrayReshape[#, Table[qm["StateDimension"], rep]], qm["StateBasis"]] & /@
+            qm["Canonical"]["StateDual"]["StateMatrix"]
     ]
 ]
 
-QuantumMeasurementProp[qm_, "States"] := If[qm["PureStateQ"], qm["MixedStates"], Plus @@@ Partition[qm["MixedStates"], qm["OutputDimension"]]]
+QuantumMeasurementProp[qm_, "States"] := If[qm["PureStateQ"], qm["MixedStates"], Plus @@@ Partition[qm["MixedStates"], qm["EigenDimension"] qm["InputDimension"]]]
 
 QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
     If[MatchQ[qm["LabelHead"], "Computational"], qm["Eigenstate"]["Computational"], qm["Eigenstate"]]["Probabilities"]
@@ -131,9 +163,9 @@ QuantumMeasurementProp[qm_, "Outcomes"] := Which[
     MatchQ[qm["LabelHead"], "Eigen"],
     qm["Eigenvalues"],
     MatchQ[qm["LabelHead"], "Computational"],
-    QuditBasis[qm["InputDimensions"][[ qm["TargetIndex"] ]]]["Names"],
+    QuditBasis[qm["StateDimensions"][[ qm["TargetIndex"] ]]]["Names"],
     True,
-    qm["Canonical"]["Output"]["Names"]
+    qm["Canonical"]["State"][{"Split", qm["Targets"]}]["Output"]["Names"]
 ]
 
 QuantumMeasurementProp[qm_, "MixedOutcomes"] := If[
@@ -168,11 +200,14 @@ QuantumMeasurementProp[qm_, {"SimulatedMeasurement", n_Integer}] := RandomVariat
 
 QuantumMeasurementProp[qm_, "Mean"] := qm["Eigenvalues"] . qm["ProbabilitiesList"]
 
-QuantumMeasurementProp[qm_, "StateAssociation" | "StatesAssociation"] := KeySort @ AssociationThread[qm["Outcomes"], qm["States"]]
+QuantumMeasurementProp[qm_, "StateAssociation" | "StatesAssociation"] := Part[
+    KeySort @ AssociationThread[qm["Outcomes"], qm["States"]],
+    Catenate @ SparseArray[qm["ProbabilitiesList"]]["ExplicitPositions"]
+]
 
 QuantumMeasurementProp[qm_, "StateAmplitudes"] := Map[Simplify, #["Amplitudes"]] & /@ qm["StateAssociation"]
 
-QuantumMeasurementProp[qm_, "StateProbabilities"] := Merge[Thread[qm["States"] -> qm["ProbabilityArray"]], Total]
+QuantumMeasurementProp[qm_, "StateProbabilities"] := Select[Chop /@ Merge[Thread[qm["States"] -> qm["ProbabilitiesList"]], Total], # != 0 &]
 
 QuantumMeasurementProp[qm_, "StateProbabilityTable"] := Dataset[qm["StateProbabilities"]]
 
@@ -202,17 +237,19 @@ QuantumMeasurement /: (qm1_QuantumMeasurement ? QuantumMeasurementQ) == (qm2_Qua
 (* formatting *)
 
 QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement ? QuantumMeasurementQ, format_] := Module[{icon},
-    icon = If[
-        AllTrue[qm["Probabilities"], NumericQ],
-        Show[
-            BarChart[Chop /@ N @ qm["Probabilities"], Frame -> {{True, False}, {True, False}}, FrameTicks -> None],
-            ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]}
-        ],
-        Graphics[{
-            {GrayLevel[0.55], Rectangle[{0., 0.}, {0.87, 1.}]},
-            {GrayLevel[0.8], Rectangle[{1.,0.}, {1.88, 2.}]},
-            {GrayLevel[0.65], Rectangle[{2., 0.}, {2.88, 3.}]}},
-            Background -> GrayLevel[1], ImageSize -> {Automatic, 29.029}, AspectRatio -> 1]
+    icon = With[{proba = TimeConstrained[qm["Probabilities"], 1]},
+        If[
+            ! FailureQ[proba] && AllTrue[proba, NumericQ],
+            Show[
+                BarChart[Chop /@ N @ proba, Frame -> {{True, False}, {True, False}}, FrameTicks -> None],
+                ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]}
+            ],
+            Graphics[{
+                {GrayLevel[0.55], Rectangle[{0., 0.}, {0.87, 1.}]},
+                {GrayLevel[0.8], Rectangle[{1.,0.}, {1.88, 2.}]},
+                {GrayLevel[0.65], Rectangle[{2., 0.}, {2.88, 3.}]}},
+                Background -> GrayLevel[1], ImageSize -> {Automatic, 29.029}, AspectRatio -> 1]
+        ]
     ];
     BoxForm`ArrangeSummaryBox["QuantumMeasurement", qm,
         icon,

@@ -204,7 +204,23 @@ QuantumBasisProp[qb_, {"Permute", perm_Cycles}] :=
         {"Split", toggleShift[PermutationList[perm, qb["Qudits"]], qb["OutputQudits"]]}
     ]
 
-QuantumBasisProp[qb_, {"Split", n_Integer}] := QuantumBasis[##, qb["Meta"]] & @@ QuantumTensorProduct[qb["Output"], qb["Input"]][{"Split", n}]
+QuantumBasisProp[qb_, "Reverse"] := QuantumBasis[qb,
+    "Output" -> qb["Output"]["Reverse"], "Input" -> qb["Input"]["Reverse"],
+    "Label" -> Superscript[qb["Label"], "R"]
+]
+
+QuantumBasisProp[qb_, {"Split", n_Integer}] :=
+    QuantumBasis["Output" -> #1, "Input" -> #2, qb["Meta"]] & @@ QuantumTensorProduct[qb["Output"], qb["Input"]][{"Split", n}]
+
+QuantumBasisProp[qb_, {"SplitDual", n_Integer}] :=
+    Which[
+        qb["OutputQudits"] < n,
+        QuantumBasis["Output" -> (QuantumTensorProduct[#1, #2["Dual"]] & @@ #1[{"Split", qb["OutputQudits"]}]), "Input" -> #2, qb["Meta"]],
+        qb["OutputQudits"] > n,
+        QuantumBasis["Output" -> #1, "Input" -> (QuantumTensorProduct[#1["Dual"], #2] & @@ #2[{"Split", qb["OutputQudits"] - n}]), qb["Meta"]],
+        True,
+        QuantumBasis["Output" -> #1, "Input" -> #2, qb["Meta"]]
+    ] & @@ QuantumTensorProduct[qb["Output"], qb["Input"]][{"Split", n}]
 
 
 QuantumBasisProp[qb_, "Dagger" | "ConjugateTranspose"] := QuantumBasis[qb,

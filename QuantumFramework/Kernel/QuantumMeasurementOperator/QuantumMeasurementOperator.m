@@ -111,18 +111,18 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
 ]
 
 (* auto reassign bad target *)
-QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? targetQ] /; !ContainsAll[qo["FullInputOrder"], target] :=
+(* QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? targetQ] /; !ContainsAll[qo["FullInputOrder"], target] :=
     QuantumMeasurementOperator[
         qo,
         Cases[qo["FullInputOrder"], Alternatives @@ target] /. {} -> Automatic
-    ]
+    ] *)
 
-QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? targetQ] /;
+(* QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? targetQ] /;
     qo["InputOrder"] != qo["FullInputOrder"] || qo["OutputOrder"] != qo["FullOutputOrder"] :=
     QuantumMeasurementOperator[
         QuantumOperator[qo, {qo["FullOutputOrder"], qo["FullInputOrder"]}],
         target
-    ]
+    ] *)
 
 
 (* composition *)
@@ -144,9 +144,9 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? targetQ] /;
                         Range @ qs["OutputQudits"],
                         qs["Output"]
                     }
-                ] @ qs,
+                ]["Sort"] @ qs,
                 QuantumStateQ
-            ][{"Split", qudits}],
+            ],
             {
                 Take[op["FullOutputOrder"], UpTo[qudits]],
                 # - Min[#] + 1 &[Max[op["FullInputOrder"]] - Reverse @ Range[qs["OutputQudits"]] + 1]
@@ -191,10 +191,8 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? targetQ] /;
         QuantumMeasurementOperatorQ[qm],
         qm["SuperOperator"],
         QuantumOperator[
-            QuantumState[qm["State"], QuantumBasis[qm["Basis"], "Input" -> qm["Input"]["Dual"]]][
-                {"Split", qm["Qudits"]}
-            ],
-            {Range[qm["Qudits"]] - qm["Eigenqudits"], Automatic}
+            qm["State"],
+            {Range[qm["OutputQudits"]] - qm["Eigenqudits"], Automatic}
         ]
     ];
 
@@ -226,7 +224,7 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? targetQ] /;
             Sort @ Join[qm["Target"], qmo["Target"]]
         ],
         QuantumMeasurement @ QuantumMeasurementOperator[QuantumOperator[
-                result["State"][{"Split", qmo["Eigenqudits"] + qm["Eigenqudits"]}],
+                result["State"],
                 TakeDrop[result["FullOutputOrder"], qmo["Eigenqudits"] + qm["Eigenqudits"]],
                 "Label" -> "Eigen"
             ],

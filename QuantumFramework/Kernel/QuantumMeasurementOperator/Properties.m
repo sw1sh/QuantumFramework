@@ -43,7 +43,7 @@ QuantumMeasurementOperatorProp[_[_, target_], "Target"] := target
 
 QuantumMeasurementOperatorProp[qmo_, "Targets"] := Length[qmo["Target"]]
 
-QuantumMeasurementOperatorProp[qmo_, "TargetIndex"] := Catenate @ Lookup[PositionIndex[qmo["FullInputOrder"]], qmo["Target"]]
+QuantumMeasurementOperatorProp[qmo_, "TargetIndex"] := Catenate @ Lookup[PositionIndex[qmo["InputOrder"]], qmo["Target"]]
 
 QuantumMeasurementOperatorProp[qmo_, "TargetDimensions"] :=
     Extract[qmo["InputDimensions"], Position[qmo["FullInputOrder"], Alternatives @@ qmo["Target"]] ]

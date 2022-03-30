@@ -259,10 +259,7 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 (qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] /; qo["Picture"] === qo["Picture"] && (
     qs["Picture"] =!= "Heisenberg" || Message[QuantumOperator::incompatiblePictures, qo["Picture"], qs["Picture"]]) :=
 With[{order = Range[qs["OutputQudits"]] + Max[Max[qo["FullInputOrder"]] - qs["OutputQudits"], 0]},
-    If[ qs["PureStateQ"],
-        qo[QuantumOperator[qs, order]]["Sort"]["State"],
-        qo[QuantumOperator[qs["Pure"][{"Split", qs["Qudits"]}], order] @ qo["Dagger"]]["Sort"]["Mixed"]
-    ]
+    qo[QuantumOperator[qs, order]]["Sort"]["State"]
 ]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumOperatorQ] /; qo["Picture"] === op["Picture"] &&
@@ -297,6 +294,8 @@ With[{order = Range[qs["OutputQudits"]] + Max[Max[qo["FullInputOrder"]] - qs["Ou
         ]
     ];
     ConfirmAssert[top["InputDimension"] == bottom["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
+    (* top = top["SortOutput"];
+    bottom = bottom["SortInput"]; *)
     QuantumOperator[top["State"] @ bottom["State"], {top["OutputOrder"], bottom["InputOrder"]}]
 ]
 

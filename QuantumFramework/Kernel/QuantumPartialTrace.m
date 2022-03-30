@@ -26,7 +26,7 @@ QuantumPartialTrace[qs_QuantumState, qudits : {_Integer ..}] :=
             Simplify @ MatrixPartialTrace[qs["Computational"]["DensityMatrix"], qudits, qs["Dimensions"]],
             QuantumBasis[qs["Dimensions"][[Complement[Range[qs["Qudits"]], qudits]]]]
         ],
-        QuantumBasis @@ QuantumPartialTrace[QuantumTensorProduct[qs["Output"], qs["Input"]], qudits][
+        QuantumBasis["Output" -> #1, "Input" -> #2] & @@ QuantumPartialTrace[QuantumTensorProduct[qs["Output"], qs["Input"]], qudits][
             {"Split", qs["OutputQudits"] - Count[qudits, q_ /; q <= qs["OutputQudits"]]}
         ]
     ]
@@ -36,7 +36,7 @@ QuantumPartialTrace[qs_QuantumState, qudits : {{_Integer, _Integer} ..}] := With
 },
     QuantumState[
         QuantumState[
-            Flatten @ TensorContract[qs["Tensor"], MapAt[qs["Output"]["NameRank"] + # &, qudits, {All, 2}]],
+            Flatten @ TensorContract[qs["Tensor"], MapAt[qs["OutputQudits"] + # &, qudits, {All, 2}]],
             QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
         ],
         basis

@@ -133,7 +133,11 @@ QuantumState[qs_ ? QuantumStateQ] := qs["Computational"]
 (* equality *)
 
 QuantumState /: Equal[qs : _QuantumState ...] :=
-    Equal @@ (#["Picture"] & /@ {qs}) && Equal @@ (#["NormalizedMatrixRepresentation"] & /@ {qs})
+    Equal @@ (#["Picture"] & /@ {qs}) &&
+    If[Equal @@ (#["PureStateQ"] & /@ {qs}),
+        Equal @@ (#["Computational"]["CanonicalStateVector"] & /@ {qs}),
+        Equal @@ (#["NormalizedMatrixRepresentation"] & /@ {qs})
+    ]
 
 (* addition *)
 
@@ -179,51 +183,48 @@ QuantumState /: f_Symbol[left : _ ? NumericQ ..., qs_QuantumState, right : _ ? N
 (* composition *)
 
 
-(qs1_QuantumState ? QuantumStateQ)[(qs2_QuantumState ? QuantumStateQ)] /; qs1["Input"] == qs2["Output"] := QuantumState[
-    Simplify @ Which[
-        qs1["VectorQ"] && qs2["VectorQ"],
+(qs1_QuantumState ? QuantumStateQ)[(qs2_QuantumState ? QuantumStateQ)] /; qs1["Input"] == qs2["Output"] := Module[{
+    state
+},
+    state = If[ qs1["VectorQ"] && qs2["VectorQ"],
         Flatten[qs1["StateMatrix"] . qs2["StateMatrix"]],
-        qs1["MatrixQ"] && qs2["VectorQ"],
-        ArrayReshape[qs1["TensorMatrix"] . qs2["Double"]["StateMatrix"], Table[qs1["OutputDimension"] qs2["InputDimension"], 2]],
-        qs1["VectorQ"] && qs2["MatrixQ"],
-        ArrayReshape[qs1["Double"]["StateMatrix"] . qs2["TensorMatrix"], Table[qs1["OutputDimension"] qs2["InputDimension"], 2]],
-        qs1["MatrixQ"] && qs2["MatrixQ"],
-        ArrayReshape[qs1["TensorMatrix"] . qs2["TensorMatrix"], Table[qs1["OutputDimension"] qs2["InputDimension"], 2]],
-        True,
-        $Failed
-    ],
-    QuantumBasis[
+        With[{q1 = If[qs1["VectorQ"], qs1["Double"], qs1], q2 = If[qs2["VectorQ"], qs2["Double"], qs2]},
+            ArrayReshape[
+                q1["StateMatrix"] . q2["StateMatrix"],
+                Table[qs1["OutputDimension"] qs2["InputDimension"], 2]
+            ]
+        ]
+    ];
+    QuantumState[
+        state,
         "Output" -> qs1["Output"], "Input" -> qs2["Input"],
         "Label" -> qs1["Label"] @* qs2["Label"],
         "ParameterSpec" -> Join[qs2["ParameterSpec"], qs1["ParameterSpec"]]
     ]
 ]
 
-(qs1_QuantumState ? QuantumStateQ)[(qs2_QuantumState ? QuantumStateQ)] /; qs1["InputDimension"] == qs2["OutputDimension"] :=
+(qs1_QuantumState ? QuantumStateQ)[(qs2_QuantumState ? QuantumStateQ)] /; qs1["InputDimension"] == qs2["OutputDimension"] := Module[{
+    q1 = qs1["Computational"], q2 = qs2["Computational"], state
+},
+    state = If[
+        q1["VectorQ"] && q2["VectorQ"],
+        Flatten[q1["StateMatrix"] . q2["StateMatrix"]],
+        q1 = If[q1["VectorQ"], q1["Double"], q1];
+        q2 = If[q2["VectorQ"], q2["Double"], q2];
+        ArrayReshape[
+            q1["StateMatrix"] . q2["StateMatrix"],
+            Table[q1["OutputDimension"] q2["InputDimension"], 2]
+        ]
+    ];
     QuantumState[
-        QuantumState[
-            With[{qsc1 = qs1["Computational"], qsc2 = qs2["Computational"]},
-                Simplify @ Which[
-                    qsc1["VectorQ"] && qsc2["VectorQ"],
-                    Flatten[qsc1["StateMatrix"] . qsc2["StateMatrix"]],
-                    qsc1["MatrixQ"] && qsc2["VectorQ"],
-                    ArrayReshape[qsc1["TensorMatrix"] . qsc2["Double"]["StateMatrix"], Table[qsc1["OutputDimension"] qsc2["InputDimension"], 2]],
-                    qsc1["VectorQ"] && qsc2["MatrixQ"],
-                    ArrayReshape[qsc1["Double"]["StateMatrix"] . qsc2["TensorMatrix"], Table[qsc1["OutputDimension"] qsc2["InputDimension"], 2]],
-                    qsc1["MatrixQ"] && qsc2["MatrixQ"],
-                    ArrayReshape[qsc1["TensorMatrix"] . qsc2["TensorMatrix"], Table[qsc1["OutputDimension"] qsc2["InputDimension"], 2]],
-                    True,
-                    $Failed
-                ]
-            ],
-            QuantumBasis["Output" -> QuditBasis[qs1["OutputDimensions"]], "Input" -> QuditBasis[qs2["InputDimensions"]]]
-        ],
+        QuantumState[state, QuantumBasis[q1["OutputDimensions"], q2["InputDimensions"]]],
         QuantumBasis[
-            "Output" -> qs1["Output"], "Input" -> qs2["Input"],
-            "Label" -> qs1["Label"] @* qs2["Label"],
-            "ParameterSpec" -> Join[qs2["ParameterSpec"], qs1["ParameterSpec"]]
+            "Output" -> q1["Output"], "Input" -> q2["Input"],
+            "Label" -> q1["Label"] @* q2["Label"],
+            "ParameterSpec" -> Join[q2["ParameterSpec"], q1["ParameterSpec"]]
         ]
     ]
+]
 
 
 (* parameterization *)
