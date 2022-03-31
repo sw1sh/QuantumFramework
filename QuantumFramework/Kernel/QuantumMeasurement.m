@@ -230,8 +230,8 @@ QuantumMeasurementProp[qm_, prop_ ? propQ, args___] /;
 
 (* equality *)
 
-QuantumMeasurement /: (qm1_QuantumMeasurement ? QuantumMeasurementQ) == (qm2_QuantumMeasurement ? QuantumMeasurementQ) :=
-    qm1["State"] == qm2["State"]
+QuantumMeasurement /: Equal[qms : _QuantumMeasurement ...] :=
+    Equal @@ (#["State"] & /@ {qms})
 
 
 (* formatting *)

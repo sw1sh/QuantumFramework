@@ -366,7 +366,7 @@ QuantumStateProp[qs_, "StateTensor"] := If[
 QuantumStateProp[qs_, "StateMatrix"] := If[
     qs["PureStateQ"],
     ArrayReshape[qs["StateVector"], qs["MatrixNameDimensions"]],
-    qs["TensorMatrix"]
+    ArrayReshape[qs["StateTensor"], qs["MatrixNameDimensions"] ^ 2]
 ]
 
 QuantumStateProp[qs_, "TensorMatrix"] := ArrayReshape[

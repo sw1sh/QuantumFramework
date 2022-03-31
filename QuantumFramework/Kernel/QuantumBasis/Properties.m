@@ -182,6 +182,8 @@ QuantumBasisProp[qb_, "MatrixRepresentation" | "Matrix"] := KroneckerProduct[qb[
 
 QuantumBasisProp[qb_, "Projectors"] := projector @* Flatten /@ qb["Elements"]
 
+QuantumBasisProp[qb_, "NormalizedProjectors"] := normalizeMatrix @* projector @* Flatten /@ qb["Elements"]
+
 QuantumBasisProp[qb_, "PureStates"] := QuantumState[SparseArray[# -> 1, qb["OutputDimension"]], qb] & /@ Range[qb["OutputDimension"]]
 
 QuantumBasisProp[qb_, "PureEffects"] := QuantumState[SparseArray[# -> 1, qb["InputDimension"]], qb] & /@ Range[qb["InputDimension"]]

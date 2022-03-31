@@ -37,7 +37,8 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
     op = ConfirmBy[
         QuantumOperator[
             QuantumOperator[
-                PadRight[eigenvalues, basis["Dimension"]] . basis["Projectors"],
+                (* DiagonalMatrix[PadRight[SparseArray @ eigenvalues, basis["Dimension"]]], *)
+                PadRight[SparseArray @ eigenvalues, basis["Dimension"]] . basis["NormalizedProjectors"],
                 # - Min[#, 1] + 1 &[Max[Replace[target, Automatic -> 0]] - Reverse @ Range[basis["OutputQudits"]] + 1],
                 QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
             ],

@@ -134,9 +134,9 @@ QuantumState[qs_ ? QuantumStateQ] := qs["Computational"]
 
 QuantumState /: Equal[qs : _QuantumState ...] :=
     Equal @@ (#["Picture"] & /@ {qs}) &&
-    If[Equal @@ (#["PureStateQ"] & /@ {qs}),
-        Equal @@ (#["Computational"]["CanonicalStateVector"] & /@ {qs}),
-        Equal @@ (#["NormalizedMatrixRepresentation"] & /@ {qs})
+    If[ And @@ (#["PureStateQ"] & /@ {qs}),
+        Equal @@ (Chop @ SetPrecision[#["Computational"]["CanonicalStateVector"], $MachinePrecision - 2] & /@ {qs}),
+        Equal @@ (Chop @ SetPrecision[#["NormalizedMatrixRepresentation"], $MachinePrecision - 2] & /@ {qs})
     ]
 
 (* addition *)
@@ -207,22 +207,23 @@ QuantumState /: f_Symbol[left : _ ? NumericQ ..., qs_QuantumState, right : _ ? N
     q1 = qs1["Computational"], q2 = qs2["Computational"], state
 },
     state = If[
-        q1["VectorQ"] && q2["VectorQ"],
+        TrueQ[qs1["VectorQ"] && qs2["VectorQ"]],
         Flatten[q1["StateMatrix"] . q2["StateMatrix"]],
-        q1 = If[q1["VectorQ"], q1["Double"], q1];
-        q2 = If[q2["VectorQ"], q2["Double"], q2];
+        If[qs1["VectorQ"], q1 = q1["Double"]];
+        If[qs2["VectorQ"], q2 = q2["Double"]];
         ArrayReshape[
             q1["StateMatrix"] . q2["StateMatrix"],
-            Table[q1["OutputDimension"] q2["InputDimension"], 2]
+            Table[qs1["OutputDimension"] qs2["InputDimension"], 2]
         ]
     ];
-    QuantumState[
-        QuantumState[state, QuantumBasis[q1["OutputDimensions"], q2["InputDimensions"]]],
-        QuantumBasis[
-            "Output" -> q1["Output"], "Input" -> q2["Input"],
-            "Label" -> q1["Label"] @* q2["Label"],
-            "ParameterSpec" -> Join[q2["ParameterSpec"], q1["ParameterSpec"]]
-        ]
+    With[{
+        s = QuantumState[state, "Output" -> QuditBasis @ qs1["OutputDimensions"], "Input" -> QuditBasis @ qs2["InputDimensions"]],
+        b = QuantumBasis[
+            "Output" -> qs1["Output"], "Input" -> qs2["Input"],
+            "Label" -> qs1["Label"] @* qs2["Label"],
+            "ParameterSpec" -> Join[qs2["ParameterSpec"], qs1["ParameterSpec"]]
+    ]},
+        QuantumState[s, b]
     ]
 ]
 
