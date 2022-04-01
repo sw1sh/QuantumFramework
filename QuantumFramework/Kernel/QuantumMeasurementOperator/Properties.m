@@ -8,6 +8,7 @@ $QuantumMeasurementOperatorProperties = {
     "Operator", "Basis", "MatrixRepresentation", "POVMElements",
     "OrderedMatrixRepresentation", "OrderedPOVMElements",
     "Arity", "Eigenqudits", "Dimensions", "Order", "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors",
+    "StateQudits", "TargetBasis", "StateBasis", "CanonicalBasis", "Canonical",
     "ProjectionQ", "POVMQ",
     "SuperOperator", "POVM"
 };
@@ -43,23 +44,40 @@ QuantumMeasurementOperatorProp[_[_, target_], "Target"] := target
 
 QuantumMeasurementOperatorProp[qmo_, "Targets"] := Length[qmo["Target"]]
 
-QuantumMeasurementOperatorProp[qmo_, "TargetIndex"] := Catenate @ Lookup[PositionIndex[qmo["InputOrder"]], qmo["Target"]]
+QuantumMeasurementOperatorProp[qmo_, "TargetIndex"] :=
+    Catenate @ Lookup[PositionIndex[Drop[qmo["FullOutputOrder"], qmo["Eigenqudits"]]], qmo["Target"]]
 
 QuantumMeasurementOperatorProp[qmo_, "TargetDimensions"] :=
-    Extract[qmo["InputDimensions"], Position[qmo["FullInputOrder"], Alternatives @@ qmo["Target"]] ]
+    Extract[qmo["OutputDimensions"], qmo["Eigenqudits"] + qmo["TargetIndex"]]
 
 QuantumMeasurementOperatorProp[qmo_, "TargetDimension"] := Times @@ qmo["TargetDimensions"]
 
 QuantumMeasurementOperatorProp[qmo_, "Eigenqudits"] := If[qmo["POVMQ"],
-    Enclose[
-        First @ Confirm @ FirstPosition[
-            FoldList[Times, qmo["OutputDimensions"]],
-            qmo["TargetDimension"]
-        ],
-        1 &
-    ],
+    Count[qmo["OutputOrder"], _ ? NonPositive],
     1
 ]
+
+QuantumMeasurementOperatorProp[qmo_, "StateQudits"] := qmo["OutputQudits"] - qmo["Eigenqudits"]
+
+
+QuantumMeasurementOperatorProp[qmo_, "TargetBasis"] := qmo["Output"][{"Extract", qmo["Eigenqudits"] + qmo["TargetIndex"]}]
+
+QuantumMeasurementOperatorProp[qmo_, "StateBasis"] :=
+    QuantumBasis[qmo["Basis"], "Output" -> Last @ qmo["Output"][{"Split", qmo["Eigenqudits"]}], "Input" -> qmo["Input"]]
+
+QuantumMeasurementOperatorProp[qmo_, "CanonicalBasis"] :=
+    QuantumBasis[qmo["Basis"], "Output" -> QuantumTensorProduct[qmo["TargetBasis"], qmo["StateBasis"]["Output"]], "Input" -> qmo["Input"]]
+
+
+QuantumMeasurementOperatorProp[qmo_, "Canonical"] := QuantumMeasurementOperator[
+    QuantumOperator[
+        qmo["State"][{"PermuteOutput", InversePermutation @ FindPermutation @ qmo["Target"]}],
+        {Range[- qmo["Targets"] + 1, qmo["StateQudits"]], qmo["InputOrder"]},
+        qmo["CanonicalBasis"]
+    ],
+    Sort @ qmo["Target"]
+]
+
 
 QuantumMeasurementOperatorProp[qmo_, "Type"] := Which[
     qmo["OutputDimension"] == qmo["InputDimension"],
@@ -93,9 +111,8 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
     eigenvalues, eigenvectors, projectors,
     eigenBasis, outputBasis, inputBasis, operator
 },
-    trace = Complement[qmo["InputOrder"], qmo["Target"]];
-    traceQudits = trace - Min[qmo["InputOrder"]] + 1;
-
+    trace = DeleteCases[qmo["FullInputOrder"], Alternatives @@ qmo["Target"]];
+    traceQudits = trace - Min[qmo["FullInputOrder"]] + 1;
     If[
         qmo["POVMQ"],
 
@@ -117,8 +134,8 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
             eigenvectors
         ];
 
-        outputBasis = QuantumPartialTrace[qmo["Output"], Catenate @ Position[qmo["OutputOrder"], Alternatives @@ qmo["Target"]]];
-        inputBasis = QuantumPartialTrace[qmo["Input"], Catenate @ Position[qmo["InputOrder"], Alternatives @@ qmo["Target"]]];
+        outputBasis = QuantumPartialTrace[qmo["Output"], Catenate @ Position[qmo["FullOutputOrder"], Alternatives @@ qmo["Target"]]];
+        inputBasis = QuantumPartialTrace[qmo["Input"], Catenate @ Position[qmo["FullInputOrder"], Alternatives @@ qmo["Target"]]];
 
         (* construct *)
         operator = QuantumOperator[
@@ -156,7 +173,7 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
             ][
                 {"PermuteInput", InversePermutation @ FindPermutation[Join[traceQudits, qmo["Target"] - Min[qmo["InputOrder"]] + 1]]}
             ],
-            {Automatic, qmo["InputOrder"]}
+            {Prepend[Sort @ qmo["OutputOrder"], 0], Sort @ qmo["InputOrder"]}
         ]
     ]
 ]

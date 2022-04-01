@@ -46,8 +46,8 @@ QuantumPartialTrace[qs_QuantumState, qudits : {{_Integer, _Integer} ..}] := With
 
 QuantumPartialTrace[qo_QuantumOperator, qudits : {{_Integer, _Integer} ..}] :=
     QuantumOperator[
-        QuantumPartialTrace[qo["State"], # - {Min[qo["OutputOrder"]], Min[qo["InputOrder"]]} + 1 & /@ qudits],
-        DeleteCases[qo["InputOrder"], Alternatives @@ qudits[[All, -1]]]
+        QuantumPartialTrace[qo["State"], # - {Min[qo["FullOutputOrder"]], Min[qo["FullOutputOrder"]]} + 1 & /@ qudits],
+        DeleteCases[qo["FullInputOrder"], Alternatives @@ qudits[[All, -1]]]
     ]
 
 

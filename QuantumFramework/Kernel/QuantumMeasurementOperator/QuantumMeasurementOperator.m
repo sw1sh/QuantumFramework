@@ -38,7 +38,7 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
         QuantumOperator[
             QuantumOperator[
                 (* DiagonalMatrix[PadRight[SparseArray @ eigenvalues, basis["Dimension"]]], *)
-                PadRight[SparseArray @ eigenvalues, basis["Dimension"]] . basis["NormalizedProjectors"],
+                PadRight[SparseArray @ eigenvalues, basis["Dimension"]] . basis["Projectors"],
                 # - Min[#, 1] + 1 &[Max[Replace[target, Automatic -> 0]] - Reverse @ Range[basis["OutputQudits"]] + 1],
                 QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
             ],
@@ -47,7 +47,7 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
         QuantumOperatorQ
     ];
     order = Replace[target, Automatic -> op["FullInputOrder"]];
-    order = Join[order, Complement[op["FullInputOrder"], order]];
+    order = PadRight[order, op["InputQudits"], DeleteCases[op["FullInputOrder"], Alternatives @@ order]];
     QuantumMeasurementOperator[
         QuantumOperator[op, {Automatic, Sort @ order}],
         order[[;; Length @ target]],
@@ -145,12 +145,12 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
                         Range @ qs["OutputQudits"],
                         qs["Output"]
                     }
-                ]["Sort"] @ qs,
+                ]["SortOutput"] @ qs,
                 QuantumStateQ
             ],
             {
-                Take[op["FullOutputOrder"], UpTo[qudits]],
-                # - Min[#] + 1 &[Max[op["FullInputOrder"]] - Reverse @ Range[qs["OutputQudits"]] + 1]
+                Range[1 - qudits, qs["OutputQudits"]],
+                Range[qs["InputQudits"]]
             }
         ],
         If[ op["OutputQudits"] <= op["InputQudits"],
@@ -184,7 +184,7 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
 
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qm : _ ? QuantumMeasurementOperatorQ | _ ? QuantumMeasurementQ] := Enclose @ Module[{
-    top, bottom, topIsLeft, result
+    top, bottom, result, target, eigens, startQudit
 },
 
     top = qmo["SuperOperator"];
@@ -197,39 +197,25 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
         ]
     ];
 
-    (* depending on relative positions of superoperator eigenqudits,
-        change the right-most operator's eigenqudit order being to the left
-        of the left-most operator
-    *)
-    topIsLeft = top["FirstOutputQudit"] + qmo["Eigenqudits"] <= bottom["FirstOutputQudit"] + qm["Eigenqudits"];
-    If[ topIsLeft,
-        bottom = QuantumOperator[bottom, {
-            ReplacePart[bottom["FullOutputOrder"], Thread[List /@ Range[qm["Eigenqudits"]] -> top["FirstOutputQudit"] - Reverse @ Range[qm["Eigenqudits"]]]],
-            bottom["InputOrder"]
-            }
-        ],
-        top = QuantumOperator[top, {
-            ReplacePart[top["FullOutputOrder"], Thread[List /@ Range[qmo["Eigenqudits"]] -> bottom["FirstOutputQudit"] - Reverse @ Range[qmo["Eigenqudits"]]]],
-            top["InputOrder"]
-            }
-        ]
+    target = Join[qmo["Target"], qm["Target"]];
+    eigens = qmo["Eigenqudits"] + qm["Eigenqudits"];
+    startQudit = Min[top["FirstOutputQudit"], bottom["FirstOutputQudit"]];
+    top = QuantumOperator[top,
+        {Join[1 + startQudit - Take[Reverse[Range[eigens]], qmo["Eigenqudits"]], Drop[top["OutputOrder"], qmo["Eigenqudits"]]], top["InputOrder"]}
     ];
-    result = top[bottom]["Sort"][
-        (* permute two sets of eigenqudits based on given operator targets, left-most first *)
-        {"PermuteOutput", InversePermutation @ FindPermutation[DeleteDuplicates @
-            If[topIsLeft, Join[qm["Target"], qmo["Target"]], Join[qmo["Target"], qm["Target"]]]]}
+    bottom = QuantumOperator[bottom,
+        {Join[1 + startQudit - Drop[Reverse[Range[eigens]], qmo["Eigenqudits"]], Drop[bottom["OutputOrder"], qm["Eigenqudits"]]], bottom["InputOrder"]}
     ];
+    result = top[bottom]["SortOutput"];
     If[ QuantumMeasurementOperatorQ[qm],
         QuantumMeasurementOperator[
             result,
-            Sort @ Join[qm["Target"], qmo["Target"]]
+            target
         ],
-        QuantumMeasurement @ QuantumMeasurementOperator[QuantumOperator[
-                result["State"],
-                TakeDrop[result["FullOutputOrder"], qmo["Eigenqudits"] + qm["Eigenqudits"]],
-                "Label" -> "Eigen"
-            ],
-            Sort @ Join[qm["Target"], qmo["Target"]]
+        QuantumMeasurement @ QuantumMeasurementOperator[
+            result,
+             "Label" -> "Eigen",
+            target
         ]
     ]
 ]
@@ -255,5 +241,5 @@ QuantumMeasurementOperator /: f_Symbol[left : Except[_QuantumMeasurementOperator
 (* equality *)
 
 QuantumMeasurementOperator /: Equal[qmo : _QuantumMeasurementOperator ... ] :=
-    Equal @@ (#["Picture"] & /@ {qmo}) && Equal @@ (#["OrderedMatrixRepresentation"] & /@ {qmo})
+    Equal @@ (#["Picture"] & /@ {qmo}) && Equal @@ (#["Canonical"]["QuantumOperator"] & /@ {qmo})
 

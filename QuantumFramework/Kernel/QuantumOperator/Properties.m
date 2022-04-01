@@ -84,6 +84,8 @@ QuantumOperatorProp[qo_, "FullOutputOrder"] := If[qo["OutputDimension"] > 1,
     {}
 ]
 
+QuantumOperatorProp[qo_, "FullOrder"] := {qo["FullOutputOrder"], qo["FullInputOrder"]}
+
 QuantumOperatorProp[qo_, "ControlOrder"] :=
     FirstCase[qo["Label"], "Controlled"[_, control1_, control0_ : {}] :> Join[control1, control0], Missing["ControlOrder"], {0}]
 

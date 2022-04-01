@@ -148,7 +148,7 @@ addQuantumStates[qs1_QuantumState ? QuantumStateQ, qs2_QuantumState ? QuantumSta
                 qs1["VectorRepresentation"] + qs2["VectorRepresentation"],
                 qs1["MatrixRepresentation"] + qs2["MatrixRepresentation"]
             ],
-            QuantumBasis[qs1["Dimensions"]]
+            QuantumBasis[qs1["OutputDimensions"], qs1["InputDimensions"]]
         ],
         qs1["Basis"]
     ]

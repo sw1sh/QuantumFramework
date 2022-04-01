@@ -74,7 +74,7 @@ QuantumStateProp[qs_, "UnknownQ"] := qs["StateType"] === "UnknownType"
 QuantumState::notpure = "is not a pure state";
 
 QuantumStateProp[qs_, "Amplitudes"] := Module[{s = qs["Pure"], result},
-    result = Enclose @ KeySort @ Association @ Thread[s["ElementNames"] -> ConfirmBy[s["StateVector"], VectorQ]];
+    result = Enclose @ KeySort @ Association @ Thread[s["ElementNames"] -> ConfirmBy[Chop @ s["StateVector"], VectorQ]];
     result /; !FailureQ[result]
 ]
 
@@ -97,7 +97,7 @@ QuantumStateProp[qs_, "Weights"] := If[qs["PureStateQ"],
     Diagonal @ qs["DensityMatrix"]
 ]
 
-QuantumStateProp[qs_, "Probabilities"] := Simplify /@ (qs["Weights"] / Total[qs["Weights"]])
+QuantumStateProp[qs_, "Probabilities"] := Simplify /@ Re @ (qs["Weights"] / Total[qs["Weights"]])
 
 QuantumStateProp[qs_, "Distribution"] := CategoricalDistribution[qs["Names"], qs["Probabilities"]]
 
@@ -127,7 +127,7 @@ QuantumStateProp[qs_, "NormalizedAmplitudes"] := Enclose @ With[{amplitudes = qs
 
 QuantumStateProp[qs_, "NormalizedStateVector"] := Normalize @ qs["StateVector"]
 
-QuantumStateProp[qs_, "CanonicalStateVector"] := qs["StateVector"] / First[SparseArray[qs["StateVector"]]["ExplicitValues"]]
+QuantumStateProp[qs_, "CanonicalStateVector"] := qs["StateVector"] / First[SparseArray[Chop @ qs["StateVector"]]["ExplicitValues"]]
 
 QuantumStateProp[qs_, "NormalizedDensityMatrix"] := Quiet @ Enclose @ Confirm[normalizeMatrix @ qs["DensityMatrix"]]
 
@@ -364,13 +364,14 @@ QuantumStateProp[qs_, "StateTensor"] := If[
 ]
 
 QuantumStateProp[qs_, "StateMatrix"] := If[
-    qs["PureStateQ"],
+    qs["VectorQ"],
     ArrayReshape[qs["StateVector"], qs["MatrixNameDimensions"]],
-    ArrayReshape[qs["StateTensor"], qs["MatrixNameDimensions"] ^ 2]
+    (* ArrayReshape[qs["StateTensor"], qs["MatrixNameDimensions"] ^ 2] *)
+    qs["TensorMatrix"]
 ]
 
 QuantumStateProp[qs_, "TensorMatrix"] := ArrayReshape[
-    Transpose[qs["StateTensor"], InversePermutation @ FindPermutation[
+    Transpose[qs["StateTensor"], FindPermutation[
         With[{input = Join[Range[qs["OutputQudits"]], qs["Qudits"] + Range[qs["OutputQudits"]]]},
             Join[input, Complement[Range[2 qs["Qudits"]], input]]
         ]

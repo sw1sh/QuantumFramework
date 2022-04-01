@@ -43,7 +43,7 @@ QuditBasis[{name : "X" | "Y" | "Z", dim_Integer : 2}, args___] := QuditBasis[{"P
 QuditBasis[name : "PauliX" | "PauliY" | "PauliZ", args___] := QuditBasis[{name, 2}, args]
 
 QuditBasis[{name : "PauliX" | "PauliY" | "PauliZ", dim_Integer : 2}, args___] := With[{
-    es = Eigensystem[pauliMatrix[name /. {"PauliX" -> 1, "PauliY" -> 2, "PauliZ" -> 3}, dim]]
+    es = eigensystem[pauliMatrix[name /. {"PauliX" -> 1, "PauliY" -> 2, "PauliZ" -> 3}, dim], "Normalize" -> True]
 },
     QuditBasis[
         AssociationThread[
@@ -53,7 +53,7 @@ QuditBasis[{name : "PauliX" | "PauliY" | "PauliZ", dim_Integer : 2}, args___] :=
                     If[# > 0, "+" <> ToString[#], ToString[#]] /. {"+1" -> "+", "-1" -> "-"}
                 ]
             ] & /@ First[es],
-            (1 / Sqrt[dim]) Last[es]
+            Last[es]
         ],
         args
     ]
