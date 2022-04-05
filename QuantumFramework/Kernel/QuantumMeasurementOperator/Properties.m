@@ -8,6 +8,9 @@ $QuantumMeasurementOperatorProperties = {
     "Operator", "Basis", "MatrixRepresentation", "POVMElements",
     "OrderedMatrixRepresentation", "OrderedPOVMElements",
     "Arity", "Eigenqudits", "Dimensions", "Order", "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors",
+    "Eigendimensions", "Eigendimension",
+    "StateDimensions", "StateDimension",
+    "TargetDimensions", "TargetDimension",
     "StateQudits", "TargetBasis", "StateBasis", "CanonicalBasis", "Canonical",
     "ProjectionQ", "POVMQ",
     "SuperOperator", "POVM"
@@ -42,7 +45,7 @@ QuantumMeasurementOperatorProp[_[op_, _], "Operator" | "QuantumOperator"] := op
 
 QuantumMeasurementOperatorProp[_[_, target_], "Target"] := target
 
-QuantumMeasurementOperatorProp[qmo_, "Targets"] := Length[qmo["Target"]]
+QuantumMeasurementOperatorProp[qmo_, "Arity" | "Targets"] := Length[qmo["Target"]]
 
 QuantumMeasurementOperatorProp[qmo_, "TargetIndex"] :=
     Catenate @ Lookup[PositionIndex[Drop[qmo["FullOutputOrder"], qmo["Eigenqudits"]]], qmo["Target"]]
@@ -52,13 +55,17 @@ QuantumMeasurementOperatorProp[qmo_, "TargetDimensions"] :=
 
 QuantumMeasurementOperatorProp[qmo_, "TargetDimension"] := Times @@ qmo["TargetDimensions"]
 
-QuantumMeasurementOperatorProp[qmo_, "Eigenqudits"] := If[qmo["POVMQ"],
-    Count[qmo["OutputOrder"], _ ? NonPositive],
-    1
-]
+QuantumMeasurementOperatorProp[qmo_, "Eigenqudits"] := Max[Count[qmo["OutputOrder"], _ ? NonPositive], 1]
+
+QuantumMeasurementOperatorProp[qmo_, "Eigendimensions"] := qmo["OutputDimensions"][[;; qmo["Eigenqudits"]]]
+
+QuantumMeasurementOperatorProp[qmo_, "Eigendimension"] := Times @@ qmo["Eigendimensions"]
 
 QuantumMeasurementOperatorProp[qmo_, "StateQudits"] := qmo["OutputQudits"] - qmo["Eigenqudits"]
 
+QuantumMeasurementOperatorProp[qmo_, "StateDimensions"] := Drop[qmo["Dimensions"], qmo["Eigenqudits"]]
+
+QuantumMeasurementOperatorProp[qmo_, "StateDimension"] := Times @@ qmo["StateDimensions"]
 
 QuantumMeasurementOperatorProp[qmo_, "TargetBasis"] := qmo["Output"][{"Extract", qmo["Eigenqudits"] + qmo["TargetIndex"]}]
 
@@ -69,7 +76,7 @@ QuantumMeasurementOperatorProp[qmo_, "CanonicalBasis"] :=
     QuantumBasis[qmo["Basis"], "Output" -> QuantumTensorProduct[qmo["TargetBasis"], qmo["StateBasis"]["Output"]], "Input" -> qmo["Input"]]
 
 
-QuantumMeasurementOperatorProp[qmo_, "Canonical"] := QuantumMeasurementOperator[
+QuantumMeasurementOperatorProp[qmo_, "Canonical"] /; qmo["Eigendimension"] == qmo["TargetDimension"] := QuantumMeasurementOperator[
     QuantumOperator[
         qmo["State"][{"PermuteOutput", InversePermutation @ FindPermutation @ qmo["Target"]}],
         {Range[- qmo["Targets"] + 1, qmo["StateQudits"]], qmo["InputOrder"]},
@@ -80,12 +87,12 @@ QuantumMeasurementOperatorProp[qmo_, "Canonical"] := QuantumMeasurementOperator[
 
 
 QuantumMeasurementOperatorProp[qmo_, "Type"] := Which[
-    qmo["OutputDimension"] == qmo["InputDimension"],
+    Count[qmo["OutputOrder"], _ ? NonPositive] == 0 && qmo["OutputDimension"] == qmo["InputDimension"],
     "Projection",
-    qmo["OutputDimension"] > qmo["InputDimension"],
+    Count[qmo["OutputOrder"], _ ? NonPositive] > 0,
     "POVM",
     True,
-    "Destructive"
+    "Unknown"
 ]
 
 QuantumMeasurementOperatorProp[qmo_, "ProjectionQ"] := qmo["Type"] === "Projection"

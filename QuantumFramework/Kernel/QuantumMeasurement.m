@@ -97,23 +97,9 @@ QuantumMeasurementProp[qm_, "StateDual"] := qm["State"][{"Split", qm["Qudits"]}]
         TakeList[Range[qm["Qudits"]], {qm["Eigenqudits"], qm["StateQudits"], qm["InputQudits"]}]
 }][{"Split", qm["Eigenqudits"] + qm["InputQudits"]}]
 
-
-QuantumMeasurementProp[qm_, "Arity" | "Targets"] := Length @ qm["Target"]
-
-QuantumMeasurementProp[qm_, "StateDimensions"] := Drop[qm["Dimensions"], qm["Eigenqudits"]]
-
-QuantumMeasurementProp[qm_, "StateDimension"] := Times @@ qm["StateDimensions"]
-
-QuantumMeasurementProp[qm_, "EigenDimensions"] := Take[qm["OutputDimensions"], qm["Eigenqudits"]]
-
-QuantumMeasurementProp[qm_, "EigenDimension"] := Times @@ qm["EigenDimensions"]
-
 QuantumMeasurementProp[qm_, "Eigenstate"] :=
     QuantumPartialTrace[qm["State"], qm["Eigenqudits"] + Range[qm["StateQudits"]]]
 
-QuantumMeasurementProp[qm_, "PureQ"] := TrueQ[qm["InputQudits"] == 0]
-
-QuantumMeasurementProp[qm_, "MixedQ"] := ! qm["PureQ"]
 
 QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumPartialTrace[
     qm["State"],
@@ -122,12 +108,12 @@ QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumPartialTrace[
 
 QuantumMeasurementProp[qm_, "MixedStates"] := With[{rep = If[qm["PureStateQ"], 1, 2]},
     Which[
-        MatchQ[qm["LabelHead"], "Eigen"],
-        QuantumState[ArrayReshape[#, Table[qm["StateDimension"], rep]], qm["StateBasis"]] & /@
-            qm["StateDual"]["StateMatrix"],
         MatchQ[qm["LabelHead"], "Computational"],
         QuantumState[QuantumState[ArrayReshape[#, Table[qm["StateDimension"], rep]], QuantumBasis[qm["StateDimensions"]]], qm["StateBasis"]] & /@
             qm["Computational"]["StateDual"]["StateMatrix"],
+        MatchQ[qm["LabelHead"], "Eigen"] || qm["Eigendimension"] != qm["TargetDimension"],
+        QuantumState[ArrayReshape[#, Table[qm["StateDimension"], rep]], qm["StateBasis"]] & /@
+            qm["StateDual"]["StateMatrix"],
         True,
         QuantumState[ArrayReshape[#, Table[qm["StateDimension"], rep]], qm["StateBasis"]] & /@
             qm["Canonical"]["StateDual"]["StateMatrix"]
@@ -138,10 +124,10 @@ QuantumMeasurementProp[qm_, "States"] := If[qm["PureStateQ"], qm["MixedStates"],
 
 QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
     Which[
-        MatchQ[qm["LabelHead"], "Eigen"],
-        qm["Eigenstate"],
         MatchQ[qm["LabelHead"], "Computational"],
         qm["Computational"]["Eigenstate"],
+        MatchQ[qm["LabelHead"], "Eigen"] || qm["Eigendimension"] != qm["TargetDimension"],
+        qm["Eigenstate"],
         True,
         qm["Canonical"]["Eigenstate"]
     ]["Probabilities"]
@@ -149,10 +135,10 @@ QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
 QuantumMeasurementProp[qm_, "Eigenvalues"] := qm["Eigenstate"]["Names"]
 
 QuantumMeasurementProp[qm_, "Outcomes"] := Which[
-    MatchQ[qm["LabelHead"], "Eigen"],
-    qm,
     MatchQ[qm["LabelHead"], "Computational"],
     qm["Computational"],
+    MatchQ[qm["LabelHead"], "Eigen"] || qm["Eigendimension"] != qm["TargetDimension"],
+    qm,
     True,
     qm["Canonical"]
 ]["Eigenvalues"]
