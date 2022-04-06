@@ -70,7 +70,7 @@ QuantumBasisProp[qb_, "OutputElements"] := qb["Output"]["Elements"]
 QuantumBasisProp[qb_, "ElementNames" | "Names"] :=
     QuantumTensorProduct @@@ Tuples[{qb["OutputElementNames"], qb["InputElementNames"]}]
 
-QuantumBasisProp[qb_, "ElementNames" | "Names", pos_ : {{_Integer ..} ...}] :=
+QuantumBasisProp[qb_, "ElementNames" | "Names", pos : {{_Integer ..} ...}] :=
     MapThread[QuantumTensorProduct, {qb["OutputElementNames", pos[[All, 1]]], qb["InputElementNames", pos[[All, 2]]]}]
 
 QuantumBasisProp[qb_, "ElementNames" | "Names", outPos : {_Integer ..} : All, inPos : {_Integer ..} : All] :=

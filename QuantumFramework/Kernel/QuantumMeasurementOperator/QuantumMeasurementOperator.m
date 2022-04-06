@@ -18,16 +18,13 @@ SetAttributes[QuantumMeasurementOperator, NHoldRest]
 QuantumMeasurementOperator[arg_ -> eigenvalues_ ? VectorQ, args___] :=
     Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumBasis[arg], QuantumBasisQ] -> eigenvalues, args]
 
-QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOperatorQ | _ ? QuantumBasisQ], ___], target_ ? targetQ] :=
-    Enclose @ With[{qb = ConfirmBy[QuantumBasis[args], QuantumBasisQ]}, QuantumMeasurementOperator[qb, target]]
-
 QuantumMeasurementOperator[target : _ ? targetQ] :=
     QuantumMeasurementOperator[QuantumBasis[], target]
 
 QuantumMeasurementOperator[] := QuantumMeasurementOperator[{1}]
 
 QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target : (_ ? targetQ) : Automatic, args___] := Enclose @ Module[{
-    basis, op, order
+    basis, op, order, newTarget
 },
     basis = If[ target === Automatic,
         qb,
@@ -46,11 +43,11 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
         ],
         QuantumOperatorQ
     ];
-    order = Replace[target, Automatic -> op["FullInputOrder"]];
-    order = PadRight[order, op["InputQudits"], DeleteCases[op["FullInputOrder"], Alternatives @@ order]];
+    newTarget = Replace[target, Automatic -> op["FullInputOrder"]];
+    order = PadRight[newTarget, op["InputQudits"], DeleteCases[op["FullInputOrder"], Alternatives @@ order]];
     QuantumMeasurementOperator[
         QuantumOperator[op, {Automatic, Sort @ order}],
-        order[[;; Length @ target]],
+        order[[;; Length @ newTarget]],
         args
     ]
 ]
@@ -74,11 +71,17 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target : _ ? targetQ, args__]
         target
     ]
 
-QuantumMeasurementOperator[tensor_ ? TensorQ /; 2 <= TensorRank[tensor] <= 3, target : (_ ? targetQ) : {1}, args___] :=
+QuantumMeasurementOperator[tensor_ ? TensorQ /; TensorRank[tensor] == 3, target : (_ ? targetQ) : {1}, args___] :=
     QuantumMeasurementOperator[
         With[{op = QuantumOperator[MatrixFunction[Sqrt, #] & /@ tensor, args, "Label" -> "Eigen"]},
             QuantumOperator[op, {Prepend[# - Min[#] + 1 & @ Drop[op["OutputOrder"], 1], 0], op["InputOrder"]}]
         ],
+        target
+    ]
+
+QuantumMeasurementOperator[tensor_ ? TensorQ /; TensorRank[tensor] == 2, target : (_ ? targetQ) : {1}, args___] :=
+    QuantumMeasurementOperator[
+        QuantumOperator[tensor, args, "Label" -> "Eigen"],
         target
     ]
 
@@ -108,7 +111,10 @@ Enclose @ Module[{
     QuantumMeasurementOperator[basis -> Range[0, basis["Dimension"] - 1], target]
 ]
 
-QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOperatorQ], ___]] := QuantumMeasurementOperator[QuantumBasis[args]]
+QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOperatorQ], ___, Except[_ ? targetQ]]] := QuantumMeasurementOperator[QuantumBasis[args]]
+
+QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOperatorQ | _ ? QuantumBasisQ], ___], target_ ? targetQ] :=
+    Enclose @ With[{qb = ConfirmBy[QuantumBasis[args], QuantumBasisQ]}, QuantumMeasurementOperator[qb, target]]
 
 
 (* mutation *)
