@@ -79,13 +79,13 @@ QuantumMeasurementOperator[tensor_ ? TensorQ /; TensorRank[tensor] == 3, target 
         target
     ]
 
-QuantumMeasurementOperator[tensor_ ? TensorQ /; TensorRank[tensor] == 2, target : (_ ? targetQ) : {1}, args___] :=
+QuantumMeasurementOperator[tensor_ ? (TensorQ[#, Not @* StringQ] &) /; TensorRank[tensor] == 2, target : (_ ? targetQ) : {1}, args___] :=
     QuantumMeasurementOperator[
         QuantumOperator[tensor, args, "Label" -> "Eigen"],
         target
     ]
 
-QuantumMeasurementOperator[tensor_ ? TensorQ /; 2 <= TensorRank[tensor] <= 3, qb_ ? QuantumBasisQ, target : (_ ? targetQ) : {1}, args___] :=
+QuantumMeasurementOperator[tensor_ ? (TensorQ[#, Not @* StringQ] &) /; 2 <= TensorRank[tensor] <= 3, qb_ ? QuantumBasisQ, target : (_ ? targetQ) : {1}, args___] :=
     QuantumMeasurementOperator[tensor, target, qb, args]
 
 QuantumMeasurementOperator[ops : {_ ? QuantumOperatorQ..}, target : (_ ? targetQ) : {1}, args___] /;
@@ -111,11 +111,11 @@ Enclose @ Module[{
     QuantumMeasurementOperator[basis -> Range[0, basis["Dimension"] - 1], target]
 ]
 
-QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOperatorQ], ___, Except[_ ? targetQ]]] := QuantumMeasurementOperator[QuantumBasis[args]]
 
 QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOperatorQ | _ ? QuantumBasisQ], ___], target_ ? targetQ] :=
     Enclose @ With[{qb = ConfirmBy[QuantumBasis[args], QuantumBasisQ]}, QuantumMeasurementOperator[qb, target]]
 
+QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOperatorQ], ___]] := QuantumMeasurementOperator[QuantumBasis[args]]
 
 (* mutation *)
 

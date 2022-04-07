@@ -2,6 +2,8 @@ Package["Wolfram`QuantumFramework`"]
 
 PackageExport["QuditName"]
 
+PackageScope["$QuditZero"]
+PackageScope["$QuditIdentity"]
 
 
 QuditName["Properties"] = {"Name", "DualQ", "Dual", "Qudits"}

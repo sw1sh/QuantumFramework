@@ -17,10 +17,13 @@ QuditBasis::dependentElements = "elements should be linearly independent";
 
 quditBasisQ[QuditBasis[representations_Association]] := Enclose[
 Module[{
-    elementQudits, numericElements
 },
     ConfirmAssert[AllTrue[Keys @ representations, MatchQ[{_QuditName, _Integer ? Positive}]]];
-
+    ConfirmAssert[And @@ ResourceFunction["KeyGroupBy"][
+        Select[representations, TensorRank[#] > 0 &],
+        Last,
+        Apply[Equal] @* Map[Dimensions]
+    ]];
     True
 ],
 False &
@@ -86,6 +89,11 @@ QuditBasis[source_QuditBasis, target_QuditBasis] := If[
     target["Dimension"] > source["Dimension"],
     target[{"TakeDimension", source["Dimension"]}],
     QuantumTensorProduct[target, source[{"DropDimension", target["Dimension"]}]]
+]
+
+QuditBasis[source_QuditBasis -> target_QuditBasis] := QuditBasis[
+    AssociationThread[Keys @ target["Representations"],
+    Values @ source["Representations"]]
 ]
 
 

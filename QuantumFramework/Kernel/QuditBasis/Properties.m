@@ -61,7 +61,7 @@ QuditBasisProp[qb_, "Association"] := Association @ Thread[qb["Names"] -> qb["El
 
 QuditBasisProp[qb_, "Size"] := If[Length[qb["Representations"]] > 0, Times @@ qb["Dimensions"], 0]
 
-QuditBasisProp[qb_, "ElementDimensions"] := Values @ KeySort @ ResourceFunction["KeyGroupBy"][qb["Representations"], Last, Length]
+QuditBasisProp[qb_, "ElementDimensions"] := Catenate @ Values @ KeySort @ ResourceFunction["KeyGroupBy"][qb["Representations"], Last, First /* Dimensions]
 
 QuditBasisProp[qb_, "ElementDimension"] := If[qb["Size"] > 0, Times @@ qb["ElementDimensions"], 0]
 
@@ -91,7 +91,7 @@ QuditBasisProp[qb_, "SortedQ"] := OrderedQ[Reverse /@ Keys @ qb["Representations
 
 QuditBasisProp[qb_, "Sort"] := QuditBasis[KeySortBy[qb["Representations"], Reverse]]
 
-QuditBasisProp[qb_, {"Permute", perm_Cycles, outputs_Integer : 0}] := Enclose @ If[perm === Cycles[{}], qb,
+QuditBasisProp[qb_, {"Permute", perm_Cycles}] := Enclose @ If[perm === Cycles[{}], qb,
 QuditBasis[
     KeyMap[MapAt[PermutationList[perm, qb["NameRank"]][[#]] &, 2]] @ qb["Representations"]
 ]]

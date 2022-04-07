@@ -112,6 +112,8 @@ QuantumOperatorProp[qo_, "InputOrderQuditMapping"] := Thread[qo["FullInputOrder"
 QuantumOperatorProp[qo_, "OutputOrderQuditMapping"] := Thread[qo["FullOutputOrder"] -> Range[qo["OutputQudits"]]]
 
 
+QuantumOperatorProp[qo_, "SquareQ"] := qo["OutputDimension"] == qo["InputDimension"]
+
 QuantumOperatorProp[qo_, "Tensor"] := qo["StateTensor"]
 
 QuantumOperatorProp[qo_, "TensorRepresentation"] := qo["State"]["TensorRepresentation"]
@@ -276,22 +278,22 @@ QuantumOperatorProp[qo_, {"OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ}] 
 ]
 
 
-QuantumOperatorProp[qo_, {"UnstackOutput", n_Integer : 1}] :=
-    QuantumOperator[#, {Drop[qo["OutputOrder"], {n}], qo["InputOrder"]}] & /@ qo["State"][{"UnstackOutput", n}]
+QuantumOperatorProp[qo_, "UnstackOutput", n_Integer : 1] /; 1 <= n <= qo["OutputQudits"] :=
+    QuantumOperator[#, {Drop[qo["OutputOrder"], {n}], qo["InputOrder"]}] & /@ qo["State"]["UnstackOutput", n]
 
-QuantumOperatorProp[qo_, {"UnstackInput", n_Integer : 1}] :=
-    QuantumOperator[#, {qo["OutputOrder"], Drop[qo["InputOrder"], {n}]}] & /@ qo["State"][{"UnstackInput", n}]
+QuantumOperatorProp[qo_, "UnstackInput", n_Integer : 1] /; 1 <= n <= qo["InputQudits"] :=
+    QuantumOperator[#, {qo["OutputOrder"], Drop[qo["InputOrder"], {n}]}] & /@ qo["State"]["UnstackInput", n]
 
 
 QuantumOperatorProp[qo_, "HermitianQ"] := HermitianMatrixQ[qo["Matrix"]]
 
 QuantumOperatorProp[qo_, "UnitaryQ"] := UnitaryMatrixQ[qo["Matrix"]]
 
-QuantumOperatorProp[qo_, "Eigenvalues"] := Eigenvalues[qo["MatrixRepresentation"]]
+QuantumOperatorProp[qo_, "Eigenvalues"] /; qo["SquareQ"] := Eigenvalues[qo["MatrixRepresentation"]]
 
-QuantumOperatorProp[qo_, "Eigenvectors", opts___] := eigenvectors[qo["MatrixRepresentation"], opts, "Sort" -> False, "Normalize" -> True]
+QuantumOperatorProp[qo_, "Eigenvectors", opts___] /; qo["SquareQ"] := eigenvectors[qo["MatrixRepresentation"], opts, "Sort" -> False, "Normalize" -> True]
 
-QuantumOperatorProp[qo_, "Eigensystem", opts___] := eigensystem[qo["MatrixRepresentation"], opts, "Sort" -> False, "Normalize" -> True]
+QuantumOperatorProp[qo_, "Eigensystem", opts___] /; qo["SquareQ"] := eigensystem[qo["MatrixRepresentation"], opts, "Sort" -> False, "Normalize" -> True]
 
 QuantumOperatorProp[qo_, "Projectors"] := projector /@ SparseArray @ Chop @ qo["Eigenvectors"]
 

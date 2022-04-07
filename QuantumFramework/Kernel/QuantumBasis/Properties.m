@@ -190,7 +190,7 @@ QuantumBasisProp[qb_, "PureEffects"] := QuantumState[SparseArray[# -> 1, qb["Inp
 
 QuantumBasisProp[qb_, "PureMaps" | "PureOperators"] :=
     Table[
-        QuantumState[Flatten @ SparseArray[{i, j} -> 1, {qb["OutputDimension"], qb["InputDimension"]}], qb],
+        With[{array = SparseArray[{i, j} -> 1, {qb["OutputDimension"], qb["InputDimension"]}]}, QuantumState[Flatten @ array, qb]],
         {i, qb["OutputDimension"]}, {j, qb["InputDimension"]}
     ]
 

@@ -345,14 +345,14 @@ QuantumStateProp[qs_, {"SplitDual", n_Integer : 0}] := With[{basis = qs["Basis"]
 ]
 
 
-QuantumStateProp[qs_, {"UnstackOutput", n_Integer : 1}] /; 1 <= n <= qs["OutputQudits"] :=
+QuantumStateProp[qs_, "UnstackOutput", n_Integer : 1] /; 1 <= n <= qs["OutputQudits"] :=
     Module[{state = If[n == 1, qs, qs[{"PermuteOutput", FindPermutation[RotateLeft[Range[qs["OutputQudits"]], n - 1]]}]], basis},
         basis = QuantumBasis[state["Basis"], "Output" -> Last @ state["Output"][{"Split", 1}]];
         QuantumState[#, basis] & /@ ArrayReshape[state["State"], {First @ state["Dimensions"], Times @@ Rest @ state["Dimensions"]}]
     ]
 
-QuantumStateProp[qs_, {"UnstackInput", n_Integer : 1}] /; 1 <= n <= qs["InputQudits"] :=
-    #["Transpose"] & /@ qs["Transpose"][{"UnstackOutput", n}]
+QuantumStateProp[qs_, "UnstackInput", n_Integer : 1] /; 1 <= n <= qs["InputQudits"] :=
+    #["Transpose"] & /@ qs["Transpose"]["UnstackOutput", n]
 
 
 (* representations *)
@@ -414,7 +414,7 @@ QuantumStateProp[qs_, "BlochSphericalCoordinates"] /; qs["Dimension"] == 2 := Wi
         ],
 
         With[{
-            u = Re[matrix[[1, 2]]], v = Im[matrix[[2, 1]]], w = matrix[[1, 1]] - matrix[[2, 2]]
+            u = 2 Re[matrix[[1, 2]]], v = 2 Im[matrix[[2, 1]]], w = matrix[[1, 1]] - matrix[[2, 2]]
         },
             If[ u == v == w == 0,
                 {0, 0, 0},
@@ -445,7 +445,7 @@ QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 :=  W
     ]
 ]
 
-QuantumStateProp[qs_, "BlochPlot"] /; qs["Dimension"] == 2 := Module[{
+QuantumStateProp[qs_, "BlochPlot" | "BlochSpherePlot"] /; qs["Dimension"] == 2 := Module[{
     greatCircles, referenceStates, u, v, w
 },
     greatCircles = ParametricPlot3D[

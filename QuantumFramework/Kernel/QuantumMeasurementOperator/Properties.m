@@ -47,30 +47,38 @@ QuantumMeasurementOperatorProp[_[_, target_], "Target"] := target
 
 QuantumMeasurementOperatorProp[qmo_, "Arity" | "Targets"] := Length[qmo["Target"]]
 
+QuantumMeasurementOperatorProp[qmo_, "EigenIndex"] :=
+    Catenate @ Position[qmo["FullOutputOrder"], _ ? NonPositive, {1}]
+
 QuantumMeasurementOperatorProp[qmo_, "TargetIndex"] :=
-    Catenate @ Lookup[PositionIndex[Drop[qmo["FullOutputOrder"], qmo["Eigenqudits"]]], qmo["Target"]]
+    Catenate @ Lookup[PositionIndex[qmo["FullOutputOrder"]], qmo["Target"]]
 
 QuantumMeasurementOperatorProp[qmo_, "TargetDimensions"] :=
-    Extract[qmo["OutputDimensions"], qmo["Eigenqudits"] + qmo["TargetIndex"]]
+    Part[qmo["OutputDimensions"], qmo["TargetIndex"]]
 
 QuantumMeasurementOperatorProp[qmo_, "TargetDimension"] := Times @@ qmo["TargetDimensions"]
 
-QuantumMeasurementOperatorProp[qmo_, "Eigenqudits"] := Max[Count[qmo["OutputOrder"], _ ? NonPositive], 1]
+QuantumMeasurementOperatorProp[qmo_, "ExtraQudits"] := Count[qmo["OutputOrder"], _ ? NonPositive]
 
-QuantumMeasurementOperatorProp[qmo_, "Eigendimensions"] := qmo["OutputDimensions"][[;; qmo["Eigenqudits"]]]
+QuantumMeasurementOperatorProp[qmo_, "Eigenqudits"] := Max[qmo["ExtraQudits"], 1]
+
+QuantumMeasurementOperatorProp[qmo_, "Eigendimensions"] :=
+    qmo["OutputDimensions"][[
+        If[qmo["ExtraQudits"] > 0, qmo["EigenIndex"], qmo["TargetIndex"]]
+    ]]
 
 QuantumMeasurementOperatorProp[qmo_, "Eigendimension"] := Times @@ qmo["Eigendimensions"]
 
-QuantumMeasurementOperatorProp[qmo_, "StateQudits"] := qmo["OutputQudits"] - qmo["Eigenqudits"]
+QuantumMeasurementOperatorProp[qmo_, "StateQudits"] := qmo["OutputQudits"] - qmo["ExtraQudits"]
 
-QuantumMeasurementOperatorProp[qmo_, "StateDimensions"] := Drop[qmo["Dimensions"], qmo["Eigenqudits"]]
+QuantumMeasurementOperatorProp[qmo_, "StateDimensions"] := Drop[qmo["Dimensions"], qmo["ExtraQudits"]]
 
 QuantumMeasurementOperatorProp[qmo_, "StateDimension"] := Times @@ qmo["StateDimensions"]
 
-QuantumMeasurementOperatorProp[qmo_, "TargetBasis"] := qmo["Output"][{"Extract", qmo["Eigenqudits"] + qmo["TargetIndex"]}]
+QuantumMeasurementOperatorProp[qmo_, "TargetBasis"] := qmo["Output"][{"Extract", qmo["TargetIndex"]}]
 
 QuantumMeasurementOperatorProp[qmo_, "StateBasis"] :=
-    QuantumBasis[qmo["Basis"], "Output" -> Last @ qmo["Output"][{"Split", qmo["Eigenqudits"]}], "Input" -> qmo["Input"]]
+    QuantumBasis[qmo["Basis"], "Output" -> Last @ qmo["Output"][{"Split", qmo["ExtraQudits"]}], "Input" -> qmo["Input"]]
 
 QuantumMeasurementOperatorProp[qmo_, "CanonicalBasis"] :=
     QuantumBasis[qmo["Basis"], "Output" -> QuantumTensorProduct[qmo["TargetBasis"], qmo["StateBasis"]["Output"]], "Input" -> qmo["Input"]]
