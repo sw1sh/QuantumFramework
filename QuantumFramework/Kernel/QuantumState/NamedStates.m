@@ -79,7 +79,7 @@ QuantumState[{"Register", subsystemCount_Integer, state_Integer ? NonNegative}, 
 QuantumState["UniformSuperposition", args___] := QuantumState[{"UniformSuperposition", 1}, args]
 
 QuantumState[{"UniformSuperposition", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
-    QuantumState[ConstantArray[1, dimension ^ subsystemCount], dimension, args]
+    QuantumState[ConstantArray[1, dimension ^ subsystemCount], dimension, args]["Normalized"]
 
 
 QuantumState["UniformMixture", args___] := QuantumState[{"UniformMixture", 1}, args]
