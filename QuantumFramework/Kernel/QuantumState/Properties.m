@@ -216,11 +216,11 @@ QuantumStateProp[qs_, "Computational"] := QuantumState[qs, QuantumBasis[
 ]
 ]
 
-QuantumStateProp[qs_, "SchmidtBasis"] := Module[{
-    uMatrix, alphaValues, wMatrix
+QuantumStateProp[qs_, "SchmidtBasis", n_Integer : Automatic] := Module[{
+    uMatrix, alphaValues, wMatrix, s = qs[{"Split", Min[Replace[n, Automatic -> 1], qs["Qudits"]]}]
 },
 
-    {uMatrix, alphaValues, wMatrix} = SingularValueDecomposition[qs["Matrix"]];
+    {uMatrix, alphaValues, wMatrix} = SingularValueDecomposition[s["Matrix"]];
 
     QuantumState[Diagonal @ alphaValues,
         QuantumBasis[
