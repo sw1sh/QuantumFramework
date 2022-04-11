@@ -44,7 +44,7 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
         QuantumOperatorQ
     ];
     newTarget = Replace[target, Automatic -> op["FullInputOrder"]];
-    order = PadRight[newTarget, op["InputQudits"], DeleteCases[op["FullInputOrder"], Alternatives @@ order]];
+    order = PadRight[newTarget, op["InputQudits"], DeleteCases[op["FullInputOrder"], Alternatives @@ newTarget]];
     QuantumMeasurementOperator[
         QuantumOperator[op, {Automatic, Sort @ order}],
         order[[;; Length @ newTarget]],
