@@ -134,9 +134,13 @@ QuantumState[qs_ ? QuantumStateQ] := qs["Computational"]
 
 QuantumState /: Equal[qs : _QuantumState ...] :=
     Equal @@ (#["Picture"] & /@ {qs}) &&
-    If[ And @@ (#["PureStateQ"] & /@ {qs}),
+    Which[
+        And @@ (#["PureStateQ"] & /@ {qs}),
         Equal @@ (Chop @ SetPrecision[#["Computational"]["CanonicalStateVector"], $MachinePrecision - 2] & /@ {qs}),
-        Equal @@ (Chop @ SetPrecision[#["NormalizedMatrixRepresentation"], $MachinePrecision - 2] & /@ {qs})
+        And @@ (#["MixedStateQ"] & /@ {qs}),
+        Equal @@ (Chop @ SetPrecision[#["NormalizedMatrixRepresentation"], $MachinePrecision - 2] & /@ {qs}),
+        True,
+        Equal @@ (Chop @ SetPrecision[#["Pure"]["Computational"]["CanonicalStateVector"], $MachinePrecision - 2] & /@ {qs})
     ]
 
 (* addition *)
