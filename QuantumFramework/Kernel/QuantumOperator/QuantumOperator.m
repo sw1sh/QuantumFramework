@@ -89,10 +89,9 @@ QuantumOperator[assoc_Association, order : (_ ? orderQ) : {1}, args___, opts : O
     tensorDimensions
 },
     quditBasis = QuditBasis[
-        QuditName /@ Keys[assoc],
         Association @ Catenate @ MapIndexed[
-            With[{counts = #1, i = First[#2]}, MapIndexed[{#1, i} -> UnitVector[Max[counts], First[#2]] &, Keys @ counts]] &,
-            Counts /@ Transpose[ConfirmBy[Keys[assoc], MatrixQ]]
+            With[{counts = #1, i = First[#2]}, MapIndexed[{QuditName[#1], i} -> UnitVector[Length[counts], First[#2]] &, Keys @ counts]] &,
+            Counts /@ Transpose[ConfirmBy[List @@@ Keys[assoc], MatrixQ]]
         ],
         args
     ];
@@ -104,7 +103,7 @@ QuantumOperator[assoc_Association, order : (_ ? orderQ) : {1}, args___, opts : O
     ];
     tensorDimensions = TensorDimensions @ First[assoc];
     QuantumOperator[
-        ArrayReshape[Values[assoc], Join[basis["Dimensions"], tensorDimensions]],
+        ArrayReshape[Lookup[KeyMap[QuditName[List @@ #] &, assoc], quditBasis["Names"], 0], Join[basis["Dimensions"], tensorDimensions]],
         Join[Complement[Range[Length[tensorDimensions]], order], order],
         basis,
         opts
@@ -304,7 +303,7 @@ With[{order = Range[qs["OutputQudits"]] + Max[Max[qo["FullInputOrder"]] - qs["Ou
     QuantumMeasurementOperator[qo @ qmo["Operator"], qmo["Target"]]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qm_ ? QuantumMeasurementQ] /; qo["Picture"] == qm["Picture"] :=
-    QuantumMeasurement[qm["Operator"][qo]["State"], qm["Target"]]
+    QuantumMeasurement[qo[qm["QuantumOperator"]]["Sort"]]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ] :=
     QuantumCircuitOperator[Append[qco["Operators"], qo]]

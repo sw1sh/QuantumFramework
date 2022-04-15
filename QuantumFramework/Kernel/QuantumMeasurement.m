@@ -22,27 +22,30 @@ QuantumMeasurement[qo_ ? QuantumFrameworkOperatorQ, target_ ? targetQ] := Quantu
 QuantumMeasurement[proba_Association, states : {_ ? QuantumStateQ..}] /;
     Length[proba] == Length[states] && Equal @@ Map[#["Dimensions"] &, states] :=
 QuantumMeasurement[
-    QuantumState[
+    QuantumOperator[
         QuantumState[
-            ArrayReshape[
-                Transpose[
-                    TensorProduct[
-                        Sqrt @ Values[proba],
-                        MapThread[Times, {Sqrt @ Values[proba], #["Computational"]["Normalized"]["DensityTensor"] & /@ states}]
+            QuantumState[
+                ArrayReshape[
+                    Transpose[
+                        TensorProduct[
+                            Sqrt @ Values[proba],
+                            MapThread[Times, {Sqrt @ Values[proba], #["Computational"]["Normalized"]["DensityTensor"] & /@ states}]
+                        ],
+                        Cycles[{RotateRight @ Reverse @ Range[Length[states] + 1]}]
                     ],
-                    Cycles[{RotateRight @ Reverse @ Range[Length[states] + 1]}]
+                    Table[Length[states] First[states]["Dimension"], 2]
                 ],
-                Table[Length[states] First[states]["Dimension"], 2]
+                QuantumTensorProduct[
+                    QuantumBasis[QuditName /@ Keys[proba]],
+                    QuantumBasis[First[states]["OutputDimensions"], First[states]["InputDimensions"]]
+                ]
             ],
             QuantumTensorProduct[
-                QuantumBasis[Keys[proba]],
-                QuantumBasis[First[states]["Dimensions"]]
+                QuantumBasis[QuditName /@ Keys[proba]],
+                First[states]["Basis"]
             ]
         ],
-        QuantumTensorProduct[
-            QuantumBasis[Keys[proba]],
-            First[states]["Basis"]
-        ][{"Split", 1}]
+        {Prepend[Range[First[states]["OutputQudits"]], 0], Range[First[states]["InputQudits"]]}
     ],
     Range[First[states]["Qudits"]]
 ]
