@@ -216,16 +216,32 @@ QuantumStateProp[qs_, "Computational"] := QuantumState[qs, QuantumBasis[
 ]
 ]
 
-QuantumStateProp[qs_, "SchmidtBasis", n_Integer : Automatic] := Module[{
-    uMatrix, alphaValues, wMatrix, s = qs[{"Split", Min[Replace[n, Automatic -> 1], qs["Qudits"]]}]
+QuantumStateProp[qs_, "SchmidtBasis", dim_Integer : Automatic] /; dim === Automatic || Divisible[qs["Dimension"], dim] := Module[{
+    uMatrix, alphaValues, wMatrix,
+    n = Replace[dim, Automatic -> If[qs["Qudits"] > 1, First @ qs["Dimensions"], Max[Most @ Divisors[qs["Dimension"]]]]],
+    m,
+    state = qs["Computational"],
+    mat
 },
-
-    {uMatrix, alphaValues, wMatrix} = SingularValueDecomposition[s["Matrix"]];
-
-    QuantumState[Diagonal @ alphaValues,
+    m = qs["Dimension"] / n;
+    mat = If[ qs["VectorQ"],
+        ArrayReshape[state["StateVector"], {n, m}],
+        ArrayReshape[
+            Transpose[ArrayReshape[state["DensityMatrix"], {n, m, n, m}], 2 <-> 3],
+            {n, m} ^ 2
+        ]
+    ];
+    {uMatrix, alphaValues, wMatrix} = SingularValueDecomposition[mat];
+    QuantumState[
+        If[ qs["VectorQ"],
+            Flatten @ alphaValues,
+            ArrayReshape[Transpose[ArrayReshape[alphaValues, {n, n, m, m}], 2 <-> 3], {n * m, n * m}]
+        ],
         QuantumBasis[
-            QuditBasis[Association @ MapIndexed[Subscript["u", First @ #2] -> #1 &, Transpose[uMatrix]]],
-            QuditBasis[Association @ MapIndexed[Subscript["v", First @ #2] -> #1 &, Transpose[wMatrix]]]["Dual"]
+            {
+                QuditBasis[Association @ MapIndexed[Subscript["u", First @ #2] -> #1 &, Transpose[uMatrix]]],
+                QuditBasis[Association @ MapIndexed[Subscript["v", First @ #2] -> #1 &, ConjugateTranspose[wMatrix]]]
+            }
         ]
     ]
 ]
@@ -263,14 +279,14 @@ QuantumStateProp[qs_, "Double"] :=
     QuantumTensorProduct[qs, qs["Dual"]]
 
 
-QuantumStateProp[qs_, "Mixed"] := Which[
+QuantumStateProp[qs_, "Mixed"] := Enclose @ Which[
     qs["MixedStateQ"],
     qs,
     qs["PureStateQ"] && IntegerQ[Sqrt[qs["Dimension"]]],
     With[{dimension = Sqrt[qs["Dimension"]]},
         QuantumState[
             ArrayReshape[qs["StateVector"], Table[dimension, 2]],
-            QuantumBasis @ qs["QuditBasis"][{"TakeDimension", dimension}]
+            QuantumBasis @ ConfirmBy[qs["QuditBasis"][{"TakeDimension", dimension}], QuditBasisQ]
         ]
     ],
     True,
@@ -358,7 +374,7 @@ QuantumStateProp[qs_, "UnstackInput", n_Integer : 1] /; 1 <= n <= qs["InputQudit
 (* representations *)
 
 QuantumStateProp[qs_, "StateTensor"] := If[
-    qs["PureStateQ"],
+    qs["VectorQ"],
     ArrayReshape[qs["StateVector"], qs["Dimensions"]],
     ArrayReshape[qs["DensityMatrix"], Join[qs["Dimensions"], qs["Dimensions"]]]
 ]
@@ -366,17 +382,14 @@ QuantumStateProp[qs_, "StateTensor"] := If[
 QuantumStateProp[qs_, "StateMatrix"] := If[
     qs["VectorQ"],
     ArrayReshape[qs["StateVector"], qs["MatrixNameDimensions"]],
-    (* ArrayReshape[qs["StateTensor"], qs["MatrixNameDimensions"] ^ 2] *)
-    qs["TensorMatrix"]
-]
-
-QuantumStateProp[qs_, "TensorMatrix"] := ArrayReshape[
-    Transpose[qs["StateTensor"], FindPermutation[
-        With[{input = Join[Range[qs["OutputQudits"]], qs["Qudits"] + Range[qs["OutputQudits"]]]},
-            Join[input, Complement[Range[2 qs["Qudits"]], input]]
-        ]
-    ]],
-    qs["MatrixNameDimensions"] ^ 2
+    ArrayReshape[
+        Transpose[qs["StateTensor"], FindPermutation[
+            With[{input = Join[Range[qs["OutputQudits"]], qs["Qudits"] + Range[qs["OutputQudits"]]]},
+                Join[input, Complement[Range[2 qs["Qudits"]], input]]
+            ]
+        ]],
+        qs["MatrixNameDimensions"] ^ 2
+    ]
 ]
 
 
@@ -414,7 +427,7 @@ QuantumStateProp[qs_, "BlochSphericalCoordinates"] /; qs["Dimension"] == 2 := Wi
         ],
 
         With[{
-            u = 2 Re[matrix[[1, 2]]], v = 2 Im[matrix[[2, 1]]], w = matrix[[1, 1]] - matrix[[2, 2]]
+            u = 2 Re[matrix[[1, 2]]], v = 2 Im[matrix[[2, 1]]], w = Re[matrix[[1, 1]] - matrix[[2, 2]]]
         },
             If[ u == v == w == 0,
                 {0, 0, 0},
@@ -438,7 +451,7 @@ QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 :=  W
         ],
 
         With[{
-            u = 2 Re[matrix[[1, 2]]], v = 2 Im[matrix[[2, 1]]], w = matrix[[1, 1]] - matrix[[2, 2]]
+            u = 2 Re[matrix[[1, 2]]], v = 2 Im[matrix[[2, 1]]], w = Re[matrix[[1, 1]] - matrix[[2, 2]]]
         },
             {u, v, w}
         ]
