@@ -99,8 +99,8 @@ QuditBasis[source_QuditBasis -> target_QuditBasis] := QuditBasis[
 
 (* equality *)
 
-QuditBasis /: qb1_QuditBasis == qb2_QuditBasis := Equal @@ Values /@
-    KeyIntersection[{KeyMap[Last] @ qb1["Representations"], KeyMap[Last] @ qb2["Representations"]}]
+QuditBasis /: qb1_QuditBasis == qb2_QuditBasis := Equal @@ (Chop @ SetPrecision[Values[#], $MachinePrecision - 2] & /@
+    KeyIntersection[{KeyMap[Last] @ qb1["Representations"], KeyMap[Last] @ qb2["Representations"]}])
 
 
 (* formatting *)
