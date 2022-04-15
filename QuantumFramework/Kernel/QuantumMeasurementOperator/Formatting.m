@@ -7,13 +7,7 @@ QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; Quantu
         qmo["Dimension"] < 2 ^ 9,
         MatrixPlot[
             Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]],
-                If[ qmo["POVMQ"],
-                    ArrayReshape[
-                        Nest[Mean, qmo["Ordered"]["TensorRepresentation"], qmo["Targets"]],
-                        qmo["MatrixNameDimensions"] / {Times @@ Take[qmo["Dimensions"], qmo["Targets"]], 1}
-                    ],
-                    qmo["Ordered"]["MatrixRepresentation"]
-                ],
+                qmo["Sort"]["MatrixRepresentation"],
                 {2}
             ],
             ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},
