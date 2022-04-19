@@ -183,7 +183,7 @@ QuantumOperator[matrix_ ? MatrixQ, args___, opts : OptionsPattern[]] := Module[{
 (* Mutation *)
 
 QuantumOperator[qo_ ? QuantumOperatorQ, order : (_ ? orderQ | Automatic)] :=
-    QuantumOperator[qo["State"], {qo["OutputOrder"], order}]
+    QuantumOperator[qo["State"], {order, order}]
 
 QuantumOperator[qo_ ? QuantumOperatorQ, outputOrder : (_ ? orderQ | Automatic), inputOrder : (_ ? orderQ | Automatic)] :=
     QuantumOperator[qo["State"], {outputOrder, inputOrder}]
@@ -197,7 +197,7 @@ QuantumOperator[qo_ ? QuantumOperatorQ, opts : PatternSequence[Except[_ ? Quantu
     QuantumOperator[qo, {outputOrder, inputOrder}, ConfirmBy[QuantumBasis[qo["Basis"], opts], QuantumBasisQ]]
 
 QuantumOperator[qo_ ? QuantumOperatorQ, order : (_ ? orderQ | Automatic), opts : PatternSequence[Except[_ ? QuantumBasisQ], ___]] := Enclose @
-    QuantumOperator[qo, {qo["OutputOrder"], order}, ConfirmBy[QuantumBasis[qo["Basis"], opts], QuantumBasisQ]]
+    QuantumOperator[qo, {order, order}, ConfirmBy[QuantumBasis[qo["Basis"], opts], QuantumBasisQ]]
 
 QuantumOperator[qo_ ? QuantumOperatorQ, order : _ ? autoOrderQ, opts : PatternSequence[Except[_ ? QuantumBasisQ], ___]] := Enclose @
     QuantumOperator[qo, order, ConfirmBy[QuantumBasis[qo["Basis"], opts], QuantumBasisQ]]
