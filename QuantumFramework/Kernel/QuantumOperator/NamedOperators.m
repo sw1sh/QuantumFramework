@@ -169,10 +169,10 @@ QuantumOperator[{"ControlledU" | "Controlled", qo_ ? QuantumOperatorQ, control1_
 },
     (*ConfirmAssert[! IntersectingQ[qo["Order"], control], "Target and control qudits shouldn't intersect"];*)
     QuantumOperator[
-        SparseArray @ ResourceFunction["BlockDiagonalMatrix"][
-            Normal @ identityMatrix[(2 ^ controls1 - 1) qo["OutputDimension"]],
-            Normal @ qo["Matrix"],
-            Normal @ identityMatrix[(2 ^ controls0 - 1) 2 ^ controls1 qo["OutputDimension"]]
+        BlockDiagonalMatrix[
+            identityMatrix[(2 ^ controls1 - 1) qo["OutputDimension"]],
+            qo["Matrix"],
+            identityMatrix[(2 ^ controls0 - 1) 2 ^ controls1 qo["OutputDimension"]]
         ],
         With[{order = Join[
             control0,
