@@ -119,7 +119,7 @@ QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOpe
 
 (* mutation *)
 
-QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args : PatternSequence[___, Except[_ ? targetQ]]] :=
+QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args : PatternSequence[Except[_ ? targetQ], ___]] :=
     QuantumMeasurementOperator[QuantumOperator[qmo["Operator"], args], qmo["Target"]]
 
 QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ : Automatic, args___] := With[{
