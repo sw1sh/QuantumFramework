@@ -1,16 +1,22 @@
+(* ::Package:: *)
+
 Package["Wolfram`QuantumFramework`"]
 
 PackageExport["QuantumEntangledQ"]
 PackageExport["QuantumEntanglementMonotone"]
 
 
+(*if no biPartition is given as argument, then set it as list of list of all qudits*)
 normalBipartition[biPartition_, qudits_] := Replace[biPartition, Automatic -> List /@ Range[qudits]]
 
+(*list of qudits other than biPartition*)
 bipartitionComplement[biPartition_ : Automatic, qudits_Integer] :=
     Complement[Range[qudits], Join @@ normalBipartition[biPartition, qudits]]
 
+(*the reduced density matrix for qudits specified by biPartition*)
 bipartitionTrace[qs_ ? QuantumStateQ, biPartition_ : Automatic] := QuantumPartialTrace[qs, bipartitionComplement[biPartition, qs["Qudits"]]]
 
+(*the reduced density matrix of 2nd qudit, specified by biPartition*)
 bipartitionReduce[qs_ ? QuantumStateQ, biPartition_ : Automatic] := With[{p = normalBipartition[biPartition, qs["Qudits"]]},
     QuantumPartialTrace[qs, Join[First[p], bipartitionComplement[p, qs["Qudits"]]]]
 ]
