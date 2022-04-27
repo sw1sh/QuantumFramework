@@ -17,7 +17,7 @@ $QuantumStateProperties = {
      "Computational", "SchmidtBasis", "SpectralBasis",
      "StateTensor", "StateMatrix",
      "Tensor", "Matrix",
-     "Pure", "Mixed",
+     "Purify", "Unpurify",
      "Formula"
 };
 
@@ -73,7 +73,7 @@ QuantumStateProp[qs_, "UnknownQ"] := qs["StateType"] === "UnknownType"
 
 QuantumState::notpure = "is not a pure state";
 
-QuantumStateProp[qs_, "Amplitudes"] := Module[{s = qs["Pure"], result},
+QuantumStateProp[qs_, "Amplitudes"] := Module[{s = qs["Purify"], result},
     result = Enclose @ KeySort @ Association @ Thread[s["ElementNames"] -> ConfirmBy[Chop @ s["StateVector"], VectorQ]];
     result /; !FailureQ[result]
 ]
@@ -87,7 +87,7 @@ QuantumStateProp[qs_, "StateVector"] := Module[{result},
         qs["Type"] === "Degenerate",
         SparseArray[{}, qs["Dimension"]],
         True,
-        Flatten @ qs["Pure"]["State"]
+        Flatten @ qs["Purify"]["State"]
     ];
     result /; !FailureQ[result]
 ]
@@ -101,7 +101,7 @@ QuantumStateProp[qs_, "Probabilities"] := Simplify /@ Re @ (qs["Weights"] / Tota
 
 QuantumStateProp[qs_, "Distribution"] := CategoricalDistribution[qs["Names"], qs["Probabilities"]]
 
-QuantumStateProp[qs_, "Formula", OptionsPattern["Normalize" -> False]] := With[{s = qs["Pure"]},
+QuantumStateProp[qs_, "Formula", OptionsPattern["Normalize" -> False]] := With[{s = qs["Purify"]},
     With[{v = SparseArray @ s[If[TrueQ[OptionValue["Normalize"]], "NormalizedStateVector", "StateVector"]], d = s["InputDimension"]},
         With[{pos = Catenate @ v["ExplicitPositions"]}, s["Names", Thread[{Quotient[pos - 1, d] + 1, Mod[pos - 1, d] + 1}]]] . v["ExplicitValues"]
     ]
@@ -254,9 +254,14 @@ QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /;
     ]
 ]
 
-QuantumStateProp[qs_, "Bipartition", dim : _Integer | Automatic : Automatic] := If[qs["VectorQ"],
-    qs["SchmidtBasis", dim],
-    (qs["Eigenvalues"] . (#["SchmidtBasis", dim]["MatrixState"] & /@ qs["Eigenstates"]))["Computational"]
+QuantumStateProp[qs_, "Bipartition", dim : _Integer | Automatic : Automatic] := If[
+    qs["Qudits"] == 2,
+    qs,
+
+    If[ qs["VectorQ"],
+        qs["SchmidtBasis", dim],
+        (qs["Eigenvalues"] . (#["SchmidtBasis", dim]["MatrixState"] & /@ qs["Eigenstates"]))["Computational"]
+    ]
 ]
 
 QuantumStateProp[qs_, "SpectralBasis"] := QuantumState[
@@ -277,7 +282,7 @@ QuantumStateProp[qs_, "Normalized" | "NormalizedState"] :=
     QuantumState[If[qs["StateType"] === "Vector", qs["NormalizedStateVector"], qs["NormalizedDensityMatrix"]], qs["Basis"]]
 
 
-QuantumStateProp[qs_, "Pure"] := If[qs["PureStateQ"] || qs["DegenerateStateQ"],
+QuantumStateProp[qs_, "Purify"] := If[qs["PureStateQ"] || qs["DegenerateStateQ"],
     qs,
     QuantumState[Flatten @ qs["DensityMatrix"], QuantumTensorProduct[qs["Basis"], qs["Basis"]]]
 ]
@@ -292,7 +297,7 @@ QuantumStateProp[qs_, "Double"] :=
     QuantumTensorProduct[qs, qs["Dual"]]
 
 
-QuantumStateProp[qs_, "Mixed"] := Enclose @ Which[
+QuantumStateProp[qs_, "Unpurify"] := Enclose @ Which[
     qs["MixedStateQ"],
     qs,
     qs["PureStateQ"] && IntegerQ[Sqrt[qs["Dimension"]]],
@@ -412,11 +417,11 @@ QuantumStateProp[qs_, "Tensor"] := qs["Computational"]["StateTensor"]
 
 QuantumStateProp[qs_, "Matrix"] := qs["Computational"]["StateMatrix"]
 
-QuantumStateProp[qs_, "PureTensor"] := qs["Computational"]["Pure"]["StateTensor"]
+QuantumStateProp[qs_, "PureTensor"] := qs["Computational"]["Purify"]["StateTensor"]
 
-QuantumStateProp[qs_, "PureMatrix"] := qs["Computational"]["Pure"]["StateMatrix"]
+QuantumStateProp[qs_, "PureMatrix"] := qs["Computational"]["Purify"]["StateMatrix"]
 
-QuantumStateProp[qs_, "PureVector"] := qs["Computational"]["Pure"]["StateVector"]
+QuantumStateProp[qs_, "PureVector"] := qs["Computational"]["Purify"]["StateVector"]
 
 QuantumStateProp[qs_, "VectorRepresentation"] := qs["Computational"]["StateVector"]
 
