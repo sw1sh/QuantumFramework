@@ -51,7 +51,7 @@ QuditBasis[assoc_Association] /; ! AllTrue[Keys[assoc], MatchQ[{_QuditName, _Int
     ]
 
 QuditBasis[names : {Except[_Integer | (name_String | {name_String, ___} /; MemberQ[$QuditBasisNames, name])] ..}] :=
-    QuditBasis[names, IdentityMatrix[Length[names]]]
+    QuditBasis[names, If[Length[names] == 1, {1}, identityMatrix[Length[names]]]]
 
 QuditBasis[names_List, elements_ ? ArrayQ] :=
     QuditBasis[AssociationThread[names, Normal @ elements]]

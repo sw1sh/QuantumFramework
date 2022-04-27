@@ -11,7 +11,7 @@ QuantumTensorProduct[args___] := QuantumTensorProduct[{args}]
 
 QuantumTensorProduct[qb1_QuditBasis, qb2_QuditBasis] := If[qb1["Size"] == 0 || qb2["Size"] == 0, QuditBasis[0],
     QuditBasis[
-        Association[qb1["Representations"], KeyMap[MapAt[# + qb1["NameRank"] &, 2]] @ qb2["Representations"]]
+        Association[qb1["Representations"], KeyMap[MapAt[# + qb1["Qudits"] &, 2]] @ qb2["Representations"]]
     ]["RemoveIdentities"]
 ]
 
