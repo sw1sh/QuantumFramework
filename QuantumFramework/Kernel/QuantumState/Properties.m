@@ -145,7 +145,11 @@ QuantumStateProp[qs_, "DensityMatrix"] /; qs["StateType"] === "Matrix" := qs["St
 
 QuantumStateProp[qs_, "DensityTensor"] := ArrayReshape[qs["DensityMatrix"], Join[qs["Dimensions"], qs["Dimensions"]]]
 
-QuantumStateProp[qs_, "Projector"] := QuantumState[Flatten @ qs["DensityMatrix"], QuantumBasis[qs["Basis"], "Input" -> qs["Output"]["Dual"]]]
+QuantumStateProp[qs_, "Projector"] := QuantumState[Flatten @ qs["DensityMatrix"],
+    QuantumBasis[qs["Basis"],
+        "Output" -> QuantumTensorProduct[qs["Output"], qs["Input"]],
+        "Input" -> QuantumTensorProduct[qs["Output"]["Dual"], qs["Input"]["Dual"]]]
+]
 
 QuantumStateProp[qs_, "NormalizedProjector"] := QuantumState[Flatten @ qs["NormalizedDensityMatrix"], QuantumBasis[qs["Basis"], "Input" -> qs["Output"]["Dual"]]]
 
