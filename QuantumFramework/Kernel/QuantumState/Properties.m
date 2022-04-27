@@ -254,6 +254,9 @@ QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /;
     ]
 ]
 
+QuantumStateProp[qs_, "Bipartition", qudits : {_Integer..}] /; ContainsAll[Range[qs["Qudits"]], qudits] :=
+    qs[{"Split", qs["Qudits"]}][{"Permute", FindPermutation[Join[qudits, Complement[Range[qs["Qudits"]], qudits]]]}]["Bipartition", Times @@ qs["Dimensions"][[qudits]]]
+
 QuantumStateProp[qs_, "Bipartition", dim : _Integer | Automatic : Automatic] := If[
     qs["Qudits"] == 2,
     qs,
