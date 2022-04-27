@@ -306,6 +306,8 @@ QuantumStateProp[qs_, "Mixed"] := Enclose @ Which[
     qs
 ]
 
+QuantumStateProp[qs_, "VectorState"] := If[qs["StateType"] === "Vector", qs, QuantumState[qs["StateVector"], qs["Basis"]]]
+
 QuantumStateProp[qs_, "MatrixState"] := If[qs["StateType"] === "Matrix", qs, QuantumState[qs["DensityMatrix"], qs["Basis"]]]
 
 QuantumStateProp[qs_, "Transpose"] := With[{qb = qs["Basis"]["Transpose"]},
