@@ -220,9 +220,13 @@ QuantumStateProp[qs_, "Computational"] := QuantumState[qs, QuantumBasis[
 ]
 ]
 
-QuantumStateProp[qs_, "SchmidtBasis", dim_Integer : Automatic] /; dim === Automatic || Divisible[qs["Dimension"], dim] := Module[{
+QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /; dim === Automatic || Divisible[qs["Dimension"], dim] := Module[{
     uMatrix, alphaValues, wMatrix,
-    n = Replace[dim, Automatic -> If[qs["Qudits"] > 1, First @ qs["Dimensions"], Max[Most @ Divisors[qs["Dimension"]]]]],
+    n = Replace[dim, Automatic -> If[
+        qs["Qudits"] > 1,
+        First @ qs["Dimensions"],
+        Replace[Divisors[qs["Dimension"]], {{1, d_} :> d, {___, d_, _} :> d}]
+    ]],
     m,
     state = qs["Computational"],
     mat
@@ -248,6 +252,11 @@ QuantumStateProp[qs_, "SchmidtBasis", dim_Integer : Automatic] /; dim === Automa
             }
         ]
     ]
+]
+
+QuantumStateProp[qs_, "Bipartition", dim : _Integer | Automatic : Automatic] := If[qs["VectorQ"],
+    qs["SchmidtBasis", dim],
+    (qs["Eigenvalues"] . (#["SchmidtBasis", dim]["MatrixState"] & /@ qs["Eigenstates"]))["Computational"]
 ]
 
 QuantumStateProp[qs_, "SpectralBasis"] := QuantumState[
