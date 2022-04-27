@@ -143,6 +143,19 @@ QuantumState /: Equal[qs : _QuantumState ...] :=
         Equal @@ (Chop @ SetPrecision[#[{"Split", #["Qudits"]}]["Pure"]["Computational"]["CanonicalStateVector"], $MachinePrecision - 2] & /@ {qs})
     ]
 
+
+(* numeric function *)
+
+QuantumState /: f_Symbol[left : Except[_QuantumState] ..., qs_QuantumState, right : Except[_QuantumState] ...] /; MemberQ[Attributes[f], NumericFunction] :=
+    Enclose @ QuantumState[
+        If[ MemberQ[{Plus, Minus, Times}, f],
+            ConfirmBy[f[left, qs["State"], right], stateQ],
+            ConfirmBy[MatrixFunction[f[left, #, right] &, qs["DensityMatrix"]], MatrixQ]
+        ],
+        qs["Basis"]
+    ]
+
+
 (* addition *)
 
 addQuantumStates[qs1_QuantumState ? QuantumStateQ, qs2_QuantumState ? QuantumStateQ] /; qs1["Dimension"] == qs2["Dimension"] :=
@@ -157,12 +170,12 @@ addQuantumStates[qs1_QuantumState ? QuantumStateQ, qs2_QuantumState ? QuantumSta
         qs1["Basis"]
     ]
 
-QuantumState /: Plus[states : _QuantumState...] := Fold[addQuantumStates, {states}]
+QuantumState /: HoldPattern[Plus[states : _QuantumState ...]] := Fold[addQuantumStates, {states}]
 
 
 (* multiplication *)
 
-QuantumState /: (qs1_QuantumState ? QuantumStateQ) * (qs2_QuantumState ? QuantumStateQ) /; qs1["Dimension"] == qs2["Dimension"] :=
+multiplyQuantumStates[qs1_QuantumState, qs2_QuantumState] /; qs1["Dimension"] == qs2["Dimension"] :=
     QuantumState[
         QuantumState[
             If[ qs1["StateType"] === qs2["StateType"] === "Vector",
@@ -174,14 +187,8 @@ QuantumState /: (qs1_QuantumState ? QuantumStateQ) * (qs2_QuantumState ? Quantum
         qs1["Basis"]
     ]
 
-QuantumState /: (x : (_ ? NumericQ) | _Symbol) * (qs_QuantumState ? QuantumStateQ) :=
-    QuantumState[
-        x qs["State"],
-        qs["Basis"]
-    ]
+QuantumState /: HoldPattern[Times[states : _QuantumState ? QuantumStateQ ...]] := Fold[QuantumTensorProduct, {states}]
 
-QuantumState /: f_Symbol[left : _ ? NumericQ ..., qs_QuantumState, right : _ ? NumericQ ...] /; MemberQ[Attributes[f], NumericFunction] :=
-    Enclose @ QuantumState[ConfirmBy[MatrixFunction[f[left, #, right] &, qs["DensityMatrix"]], MatrixQ], qs["Basis"]]
 
 
 (* composition *)
@@ -206,6 +213,7 @@ QuantumState /: f_Symbol[left : _ ? NumericQ ..., qs_QuantumState, right : _ ? N
         "ParameterSpec" -> Join[qs2["ParameterSpec"], qs1["ParameterSpec"]]
     ]
 ]
+
 
 (qs1_QuantumState ? QuantumStateQ)[(qs2_QuantumState ? QuantumStateQ)] /; qs1["InputDimension"] == qs2["OutputDimension"] := Module[{
     q1 = qs1["Computational"], q2 = qs2["Computational"], state

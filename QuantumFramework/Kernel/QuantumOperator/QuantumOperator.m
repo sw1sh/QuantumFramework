@@ -314,6 +314,11 @@ expandQuditBasis[qb_QuditBasis, order1_ ? orderQ, order2_ ? orderQ, defaultDim_I
     QuantumTensorProduct[order2 /. Append[Thread[order1 -> qb["Decompose"]], _Integer -> QuditBasis[defaultDim]]]
 )
 
+
+QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator] ...] /; MemberQ[Attributes[f], NumericFunction] :=
+    Enclose @ QuantumOperator[ConfirmBy[MatrixFunction[f[left, #, right] &, qo["Matrix"]], MatrixQ], qo["Order"], qo["Basis"], "Label" -> f[left, qo["Label"], right]]
+
+
 QuantumOperator /: Plus[ops : _QuantumOperator...] := Fold[addQuantumOperators, {ops}]
 
 addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator ? QuantumOperatorQ] := Enclose @ With[{
@@ -336,9 +341,6 @@ addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator 
         ordered1["Basis"]
     ]
 ]
-
-QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator] ...] /; MemberQ[Attributes[f], NumericFunction] :=
-    Enclose @ QuantumOperator[ConfirmBy[MatrixFunction[f[left, #, right] &, qo["Matrix"]], MatrixQ], qo["Order"], qo["Basis"], "Label" -> f[left, qo["Label"], right]]
 
 
 (* equality *)
