@@ -126,15 +126,23 @@ QuantumState[{"W", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 
     QuantumState[SparseArray[{element_} /; IntegerQ[Log[dimension, element - 1]] -> 1, {dimension ^ subsystemCount}], dimension, args]
 
 
-QuantumState["Werner", args___] := QuantumState[{"Werner", 0}, args]
 
-QuantumState[{"Werner", relativeWeight_}, args___] := Module[{
-    phiMinus, phiMinusDensityMatrix, densityMatrix
+wernerState[p_, qb_QuditBasis] /; qb["Qudits"] == 2 :=
+    Module[{dim = qb["Dimension"], d = First[qb["Dimensions"]], fAB, sym, as},
+        fAB = QuantumOperator[{"Permutation", qb["Dimensions"], Cycles[{{1, 2}}]}]["Matrix"];
+        sym = IdentityMatrix[dim] + fAB;
+        as = IdentityMatrix[dim] - fAB;
+        QuantumState[p sym 1 / (dim + d) + 1 / (dim - d) (1 - p) as // FullSimplify, qb]
+    ]
+
+QuantumState["Werner", args___] := QuantumState[{"Werner", .5, 2}, args]
+
+QuantumState[{"Werner", p_, param_ : 2}, args___] := QuantumState[{"Werner", p, QuditBasis[param]}, args]
+
+QuantumState[{"Werner", p_, qb_ ? QuditBasisQ}, args___] := With[{
+    basis = QuditBasis[qb, 2]
 },
-    phiMinus = {1, 0, 0, -1};
-    phiMinusDensityMatrix = SparseArray[ConjugateTranspose[{phiMinus}]] . SparseArray[{phiMinus}];
-    densityMatrix = (relativeWeight phiMinusDensityMatrix) + ((1 - relativeWeight) / 4) identityMatrix[4];
-    QuantumState[densityMatrix, args]
+    QuantumState[wernerState[p, basis], args]
 ]
 
 
