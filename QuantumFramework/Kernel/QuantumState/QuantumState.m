@@ -170,7 +170,10 @@ addQuantumStates[qs1_QuantumState ? QuantumStateQ, qs2_QuantumState ? QuantumSta
         qs1["Basis"]
     ]
 
-QuantumState /: HoldPattern[Plus[states : _QuantumState ...]] := Fold[addQuantumStates, {states}]
+QuantumState /: HoldPattern[Plus[states : _QuantumState ...]] :=
+    If[ Equal @@ (#["Dimension"] & /@ {states}), Fold[addQuantumStates, {states}],
+        Failure["QuantumState", <|"MessageTemplate" -> "Incompatible dimensions"|>]
+    ]
 
 
 (* multiplication *)
@@ -187,7 +190,10 @@ multiplyQuantumStates[qs1_QuantumState, qs2_QuantumState] /; qs1["Dimension"] ==
         qs1["Basis"]
     ]
 
-QuantumState /: HoldPattern[Times[states : _QuantumState ? QuantumStateQ ...]] := Fold[QuantumTensorProduct, {states}]
+QuantumState /: HoldPattern[Times[states : _QuantumState ? QuantumStateQ ...]] :=
+    If[ Equal @@ (#["Dimension"] & /@ {states}), Fold[multiplyQuantumStates, {states}],
+        Failure["QuantumState", <|"MessageTemplate" -> "Incompatible dimensions"|>]
+    ]
 
 
 
