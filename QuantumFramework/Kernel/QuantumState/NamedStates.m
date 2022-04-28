@@ -85,7 +85,7 @@ QuantumState[{"UniformSuperposition", subsystemCount_Integer}, dimension : (_Int
 QuantumState["UniformMixture", args___] := QuantumState[{"UniformMixture", 1}, args]
 
 QuantumState[{"UniformMixture", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
-    QuantumState[identityMatrix[dimension ^ subsystemCount], dimension, args]
+    QuantumState[identityMatrix[dimension ^ subsystemCount] / (dimension ^ subsystemCount), dimension, args]
 
 
 QuantumState[{"RandomPure", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
@@ -123,7 +123,7 @@ QuantumState[{"GHZ", subsystemCount_Integer}, dimension : (_Integer ? Positive) 
 QuantumState["W", args___] := QuantumState[{"W", 3}, args]
 
 QuantumState[{"W", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
-    QuantumState[SparseArray[{element_} /; IntegerQ[Log[dimension, element - 1]] -> 1, {dimension ^ subsystemCount}], dimension, args]
+    QuantumState[SparseArray[{element_} /; IntegerQ[Log[dimension, element - 1]] -> 1 / Sqrt[subsystemCount], {dimension ^ subsystemCount}], dimension, args]
 
 
 
