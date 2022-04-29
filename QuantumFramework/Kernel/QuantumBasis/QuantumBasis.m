@@ -66,7 +66,6 @@ QuantumBasisQ[qb : QuantumBasis[_Association]] := System`Private`ValidQ[qb]
 
 QuantumBasisQ[___] := False
 
-SetAttributes[QuantumBasis, NHoldAll]
 
 (* mutation *)
 
@@ -168,4 +167,11 @@ QuantumBasis /: (qb1_QuantumBasis ? QuantumBasisQ) ==
     (qb2_QuantumBasis ? QuantumBasisQ) := qb1["Input"] == qb2["Input"] && qb1["Output"] == qb2["Output"]
 
 
+(* N *)
+
+N[qb_QuantumBasis, n_] /; ! AllTrue[
+    Join[Values[qb["Output"]["Representations"]], Values[qb["Input"]["Representations"]]],
+    InexactNumberQ[#] || ArrayQ[#, _, InexactNumberQ] &] := QuantumBasis[qb, "Output" -> N[qb["Output"], n], "Input" -> N[qb["Input"], n]]
+
+SetAttributes[QuantumBasis, NHoldAll]
 
