@@ -254,6 +254,20 @@ QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /;
     ]
 ]
 
+QuantumStateProp[qs_, "Bipartition", bipartition : {{_Integer..}, {_Integer..}}] := With[{
+    qudits = Catenate @ bipartition,
+    allQudits = Range[qs["Qudits"]]
+},
+    With[{trace = Complement[allQudits, qudits]},
+        QuantumPartialTrace[qs, trace][
+            "Bipartition",
+            bipartition[[1]] /. Thread[
+                Join[Complement[allQudits, trace], trace] -> allQudits
+            ]
+        ]
+    ] /; DuplicateFreeQ[qudits] && ContainsAll[allQudits, qudits]
+]
+
 QuantumStateProp[qs_, "Bipartition", qudits : {_Integer..}] /; ContainsAll[Range[qs["Qudits"]], qudits] :=
     qs[{"Split", qs["Qudits"]}][{"Permute", FindPermutation[Join[qudits, Complement[Range[qs["Qudits"]], qudits]]]}]["Bipartition", Times @@ qs["Dimensions"][[qudits]]]
 
