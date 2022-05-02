@@ -140,7 +140,7 @@ QuantumState /: Equal[qs : _QuantumState ...] :=
         And @@ (#["MixedStateQ"] & /@ {qs}),
         Equal @@ (Chop @ SetPrecision[#["NormalizedMatrixRepresentation"], $MachinePrecision - 2] & /@ {qs}),
         True,
-        Equal @@ (Chop @ SetPrecision[#[{"Split", #["Qudits"]}]["Purify"]["Computational"]["CanonicalStateVector"], $MachinePrecision - 2] & /@ {qs})
+        Equal @@ (Chop @ SetPrecision[#[{"Split", #["Qudits"]}]["Bend"]["Computational"]["CanonicalStateVector"], $MachinePrecision - 2] & /@ {qs})
     ]
 
 

@@ -59,8 +59,8 @@ QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] := Enclose[
     QuantumState[QuantumState[
         If[qs1["StateType"] === qs2["StateType"] === "Vector",
             Flatten[KroneckerProduct[
-                qs1["PureMatrix"],
-                qs2["PureMatrix"]
+                qs1["Computational"]["StateMatrix"],
+                qs2["Computational"]["StateMatrix"]
             ]],
             KroneckerProduct[qs1["MatrixRepresentation"], qs2["MatrixRepresentation"]]
         ],
