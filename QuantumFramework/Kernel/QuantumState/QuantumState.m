@@ -155,6 +155,10 @@ QuantumState /: f_Symbol[left : Except[_QuantumState] ..., qs_QuantumState, righ
         qs["Basis"]
     ]
 
+(* Trace *)
+
+QuantumState /: Tr[qs_QuantumState] := Tr @ qs["DensityMatrix"]
+
 
 (* addition *)
 

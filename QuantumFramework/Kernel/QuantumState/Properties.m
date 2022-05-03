@@ -8,7 +8,7 @@ $QuantumStateProperties = {
      "NormalizedState", "NormalizedAmplitudes", "NormalizedStateVector", "NormalizedDensityMatrix",
      "Entropy", "VonNeumannEntropy",
      "Purity", "Type", "PureStateQ", "MixedStateQ",
-     "Norm", "NormalizedQ",
+     "Norm", "TraceNorm", "NormalizedQ",
      "BlochSphericalCoordinates", "BlochCartesianCoordinates",
      "BlochPlot",
      "Projector", "NormalizedProjector",
@@ -16,8 +16,13 @@ $QuantumStateProperties = {
      "Eigenvalues", "Eigenvectors", "Eigenstates",
      "Computational", "SchmidtBasis", "SpectralBasis",
      "StateTensor", "StateMatrix",
+     "VectorState", "MatrixState",
      "Tensor", "Matrix",
-     "Bend", "Unbend",
+     "Purify", "Unpurify",
+     "Bend", "BendDual", "Unbend", "Double",
+     "Pure", "Mixed",
+     "Trace", "Transpose", "Conjugate", "ConjugateTranspose", "Reverse",
+     "Bipartition",
      "Formula"
 };
 
@@ -73,7 +78,7 @@ QuantumStateProp[qs_, "UnknownQ"] := qs["StateType"] === "UnknownType"
 
 QuantumState::notpure = "is not a pure state";
 
-QuantumStateProp[qs_, "Amplitudes"] := Module[{s = qs["Bend"], result},
+QuantumStateProp[qs_, "Amplitudes"] := Module[{s = qs["Pure"], result},
     result = Enclose @ KeySort @ Association @ Thread[s["ElementNames"] -> ConfirmBy[Chop @ s["StateVector"], VectorQ]];
     result /; !FailureQ[result]
 ]
@@ -101,7 +106,7 @@ QuantumStateProp[qs_, "Probabilities"] := Simplify /@ Re @ (qs["Weights"] / Tota
 
 QuantumStateProp[qs_, "Distribution"] := CategoricalDistribution[qs["Names"], qs["Probabilities"]]
 
-QuantumStateProp[qs_, "Formula", OptionsPattern["Normalize" -> False]] := With[{s = qs["Bend"]},
+QuantumStateProp[qs_, "Formula", OptionsPattern["Normalize" -> False]] := With[{s = qs["Pure"]},
     With[{v = SparseArray @ s[If[TrueQ[OptionValue["Normalize"]], "NormalizedStateVector", "StateVector"]], d = s["InputDimension"]},
         With[{pos = Catenate @ v["ExplicitPositions"]}, s["Names", Thread[{Quotient[pos - 1, d] + 1, Mod[pos - 1, d] + 1}]]] . v["ExplicitValues"]
     ]
@@ -110,7 +115,10 @@ QuantumStateProp[qs_, "Formula", OptionsPattern["Normalize" -> False]] := With[{
 
 (* normalization *)
 
-QuantumStateProp[qs_, "Norm"] := FullSimplify @ If[qs["StateType"] === "Vector", Norm[qs["StateVector"]], Total @ SingularValueList @ qs["DensityMatrix"]]
+QuantumStateProp[qs_, "Norm"] := FullSimplify @ If[qs["StateType"] === "Vector", Norm[qs["StateVector"]], Tr @ qs["DensityMatrix"]]
+
+QuantumStateProp[qs_, "TraceNorm"] := Total @ SingularValueList @ qs["DensityMatrix"]
+
 
 QuantumStateProp[qs_, "NormalizedQ"] := qs["Norm"] == 1
 
@@ -322,6 +330,11 @@ QuantumStateProp[qs_, "Unbend"] := Enclose @ Which[
 QuantumStateProp[qs_, "Purify"] := Sqrt[qs]["Bend"]
 
 QuantumStateProp[qs_, "Unpurify"] := qs["Unbend"] ^ 2
+
+
+QuantumStateProp[qs_, "Pure"] := If[qs["PureStateQ"], qs, qs["Bend"]]
+
+QuantumStateProp[qs_, "Mixed"] := If[qs["MixedStateQ"], qs, qs["Unbend"]]
 
 
 QuantumStateProp[qs_, "VectorState"] := If[qs["StateType"] === "Vector", qs, QuantumState[qs["StateVector"], qs["Basis"]]]

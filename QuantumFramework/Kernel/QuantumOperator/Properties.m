@@ -14,11 +14,12 @@ $QuantumOperatorProperties = {
     "Range", "FullInputOrder", "FullOutputOrder", "InputQuditOrder", "OutputQuditOrder",
     "FirstOutputQudit", "LastOutputQudit", "FirstInputQudit", "LastInputQudit", "InputOrderQuditMapping",
     "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors", "Eigensystem", "Projectors",
-    "ConjugateTranspose",
+    "Transpose", "ConjugateTranspose",
     "UnstackOutput", "UnstackInput",
     "QuantumOperator", "Operator",
     "Computational",
-    "Dagger", "Dual"
+    "Dagger", "Dual",
+    "TraceNorm"
 };
 
 QuantumOperator["Properties"] := Union @ Join[$QuantumOperatorProperties, Complement[QuantumState["Properties"], {
@@ -304,6 +305,8 @@ QuantumOperatorProp[qo_, "Dagger" | "ConjugateTranspose"] := QuantumOperator[
     qo["State"]["Dagger"], {qo["InputOrder"], qo["OutputOrder"]}]
 
 QuantumOperatorProp[qo_, "Dual"] := QuantumOperator[qo["State"]["Dual"], qo["Order"]]
+
+QuantumOperatorProp[qo_, "TraceNorm"] := qo["Unbend"]["TraceNorm"]
 
 
 (* evolution *)
