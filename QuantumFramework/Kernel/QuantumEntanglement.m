@@ -26,11 +26,11 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Conc
 
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Negativity"] :=
-    Enclose[(2 ^ QuantumEntanglementMonotone[ConfirmBy[qs["Bipartition", biPartition], QuantumStateQ], "LogNegativity"] - 1) / 2]
+    Enclose[(ConfirmBy[qs["Bipartition", biPartition], QuantumStateQ][{"Transpose", {2}}]["Norm"] - 1) / 2]
 
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "LogNegativity"] :=
-    Enclose[Chop @ Log[2, Total @ SingularValueList @ QuantumPartialTrace[ConfirmBy[qs["Bipartition", biPartition], QuantumStateQ], {1}]["NormalizedDensityMatrix"]]]
+    Enclose @ Log2 @ ConfirmBy[qs["Bipartition", biPartition], QuantumStateQ][{"Transpose", {2}}]["Norm"]
 
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "EntanglementEntropy"] :=

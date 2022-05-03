@@ -93,6 +93,7 @@ QuantumBasis[arg : {(_QuditName | _Integer | _ ? propQ) ..}, args___] := Quantum
 
 QuantumBasis[params_List, args___] := QuantumTensorProduct[QuantumBasis[#, args] & /@ params]
 
+QuantumBasis[{}, args___] := QuantumBasis[QuditBasis[{}], args]
 
 (* defaults *)
 QuantumBasis[data_Association ? (Keys /* Not @* ContainsAll[$QuantumBasisDataKeys]), args___] :=

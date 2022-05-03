@@ -67,6 +67,11 @@ tensorToVector[t_ ? TensorQ] := Flatten[t]
 tensorToVector[t_] := {t}
 
 
+toTensor[t_ ? TensorQ] := t
+
+toTensor[t_] := {t}
+
+
 identityMatrix[0] := {{}}
 
 identityMatrix[n_] := IdentityMatrix[n, SparseArray]
@@ -82,7 +87,7 @@ projector[v_] := KroneckerProduct[v, Conjugate[v]]
 
 
 MatrixPartialTrace[matrix_, trace_, dimensions_] := ArrayReshape[
-    TensorContract[
+    toTensor @ TensorContract[
         ArrayReshape[matrix, Join[dimensions, dimensions]], Thread[{trace, trace + Length[dimensions]}]
     ],
     Table[Times @@ Delete[dimensions, List /@ trace], 2]

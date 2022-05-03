@@ -110,7 +110,7 @@ QuantumStateProp[qs_, "Formula", OptionsPattern["Normalize" -> False]] := With[{
 
 (* normalization *)
 
-QuantumStateProp[qs_, "Norm"] := FullSimplify @ If[qs["StateType"] === "Vector", Norm[qs["StateVector"]], Tr @ qs["DensityMatrix"]]
+QuantumStateProp[qs_, "Norm"] := FullSimplify @ If[qs["StateType"] === "Vector", Norm[qs["StateVector"]], Total @ SingularValueList @ qs["DensityMatrix"]]
 
 QuantumStateProp[qs_, "NormalizedQ"] := qs["Norm"] == 1
 
@@ -342,6 +342,8 @@ QuantumStateProp[qs_, {"Transpose", qudits : {_Integer...}}] := QuantumState[
 
 QuantumStateProp[qs_, "Reverse"] :=
     qs[{"PermuteOutput", FindPermutation[Reverse @ Range qs["OutputQudits"]]}][{"PermuteInput", FindPermutation[Reverse @ Range qs["InputQudits"]]}]
+
+QuantumStateProp[qs_, "Trace"] := QuantumPartialTrace[qs]
 
 QuantumStateProp[qs_, {"Trace", qudits : {_Integer...}}] := QuantumPartialTrace[qs, qudits]
 
