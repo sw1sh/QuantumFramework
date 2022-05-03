@@ -37,10 +37,10 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Enta
     Enclose @ QuantumPartialTrace[ConfirmBy[qs["Bipartition", biPartition], QuantumStateQ], {1}]["VonNeumannEntropy"]
 
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "RenyiEntanglementEntropy"] :=
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "RenyiEntanglementEntropy" | "RenyiEntropy"] :=
     QuantumEntanglementMonotone[qs, biPartition, {"RenyiEntanglementEntropy", 1 / 2}]
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, {"RenyiEntanglementEntropy", alpha_}] :=
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, {"RenyiEntanglementEntropy" | "RenyiEntropy", alpha_}] :=
     Enclose[
         (1 / (1 - alpha)) Log[2, Total[Select[Re[Eigenvalues[MatrixPower[
             QuantumPartialTrace[
