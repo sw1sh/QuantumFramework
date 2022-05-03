@@ -17,7 +17,7 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Conc
     s, ds, twoQuditPauliY
 },
 
-    s = ConfirmBy[qs["Bipartition", biPartition], QuantumStateQ];
+    s = ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ];
     ds = s["Dimensions"];
     twoQuditPauliY = QuantumTensorProduct[QuantumOperator[{"Y", ds[[1]]}], QuantumOperator[{"Y", ds[[2]]}]];
 
