@@ -6,7 +6,7 @@
 
 
 PacletManager`Package`loadWolframLanguageCode[
-    "Wolfram`QuantumFramework`",
+    "Wolfram`QuantumFramework",
     "Wolfram`QuantumFramework`",
     ParentDirectory[DirectoryName[$InputFileName]],
     "Kernel/QuantumFramework.m",
