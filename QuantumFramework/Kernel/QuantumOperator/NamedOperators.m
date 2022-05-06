@@ -369,6 +369,12 @@ QuantumOperator[{"RandomUnitary", dimension_Integer}, order : (_ ? orderQ) : {1}
            RandomVariate @ CircularUnitaryMatrixDistribution[dimension ^ Length[order]], order, dimension, Length[order], opts, "Label" -> None
     ]
 
+QuantumOperator["RandomUnitary", order : (_ ? orderQ) : {1}, opts___] := With[{basis = QuantumBasis[opts]},
+    QuantumOperator[
+           RandomVariate @ CircularUnitaryMatrixDistribution[basis["Dimension"]], order, basis, "Label" -> None
+    ]
+]
+
 
 QuantumOperator[{"Permutation", perm_Cycles}, opts___] := QuantumOperator[{"Permutation", 2, perm}, opts]
 
