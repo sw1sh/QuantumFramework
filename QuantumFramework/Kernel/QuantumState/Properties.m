@@ -8,6 +8,7 @@ $QuantumStateProperties = {
      "NormalizedState", "NormalizedAmplitudes", "NormalizedStateVector", "NormalizedDensityMatrix",
      "Entropy", "VonNeumannEntropy",
      "Purity", "Type", "PureStateQ", "MixedStateQ",
+     "Kind",
      "Norm", "TraceNorm", "NormalizedQ",
      "BlochSphericalCoordinates", "BlochCartesianCoordinates",
      "BlochPlot",
@@ -73,6 +74,17 @@ QuantumStateProp[qs_, "MatrixQ"] := qs["StateType"] === "Matrix"
 
 QuantumStateProp[qs_, "UnknownQ"] := qs["StateType"] === "UnknownType"
 
+
+QuantumStateProp[qs_, "Kind"] := Which[
+    qs["InputQudits"] === qs["OutputQudits"] === 0,
+    "Number",
+    qs["InputQudits"] === 0,
+    "State",
+    qs["OutputQudits"] === 0,
+    "Effect",
+    True,
+    "Map"
+]
 
 (* amplitudes are only defined for pure states *)
 

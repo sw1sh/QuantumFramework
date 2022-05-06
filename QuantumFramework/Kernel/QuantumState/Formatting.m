@@ -17,11 +17,11 @@ QuantumState /: MakeBoxes[qs_QuantumState /; Quiet @ QuantumStateQ[Unevaluated @
     BoxForm`ArrangeSummaryBox["QuantumState", qs, icon,
     {
         {
-            BoxForm`SummaryItem[{"StateType: ", qs["StateType"]}],
+            BoxForm`SummaryItem[{Row @ {qs["Type"], " ", ToLowerCase @ qs["Kind"]}}],
             BoxForm`SummaryItem[{"Qudits: ", qs["Qudits"]}]
         },
         {
-            BoxForm`SummaryItem[{"Type: ", Quiet @ qs["Type"]}],
+            BoxForm`SummaryItem[{"Type: ", qs["StateType"]}],
             BoxForm`SummaryItem[{"Dimension: ", qs["Dimension"]}]
         },
         {
