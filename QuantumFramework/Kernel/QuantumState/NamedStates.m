@@ -42,9 +42,9 @@ QuantumState["Plus", args___] := QuantumState[Normalize @ {1, 1}, "Label" -> "+"
 
 QuantumState["Minus", args___] := QuantumState[Normalize @ {-1, 1}, "Label" -> "-", args]
 
-QuantumState["Left", args___] := QuantumState[Normalize @ {1, I}, "Label" -> "L", args]
+QuantumState["Left", args___] := QuantumState[Normalize @ {I, 1}, "Label" -> "L", args]
 
-QuantumState["Right", args___] := QuantumState[Normalize @ {1, -I}, "Label" -> "R", args]
+QuantumState["Right", args___] := QuantumState[Normalize @ {-I, 1}, "Label" -> "R", args]
 
 QuantumState["PhiPlus", args___] := QuantumState[Normalize @ {1, 0, 0, 1}, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(+\)]", args]
 
