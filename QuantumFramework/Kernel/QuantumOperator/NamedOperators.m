@@ -187,13 +187,13 @@ QuantumOperator[{"ControlledU" | "Controlled", qo_ ? QuantumOperatorQ, control1_
             {order, order}
         ],
         QuantumTensorProduct[
+            QuantumBasis[QuditBasis[2, controls0], QuditBasis[2, controls0]],
             QuantumBasis[QuditBasis[2, controls1], QuditBasis[2, controls1]],
-            qo["Basis"],
-            QuantumBasis[QuditBasis[2, controls0], QuditBasis[2, controls0]]
+            qo["Basis"]
         ],
         opts,
         "Label" -> "Controlled"[qo["Label"], control1, control0]
-    ]
+    ]["Sort"]
 ]
 
 
