@@ -140,17 +140,17 @@ QuantumOperatorProp[qo_, "OrderedTensor"] := qo["Ordered"]["Tensor"]
 QuantumOperatorProp[qo_, "OrderedTensorRepresentation"] := qo["Ordered"]["TensorRepresentation"]
 
 
-QuantumOperatorProp[qo_, {"PermuteInput", perm_Cycles}] := QuantumOperator[
-    qo["State"][{"PermuteInput", perm}],
+QuantumOperatorProp[qo_, "PermuteInput", perm_Cycles] := QuantumOperator[
+    qo["State"]["PermuteInput", perm],
     qo["Order"]
 ]
 
-QuantumOperatorProp[qo_, {"PermuteOutput", perm_Cycles}] := QuantumOperator[
-    qo["State"][{"PermuteOutput", perm}],
+QuantumOperatorProp[qo_, "PermuteOutput", perm_Cycles] := QuantumOperator[
+    qo["State"]["PermuteOutput", perm],
     qo["Order"]
 ]
 
-QuantumOperatorProp[qo_, {"OrderInputExtra", inputSource_ ? orderQ, inputTarget_ ? orderQ}] := Module[{
+QuantumOperatorProp[qo_, "OrderInputExtra", inputSource_ ? orderQ, inputTarget_ ? orderQ] := Module[{
     extra = DeleteCases[inputTarget, Alternatives @@ inputSource],
     inputPerm, outputTarget
 },
@@ -158,12 +158,12 @@ QuantumOperatorProp[qo_, {"OrderInputExtra", inputSource_ ? orderQ, inputTarget_
     inputPerm = FindPermutation[Join[inputSource, extra], inputTarget];
     outputTarget = qo["FullOutputOrder"] /. Thread[Permute[qo["FullInputOrder"], inputPerm] -> inputTarget];
     QuantumOperator[
-        qo[{"PermuteInput", inputPerm}],
+        qo["PermuteInput", inputPerm],
         {outputTarget, Sort @ inputTarget}
     ]
 ]
 
-QuantumOperatorProp[qo_, {"OrderOutputExtra", outputSource_ ? orderQ, outputTarget_ ? orderQ}] := Module[{
+QuantumOperatorProp[qo_, "OrderOutputExtra", outputSource_ ? orderQ, outputTarget_ ? orderQ] := Module[{
     extra = DeleteCases[outputTarget, Alternatives @@ outputSource],
     outputPerm, inputTarget
 },
@@ -171,80 +171,80 @@ QuantumOperatorProp[qo_, {"OrderOutputExtra", outputSource_ ? orderQ, outputTarg
     outputPerm = FindPermutation[Join[outputSource, extra], outputTarget];
     inputTarget = qo["FullInputOrder"] /. Thread[Permute[qo["FullOutputOrder"], outputPerm] -> outputTarget];
     QuantumOperator[
-        qo[{"PermuteOutput", outputPerm}],
+        qo["PermuteOutput", outputPerm],
         {Sort @ outputTarget, inputTarget}
     ]
 ]
 
-QuantumOperatorProp[qo_, "SortInput"] := QuantumOperator[qo[{
+QuantumOperatorProp[qo_, "SortInput"] := QuantumOperator[qo[
     "PermuteInput",
     InversePermutation @ FindPermutation[Ordering @ Ordering @ qo["FullInputOrder"]]
-}],
+],
     {qo["OutputOrder"], Sort @ qo["InputOrder"]}
 ]
 
-QuantumOperatorProp[qo_, "SortOutput"] := QuantumOperator[qo[{
+QuantumOperatorProp[qo_, "SortOutput"] := QuantumOperator[qo[
     "PermuteOutput",
     InversePermutation @ FindPermutation[Ordering @ Ordering @ qo["FullOutputOrder"]]
-}],
+],
     {Sort @ qo["OutputOrder"], qo["InputOrder"]}
 ]
 
 QuantumOperatorProp[qo_, "Sort"] := qo["SortOutput"]["SortInput"]
 
 
-QuantumOperatorProp[qo_, "Ordered" | "OrderedInput"] := qo[{"OrderedInput", Sort @ qo["FullInputOrder"]}]
+QuantumOperatorProp[qo_, "Ordered" | "OrderedInput"] := qo["OrderedInput", Sort @ qo["FullInputOrder"]]
 
-QuantumOperatorProp[qo_, "OrderedOutput"] := qo[{"OrderedOutput", Sort @ qo["FullOutputOrder"]}]
+QuantumOperatorProp[qo_, "OrderedOutput"] := qo["OrderedOutput", Sort @ qo["FullOutputOrder"]]
 
-QuantumOperatorProp[qo_, {"OrderedOutput", from_Integer, to_Integer}] /; qo["OutputQudits"] == 1 :=
-    qo[{"OrderedOutput", Range[from, to], QuditBasis[qo["Output"], to - from + 1]}]
+QuantumOperatorProp[qo_, "OrderedOutput", from_Integer, to_Integer] /; qo["OutputQudits"] == 1 :=
+    qo["OrderedOutput", Range[from, to], QuditBasis[qo["Output"], to - from + 1]]
 
-QuantumOperatorProp[qo_, {"Ordered" | "OrderedInput", from_Integer, to_Integer}] /; qo["InputQudits"] == 1 :=
-    qo[{"OrderedInput", Range[from, to], QuditBasis[qo["Input"], to - from + 1]}]
+QuantumOperatorProp[qo_, "Ordered" | "OrderedInput", from_Integer, to_Integer] /; qo["InputQudits"] == 1 :=
+    qo["OrderedInput", Range[from, to], QuditBasis[qo["Input"], to - from + 1]]
 
-QuantumOperatorProp[qo_, {"Ordered", from_Integer, to_Integer, qb_ ? QuditBasisQ}] := qo[{"Ordered", Range[from, to], qb}]
+QuantumOperatorProp[qo_, "Ordered", from_Integer, to_Integer, qb_ ? QuditBasisQ] := qo["Ordered", Range[from, to], qb]
 
-QuantumOperatorProp[qo_, {"Ordered", order_ ? orderQ, qb_ ? QuditBasisQ}] :=
-    qo[{"OrderedInput", order, qb}]
+QuantumOperatorProp[qo_, "Ordered", order_ ? orderQ, qb_ ? QuditBasisQ] :=
+    qo["OrderedInput", order, qb]
 
-QuantumOperatorProp[qo_, {"Ordered" | "OrderedInput" | "OrderedOutput", {}, ___}] := qo
+QuantumOperatorProp[qo_, "Ordered" | "OrderedInput" | "OrderedOutput", {}, ___] := qo
 
-QuantumOperatorProp[qo_, {"OrderedInput", order_ ? orderQ}] := Enclose @ With[{
+QuantumOperatorProp[qo_, "OrderedInput", order_ ? orderQ] := Enclose @ With[{
     dimensions = qo["InputDimensions"]
 },
     ConfirmAssert[Length[order] <= Length[dimensions], "Not enough input dimensions to order"];
-    qo[{"OrderedInput", order,
+    qo["OrderedInput", order,
         QuditBasis @ Extract[
             dimensions,
             List /@ (order /. qo["InputOrderQuditMapping"])
-        ]}
+        ]
     ]
 ]
 
-QuantumOperatorProp[qo_, {"OrderedOutput", order_ ? orderQ}] := Enclose @ With[{
+QuantumOperatorProp[qo_, "OrderedOutput", order_ ? orderQ] := Enclose @ With[{
     dimensions = qo["OutputDimensions"]
 },
     ConfirmAssert[Length[order] <= Length[dimensions], "Not enough output dimensions to order"];
-    qo[{"OrderedOutput", order,
+    qo["OrderedOutput", order,
         QuditBasis @ Extract[
             dimensions,
             List /@ (order /. qo["OutputOrderQuditMapping"])
-        ]}
+        ]
     ]
 ]
 
-QuantumOperatorProp[qo_, {"OrderedInput", qb_ ? QuditBasisQ}] := qo[{"OrderedInput", qo["FullInputOrder"], qb}]
+QuantumOperatorProp[qo_, "OrderedInput", qb_ ? QuditBasisQ] := qo["OrderedInput", qo["FullInputOrder"], qb]
 
-QuantumOperatorProp[qo_, {"OrderedInput", order_ ? orderQ, qb_ ? QuditBasisQ}] := Enclose @ With[{
+QuantumOperatorProp[qo_, "OrderedInput", order_ ? orderQ, qb_ ? QuditBasisQ] := Enclose @ With[{
     arity = Length[order], pos = Catenate @ Position[order, Alternatives @@ qo["FullInputOrder"]]
 },
     ConfirmAssert[ContainsAll[order, qo["FullInputOrder"]], "Given order should contain all operator order qudits"];
     ConfirmAssert[arity <= qb["Qudits"], "Order size should be less than or equal to number of qudits"];
     If[ arity > qo["InputQudits"],
         QuantumTensorProduct[
-            QuantumOperator[qo, "Input" -> qb[{"Extract", pos}]],
-            With[{iqb = qb[{"Delete", pos}]},
+            QuantumOperator[qo, "Input" -> qb["Extract", pos]],
+            With[{iqb = qb["Delete", pos]},
                 QuantumOperator[
                     QuantumOperator[{"Identity", iqb}],
                     Automatic,
@@ -252,21 +252,21 @@ QuantumOperatorProp[qo_, {"OrderedInput", order_ ? orderQ, qb_ ? QuditBasisQ}] :
                 ]
             ]
         ],
-        QuantumOperator[qo, "Input" -> qb[{"Extract", pos}]]
-    ][{"OrderInputExtra", qo["FullInputOrder"], order}]
+        QuantumOperator[qo, "Input" -> qb["Extract", pos]]
+    ]["OrderInputExtra", qo["FullInputOrder"], order]
 ]
 
-QuantumOperatorProp[qo_, {"OrderedOutput", qb_ ? QuditBasisQ}] := qo[{"OrderedOutput", qo["FullOutputOrder"], qb}]
+QuantumOperatorProp[qo_, "OrderedOutput", qb_ ? QuditBasisQ] := qo["OrderedOutput", qo["FullOutputOrder"], qb]
 
-QuantumOperatorProp[qo_, {"OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ}] := Enclose @ With[{
+QuantumOperatorProp[qo_, "OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ] := Enclose @ With[{
     arity = Length[order], pos = Catenate @ Position[order, Alternatives @@ qo["FullOutputOrder"]]
 },
     ConfirmAssert[ContainsAll[order, qo["FullOutputOrder"]], "Given order should contain all operator order qudits"];
     ConfirmAssert[arity <= qb["Qudits"], "Order size should be less than or equal to number of qudits"];
     If[ arity > qo["OutputQudits"],
         QuantumTensorProduct[
-            QuantumOperator[qo, "Output" -> qb[{"Extract", pos}]],
-            With[{iqb = qb[{"Delete", pos}]},
+            QuantumOperator[qo, "Output" -> qb["Extract", pos]],
+            With[{iqb = qb["Delete", pos]},
                 QuantumOperator[
                     QuantumOperator[{"Identity", iqb}],
                     Max[qo["LastOutputQudit"], qo["LastInputQudit"]] + Range @ iqb["Qudits"],
@@ -274,8 +274,8 @@ QuantumOperatorProp[qo_, {"OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ}] 
                 ]
             ]
         ],
-        QuantumOperator[qo, "Output" -> qb[{"Extract", pos}]]
-    ][{"OrderOutputExtra", qo["FullOutputOrder"], order}]
+        QuantumOperator[qo, "Output" -> qb["Extract", pos]]
+    ]["OrderOutputExtra", qo["FullOutputOrder"], order]
 ]
 
 

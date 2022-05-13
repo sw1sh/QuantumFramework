@@ -6,7 +6,7 @@ PackageExport["QuantumPartialTrace"]
 
 QuantumPartialTrace[arg_, {}] := arg
 
-QuantumPartialTrace[qb_QuditBasis, qudits : {_Integer ..}] := qb[{"Delete", qudits}]
+QuantumPartialTrace[qb_QuditBasis, qudits : {_Integer ..}] := qb["Delete", qudits]
 
 
 QuantumPartialTrace[qb_QuantumBasis, qudits : {{_Integer, _Integer} ..}] := Enclose @ Module[{},
@@ -27,7 +27,7 @@ QuantumPartialTrace[qs_QuantumState, qudits : {_Integer ..}] :=
             QuantumBasis[qs["Dimensions"][[Complement[Range[qs["Qudits"]], qudits]]]]
         ],
         QuantumBasis["Output" -> #1, "Input" -> #2] & @@ QuantumPartialTrace[QuantumTensorProduct[qs["Output"], qs["Input"]], qudits][
-            {"Split", qs["OutputQudits"] - Count[qudits, q_ /; q <= qs["OutputQudits"]]}
+            "Split", qs["OutputQudits"] - Count[qudits, q_ /; q <= qs["OutputQudits"]]
         ]
     ]
 

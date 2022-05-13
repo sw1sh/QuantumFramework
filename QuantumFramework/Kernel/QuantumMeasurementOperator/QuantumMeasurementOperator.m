@@ -160,11 +160,11 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
                     ReplacePart[op["FullOutputOrder"], Thread[List /@ Range[qudits] -> 1 - Reverse @ Range[qudits]]],
                     op["FullInputOrder"] - Max[Max[op["FullInputOrder"]] - qs["OutputQudits"], 0]
                 ][
-                    {
-                        "OrderedInput",
-                        Range @ qs["OutputQudits"],
-                        qs["Output"]
-                    }
+                    
+                    "OrderedInput",
+                    Range @ qs["OutputQudits"],
+                    qs["Output"]
+                    
                 ]["SortOutput"] @ qs,
                 QuantumStateQ
             ],

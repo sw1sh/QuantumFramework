@@ -82,7 +82,7 @@ groupQuditName[qbn_QuditName] := QuditName @@
 
 qbn_QuditName["Group"] := groupQuditName @ qbn
 
-qbn_QuditName[{"Permute", perm_Cycles, outputs_Integer : 0}] :=
+qbn_QuditName["Permute", perm_Cycles, outputs_Integer : 0] :=
     (QuditName @@ MapThread[If[#2, #1["Dual"], #1] &, {Permute[Normal[qbn], perm], toggleSwap[PermutationList[perm, qbn["Qudits"]], outputs]}])["Group"]
 
 qbn_QuditName["Take", arg_] := (QuditName @@ Take[Normal[qbn], arg])["Group"]

@@ -289,7 +289,7 @@ QuantumStateProp[qs_, "Bipartition", bipartition : {{_Integer..}, {_Integer..}}]
 ]
 
 QuantumStateProp[qs_, "Bipartition", qudits : {_Integer..}] /; ContainsAll[Range[qs["Qudits"]], qudits] :=
-    qs[{"Split", qs["Qudits"]}][{"Permute", FindPermutation[Join[qudits, Complement[Range[qs["Qudits"]], qudits]]]}]["Bipartition", Times @@ qs["Dimensions"][[qudits]]]
+    qs["Split", qs["Qudits"]]["Permute", FindPermutation[Join[qudits, Complement[Range[qs["Qudits"]], qudits]]]]["Bipartition", Times @@ qs["Dimensions"][[qudits]]]
 
 QuantumStateProp[qs_, "Bipartition", dim : _Integer | Automatic : Automatic] := If[
     qs["Qudits"] == 2,
@@ -332,7 +332,7 @@ QuantumStateProp[qs_, "Unbend"] := Enclose @ Which[
     With[{dimension = Sqrt[qs["Dimension"]]},
         QuantumState[
             ArrayReshape[qs["StateVector"], Table[dimension, 2]],
-            QuantumBasis @ ConfirmBy[qs["QuditBasis"][{"TakeDimension", dimension}], QuditBasisQ]
+            QuantumBasis @ ConfirmBy[qs["QuditBasis"]["TakeDimension", dimension], QuditBasisQ]
         ]
     ],
     True,
@@ -357,7 +357,7 @@ QuantumStateProp[qs_, "Transpose"] := With[{qb = qs["Basis"]["Transpose"]},
     QuantumState[If[qs["StateType"] === "Vector", Flatten, ArrayReshape[#, qb["MatrixDimensions"]] &] @ Transpose[qs["StateMatrix"]], qb]
 ]
 
-QuantumStateProp[qs_, {"Transpose", qudits : {_Integer...}}] := QuantumState[
+QuantumStateProp[qs_, "Transpose", qudits : {_Integer...}] := QuantumState[
     ArrayReshape[
         Transpose[ArrayReshape[qs["DensityMatrix"], Join[qs["Dimensions"], qs["Dimensions"]]], Cycles[{#, # + qs["Qudits"]} & /@ qudits]],
         {qs["Dimension"], qs["Dimension"]}
@@ -366,11 +366,11 @@ QuantumStateProp[qs_, {"Transpose", qudits : {_Integer...}}] := QuantumState[
 ]
 
 QuantumStateProp[qs_, "Reverse"] :=
-    qs[{"PermuteOutput", FindPermutation[Reverse @ Range qs["OutputQudits"]]}][{"PermuteInput", FindPermutation[Reverse @ Range qs["InputQudits"]]}]
+    qs["PermuteOutput", FindPermutation[Reverse @ Range qs["OutputQudits"]]]["PermuteInput", FindPermutation[Reverse @ Range qs["InputQudits"]]]
 
 QuantumStateProp[qs_, "Trace"] := QuantumPartialTrace[qs]
 
-QuantumStateProp[qs_, {"Trace", qudits : {_Integer...}}] := QuantumPartialTrace[qs, qudits]
+QuantumStateProp[qs_, "Trace", qudits : {_Integer...}] := QuantumPartialTrace[qs, qudits]
 
 QuantumStateProp[qs_, "Conjugate" | "Dual"] := With[{qb = qs["Basis"]["Dual"]},
     QuantumState[If[qs["StateType"] === "Vector", Flatten, ArrayReshape[#, qb["MatrixDimensions"]] &] @ Conjugate[qs["StateMatrix"]], qb]
@@ -384,7 +384,7 @@ QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := With[{qb = qs["Basis"]
 ]
 
 
-QuantumStateProp[qs_, {"Permute", perm_Cycles}] := QuantumState[
+QuantumStateProp[qs_, "Permute", perm_Cycles] := QuantumState[
     If[ qs["PureStateQ"],
         Flatten @ Transpose[qs["StateTensor"], perm],
         ArrayReshape[
@@ -392,38 +392,38 @@ QuantumStateProp[qs_, {"Permute", perm_Cycles}] := QuantumState[
             Table[qs["Dimension"], 2]
         ]
     ],
-    qs["Basis"][{"Permute", perm}]
+    qs["Basis"]["Permute", perm]
 ]
 
-QuantumStateProp[qs_, {"PermuteInput", perm_Cycles}] := profile["PermuteInput"] @ If[perm === Cycles[{}],
+QuantumStateProp[qs_, "PermuteInput", perm_Cycles] := profile["PermuteInput"] @ If[perm === Cycles[{}],
     qs,
     QuantumState[
         qs @ QuantumOperator[{"Permutation", Permute[qs["InputDimensions"], perm], InversePermutation @ perm}]["State"],
-        qs["Basis"][{"PermuteInput", perm}]
+        qs["Basis"]["PermuteInput", perm]
     ]
 ]
 
-QuantumStateProp[qs_, {"PermuteOutput", perm_Cycles}] := profile["PermuteOutput"] @ If[perm === Cycles[{}],
+QuantumStateProp[qs_, "PermuteOutput", perm_Cycles] := profile["PermuteOutput"] @ If[perm === Cycles[{}],
     qs,
     QuantumState[
         QuantumOperator[{"Permutation", qs["OutputDimensions"], perm}]["State"] @ qs,
-        qs["Basis"][{"PermuteOutput", perm}]
+        qs["Basis"]["PermuteOutput", perm]
     ]
 ]
 
-QuantumStateProp[qs_, {"Split", n_Integer : 0}] := With[{basis = qs["Basis"][{"Split", n}]},
+QuantumStateProp[qs_, "Split", n_Integer : 0] := With[{basis = qs["Basis"]["Split", n]},
     QuantumState[qs["State"], basis]
     (* QuantumState[QuantumState[qs["Computational"]["State"], QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]], basis] *)
 ]
 
-QuantumStateProp[qs_, {"SplitDual", n_Integer : 0}] := With[{basis = qs["Basis"][{"SplitDual", n}]},
+QuantumStateProp[qs_, "SplitDual", n_Integer : 0] := With[{basis = qs["Basis"]["SplitDual", n]},
     QuantumState[qs["State"], basis]
 ]
 
 
 QuantumStateProp[qs_, "UnstackOutput", n_Integer : 1] /; 1 <= n <= qs["OutputQudits"] :=
-    Module[{state = If[n == 1, qs, qs[{"PermuteOutput", FindPermutation[RotateLeft[Range[qs["OutputQudits"]], n - 1]]}]], basis},
-        basis = QuantumBasis[state["Basis"], "Output" -> Last @ state["Output"][{"Split", 1}]];
+    Module[{state = If[n == 1, qs, qs["PermuteOutput", FindPermutation[RotateLeft[Range[qs["OutputQudits"]], n - 1]]]], basis},
+        basis = QuantumBasis[state["Basis"], "Output" -> Last @ state["Output"]["Split", 1]];
         QuantumState[#, basis] & /@ ArrayReshape[state["State"], {First @ state["Dimensions"], Times @@ Rest @ state["Dimensions"]}]
     ]
 

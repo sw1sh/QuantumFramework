@@ -49,7 +49,7 @@ QuantumHamiltonianOperatorProp[qho_, "InitialParameter"] := qho["ParameterSpec"]
 QuantumHamiltonianOperatorProp[qho_, "FinalParameter"] := qho["ParameterSpec"][[3]]
 
 
-QuantumHamiltonianOperatorProp[qho_, "Gap"] := qho[{"Gap", 100}]
+QuantumHamiltonianOperatorProp[qho_, "Gap"] := qho["Gap", 100]
 
 QuantumHamiltonianOperatorProp[qho_, {"Gap", n_Integer ? Positive}] :=
     Module[ {eigenvalues, gap},
@@ -66,18 +66,18 @@ QuantumHamiltonianOperatorProp[qho_, {"Gap", parameterValue_}] :=
     ]
 
 QuantumHamiltonianOperatorProp[qho_, "MinimumGap"] := FindMinimum[
-     qho[{"Gap", qho["Parameter"]}], qho["ParameterSpec"]
+     qho["Gap", qho["Parameter"]], qho["ParameterSpec"]
 ]
 
-QuantumHamiltonianOperatorProp[qho_, "InitialGap"] := qho[{"Gap", qho["InitialParameter"]}]
+QuantumHamiltonianOperatorProp[qho_, "InitialGap"] := qho["Gap", qho["InitialParameter"]]
 
-QuantumHamiltonianOperatorProp[qho_, "FinalGap"] :=  qho[{"Gap", qho["FinalParameter"]}]
+QuantumHamiltonianOperatorProp[qho_, "FinalGap"] :=  qho["Gap", qho["FinalParameter"]]
 
-QuantumHamiltonianOperatorProp[qho_, {"MatrixRepresentation", param_}] := Normal[qho["MatrixRepresentation"]] /. qho["Parameter"] -> param
+QuantumHamiltonianOperatorProp[qho_, "MatrixRepresentation", param_] := Normal[qho["MatrixRepresentation"]] /. qho["Parameter"] -> param
 
-QuantumHamiltonianOperatorProp[qho_, "InitialMatrixRepresentation"] := qho[{"MatrixRepresentation", qho["InitialParameter"]}]
+QuantumHamiltonianOperatorProp[qho_, "InitialMatrixRepresentation"] := qho["MatrixRepresentation", qho["InitialParameter"]]
 
-QuantumHamiltonianOperatorProp[qho_, "FinalMatrixRepresentation"] := qho[{"MatrixRepresentation", qho["FinalParameter"]}]
+QuantumHamiltonianOperatorProp[qho_, "FinalMatrixRepresentation"] := qho["MatrixRepresentation", qho["FinalParameter"]]
 
 QuantumHamiltonianOperatorProp[qho_, "EvolutionOperator"] := Module[{
     leftEquations, rightEquations, initialEquations, equations
@@ -111,15 +111,15 @@ QuantumHamiltonianOperatorProp[qho_, "EvolutionOperator"] := Module[{
         ]
     ]
 
-QuantumHamiltonianOperatorProp[qho_, {"EvolutionOperator", param_}] := qho["EvolutionOperator"] /. qho["Parameter"] -> param
+QuantumHamiltonianOperatorProp[qho_, "EvolutionOperator", param_] := qho["EvolutionOperator"] /. qho["Parameter"] -> param
 
-QuantumHamiltonianOperatorProp[qho_, "InitialEvolutionOperator"] := qho[{"EvolutionOperator", qho["InitialParameter"]}]
+QuantumHamiltonianOperatorProp[qho_, "InitialEvolutionOperator"] := qho["EvolutionOperator", qho["InitialParameter"]]
 
-QuantumHamiltonianOperatorProp[qho_, "FinalEvolutionOperator"] := qho[{"EvolutionOperator", qho["FinalParameter"]}]
+QuantumHamiltonianOperatorProp[qho_, "FinalEvolutionOperator"] := qho["EvolutionOperator", qho["FinalParameter"]]
 
 
 (* operator properties *)
 
-QuantumHamiltonianOperatorProp[qho_, args : PatternSequence[prop_String, ___] | PatternSequence[{prop_String, ___}, ___]] /;
+QuantumHamiltonianOperatorProp[qho_, args : PatternSequence[prop_String, ___]] /;
     MemberQ[Intersection[qho["QuantumOperator"]["Properties"], qho["Properties"]], prop] := qho["QuantumOperator"][args]
 

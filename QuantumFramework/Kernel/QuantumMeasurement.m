@@ -95,10 +95,10 @@ QuantumMeasurementProp[qm_, "Canonical"] := QuantumMeasurement @ qm["QuantumOper
 QuantumMeasurementProp[qm_, "Computational"] := QuantumMeasurement @ qm["QuantumOperator"]["Computational"]
 
 
-QuantumMeasurementProp[qm_, "StateDual"] := qm["State"][{"Split", qm["Qudits"]}][{"PermuteOutput",
+QuantumMeasurementProp[qm_, "StateDual"] := qm["State"]["Split", qm["Qudits"]]["PermuteOutput",
     FindPermutation @ Catenate[{#1, #3, #2}] & @@
         TakeList[Range[qm["Qudits"]], {qm["Eigenqudits"], qm["StateQudits"], qm["InputQudits"]}]
-}][{"Split", qm["Eigenqudits"] + qm["InputQudits"]}]
+]["Split", qm["Eigenqudits"] + qm["InputQudits"]]
 
 QuantumMeasurementProp[qm_, "Eigenstate"] :=
     QuantumPartialTrace[qm["State"], qm["Eigenqudits"] + Range[qm["StateQudits"]]]
@@ -174,7 +174,7 @@ QuantumMeasurementProp[qm_, "Entropy"] := TimeConstrained[Quantity[qm["Distribut
 
 QuantumMeasurementProp[qm_, "SimulatedMeasurement"] := RandomVariate[qm["Distribution"]]
 
-QuantumMeasurementProp[qm_, {"SimulatedMeasurement", n_Integer}] := RandomVariate[qm["Distribution"], n]
+QuantumMeasurementProp[qm_, "SimulatedMeasurement", n_Integer] := RandomVariate[qm["Distribution"], n]
 
 QuantumMeasurementProp[qm_, "Mean"] := qm["Eigenvalues"] . qm["ProbabilitiesList"]
 
@@ -195,7 +195,7 @@ QuantumMeasurementProp[qm_, "TopStateProbabilities" -> n_Integer] := KeyMap[qm["
 
 QuantumMeasurementProp[qm_, "SimulatedStateMeasurement"] := qm["StateAssociation"][qm["SimulatedMeasurement"]]
 
-QuantumMeasurementProp[qm_, {"SimulatedStateMeasurement", n_}] := Part[qm["StateAssociation"], Key /@ qm[{"SimulatedMeasurement", n}]]
+QuantumMeasurementProp[qm_, "SimulatedStateMeasurement", n_] := Part[qm["StateAssociation"], Key /@ qm["SimulatedMeasurement", n]]
 
 QuantumMeasurementProp[qm_, "MeanState"] := qm["Mean"] /. qm["StateAssociation"]
 

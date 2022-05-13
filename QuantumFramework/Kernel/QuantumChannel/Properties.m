@@ -59,6 +59,6 @@ QuantumChannelProp[qc_, "NEvolutionChannel"] := QuantumChannel[
 
 (* operator properties *)
 
-QuantumChannelProp[qc_, args : PatternSequence[prop_String, ___] | PatternSequence[{prop_String, ___}, ___]] /;
+QuantumChannelProp[qc_, args : PatternSequence[prop_String, ___]] /;
     MemberQ[Intersection[qc["Operator"]["Properties"], qc["Properties"]], prop] := qc["Operator"][args]
 

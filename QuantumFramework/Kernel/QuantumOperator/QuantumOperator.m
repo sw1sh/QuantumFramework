@@ -287,9 +287,9 @@ With[{order = Range[qs["OutputQudits"]] + Max[Max[qo["FullInputOrder"]] - qs["Ou
                 QuditBasis[]
             ];
             If[ bottom["OutputOrder"] != order,
-                bottom = bottom[{"OrderedOutput", order, basis}]
+                bottom = bottom["OrderedOutput", order, basis]
             ];
-            top = top[{"OrderedInput", order, basis}];
+            top = top["OrderedInput", order, basis];
         ]
     ];
     ConfirmAssert[top["InputDimension"] == bottom["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
@@ -323,12 +323,12 @@ QuantumOperator /: Plus[ops : _QuantumOperator...] := Fold[addQuantumOperators, 
 
 addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator ? QuantumOperatorQ] := Enclose @ With[{
     ordered1 = qo1[
-        With[{order = Union[qo1["InputOrder"], qo2["InputOrder"]]}, {"OrderedInput", order, expandQuditBasis[qo1["Input"], qo1["InputOrder"], order]}]][
-        With[{order = Union[qo1["OutputOrder"], qo2["OutputOrder"]]}, {"OrderedOutput", order, expandQuditBasis[qo1["Output"], qo1["OutputOrder"], order]}]
+        Sequence @@ With[{order = Union[qo1["InputOrder"], qo2["InputOrder"]]}, {"OrderedInput", order, expandQuditBasis[qo1["Input"], qo1["InputOrder"], order]}]][
+        Sequence @@ With[{order = Union[qo1["OutputOrder"], qo2["OutputOrder"]]}, {"OrderedOutput", order, expandQuditBasis[qo1["Output"], qo1["OutputOrder"], order]}]
     ],
     ordered2 = qo2[
-        With[{order = Union[qo1["InputOrder"], qo2["InputOrder"]]}, {"OrderedInput", order, expandQuditBasis[qo2["Input"], qo2["InputOrder"], order]}]][
-        With[{order = Union[qo1["OutputOrder"], qo2["OutputOrder"]]}, {"OrderedOutput", order, expandQuditBasis[qo2["Output"], qo2["OutputOrder"], order]}]
+        Sequence @@ With[{order = Union[qo1["InputOrder"], qo2["InputOrder"]]}, {"OrderedInput", order, expandQuditBasis[qo2["Input"], qo2["InputOrder"], order]}][
+        Sequence @@ With[{order = Union[qo1["OutputOrder"], qo2["OutputOrder"]]}, {"OrderedOutput", order, expandQuditBasis[qo2["Output"], qo2["OutputOrder"], order]}]]
     ]
 },
     ConfirmAssert[ordered1["Dimensions"] == ordered2["Dimensions"]];

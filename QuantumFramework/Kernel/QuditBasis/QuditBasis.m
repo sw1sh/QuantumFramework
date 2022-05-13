@@ -87,8 +87,8 @@ QuditBasis[qb_QuditBasis ? QuditBasisQ, multiplicity_Integer ? NonNegative] :=
 
 QuditBasis[source_QuditBasis, target_QuditBasis] := If[
     target["Dimension"] > source["Dimension"],
-    target[{"TakeDimension", source["Dimension"]}],
-    QuantumTensorProduct[target, source[{"DropDimension", target["Dimension"]}]]
+    target["TakeDimension", source["Dimension"]],
+    QuantumTensorProduct[target, source["DropDimension", target["Dimension"]]]
 ]
 
 QuditBasis[source_QuditBasis -> target_QuditBasis] := QuditBasis[
