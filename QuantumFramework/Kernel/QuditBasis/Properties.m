@@ -52,6 +52,18 @@ QuditBasisProp[qb_, "NameRank"] := Count[qb["Dimensions"], Except[1]]
 
 QuditBasisProp[qb_, "NameTensor"] := ArrayReshape[qb["Names"], qb["Dimensions"]]
 
+
+computationalBasisQ[repr_] := And @@ ResourceFunction["KeyGroupBy"][repr, Last, With[{vs = SparseArray[Values[#]]}, vs == IdentityMatrix[Length[vs], SparseArray]] &]
+
+QuditBasisProp[qb_, "Elements"] /; computationalBasisQ[qb["Representations"]] := With[{
+    dims = qb["Dimensions"], dim = qb["Dimension"], qudits = qb["Qudits"]
+},
+    SparseArray[
+        {#, Splice[IntegerDigits[# - 1, MixedRadix[dims], qudits] + 1]} -> 1 & /@ Range[dim],
+        Prepend[dims, dim]
+    ]
+]
+
 QuditBasisProp[qb_, "Elements"] := If[Length[qb["Representations"]] > 0,
     SparseArray[TensorProduct @@@ Tuples @ Values @ KeySort @ ResourceFunction["KeyGroupBy"][qb["Representations"], Last, SparseArray @* Values]],
     {}
@@ -59,15 +71,13 @@ QuditBasisProp[qb_, "Elements"] := If[Length[qb["Representations"]] > 0,
 
 QuditBasisProp[qb_, "Association"] := Association @ Thread[qb["Names"] -> qb["Elements"]]
 
-QuditBasisProp[qb_, "Size"] := If[Length[qb["Representations"]] > 0, Times @@ qb["Dimensions"], 0]
+QuditBasisProp[qb_, "Size" | "Dimension"] := If[Length[qb["Representations"]] > 0, Times @@ qb["Dimensions"], 0]
 
 QuditBasisProp[qb_, "ElementDimensions"] := Catenate @ Values @ KeySort @ ResourceFunction["KeyGroupBy"][qb["Representations"], Last, First /* Dimensions]
 
 QuditBasisProp[qb_, "ElementDimension"] := If[qb["Size"] > 0, Times @@ qb["ElementDimensions"], 0]
 
 QuditBasisProp[qb_, "Rank"] := If[qb["Size"] > 1, Length @ qb["ElementDimensions"], 0]
-
-QuditBasisProp[qb_, "Dimension"] := If[qb["Size"] > 0, Times @@ qb["Dimensions"], 0]
 
 QuditBasisProp[qb_, "MatrixDimensions"] := {qb["ElementDimension"], qb["Dimension"]}
 

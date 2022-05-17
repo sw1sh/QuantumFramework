@@ -35,6 +35,11 @@ QuantumMeasurementOperator::undefprop = "QuantumMeasurementOperator property `` 
         /; !FailureQ[Unevaluated @ result] && (!MatchQ[result, _QuantumMeasurementOperatorProp] || Message[QuantumMeasurementOperator::undefprop, prop])
 ]
 
+CacheProperty[QuantumMeasurementOperator][args___, value_] := PrependTo[
+    DownValues[QuantumMeasurementOperatorProp],
+    HoldPattern[QuantumMeasurementOperatorProp[args]] :> value
+]
+
 QuantumMeasurementOperatorProp[qmo_, "Properties"] :=
     DeleteDuplicates @ Join[QuantumMeasurementOperator["Properties"], qmo["Operator"]["Properties"]]
 
@@ -139,7 +144,7 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
         ];
 
         {eigenvalues, eigenvectors} = profile["Eigensystem"] @ tracedOperator["Eigensystem", "Sort" -> True];
-        projectors = projector /@ eigenvectors;
+        projectors = tracedOperator["Projectors"];
 
         eigenBasis = QuditBasis[
             MapIndexed[

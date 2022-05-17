@@ -24,18 +24,19 @@ QuantumMeasurementOperator[target : _ ? targetQ] :=
 QuantumMeasurementOperator[] := QuantumMeasurementOperator[{1}]
 
 QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target : (_ ? targetQ) : Automatic, args___] := Enclose @ Module[{
-    basis, op, order, newTarget
+    basis, op, order, newTarget, qmo
 },
     basis = If[ target === Automatic,
         qb,
         QuantumBasis[qb, Ceiling[Length[target] / qb["OutputQudits"]]]
     ];
     basis = QuantumBasis[basis, Ceiling[Length[eigenvalues] / basis["Dimension"]]];
+
     op = ConfirmBy[
         QuantumOperator[
             QuantumOperator[
                 (* DiagonalMatrix[PadRight[SparseArray @ eigenvalues, basis["Dimension"]]], *)
-                PadRight[SparseArray @ eigenvalues, basis["Dimension"]] . SparseArray @ basis["Projectors"],
+                PadRight[SparseArray @ eigenvalues, basis["Dimension"]] . basis["Projectors"],
                 # - Min[#, 1] + 1 &[Max[Replace[target, Automatic -> 0]] - Reverse @ Range[basis["OutputQudits"]] + 1],
                 QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
             ],
@@ -45,11 +46,20 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
     ];
     newTarget = Replace[target, Automatic -> op["FullInputOrder"]];
     order = PadRight[newTarget, op["InputQudits"], DeleteCases[op["FullInputOrder"], Alternatives @@ newTarget]];
-    QuantumMeasurementOperator[
+    qmo = QuantumMeasurementOperator[
         QuantumOperator[op, {Automatic, Sort @ order}],
         order[[;; Length @ newTarget]],
         args
-    ]
+    ];
+
+    (* cache eigensystem *)
+    With[{eigenvectors = ArrayReshape[basis["Elements"], {basis["Dimension"], basis["ElementDimension"]}]},
+        CacheProperty[QuantumMeasurementOperator][qmo, "Eigenvalues", ___, eigenvalues];
+        CacheProperty[QuantumMeasurementOperator][qmo, "Eigenvectors", ___, eigenvectors];
+        CacheProperty[QuantumMeasurementOperator][qmo, "Eigensystem", ___, {eigenvalues, eigenvectors}];
+        CacheProperty[QuantumMeasurementOperator][qmo, "Projectors", ___, basis["Projectors"]];
+    ];
+    qmo
 ]
 
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, Automatic] := QuantumMeasurementOperator[qo, qo["InputOrder"]]
@@ -160,11 +170,9 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
                     ReplacePart[op["FullOutputOrder"], Thread[List /@ Range[qudits] -> 1 - Reverse @ Range[qudits]]],
                     op["FullInputOrder"] - Max[Max[op["FullInputOrder"]] - qs["OutputQudits"], 0]
                 ][
-                    
                     "OrderedInput",
                     Range @ qs["OutputQudits"],
                     qs["Output"]
-                    
                 ]["SortOutput"] @ qs,
                 QuantumStateQ
             ],

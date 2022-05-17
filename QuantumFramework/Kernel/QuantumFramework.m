@@ -2,6 +2,8 @@ Package["Wolfram`QuantumFramework`"]
 
 PackageScope["QuantumFrameworkOperatorQ"]
 PackageScope["$QuantumFrameworkPropCache"]
+PackageScope["CacheProperty"]
+
 
 
 QuantumFrameworkOperatorQ[op_] := QuantumOperatorQ[op] ||

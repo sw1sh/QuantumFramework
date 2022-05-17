@@ -83,6 +83,8 @@ QuantumBasisProp[qb_, "Elements"] := ArrayReshape[Transpose[
     Prepend[qb["ElementDimensions"], qb["OutputSize"] qb["InputSize"]]
 ]
 
+QuantumBasisProp[qb_, "ElementVectors"] := ArrayReshape[qb["Elements"], {qb["Dimension"], qb["ElementDimension"]}]
+
 
 QuantumBasisProp[qb_, "ElementAssociation" | "Association"] := Association @ Thread[
     qb["ElementNames"] -> qb["Elements"]
@@ -180,7 +182,11 @@ QuantumBasisProp[qb_, "TensorRepresentation" | "Tensor"] := ArrayReshape[qb["Mat
 QuantumBasisProp[qb_, "MatrixRepresentation" | "Matrix"] := KroneckerProduct[qb["OutputMatrix"], qb["InputMatrix"]]
 
 
-QuantumBasisProp[qb_, "Projectors"] := projector @* Flatten /@ qb["Elements"]
+QuantumBasisProp[qb_, "Projectors"] := Module[{x = qb["Elements"], y},
+    {m, n} = qb["MatrixDimensions"];
+    y = ArrayReshape[x, {n, m}];
+    ArrayReshape[KroneckerProduct[y, Conjugate[y]][[;; ;; n + 1]], {n, m, m}]
+]
 
 QuantumBasisProp[qb_, "NormalizedProjectors"] := normalizeMatrix @* projector @* Flatten /@ qb["Elements"]
 
