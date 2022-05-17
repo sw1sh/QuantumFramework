@@ -9,13 +9,14 @@ PackageScope["controlledZGate"]
 $QuantumOperatorNames = {
     "Identity", "Permutation", "Curry", "Uncurry",
     "Fourier", "InverseFourier",
-    "XRotation", "YRotation", "ZRotation", "Phase", "P",
+    "XRotation", "YRotation", "ZRotation", "U", "Phase", "P",
     "Diagonal", "GlobalPhase",
     "SUM", "RootNOT",
     "X", "Y", "Z", "PauliX", "PauliY", "PauliZ", "H", "Hadamard",
     "SWAP", "RootSWAP", "CSWAP", "Fredkin",
     "Controlled", "Controlled0", "CX", "CY", "CZ", "CH", "CT", "CS", "CPHASE", "CNOT",
     "XX", "YY", "ZZ",
+    "S", "T",
     "Toffoli", "Deutsch", "RandomUnitary",
     "Spider", "ZSpider", "XSpider",
     "Deutsch",
@@ -67,6 +68,11 @@ QuantumOperator[{"YRotation", angle_, dimension_Integer : 2}, opts___] := Quantu
 QuantumOperator[{"ZRotation", angle_, dimension_Integer : 2}, opts___] := QuantumOperator[
     Exp[- I angle / 2 QuantumOperator[{"PauliZ", dimension}, opts]],
     "Label" -> Subscript["R", "Z"][angle]
+]
+
+QuantumOperator[{"U", theta_, phi_, lambda_}, opts___] := QuantumOperator[
+    Exp[I (lambda + phi) / 2] QuantumOperator[{"ZRotation", phi + Pi / 2}, opts] @ QuantumOperator[{"XRotation", theta}, opts] @ QuantumOperator[{"ZRotation", lambda - Pi / 2}, opts],
+    "Label" -> "U"[theta, phi, lambda]
 ]
 
 QuantumOperator["Phase" | "P", opts___] := QuantumOperator[{"Phase", Pi}, opts]
