@@ -21,7 +21,8 @@ QuantumCircuitOperator[op_ ? QuantumFrameworkOperatorQ] := QuantumCircuitOperato
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[op_ ? QuantumFrameworkOperatorQ] :=
     QuantumCircuitOperator[Prepend[qco["Operators"], op]]
 
-(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qs_ ? QuantumStateQ] := qco["CircuitOperator"][qs]
+(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qs_ ? QuantumStateQ] := Fold[ReverseApplied[Construct], qs, qco["Operators"]]
 
 op_QuantumMeasurementOperator[qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ] :=
     QuantumCircuitOperator[Append[qco["Operators"], op]]
+

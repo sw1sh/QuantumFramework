@@ -5,7 +5,8 @@ $AutoCompletionData = With[{
     stateNames = Wolfram`QuantumFramework`PackageScope`$QuantumStateNames,
     operatorNames = Wolfram`QuantumFramework`PackageScope`$QuantumOperatorNames,
     measurementOperatorNames = Wolfram`QuantumFramework`PackageScope`$QuantumMeasurementOperatorNames,
-    channelNames =  Wolfram`QuantumFramework`PackageScope`$QuantumChannelNames
+    channelNames =  Wolfram`QuantumFramework`PackageScope`$QuantumChannelNames,
+    circuitNames = Wolfram`QuantumFramework`PackageScope`$QuantumCircuitOperatorNames
 },
     {
         "QuditBasis" -> {basisNames},
@@ -13,7 +14,8 @@ $AutoCompletionData = With[{
         "QuantumState" -> {stateNames, basisNames},
         "QuantumOperator" -> {operatorNames, basisNames},
         "QuantumMeasurementOperator" -> {Join[basisNames, measurementOperatorNames], basisNames},
-        "QuantumChannel" -> {channelNames, basisNames}
+        "QuantumChannel" -> {channelNames, basisNames},
+        "QuantumCircuitOperator" -> {circuitNames}
     }
 ]
 
