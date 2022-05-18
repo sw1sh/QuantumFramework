@@ -30,10 +30,10 @@ QuantumState /: MakeBoxes[qs_QuantumState /; Quiet @ QuantumStateQ[Unevaluated @
     },
     {
         {
-            BoxForm`SummaryItem[{"Purity: ", Enclose[ConfirmQuiet[N @ qs["Purity"]], Indeterminate &]}]
+            BoxForm`SummaryItem[{"Purity: ", TimeConstrained[Enclose[ConfirmQuiet[N @ qs["Purity"]], Indeterminate &], 1]}]
         },
         {
-            BoxForm`SummaryItem[{"Von Neumann Entropy: ", Enclose[ConfirmQuiet[N @ qs["VonNeumannEntropy"]], Indeterminate &]}]
+            BoxForm`SummaryItem[{"Von Neumann Entropy: ", TimeConstrained[Enclose[ConfirmQuiet[N @ qs["VonNeumannEntropy"]], Indeterminate &], 1]}]
         },
         {
             BoxForm`SummaryItem[{"Dimensions: ",

@@ -191,7 +191,7 @@ QuantumStateProp[qs_, "VonNeumannEntropy" | "Entropy", logBase_ ? NumericQ] := E
         qs["PureStateQ"],
         0,
         ConfirmAssert[qs["Dimension"] < 2 ^ 10];
-        Enclose[TimeConstrained[Chop @ Simplify @ - Tr[matrix . ConfirmBy[MatrixLog[matrix], MatrixQ]] / Log[logBase], 1], $Failed &]
+        Enclose[Chop @ Simplify @ - Tr[matrix . ConfirmBy[MatrixLog[matrix], MatrixQ]] / Log[logBase], $Failed &]
     ]
 ],
     Indeterminate &
@@ -208,7 +208,7 @@ QuantumStateProp[qs_, "Purity"] := Enclose[
     If[ qs["StateType"] === "Vector",
         1,
         ConfirmAssert[qs["Dimension"] < 2 ^ 10];
-        TimeConstrained[Simplify @ Abs[Tr[MatrixPower[ConfirmBy[qs["NormalizedDensityMatrix"], MatrixQ], 2]]], 1]
+        Simplify @ Abs[Tr[MatrixPower[ConfirmBy[qs["NormalizedDensityMatrix"], MatrixQ], 2]]]
     ],
     Indeterminate &
 ]

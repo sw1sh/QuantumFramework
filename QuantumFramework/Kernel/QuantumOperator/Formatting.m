@@ -27,11 +27,11 @@ QuantumOperator /: MakeBoxes[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated 
         },
         {
             {
-                BoxForm`SummaryItem[{"Hermitian: ", qo["HermitianQ"]}],
+                BoxForm`SummaryItem[{"Hermitian: ", TimeConstrained[qo["HermitianQ"], 1]}],
                 BoxForm`SummaryItem[{"Order: ", Row[{qo["InputOrder"], "\[RightArrow]", qo["OutputOrder"]}]}]
             },
             {
-                BoxForm`SummaryItem[{"Unitary: ", qo["UnitaryQ"]}],
+                BoxForm`SummaryItem[{"Unitary: ", TimeConstrained[qo["UnitaryQ"], 1]}],
                 BoxForm`SummaryItem[{"Dimensions: ",
                     Row[{qo["InputDimensions"], "\[RightArrow]", qo["OutputDimensions"]}]}
                 ]

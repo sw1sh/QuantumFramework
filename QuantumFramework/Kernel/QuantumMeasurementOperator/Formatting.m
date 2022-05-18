@@ -30,11 +30,11 @@ QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; Quantu
         },
         {
             {
-                BoxForm`SummaryItem[{"Hermitian: ", qmo["HermitianQ"]}],
+                BoxForm`SummaryItem[{"Hermitian: ", TimeConstrained[qmo["HermitianQ"], 1]}],
                 BoxForm`SummaryItem[{"Order: ", Row[{qmo["InputOrder"], "\[RightArrow]", qmo["OutputOrder"]}]}]
             },
             {
-                BoxForm`SummaryItem[{"Unitary: ", qmo["UnitaryQ"]}],
+                BoxForm`SummaryItem[{"Unitary: ", TimeConstrained[qmo["UnitaryQ"], 1]}],
                 BoxForm`SummaryItem[{"Dimensions: ",
                     Row[{qmo["InputDimensions"], "\[RightArrow]", qmo["OutputDimensions"]}]}
                 ]
