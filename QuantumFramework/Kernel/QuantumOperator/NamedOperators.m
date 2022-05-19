@@ -19,7 +19,6 @@ $QuantumOperatorNames = {
     "S", "T",
     "Toffoli", "Deutsch", "RandomUnitary",
     "Spider", "ZSpider", "XSpider",
-    "Deutsch",
     "Switch"
 }
 
