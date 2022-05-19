@@ -42,14 +42,17 @@ QuantumOperator[] := QuantumOperator["Identity"]
 
 QuantumOperator["Identity", opts___] := QuantumOperator[{"Identity", 2}, opts]
 
-QuantumOperator[{"Identity", dims_List}, opts___] := QuantumOperator[{"Permutation", dims, Cycles[{{}}]}, opts]
+QuantumOperator[{"Identity", dims_List}, opts___] := QuantumOperator[
+    QuantumState[SparseArrayFlatten @ identityMatrix[Times @@ dims], QuantumBasis[QuditBasis[dims], QuditBasis[dims], "Label" -> "I"]],
+    opts
+]
 
 QuantumOperator[{"Identity", qb_ ? QuditBasisQ}, opts___] := QuantumOperator[
     QuantumOperator[{"Identity", qb["Dimensions"]}, opts],
     "Output" -> qb, "Input" -> qb["Dual"]
 ]
 
-QuantumOperator[{"Identity", dimension_Integer}, opts___] := QuantumOperator[identityMatrix[dimension], opts, dimension, "Label" -> "I"]
+QuantumOperator[{"Identity", dimension_Integer}, opts___] := QuantumOperator[{"Identity", {dimension}}, opts]
 
 
 QuantumOperator[name : "XRotation" | "YRotation" | "ZRotation", opts___] :=  QuantumOperator[{name, Pi / 2}, opts]
@@ -387,11 +390,13 @@ QuantumOperator[{"Permutation", dim_Integer, perm_Cycles}, opts___] := QuantumOp
 
 QuantumOperator[{"Permutation", dims_List, perm_Cycles}] := QuantumOperator[{"Permutation", dims, perm}, Range[Length[dims]]]
 
-QuantumOperator[{"Permutation", dims_List, perm_Cycles}, args___] :=
+QuantumOperator[{"Permutation", dims_List, perm_Cycles}, args__] :=
     QuantumOperator[
-        TensorTranspose[ArrayReshape[kroneckerProduct @@ identityMatrix /@ dims, Join[dims, dims]], perm],
-        args,
-        QuantumBasis[QuditBasis[Permute[dims, perm]], QuditBasis[dims], "Label" -> Superscript["\[Pi]", Row @ PermutationList[perm]]]
+        QuantumState[
+            SparseArrayFlatten @ TensorTranspose[ArrayReshape[identityMatrix[Times @@ dims], Join[dims, dims]], perm],
+            QuantumBasis[QuditBasis[Permute[dims, perm]], QuditBasis[dims], "Label" -> Superscript["\[Pi]", Row @ PermutationList[perm]]]
+        ],
+        args
     ]
 
 QuantumOperator["Uncurry", opts___] := QuantumOperator[{"Uncurry", {2, 2}}, opts]
@@ -420,7 +425,7 @@ QuantumOperator[{"ZSpider", out_Integer : 1, in_Integer : 1, phase_ : 0}, opts__
         QuantumState[
             If[ basis["Dimension"] <= 1,
                 {Exp[I Last[phases]]}[[;; basis["Dimension"]]],
-                Flatten @ SparseArray[Thread[Transpose[Table[Range[dim], basis["Qudits"]]] -> Exp[I phases]], basis["Dimensions"]]
+                SparseArrayFlatten @ SparseArray[Thread[Transpose[Table[Range[dim], basis["Qudits"]]] -> Exp[I phases]], basis["Dimensions"]]
             ],
             basis
         ],

@@ -176,7 +176,7 @@ QuantumOperator[matrix_ ? MatrixQ, args___, opts : OptionsPattern[]] := Module[{
         ];
         QuantumOperator[state, {Range[basis["OutputQudits"]], Range[basis["InputQudits"]]}, opts]
     ];
-    result /; !FailureQ[Unevaluted @ result]
+    result /; !FailureQ[Unevaluated @ result]
 ]
 
 

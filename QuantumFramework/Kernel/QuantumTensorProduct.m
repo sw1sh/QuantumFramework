@@ -44,10 +44,16 @@ QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] /; qs1["Input"] == qs2[
     ConfirmAssert[ConfirmBy[qs1, QuantumStateQ]["Picture"] === ConfirmBy[qs2, QuantumStateQ]["Picture"]];
     profile["Kronecker"] @ QuantumState[
         If[ qs1["StateType"] === qs2["StateType"] === "Vector",
-            Flatten[KroneckerProduct[
-                qs1["StateMatrix"],
-                qs2["StateMatrix"]
-            ]],
+            If[ qs1["InputQudits"] == 0 || qs2["InputQudits"] == 0 || qs1["OutputQudits"] == 0 || qs2["OutputQudits"] == 0,
+                SparseArrayFlatten @ KroneckerProduct[
+                    qs1["StateVector"],
+                    qs2["StateVector"]
+                ],
+                SparseArrayFlatten @ KroneckerProduct[
+                    qs1["StateMatrix"],
+                    qs2["StateMatrix"]
+                ]
+            ],
             KroneckerProduct[qs1["DensityMatrix"], qs2["DensityMatrix"]]
         ],
         QuantumTensorProduct[qs1["Basis"], qs2["Basis"]]
@@ -57,11 +63,17 @@ QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] /; qs1["Input"] == qs2[
 QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] := Enclose[
     ConfirmAssert[ConfirmBy[qs1, QuantumStateQ]["Picture"] === ConfirmBy[qs2, QuantumStateQ]["Picture"]];
     QuantumState[QuantumState[
-        If[qs1["StateType"] === qs2["StateType"] === "Vector",
-            Flatten[KroneckerProduct[
-                qs1["Computational"]["StateMatrix"],
-                qs2["Computational"]["StateMatrix"]
-            ]],
+        If[ qs1["StateType"] === qs2["StateType"] === "Vector",
+            If[ qs1["InputQudits"] == 0 || qs2["InputQudits"] == 0 || qs1["OutputQudits"] == 0 || qs2["OutputQudits"] == 0,
+                SparseArrayFlatten @ KroneckerProduct[
+                    qs1["Computational"]["StateVector"],
+                    qs2["Computational"]["StateVector"]
+                ],
+                SparseArrayFlatten @ KroneckerProduct[
+                    qs1["Computational"]["StateMatrix"],
+                    qs2["Computational"]["StateMatrix"]
+                ]
+            ],
             KroneckerProduct[qs1["MatrixRepresentation"], qs2["MatrixRepresentation"]]
         ],
         QuantumBasis[Join[qs1["OutputDimensions"], qs2["OutputDimensions"]], Join[qs1["InputDimensions"], qs2["InputDimensions"]]]

@@ -103,7 +103,7 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["ElementDimen
     qs["StateType"],
     "Vector",
     QuantumState[
-        Simplify @ Flatten[
+        Simplify @ SparseArrayFlatten[
             PseudoInverse[newBasis["OutputMatrix"]] . (qs["OutputMatrix"] . qs["StateMatrix"] . PseudoInverse[qs["InputMatrix"]]) . newBasis["InputMatrix"]
             (* PseudoInverse[qs["OutputMatrix"]] . qs["StateMatrix"] . newBasis["OutputMatrix"] *)
         ],
@@ -208,7 +208,7 @@ QuantumState /: HoldPattern[Times[states : _QuantumState ? QuantumStateQ ...]] :
     state
 },
     state = If[ qs1["VectorQ"] && qs2["VectorQ"],
-        Flatten[qs1["StateMatrix"] . qs2["StateMatrix"]],
+        SparseArrayFlatten[qs1["StateMatrix"] . qs2["StateMatrix"]],
         With[{q1 = If[qs1["VectorQ"], qs1["Double"], qs1], q2 = If[qs2["VectorQ"], qs2["Double"], qs2]},
             ArrayReshape[
                 q1["StateMatrix"] . q2["StateMatrix"],
@@ -230,7 +230,7 @@ QuantumState /: HoldPattern[Times[states : _QuantumState ? QuantumStateQ ...]] :
 },
     state = If[
         TrueQ[qs1["VectorQ"] && qs2["VectorQ"]],
-        Flatten[q1["StateMatrix"] . q2["StateMatrix"]],
+        SparseArrayFlatten[q1["StateMatrix"] . q2["StateMatrix"]],
         If[qs1["VectorQ"], q1 = q1["Double"]];
         If[qs2["VectorQ"], q2 = q2["Double"]];
         ArrayReshape[

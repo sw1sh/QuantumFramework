@@ -26,6 +26,8 @@ PackageScope["toggleSwap"]
 PackageScope["toggleShift"]
 PackageScope["alignDimensions"]
 
+PackageScope["SparseArrayFlatten"]
+
 PackageScope["$QuantumFrameworkProfile"]
 PackageScope["profile"]
 
@@ -189,6 +191,33 @@ pauliMatrix[3, dimension_] := With[{
         {dimension, dimension}
     ]
 ]
+
+
+(* optimization *)
+
+SparseArrayFlatten[sa_SparseArray] := With[{dims = sa["Dimensions"]},
+	With[{
+        (* if all dimensions are equal don't fold *)
+		cs = If[Equal @@ dims, dims ^ Range[Length[dims] - 1, 0, -1], Reverse @ FoldList[Times, 1, dims[[-1 ;; 2 ;; -1]]]],
+		ps = Catenate @ MapThread[ConstantArray, {Range[0, dims[[1]] - 1], Differences @ sa["RowPointers"]}]
+	},
+		SparseArray[
+            Automatic,
+            {Times @@ dims},
+            sa["ImplicitValue"],
+            {
+                1,
+                {
+                    {0, sa["ExplicitLength"]},
+                    List /@ (1 + First[cs] * ps + Total[(sa["ColumnIndices"] - 1) * Threaded[Rest @ cs], {2}])
+                },
+                sa["ExplicitValues"]
+            }
+        ]
+    ] /; Length[dims] > 11
+]
+
+SparseArrayFlatten[array_] := Flatten[array]
 
 
 (* helpers *)

@@ -104,7 +104,7 @@ QuantumStateProp[qs_, "StateVector"] := Module[{result},
         qs["Type"] === "Degenerate",
         SparseArray[{}, qs["Dimension"]],
         True,
-        Flatten @ qs["Bend"]["State"]
+        SparseArrayFlatten @ qs["Bend"]["State"]
     ];
     result /; !FailureQ[result]
 ]
@@ -373,7 +373,7 @@ QuantumStateProp[qs_, "Trace"] := QuantumPartialTrace[qs]
 QuantumStateProp[qs_, "Trace", qudits : {_Integer...}] := QuantumPartialTrace[qs, qudits]
 
 QuantumStateProp[qs_, "Conjugate" | "Dual"] := With[{qb = qs["Basis"]["Dual"]},
-    QuantumState[If[qs["StateType"] === "Vector", Flatten, ArrayReshape[#, qb["MatrixDimensions"]] &] @ Conjugate[qs["StateMatrix"]], qb]
+    QuantumState[If[qs["StateType"] === "Vector", SparseArrayFlatten, ArrayReshape[#, qb["MatrixDimensions"]] &] @ Conjugate[qs["StateMatrix"]], qb]
 ]
 
 QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := With[{qb = qs["Basis"]["ConjugateTranspose"]},
@@ -384,32 +384,53 @@ QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := With[{qb = qs["Basis"]
 ]
 
 
-QuantumStateProp[qs_, "Permute", perm_Cycles] := QuantumState[
-    If[ qs["PureStateQ"],
-        Flatten @ Transpose[qs["StateTensor"], perm],
-        ArrayReshape[
-            Transpose[qs["StateTensor"], PermutationCycles[With[{list = PermutationList[perm, qs["Qudits"]]}, Join[list, list + qs["Qudits"]]]]],
-            Table[qs["Dimension"], 2]
-        ]
-    ],
-    qs["Basis"]["Permute", perm]
-]
-
-QuantumStateProp[qs_, "PermuteInput", perm_Cycles] := profile["PermuteInput"] @ If[perm === Cycles[{}],
+QuantumStateProp[qs_, "Permute", perm_Cycles] := If[
+    perm === Cycles[{}],
     qs,
     QuantumState[
-        qs @ QuantumOperator[{"Permutation", Permute[qs["InputDimensions"], perm], InversePermutation @ perm}]["State"],
+        If[ qs["PureStateQ"],
+            SparseArrayFlatten @ Transpose[qs["StateTensor"], perm],
+            ArrayReshape[
+                Transpose[qs["StateTensor"], PermutationCycles[With[{list = PermutationList[perm, qs["Qudits"]]}, Join[list, list + qs["Qudits"]]]]],
+                Table[qs["Dimension"], 2]
+            ]
+        ],
+        qs["Basis"]["Permute", perm]
+    ]
+]
+
+QuantumStateProp[qs_, "PermuteOutput", perm_Cycles] := If[
+    perm === Cycles[{}],
+    qs,
+    QuantumState[
+        If[ qs["VectorQ"],
+            SparseArrayFlatten @ Transpose[qs["StateTensor"], perm],
+            ArrayReshape[
+                Transpose[qs["StateTensor"], PermutationCycles[With[{list = PermutationList[perm, qs["Qudits"]]}, Join[list, list + qs["Qudits"]]]]],
+                Table[qs["Dimension"], 2]
+            ]
+        ],
+        qs["Basis"]["PermuteOutput", perm]
+    ]
+]
+
+QuantumStateProp[qs_, "PermuteInput", perm_Cycles] := If[
+    perm === Cycles[{}],
+    qs,
+    QuantumState[
+        With[{inPerm = PermutationCycles @ Join[Range[qs["OutputQudits"]], PermutationList[perm, qs["InputQudits"]] + qs["OutputQudits"]]},
+            If[ qs["VectorQ"],
+                SparseArrayFlatten @ Transpose[qs["StateTensor"], inPerm],
+                ArrayReshape[
+                    Transpose[qs["StateTensor"], PermutationCycles[With[{list = PermutationList[inPerm, qs["Qudits"]]}, Join[list, list + qs["Qudits"]]]]],
+                    Table[qs["Dimension"], 2]
+                ]
+            ]
+        ],
         qs["Basis"]["PermuteInput", perm]
     ]
 ]
 
-QuantumStateProp[qs_, "PermuteOutput", perm_Cycles] := profile["PermuteOutput"] @ If[perm === Cycles[{}],
-    qs,
-    QuantumState[
-        QuantumOperator[{"Permutation", qs["OutputDimensions"], perm}]["State"] @ qs,
-        qs["Basis"]["PermuteOutput", perm]
-    ]
-]
 
 QuantumStateProp[qs_, "Split", n_Integer : 0] := With[{basis = qs["Basis"]["Split", n]},
     QuantumState[qs["State"], basis]
