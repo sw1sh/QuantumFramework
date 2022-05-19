@@ -36,13 +36,14 @@ QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[Join[Options[d
     labels, indices, graphics,
     width, height,
     sizes,
-    imageWidth, imageHeight
+    imageWidth, imageHeight,
+    scale = 0.001
     (* scale = Dynamic[0.26 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]] *)
 },
     {labels, indices, graphics} = drawGateGraphics[qco["Operators"],
         FilterRules[{opts}, Options[drawGateGraphics]]
     ];
-    (* graphics = graphics /. {Thickness[t_] :> Thickness[100 scale t], Arrowheads[s_] :> Arrowheads[0.1 scale s]}; *)
+    graphics = graphics /. {Thickness[t_] :> Thickness[100 scale t], Arrowheads[s_] :> Arrowheads[0.1 scale s]};
     width = Max[indices];
     height = qco["Arity"];
     sizes = Most @ Rasterize[#, "BoundingBox"] & /@ labels;
@@ -56,7 +57,7 @@ QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[Join[Options[d
 
 QuantumCircuitOperatorProp[qco_, "CircuitOperator" | "Compile"] := Fold[ReverseApplied[Construct], qco["Operators"]]
 
-QuantumCircuitOperatorProp[qco_, "Gates"] := Length @ qco["Operators"]
+QuantumCircuitOperatorProp[qco_, "Gates" | "Depth"] := Length @ qco["Operators"]
 
 QuantumCircuitOperatorProp[qco_, "InputOrders"] := #["InputOrder"] & /@ qco["Operators"]
 
@@ -67,6 +68,8 @@ QuantumCircuitOperatorProp[qco_, "OutputOrders"] := #["OutputOrder"] & /@ qco["O
 QuantumCircuitOperatorProp[qco_, "OutputOrder"] := Union @@ qco["OutputOrders"]
 
 QuantumCircuitOperatorProp[qco_, "Arity"] := Length @ qco["InputOrder"]
+
+QuantumCircuitOperatorProp[qco_, "Width"] := Max[qco["InputOrder"], qco["OutputOrder"]]
 
 QuantumCircuitOperatorProp[qco_, "InputDimensions"] :=
     (q |-> #["InputDimensions"][[ q /. #["InputOrderQuditMapping"] ]] & @

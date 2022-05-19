@@ -14,22 +14,30 @@ existingGateNames = {
 };
 
 labelToGate = Replace[{
-    "Controlled"[x_String, ___] :> "c" <> ToLowerCase[x],
+    "Controlled"[x_String, ___] :> "c" <> Replace[ToLowerCase[x], "not" -> "x"],
     Superscript[x_String, CircleTimes[_]] :> x,
+    Superscript[x_String, "\[Dagger]"] :> ToLowerCase[x] <> "dg",
     x_String :> ToLowerCase[x]
 }]
 
 QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
     operators = Map[
         With[{
-            label = If[QuantumMeasurementOperatorQ[#], "measure", labelToGate @ #["Label"]]
+            label = If[QuantumMeasurementOperatorQ[#], "m", labelToGate @ #["Label"]]
         },
             Switch[
-                label,
-                "measure",
+                StringTake[label, 1],
+                "m",
                 Splice[{label, None, {#, #}} & /@ (#["InputOrder"] - 1)],
                 "c",
-                {label, First @ #["ControlOrder"], First @ #["TargetOrder"]},
+                Module[{c1 = #["Label"][[2]], c0 = #["Label"][[3]], t = #["TargetOrder"], range},
+                    range = Join[c1, c0];
+                    {
+                        "control",
+                        {Length[c1] + Length[c0], label, StringReverse @ StringJoin @ Replace[range, Join[Thread[c1 -> "1"], Thread[c0 -> "0"]], {1}]},
+                        Join[range, t] - 1
+                    }
+                ],
                 _,
                 {
                     label,
@@ -40,13 +48,15 @@ QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
         ] &,
         qco["Operators"]
     ],
-    arity = {qco["Arity"], Replace[Quiet[qco["Targets"]], Except[_Integer] -> Nothing]}
+    arity = {qco["Width"], Replace[Quiet[qco["Targets"]], Except[_Integer] -> Nothing]}
 },
     ExternalEvaluate[Confirm @ $PythonSession, "
 from wolframclient.language import wl
 
 from qiskit import QuantumCircuit
 from qiskit.extensions import UnitaryGate
+from qiskit.circuit.gate import Gate
+from qiskit.circuit.library.standard_gates import XGate, YGate, ZGate
 
 import pickle
 import os
@@ -61,6 +71,17 @@ circuit = QuantumCircuit(
 for name, data, order in <* Wolfram`QuantumFramework`Qiskit`PackagePrivate`operators *>:
     if name.lower() in <* Wolfram`QuantumFramework`Qiskit`PackagePrivate`existingGateNames *>:
         getattr(circuit, name.lower())(*tuple(order))
+    elif name == 'control':
+        base_name = data[1][1:]
+        if base_name == 'x':
+            base_gate = XGate()
+        elif base_name == 'y':
+            base_gate = YGate()
+        elif base_name == 'z':
+            base_gate = ZGate()
+        else:
+            base_gate = Gate(base_name, n_qubits=data[0])
+        circuit.append(base_gate.control(len(data[2]), ctrl_state=data[2]), tuple(order))
     else:
         circuit.append(UnitaryGate(data, name), tuple(order))
 
