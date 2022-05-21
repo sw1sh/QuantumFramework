@@ -7,23 +7,46 @@ PackageScope["$QuantumCircuitOperatorNames"]
 $QuantumCircuitOperatorNames = {"Graph", "GroverDiffusion", "BooleanOracle", "Toffoli"}
 
 
-QuantumCircuitOperator[{"Graph", g_Graph}] := QuantumCircuitOperator[QuantumOperator["CZ", {#1, #2}] & @@@ EdgeList[IndexGraph @ g]]
+QuantumCircuitOperator[{"Graph", g_Graph}] := QuantumCircuitOperator[QuantumOperator["CZ", {#1, #2}] & @@@ EdgeList[IndexGraph @ g], "\[ScriptCapitalG]"]
 
 
-QuantumCircuitOperator[{"GroverDiffusion", xs : {_Integer ? Positive..}, m : _Integer ? Positive | Automatic : Automatic}] := With[{
-    target = Replace[m, Automatic -> Max[xs] + 1]
+QuantumCircuitOperator[{"GroverAmplification" | "GroverDiffusion", xs : {_Integer ? Positive..}, m : _Integer ? Positive | Automatic | None : Automatic}] := With[{
+    target = Replace[m, Automatic -> Max[xs]]
 },
     QuantumCircuitOperator[{
         Splice[Table[QuantumOperator["H", {q}], {q, xs}]],
-        Splice[Table[QuantumOperator["X", {q}], {q, Append[xs, target]}]],
-        QuantumOperator[{"Controlled", "Z", xs}, {target}],
-        Splice[Table[QuantumOperator["X", {q}], {q, Append[xs, target]}]],
+        Splice[Table[QuantumOperator["X", {q}], {q, xs}]],
+        QuantumOperator[{"Controlled", "Z", DeleteCases[xs, target]}, {target}],
+        Splice[Table[QuantumOperator["X", {q}], {q, xs}]],
         Splice[Table[QuantumOperator["H", {q}], {q, xs}]]
     }]
 ]
 
-QuantumCircuitOperator[{"GroverDiffusion", n_Integer ? Positive, m : _Integer ? Positive | Automatic : Automatic}] :=
-    QuantumCircuitOperator[{"GroverDiffusion", Range[n], m}]
+QuantumCircuitOperator[{"GroverAmplification0" | "GroverDiffusion0", xs : {_Integer ? Positive..}, m : _Integer ? Positive | Automatic | None : Automatic}] := With[{
+    target = Replace[m, Automatic -> Max[xs]]
+},
+    QuantumCircuitOperator[{
+        Splice[Table[QuantumOperator["H", {q}], {q, xs}]],
+        QuantumOperator[{"Controlled0", - QuantumOperator["Z"], DeleteCases[xs, target]}, {target}],
+        Splice[Table[QuantumOperator["H", {q}], {q, xs}]]
+    }]
+]
+
+QuantumCircuitOperator[{name : "GroverAmplification" | "GroverAmplification0" | "GroverDiffusion" | "GroverDiffusion0",
+    n_Integer ? Positive, m : _Integer ? Positive | Automatic : Automatic}] :=
+    QuantumCircuitOperator[{name, Range[n], m}]
+
+QuantumCircuitOperator[{"GroverOperator" | "Grover", oracle_ ? QuantumFrameworkOperatorQ /; ContainsExactly[oracle["InputOrder"], oracle["OutputOrder"]], m : _Integer ? Positive | Automatic | None : Automatic}] :=
+    With[{n = Replace[m, Automatic -> Max[oracle["OutputOrder"]] - 1]},
+        QuantumCircuitOperator[{QuantumOperator["H", {n + 1}], QuantumOperator["X", {n + 1}]}] @*
+            QuantumCircuitOperator[{"GroverDiffusion", n}][oracle] @*
+                QuantumCircuitOperator[{QuantumOperator["X", {n + 1}], QuantumOperator["H", {n + 1}]}]
+    ]
+
+QuantumCircuitOperator[{"GroverOperator0" | "Grover0", oracle_ ? QuantumFrameworkOperatorQ /; ContainsExactly[oracle["InputOrder"], oracle["OutputOrder"]], m : _Integer ? Positive | Automatic | None : Automatic}] :=
+    With[{n = Replace[m, Automatic -> Max[oracle["OutputOrder"]] - 1]},
+        QuantumOperator["H", {n + 1}] @ QuantumCircuitOperator[{"GroverDiffusion0", n}] @ oracle @ QuantumOperator["H", {n + 1}]
+    ]
 
 
 QuantumCircuitOperator[{"BooleanOracle", formula_, defaultVars : _List | Automatic : Automatic, n : _Integer ? NonNegative : 0}] := Enclose @ Module[{
@@ -34,8 +57,8 @@ QuantumCircuitOperator[{"BooleanOracle", formula_, defaultVars : _List | Automat
     esop = Replace[esop, clause : Except[_Xor] :> {clause}]  /. Xor -> List;
     esop = Replace[esop, clause : Except[_List] :> {clause}, {1}];
 	indices = <|0 -> {}, 1 -> {}, PositionIndex @ Lookup[#, vars]|> & /@ Map[If[MatchQ[#, _Not], #[[1]] -> 0, # -> 1] &, esop, {2}];
-    targetQubits = {Length[vars] + 1 + n};
-	QuantumCircuitOperator[QuantumOperator[{"Controlled", "NOT", #[1], #[0]}, targetQubits] & /@ indices]
+    targetQubits = {Max[Length[vars] + 1, n]};
+	QuantumCircuitOperator[QuantumOperator[{"Controlled", "NOT", #[1], #[0]}, targetQubits] & /@ indices, formula]
 ]
 
 QuantumCircuitOperator[{"BooleanOracle", formula_, vars : KeyValuePattern[_ -> _Integer ? Positive], n : _Integer ? NonNegative : 0}] :=

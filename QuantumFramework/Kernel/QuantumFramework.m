@@ -6,10 +6,10 @@ PackageScope["CacheProperty"]
 
 
 
-QuantumFrameworkOperatorQ[op_] := QuantumOperatorQ[op] ||
-    QuantumMeasurementOperatorQ[op] ||
-    QuantumChannelQ[op] ||
-    QuantumCircuitOperatorQ[op]
+QuantumFrameworkOperatorQ[op_] := QuantumOperatorQ[Unevaluated @ op] ||
+    QuantumMeasurementOperatorQ[Unevaluated @ op] ||
+    QuantumChannelQ[Unevaluated @ op] ||
+    QuantumCircuitOperatorQ[Unevaluated @ op]
 
 $QuantumFrameworkPropCache = True
 

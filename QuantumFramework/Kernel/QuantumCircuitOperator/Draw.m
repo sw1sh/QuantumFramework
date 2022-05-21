@@ -219,7 +219,7 @@ drawMeasurementWire[positionIndices_List, opts : OptionsPattern[]] := Graphics[{
 Options[drawGateGraphics] = Join[Options[Style], Options[drawWireGraphics], Options[drawMeasurementWire]]
 
 drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
-    width, height, orders, targetOrders, dimensions, graphicsList, index, positionIndices, gatePositionIndices,
+    width, height, orders, targetOrders, graphicsList, index, positionIndices, gatePositionIndices,
     targetQuditsOrder,
     controlQuditsOrder,
     controlQuditsOrderTop, controlQuditsOrderBottom,
@@ -234,7 +234,6 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
     height = 3;
     orders = #["InputOrder"] & /@ gates;
     targetOrders = #["TargetOrder"] & /@ gates;
-    dimensions = First[gates]["InputDimensions"];
 
     graphicsList = {};
     index = 1;
@@ -266,7 +265,7 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
     ];
     label = Replace[gates[[i]]["Label"], "Controlled"[x_, ___] :> x];
 
-    If[ QuantumOperatorQ[gates[[i]]] || QuantumChannelQ[gates[[i]]],
+    If[ QuantumOperatorQ[gates[[i]]] || QuantumChannelQ[gates[[i]]] || QuantumCircuitOperatorQ[gates[[i]]],
         gatePositionIndices = Table[positionIndices[[j]], {j, Min[orders[[i]]], Max[orders[[i]]]}];
         If[ MatchQ[gates[[i]]["Label"], "CX" | "CY" | "CZ" | "CNOT" | "CPHASE" | "CSWAP" | "Controlled"[__]],
             If[ MatchQ[gates[[i]]["Label"], "Controlled"[__]],

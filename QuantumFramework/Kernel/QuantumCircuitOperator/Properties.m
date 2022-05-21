@@ -3,7 +3,7 @@ Package["Wolfram`QuantumFramework`"]
 
 
 $QuantumCircuitOperatorProperties = {
-     "Operators", "Diagram", "Gates", "Orders", "CircuitOperator", "QiskitCircuit"
+     "Operators", "Diagram", "Gates", "Orders", "CircuitOperator", "QiskitCircuit", "Label"
 };
 
 
@@ -30,7 +30,7 @@ QuantumCircuitOperator::undefprop = "property `` is undefined for this circuit";
         !FailureQ[Unevaluated @ result] && (!MatchQ[Unevaluated @ result, _QuantumCircuitOperatorProp] || Message[QuantumCircuitOperator::undefprop, prop])
 ]
 
-QuantumCircuitOperatorProp[QuantumCircuitOperator[operators_], "Operators"] := operators
+QuantumCircuitOperatorProp[QuantumCircuitOperator[data_Association], key_String] /; KeyExistsQ[data, key] := data[key]
 
 QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[Join[Options[drawGateGraphics], Options[Graphics]]]] := Module[{
     labels, indices, graphics,
@@ -85,7 +85,17 @@ QuantumCircuitOperatorProp[qco_, "OutputDimension"] := Times @@ qco["OutputDimen
 
 QuantumCircuitOperatorProp[qco_, "Target"] := Union @@ (#["Target"] & /@ Select[qco["Operators"], QuantumMeasurementOperatorQ])
 
+QuantumCircuitOperatorProp[qco_, "TargetOrder"] := qco["InputOrder"]
+
+QuantumCircuitOperatorProp[qco_, "TargetArity"] := Length @ qco["TargetOrder"]
+
 QuantumCircuitOperatorProp[qco_, "QiskitCircuit" | "Qiskit"] := QuantumCircuitOperatorToQiskit[qco]
+
+QuantumCircuitOperatorProp[qco_, "Label"] := "Q"
+
+QuantumCircuitOperatorProp[qco_, "Flatten", n : _Integer | NonNegative : 1] :=
+    QuantumCircuitOperator[Nest[Flatten[Map[Replace[c_ ? QuantumCircuitOperatorQ :> c["Operators"]], #], 1] &, qco["Operators"], n]]
+
 
 (* operator properties *)
 
