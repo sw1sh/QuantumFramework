@@ -7,7 +7,7 @@ $QuantumOperatorProperties = {
     "InputOrder", "OutputOrder", "ControlOrder", "TargetOrder",
     "MatrixRepresentation", "Matrix",
     "TensorRepresentation", "Tensor",
-    "Ordered", "OrderedInput", "OrderedOutput", "SortInput", "SortOutput", "Sort",
+    "Ordered", "OrderedInput", "OrderedOutput", "SortInput", "SortOutput", "Sort", "ReverseOutput", "ReverseInput", "Reverse",
     "OrderedMatrixRepresentation", "OrderedMatrix",
     "OrderedTensorRepresentation", "OrderedTensor",
     "Arity", "MaxArity", "FullArity", "TargetArity",
@@ -191,6 +191,13 @@ QuantumOperatorProp[qo_, "SortOutput"] := QuantumOperator[qo[
 ]
 
 QuantumOperatorProp[qo_, "Sort"] := qo["SortOutput"]["SortInput"]
+
+
+QuantumOperatorProp[qo_, "ReverseOutput"] := QuantumOperator[qo["State"], {Reverse @ qo["OutputOrder"], qo["InputOrder"]}]
+
+QuantumOperatorProp[qo_, "ReverseInput"] := QuantumOperator[qo["State"], {qo["OutputOrder"], Reverse @ qo["InputOrder"]}]
+
+QuantumOperatorProp[qo_, "Reverse"] := QuantumOperator[qo["State"], Reverse /@ qo["Order"]]
 
 
 QuantumOperatorProp[qo_, "Ordered" | "OrderedInput"] := qo["OrderedInput", Sort @ qo["FullInputOrder"]]

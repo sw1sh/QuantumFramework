@@ -3,28 +3,29 @@ Package["Wolfram`QuantumFramework`"]
 
 
 $QuantumStateProperties = {
-     "StateType", "State", "Basis",
-     "Amplitudes", "Weights", "Probabilities", "StateVector", "DensityMatrix",
-     "NormalizedState", "NormalizedAmplitudes", "NormalizedStateVector", "NormalizedDensityMatrix",
-     "Entropy", "VonNeumannEntropy",
-     "Purity", "Type", "PureStateQ", "MixedStateQ",
-     "Kind",
-     "Norm", "TraceNorm", "NormalizedQ",
-     "BlochSphericalCoordinates", "BlochCartesianCoordinates",
-     "BlochPlot",
-     "Projector", "NormalizedProjector",
-     "Operator", "NormalizedOperator",
-     "Eigenvalues", "Eigenvectors", "Eigenstates",
-     "Computational", "SchmidtBasis", "SpectralBasis",
-     "StateTensor", "StateMatrix",
-     "VectorState", "MatrixState",
-     "Tensor", "Matrix",
-     "Purify", "Unpurify",
-     "Bend", "BendDual", "Unbend", "Double",
-     "Pure", "Mixed",
-     "Trace", "Transpose", "Conjugate", "ConjugateTranspose", "Reverse",
-     "Bipartition",
-     "Formula"
+    "StateType", "State", "Basis",
+    "Amplitudes", "Weights", "Probabilities", "StateVector", "DensityMatrix",
+    "NormalizedState", "NormalizedAmplitudes", "NormalizedStateVector", "NormalizedDensityMatrix",
+    "Entropy", "VonNeumannEntropy",
+    "Purity", "Type", "PureStateQ", "MixedStateQ",
+    "Kind",
+    "Norm", "TraceNorm", "NormalizedQ",
+    "BlochSphericalCoordinates", "BlochCartesianCoordinates",
+    "BlochPlot",
+    "Projector", "NormalizedProjector",
+    "Operator", "NormalizedOperator",
+    "Eigenvalues", "Eigenvectors", "Eigenstates",
+    "Computational", "SchmidtBasis", "SpectralBasis",
+    "StateTensor", "StateMatrix",
+    "VectorState", "MatrixState",
+    "Tensor", "Matrix",
+    "Purify", "Unpurify",
+    "Bend", "BendDual", "Unbend", "Double",
+    "Pure", "Mixed",
+    "Trace", "Transpose", "Conjugate", "ConjugateTranspose",
+    "ReverseOutput", "ReverseInput", "Reverse",
+    "Bipartition",
+    "Formula"
 };
 
 QuantumState["Properties"] := Union @ Join[$QuantumStateProperties, QuantumBasis["Properties"]]
@@ -365,8 +366,11 @@ QuantumStateProp[qs_, "Transpose", qudits : {_Integer...}] := QuantumState[
     qs["Basis"]
 ]
 
-QuantumStateProp[qs_, "Reverse"] :=
-    qs["PermuteOutput", FindPermutation[Reverse @ Range qs["OutputQudits"]]]["PermuteInput", FindPermutation[Reverse @ Range qs["InputQudits"]]]
+QuantumStateProp[qs_, "ReverseOutput"] := qs["PermuteOutput", FindPermutation[Reverse @ Range @ qs["OutputQudits"]]]
+
+QuantumStateProp[qs_, "ReverseInput"] := qs["PermuteInput", FindPermutation[Reverse @ Range @ qs["InputQudits"]]]
+
+QuantumStateProp[qs_, "Reverse"] := qs["ReverseOutput"]["ReverseInput"]
 
 QuantumStateProp[qs_, "Trace"] := QuantumPartialTrace[qs]
 
