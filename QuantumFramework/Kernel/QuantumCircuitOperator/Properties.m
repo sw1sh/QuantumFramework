@@ -55,7 +55,7 @@ QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[Join[Options[d
     ]
 ]
 
-QuantumCircuitOperatorProp[qco_, "CircuitOperator" | "Compile"] := Fold[ReverseApplied[Construct], qco["Operators"]]
+QuantumCircuitOperatorProp[qco_, "CircuitOperator" | "Compile"] := Fold[ReverseApplied[Construct], qco["Flatten"]["Operators"]]
 
 QuantumCircuitOperatorProp[qco_, "Gates" | "Depth"] := Length @ qco["Operators"]
 
@@ -93,8 +93,13 @@ QuantumCircuitOperatorProp[qco_, "QiskitCircuit" | "Qiskit"] := QuantumCircuitOp
 
 QuantumCircuitOperatorProp[qco_, "Label"] := "Q"
 
-QuantumCircuitOperatorProp[qco_, "Flatten", n : _Integer | NonNegative : 1] :=
-    QuantumCircuitOperator[Nest[Flatten[Map[Replace[c_ ? QuantumCircuitOperatorQ :> c["Operators"]], #], 1] &, qco["Operators"], n]]
+QuantumCircuitOperatorProp[qco_, "Flatten", n : _Integer ? NonNegative | Infinity : Infinity] :=
+    QuantumCircuitOperator[
+        If[ n === Infinity,
+            FixedPoint[Flatten[Map[Replace[c_ ? QuantumCircuitOperatorQ :> c["Operators"]], #], 1] &, qco["Operators"]],
+            Nest[Flatten[Map[Replace[c_ ? QuantumCircuitOperatorQ :> c["Operators"]], #], 1] &, qco["Operators"], n]
+        ]
+    ]
 
 
 (* operator properties *)

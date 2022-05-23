@@ -149,6 +149,9 @@ QuantumOperator[{name : "ControlledU" | "Controlled", params : Shortest @ Patter
 QuantumOperator[{name : "ControlledU" | "Controlled", params : Shortest @ PatternSequence[Except[_ ? QuantumOperatorQ], ___], control : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}}, target_ ? orderQ, opts___] :=
     QuantumOperator[{name, QuantumOperator[params, target], control, control0}, opts]
 
+QuantumOperator[{name : "Controlled0", params : Shortest @ PatternSequence[Except[_ ? QuantumOperatorQ], ___], control0 : _ ? orderQ | {} : {}}, target_ ? orderQ, opts___] :=
+    QuantumOperator[{name, QuantumOperator[params, target], control0}, opts]
+
 QuantumOperator[{name : "ControlledU" | "Controlled", params : PatternSequence[___, Except[_ ? orderQ | {}]]}, order_ ? orderQ, opts___] :=
     With[{op = QuantumOperator[params, Replace[Rest @ order, {} -> {First @ order + 1}]]},
         QuantumOperator[{name, op, {First @ order}}, opts]

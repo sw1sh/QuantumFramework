@@ -316,7 +316,7 @@ expandQuditBasis[qb_QuditBasis, order1_ ? orderQ, order2_ ? orderQ, defaultDim_I
 
 
 QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator] ...] /; MemberQ[Attributes[f], NumericFunction] :=
-    Enclose @ QuantumOperator[ConfirmBy[MatrixFunction[f[left, #, right] &, qo["Matrix"]], MatrixQ], qo["Order"], qo["Basis"], "Label" -> f[left, qo["Label"], right]]
+    Enclose @ QuantumOperator[ConfirmBy[MatrixFunction[f[left, #, right] &, qo["Sort"]["Matrix"]], MatrixQ], Sort /@ qo["Order"], qo["Basis"], "Label" -> f[left, qo["Label"], right]]
 
 
 QuantumOperator /: Plus[ops : _QuantumOperator...] := Fold[addQuantumOperators, {ops}]
@@ -325,11 +325,11 @@ addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator 
     ordered1 = qo1[
         Sequence @@ With[{order = Union[qo1["InputOrder"], qo2["InputOrder"]]}, {"OrderedInput", order, expandQuditBasis[qo1["Input"], qo1["InputOrder"], order]}]][
         Sequence @@ With[{order = Union[qo1["OutputOrder"], qo2["OutputOrder"]]}, {"OrderedOutput", order, expandQuditBasis[qo1["Output"], qo1["OutputOrder"], order]}]
-    ],
+    ]["Sort"],
     ordered2 = qo2[
         Sequence @@ With[{order = Union[qo1["InputOrder"], qo2["InputOrder"]]}, {"OrderedInput", order, expandQuditBasis[qo2["Input"], qo2["InputOrder"], order]}][
         Sequence @@ With[{order = Union[qo1["OutputOrder"], qo2["OutputOrder"]]}, {"OrderedOutput", order, expandQuditBasis[qo2["Output"], qo2["OutputOrder"], order]}]]
-    ]
+    ]["Sort"]
 },
     ConfirmAssert[ordered1["Dimensions"] == ordered2["Dimensions"]];
     QuantumOperator[
