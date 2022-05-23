@@ -316,7 +316,7 @@ QuantumStateProp[qs_, "SpectralBasis"] := QuantumState[
 ]
 
 
-QuantumStateProp[qs_, "Normalized" | "NormalizedState"] :=
+QuantumStateProp[qs_, "Normalized" | "NormalizedState" | "Normalize"] :=
     QuantumState[If[qs["StateType"] === "Vector", qs["NormalizedStateVector"], qs["NormalizedDensityMatrix"]], qs["Basis"]]
 
 
