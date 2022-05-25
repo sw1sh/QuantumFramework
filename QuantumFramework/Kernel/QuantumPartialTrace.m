@@ -20,10 +20,18 @@ QuantumPartialTrace[qb_QuantumBasis, qudits : {{_Integer, _Integer} ..}] := Encl
 
 QuantumPartialTrace[qb_QuantumBasis, qudits : {_Integer ..}] := QuantumBasis[qb, "Output" -> QuantumPartialTrace[qb["Output"], qudits]]
 
+QuantumPartialTrace[qs_QuantumState, outQudits : {_Integer ...}, inQudits : {_Integer ...}] :=
+    QuantumPartialTrace[qs, Join[outQudits, qs["OutputQudits"] + inQudits]]
+
+QuantumPartialTrace[qs_QuantumState, {}] := qs
+
 QuantumPartialTrace[qs_QuantumState, qudits : {_Integer ..}] :=
     QuantumState[
         QuantumState[
-            Simplify @ MatrixPartialTrace[qs["Computational"]["DensityMatrix"], qudits, qs["Dimensions"]],
+            If[ qs["VectorQ"] && False, (* Need an efficient check for separability to be able to discard qudits this way *)
+                SparseArrayFlatten @ Extract[qs["Computational"]["StateTensor"], ReplacePart[Table[All, qs["Qudits"]], Thread[qudits -> 1]]],
+                MatrixPartialTrace[qs["Computational"]["DensityMatrix"], qudits, qs["Dimensions"]]
+            ],
             QuantumBasis[qs["Dimensions"][[Complement[Range[qs["Qudits"]], qudits]]]]
         ],
         QuantumBasis["Output" -> #1, "Input" -> #2] & @@ QuantumPartialTrace[QuantumTensorProduct[qs["Output"], qs["Input"]], qudits][

@@ -101,7 +101,10 @@ QuantumStateProp[qs_, "StateVector"] := Module[{result},
         qs["StateType"] === "Vector",
         qs["State"],
         qs["PureStateQ"],
-        SparseArray @ First @ Pick[qs["Eigenvectors", "Normalize" -> qs["NormalizedQ"]], ConfirmBy[Map[# =!= 0 &, Chop[qs["Eigenvalues"]]], Apply[Or]]],
+        Module[{eigenvalues = Chop[qs["Eigenvalues"]], pick},
+            pick = ConfirmBy[Map[# =!= 0 &, eigenvalues], Apply[Or]];
+            SparseArray @ First @ MapThread[Times, {Pick[qs["Eigenvectors", "Normalize" -> qs["NormalizedQ"]], pick], Pick[eigenvalues, pick]}]
+        ],
         qs["Type"] === "Degenerate",
         SparseArray[{}, qs["Dimension"]],
         True,
