@@ -220,6 +220,9 @@
             "BooleanOracle",
             "PhaseOracle",
             "Grover",
+            "GroverPhase",
+            "Grover0",
+            "GroverPhase0",
             "Toffoli"
         }
     }

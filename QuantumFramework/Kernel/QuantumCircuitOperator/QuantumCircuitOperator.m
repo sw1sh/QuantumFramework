@@ -20,7 +20,11 @@ QuantumCircuitOperator[operators_ /; VectorQ[operators, QuantumFrameworkOperator
 QuantumCircuitOperator[operators_ /; VectorQ[operators, QuantumFrameworkOperatorQ], label_] :=
     QuantumCircuitOperator[<|"Operators" -> operators, "Label" -> label|>]
 
-QuantumCircuitOperator[op_ ? QuantumFrameworkOperatorQ, args___] := QuantumCircuitOperator[{op}, args]
+QuantumCircuitOperator[op : Except[_ ? QuantumCircuitOperatorQ, _ ? QuantumFrameworkOperatorQ], args___] := QuantumCircuitOperator[{op}, args]
+
+QuantumCircuitOperator[op_ ? QuantumCircuitOperatorQ, args__] := QuantumCircuitOperator[op["Operators"], args]
+
+QuantumCircuitOperator[qco_ ? QuantumCircuitOperatorQ | {qco_ ? QuantumCircuitOperatorQ}] := qco
 
 
 (* composition *)
