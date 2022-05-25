@@ -52,21 +52,27 @@ QuantumCircuitOperator[{"GroverAmplification0" | "GroverDiffusion0", xs : {_Inte
     ys
 },
     ys = DeleteCases[xs, target];
-    QuantumCircuitOperator[{
-        Splice[Table[QuantumOperator["H", {q}], {q, ys}]],
-        QuantumOperator[{"Controlled0", "NOT", ys}, {target}],
-        Splice[Table[QuantumOperator["H", {q}], {q, ys}]]
-    }, opts]
+    QuantumCircuitOperator[
+        QuantumCircuitOperator[{
+            Splice[Table[QuantumOperator["H", {q}], {q, ys}]],
+            QuantumOperator[{"Controlled0", "NOT", ys}, {target}],
+            Splice[Table[QuantumOperator["H", {q}], {q, ys}]]
+        }, "GroverDiffusion"],
+        opts
+    ]
 ]
 
 QuantumCircuitOperator[{"GroverPhaseAmplification0" | "GroverPhaseDiffusion0", xs : {_Integer ? Positive..}, m : _Integer ? Positive | Automatic | None : Automatic}, opts___] := Module[{
     target = Replace[m, Automatic -> Max[xs]]
 },
-    QuantumCircuitOperator[{
-        Splice[Table[QuantumOperator["H", {q}], {q, xs}]],
-        QuantumOperator[{"Controlled0", - QuantumOperator["Z"], DeleteCases[xs, target]}, {target}],
-        Splice[Table[QuantumOperator["H", {q}], {q, xs}]]
-    }, opts]
+    QuantumCircuitOperator[
+        QuantumCircuitOperator[{
+            Splice[Table[QuantumOperator["H", {q}], {q, xs}]],
+            QuantumOperator[{"Controlled0", - QuantumOperator["Z"], DeleteCases[xs, target]}, {target}],
+            Splice[Table[QuantumOperator["H", {q}], {q, xs}]]
+        }, "GroverDiffusion"],
+        opts
+    ]
 ]
 
 QuantumCircuitOperator[{
@@ -75,32 +81,38 @@ QuantumCircuitOperator[{
     n_Integer ? Positive, m : _Integer ? Positive | Automatic : Automatic}, opts___] :=
     QuantumCircuitOperator[{name, Range[n], m}, opts]
 
-QuantumCircuitOperator[{"GroverOperator" | "Grover", formula_, m : _Integer ? Positive | Automatic | None : Automatic}, opts___] := Enclose @ Module[{
-    oracle = Confirm @ QuantumCircuitOperator[{"BooleanOracle", formula}], n
+
+QuantumCircuitOperator[{
+        name : "GroverOperator" | "Grover" | "GroverOperator0" | "Grover0" |
+        "GroverPhaseOperator" | "GroverPhase" | "GroverPhaseOperator0" | "GroverPhase0",
+        op_ ? QuantumFrameworkOperatorQ,
+        m : _Integer ? Positive | Automatic | None : Automatic
+    },
+    opts___
+] := With[{
+    n = Replace[m, Automatic -> Max[op["OutputOrder"]]]
 },
-    n = Replace[m, Automatic -> Max[oracle["OutputOrder"]]];
-    QuantumCircuitOperator[QuantumCircuitOperator[{"GroverDiffusion", oracle["OutputOrder"], n}][oracle], opts]
+    QuantumCircuitOperator[
+        QuantumCircuitOperator[{
+            "Grover" <> If[StringContainsQ[name, "Phase"], "Phase", ""] <> "Diffusion" <> If[StringEndsQ[name, "0"], "0", ""],
+            op["OutputOrder"], n}
+        ] @ op,
+        opts
+    ]
 ]
 
-QuantumCircuitOperator[{"GroverOperator0" | "Grover0", formula_, m : _Integer ? Positive | Automatic | None : Automatic}, opts___] := Enclose @ Module[{
-    oracle = Confirm @ QuantumCircuitOperator[{"BooleanOracle", formula}], n
-},
-    n = Replace[m, Automatic -> Max[oracle["OutputOrder"]]];
-    QuantumCircuitOperator[QuantumCircuitOperator[{"GroverDiffusion0", oracle["OutputOrder"], n}][oracle], opts]
-]
 
-QuantumCircuitOperator[{"GroverPhaseOperator" | "GroverPhase", formula_, m : _Integer ? Positive | Automatic | None : Automatic}, opts___] := Enclose @ Module[{
-    oracle = Confirm @ QuantumCircuitOperator[{"PhaseOracle", formula}], n
+QuantumCircuitOperator[{
+        name : "GroverOperator" | "Grover" | "GroverOperator0" | "Grover0" |
+        "GroverPhaseOperator" | "GroverPhase" | "GroverPhaseOperator0" | "GroverPhase0",
+        formula_,
+        m : _Integer ? Positive | Automatic | None : Automatic
+    },
+    opts___
+] := Enclose @ With[{
+    oracle = Confirm @ QuantumCircuitOperator[{If[StringContainsQ[name, "Phase"], "PhaseOracle", "BooleanOracle"], formula}]
 },
-    n = Replace[m, Automatic -> Max[oracle["OutputOrder"]]];
-    QuantumCircuitOperator[QuantumCircuitOperator[{"GroverPhaseDiffusion", oracle["OutputOrder"], n}][oracle], opts]
-]
-
-QuantumCircuitOperator[{"GroverPhaseOperator0" | "GroverPhase0", formula_, m : _Integer ? Positive | Automatic | None : Automatic}, opts___] := Enclose @ Module[{
-    oracle = Confirm @ QuantumCircuitOperator[{"PhaseOracle", formula}], n
-},
-    n = Replace[m, Automatic -> Max[oracle["OutputOrder"]]];
-    QuantumCircuitOperator[QuantumCircuitOperator[{"GroverPhaseDiffusion0", oracle["OutputOrder"], n}][oracle], opts]
+    QuantumCircuitOperator[{name, oracle, m}, opts]
 ]
 
 

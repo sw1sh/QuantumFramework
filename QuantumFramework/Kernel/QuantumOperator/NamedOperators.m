@@ -59,22 +59,26 @@ QuantumOperator[{"Identity", params__}, opts___] :=
 QuantumOperator[name : "XRotation" | "YRotation" | "ZRotation", opts___] :=  QuantumOperator[{name, Pi / 2}, opts]
 
 QuantumOperator[{"XRotation", angle_, dimension_Integer : 2}, opts___] := QuantumOperator[
-    Exp[- I angle / 2 QuantumOperator[{"PauliX", dimension}, opts]],
+    Exp[- I angle / 2 QuantumOperator[{"PauliX", dimension}]],
+    opts,
     "Label" -> Subscript["R", "X"][angle]
 ]
 
 QuantumOperator[{"YRotation", angle_, dimension_Integer : 2}, opts___] := QuantumOperator[
-    Exp[- I angle / 2 QuantumOperator[{"PauliY", dimension}, opts]],
+    Exp[- I angle / 2 QuantumOperator[{"PauliY", dimension}]],
+    opts,
     "Label" -> Subscript["R", "Y"][angle]
 ]
 
 QuantumOperator[{"ZRotation", angle_, dimension_Integer : 2}, opts___] := QuantumOperator[
-    Exp[- I angle / 2 QuantumOperator[{"PauliZ", dimension}, opts]],
+    Exp[- I angle / 2 QuantumOperator[{"PauliZ", dimension}]],
+    opts,
     "Label" -> Subscript["R", "Z"][angle]
 ]
 
 QuantumOperator[{"U", theta_, phi_, lambda_}, opts___] := QuantumOperator[
-    Exp[I (lambda + phi) / 2] QuantumOperator[{"ZRotation", phi + Pi / 2}, opts] @ QuantumOperator[{"XRotation", theta}, opts] @ QuantumOperator[{"ZRotation", lambda - Pi / 2}, opts],
+    Exp[I (lambda + phi) / 2] QuantumOperator[{"ZRotation", phi + Pi / 2}] @ QuantumOperator[{"XRotation", theta}] @ QuantumOperator[{"ZRotation", lambda - Pi / 2}],
+    opts,
     "Label" -> "U"[theta, phi, lambda]
 ]
 
@@ -300,18 +304,21 @@ QuantumOperator[{"SUM", dimension_Integer}, opts___] := QuantumOperator[QuantumO
 QuantumOperator[name : "X" | "Y" | "Z" | "PauliX" | "PauliY" | "PauliZ" | "NOT", opts___] := QuantumOperator[{name, 2}, opts]
 
 QuantumOperator[{"PauliX" | "X", dimension_Integer}, order : _ ? orderQ : {1}, opts___] := QuantumOperator[
-    {QuantumOperator[pauliMatrix[1, dimension], dimension, opts, "Label" -> "X"], Length[order]},
-    {order, order}
+    {QuantumOperator[pauliMatrix[1, dimension], dimension, "Label" -> "X"], Length[order]},
+    {order, order},
+    opts
 ]
 
 QuantumOperator[{"PauliY" | "Y", dimension_Integer}, order : _ ? orderQ : {1}, opts___] := QuantumOperator[
-    {QuantumOperator[pauliMatrix[2, dimension], dimension, opts, "Label" -> "Y"], Length[order]},
-    {order, order}
+    {QuantumOperator[pauliMatrix[2, dimension], dimension, "Label" -> "Y"], Length[order]},
+    {order, order},
+    opts
 ]
 
 QuantumOperator[{"PauliZ" | "Z", dimension_Integer}, order : _ ? orderQ : {1}, opts___] := QuantumOperator[
-    {QuantumOperator[pauliMatrix[3, dimension], dimension, opts, "Label" -> "Z"], Length[order]},
-    {order, order}
+    {QuantumOperator[pauliMatrix[3, dimension], dimension, "Label" -> "Z"], Length[order]},
+    {order, order},
+    opts
 ]
 
 QuantumOperator[{"NOT", dimension_Integer}, opts___] := QuantumOperator[{"X", dimension}, opts, "Label" -> "NOT"]
@@ -327,19 +334,20 @@ QuantumOperator[{"RootNOT", dimension_Integer}, order : _ ? orderQ : {1}, opts__
     {order, order},
     dimension,
     opts,
-     "Label" -> Sqrt["NOT"]
+    "Label" -> Sqrt["NOT"]
 ]
 
 
 QuantumOperator["Hadamard" | "H", order : _ ? orderQ : {1}, opts___] := QuantumOperator[{"H", Length @ order}, order, opts]
 
-QuantumOperator[{"Hadamard" | "H", qudits_Integer ? Positive}, opts : PatternSequence[] | PatternSequence[___, Except[_ ? orderQ]]] :=
+QuantumOperator[{"Hadamard" | "H", qudits_Integer ? Positive}, opts : PatternSequence[] | PatternSequence[Except[_ ? orderQ], ___]] :=
     QuantumOperator[{"H", qudits}, Range[qudits], opts]
 
 QuantumOperator[{"Hadamard" | "H", qudits_Integer ? Positive}, order_ ? orderQ, opts___] :=
     QuantumOperator[
-        QuantumTensorProduct[Table[QuantumOperator[HadamardMatrix[2], opts], qudits]],
+        QuantumTensorProduct[Table[QuantumOperator[HadamardMatrix[2]], qudits]],
         {order, order},
+        opts,
         "Label" -> If[qudits > 1, Superscript["H", CircleTimes[qudits]], "H"]
     ]
 

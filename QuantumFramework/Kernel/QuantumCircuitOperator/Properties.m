@@ -47,8 +47,8 @@ QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[Join[Options[d
     width = Max[indices];
     height = qco["Arity"];
     sizes = Most @ Rasterize[#, "BoundingBox"] & /@ labels;
-    imageWidth = Min[width Max[sizes[[All, 1]] + 1, 64], 512];
-    imageHeight = Min[height Max[sizes[[All, 2]] + 1, 64], 512];
+    imageWidth = Min[width Max[sizes[[All, 1]] + 1, 128], 512];
+    imageHeight = Min[height Max[sizes[[All, 2]] + 1, 128], 512];
     Show[graphics,
         FilterRules[{opts}, Options[Graphics]],
         ImageSize -> If[width > height, {imageWidth, Automatic}, {Automatic, imageHeight}]
