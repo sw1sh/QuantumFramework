@@ -179,6 +179,8 @@ QuantumOperator[matrix_ ? MatrixQ, args___, opts : OptionsPattern[]] := Module[{
     result /; !FailureQ[Unevaluated @ result]
 ]
 
+QuantumOperator[array_ ? NumericArrayQ, args___] := QuantumOperator[Normal @ array, args]
+
 
 (* Mutation *)
 

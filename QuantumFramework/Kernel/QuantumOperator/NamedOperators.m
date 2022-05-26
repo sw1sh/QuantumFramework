@@ -40,19 +40,19 @@ QuantumOperator[name_ ? nameQ, basisName : Except[Alternatives @@ $QuantumBasisP
 
 QuantumOperator[] := QuantumOperator["Identity"]
 
-QuantumOperator["Identity", opts___] := QuantumOperator[{"Identity", 2}, opts]
+QuantumOperator["Identity" | "I", opts___] := QuantumOperator[{"Identity", 2}, opts]
 
-QuantumOperator[{"Identity", dims_List}, opts___] := QuantumOperator[
+QuantumOperator[{"Identity" | "I", dims_List}, opts___] := QuantumOperator[
     QuantumState[SparseArrayFlatten @ identityMatrix[Times @@ dims], QuantumBasis[QuditBasis[dims], QuditBasis[dims], "Label" -> "I"]],
     opts
 ]
 
-QuantumOperator[{"Identity", qb_ ? QuditBasisQ}, opts___] := QuantumOperator[
+QuantumOperator[{"Identity" | "I", qb_ ? QuditBasisQ}, opts___] := QuantumOperator[
     QuantumOperator[{"Identity", qb["Dimensions"]}, opts],
     "Output" -> qb, "Input" -> qb["Dual"]
 ]
 
-QuantumOperator[{"Identity", params__}, opts___] :=
+QuantumOperator[{"Identity" | "I", params__}, opts___] :=
     QuantumOperator[{"Identity", QuditBasis[params]}, opts]
 
 
@@ -148,6 +148,16 @@ QuantumOperator["CT", opts___] := QuantumOperator[{"ControlledU", "T"}, opts]
 QuantumOperator["CS", opts___] := QuantumOperator[{"ControlledU", "S"}, opts]
 
 
+QuantumOperator[{name : "ControlledU" | "Controlled", params : PatternSequence[___, Except[_ ? orderQ | {}]]}, order_ ? orderQ, opts___] :=
+    With[{op = QuantumOperator[params, Replace[Rest @ order, {} -> {First @ order + 1}]]},
+        QuantumOperator[{name, op, {First @ order}}, opts]
+    ]
+
+QuantumOperator[{"Controlled0", params : PatternSequence[___, Except[_ ? orderQ | {}]]}, order : _ ? orderQ, opts___] :=
+    With[{op = QuantumOperator[params, Replace[Rest @ order, {} -> {First @ order + 1}]]},
+        QuantumOperator[{"Controlled", op, {}, {First @ order}}, opts]
+    ]
+
 QuantumOperator[{name : "ControlledU" | "Controlled", params : Shortest @ PatternSequence[Except[_ ? QuantumOperatorQ], ___], defaultControl : _ ? orderQ | Automatic : Automatic, control0 : _ ? orderQ | {} : {}}, opts___] :=
     Module[{op = QuantumOperator[params], control},
         control = Replace[defaultControl, Automatic -> {Max[{1, Min[op["InputOrder"]] - 1}]}];
@@ -166,15 +176,7 @@ QuantumOperator[{name : "ControlledU" | "Controlled", params : Shortest @ Patter
 QuantumOperator[{name : "Controlled0", params : Shortest @ PatternSequence[Except[_ ? QuantumOperatorQ], ___], control0 : _ ? orderQ | {} : {}}, target_ ? orderQ, opts___] :=
     QuantumOperator[{name, QuantumOperator[params, target], control0}, opts]
 
-QuantumOperator[{name : "ControlledU" | "Controlled", params : PatternSequence[___, Except[_ ? orderQ | {}]]}, order_ ? orderQ, opts___] :=
-    With[{op = QuantumOperator[params, Replace[Rest @ order, {} -> {First @ order + 1}]]},
-        QuantumOperator[{name, op, {First @ order}}, opts]
-    ]
 
-QuantumOperator[{"Controlled0", params : PatternSequence[___, Except[_ ? orderQ | {}]]}, order : _ ? orderQ, opts___] :=
-    With[{op = QuantumOperator[params, Replace[Rest @ order, {} -> {First @ order + 1}]]},
-        QuantumOperator[{"Controlled", op, {}, {First @ order}}, opts]
-    ]
 
 (* QuantumOperator[{name : "ControlledU" | "Controlled", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___]}, opts___] := Enclose @
     With[{op = QuantumOperator[params]},

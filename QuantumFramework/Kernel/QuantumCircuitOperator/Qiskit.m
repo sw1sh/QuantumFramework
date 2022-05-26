@@ -26,10 +26,10 @@ QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
             label = If[QuantumMeasurementOperatorQ[#], "m", labelToGate @ #["Label"]]
         },
             Switch[
-                StringTake[label, 1],
+                label,
                 "m",
                 Splice[{label, None, {#, #}} & /@ (#["InputOrder"] - 1)],
-                "c",
+                "cx" | "cy" | "cz",
                 Module[{c1 = #["Label"][[2]], c0 = #["Label"][[3]], t = #["TargetOrder"], range},
                     range = Join[c1, c0];
                     {
@@ -59,10 +59,7 @@ from qiskit.circuit.gate import Gate
 from qiskit.circuit.library.standard_gates import XGate, YGate, ZGate
 
 import pickle
-import os
 
-if 'texbin' not in os.environ['PATH']:
-    os.environ['PATH'] += os.pathsep + os.pathsep.join(['/Library/TeX/texbin'])
 
 circuit = QuantumCircuit(
     * <* Wolfram`QuantumFramework`Qiskit`PackagePrivate`arity *>
@@ -98,8 +95,15 @@ qc_QiskitCircuit["EvalBytes", attr_String, args___, kwargs : OptionsPattern[]] :
     PythonEvalAttr[{qc["Bytes"], attr, args, kwargs}, "ReturnBytes" -> True]
 
 
-qiskitDiagram[qc_QiskitCircuit, OptionsPattern[{"Scale" -> 5}]] := Enclose @ With[{
-    latex = qc["Eval", "draw", "output" -> "latex_source", "scale" -> OptionValue["Scale"]]
+qiskitGraphics[qc_QiskitCircuit, OptionsPattern[{"Scale" -> 5}]] := Enclose @ With[{
+    latex = (
+        ExternalEvaluate[Confirm @ $PythonSession, "
+import os
+if 'texbin' not in os.environ['PATH']:
+    os.environ['PATH'] += os.pathsep + os.pathsep.join(['/Library/TeX/texbin'])
+"];
+        qc["Eval", "draw", "output" -> "latex_source", "scale" -> OptionValue["Scale"]]
+    )
 },
     Confirm @ Check[Needs["MaTeX`"], ResourceFunction["MaTeXInstall"][]; Needs["MaTeX`"]];
     MaTeX`MaTeX[
@@ -109,6 +113,24 @@ qiskitDiagram[qc_QiskitCircuit, OptionsPattern[{"Scale" -> 5}]] := Enclose @ Wit
 ]
 
 
+qiskitDiagram[qc_QiskitCircuit, OptionsPattern[{"Scale" -> 5}]] := Enclose @ Block[{
+    Wolfram`QuantumFramework`$pythonBytes = qc["Bytes"],
+    Wolfram`QuantumFramework`scale = OptionValue["Scale"]
+},
+    ExternalEvaluate[Confirm @ $PythonSession, "
+import pickle
+import PIL
+import matplotlib
+matplotlib.use('Agg')
+fig = pickle.loads(<* Wolfram`QuantumFramework`$pythonBytes *>).draw(output='mpl', scale=<* Wolfram`QuantumFramework`scale *>)
+fig.canvas.draw()
+PIL.Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
+"]
+]
+
+
+qc_QiskitCircuit["Graphics", opts : OptionsPattern[]] := qiskitGraphics[qc, opts]
+
 qc_QiskitCircuit["Diagram", opts : OptionsPattern[]] := qiskitDiagram[qc, opts]
 
 qc_QiskitCircuit["Qubits"] := qc["Eval", "num_qubits"]
@@ -116,6 +138,67 @@ qc_QiskitCircuit["Qubits"] := qc["Eval", "num_qubits"]
 qc_QiskitCircuit["Depth"] := qc["Eval", "depth"]
 
 qc_QiskitCircuit["Ops"] := qc["Eval", "count_ops"]
+
+qc_QiskitCircuit["QuantumCircuit" | "QuantumCircuitOperator"] := Enclose @ Block[{
+    Wolfram`QuantumFramework`$pythonBytes = qc["Bytes"]
+},
+    ExternalEvaluate[Confirm @ $PythonSession, "
+import pickle
+from wolframclient.language import wl
+from math import pi
+
+qc = pickle.loads(<* Wolfram`QuantumFramework`$pythonBytes *>)
+
+ops = []
+for gate, qubits, clbits in qc:
+    order = [q.index + 1 for q in qubits]
+    if len(gate.params) > 0:
+        xs = []
+        for x in gate.params:
+            if isinstance(x, float):
+                if x == pi:
+                    xs.append(wl.Pi)
+                elif x == - pi:
+                    xs.append(wl.Minus(wl.Pi))
+            else:
+                xs.append(x)
+    if gate.name == 'x':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('X', order))
+    elif gate.name == 'h':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('H', order))
+    elif gate.name == 'p':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Phase', gate.params[0]], order))
+    elif gate.name == 'u':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['U', *gate.params], order))
+    elif gate.name == 'cx':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('CNOT', order))
+    elif gate.name == 'cy':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('CY', order))
+    elif gate.name == 'cz':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('CZ', order))
+    elif gate.name == 't':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('T', order))
+    elif gate.name == 'tdg':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('T', order)('Dagger'))
+    elif gate.name == 'ccrx':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Controlled', ['XRotation', *xs], order[:2]], order[2:]))
+    elif gate.name == 'ccrx_o0':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Controlled0', ['XRotation', *xs], order[:2]], order[2:]))
+    elif gate.name == 'ccrx_o1':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Controlled', ['XRotation', *xs], [order[0]], [order[1]]], order[2:]))
+    elif gate.name == 'ccrx_o2':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Controlled', ['XRotation', *xs], [order[1]], [order[0]]], order[2:]))
+    elif gate.name == 'ccx_o2':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Controlled', 'NOT', [order[1]], [order[0]]], order[2:]))
+    elif gate.name == 'ccx':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Controlled', 'NOT', order[:2]], order[2:]))
+    elif gate.name == 'unitary':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(*xs, wl.Rule('Label', gate.label)))
+    else:
+        print('Uknonwn gate: ', gate.name, gate.params, [q.index for q in qubits])
+wl.Wolfram.QuantumFramework.QuantumCircuitOperator(ops)
+"]
+]
 
 
 qiskitMatrix[qc_QiskitCircuit] := Block[{Wolfram`QuantumFramework`$pythonBytes = qc["Bytes"]},
