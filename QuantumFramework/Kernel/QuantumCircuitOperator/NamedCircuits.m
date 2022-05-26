@@ -191,3 +191,8 @@ QuantumCircuitOperator[{"Toffoli", n : _Integer ? Positive : 1}, opts___] := Qua
     opts
 ]
 
+
+QuantumCircuitOperator[pauliString_String] := With[{chars = Characters[pauliString]},
+    QuantumCircuitOperator[MapIndexed[QuantumOperator, chars]] /; ContainsOnly[chars, {"I", "X", "Y", "Z"}]
+]
+
