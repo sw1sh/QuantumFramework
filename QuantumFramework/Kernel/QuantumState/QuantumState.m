@@ -132,15 +132,20 @@ QuantumState[qs_ ? QuantumStateQ] := qs["Computational"]
 
 (* equality *)
 
+SetPrecisionNumeric[x_ /; NumericQ[x] || ArrayQ[x, _, NumericQ]] := SetPrecision[x, $MachinePrecision - 2]
+
+SetPrecisionNumeric[x_] := x
+
+
 QuantumState /: Equal[qs : _QuantumState ...] :=
     Equal @@ (#["Picture"] & /@ {qs}) &&
     Which[
         And @@ (#["PureStateQ"] & /@ {qs}),
-        Equal @@ (Chop @ SetPrecision[#["Computational"]["CanonicalStateVector"], $MachinePrecision - 2] & /@ {qs}),
+        Thread[Equal[Chop @ SetPrecisionNumeric[#["Computational"]["CanonicalStateVector"]] & /@ {qs}]],
         And @@ (#["MixedStateQ"] & /@ {qs}),
-        Equal @@ (Chop @ SetPrecision[#["NormalizedMatrixRepresentation"], $MachinePrecision - 2] & /@ {qs}),
+        Thread[Equal[Chop @ SetPrecisionNumeric[SparseArrayFlatten @ #["NormalizedMatrixRepresentation"]] & /@ {qs}]],
         True,
-        Equal @@ (Chop @ SetPrecision[#["Split", #["Qudits"]]["Bend"]["Computational"]["CanonicalStateVector"], $MachinePrecision - 2] & /@ {qs})
+        Thread[Equal[Chop @ SetPrecisionNumeric[#["Split", #["Qudits"]]["Bend"]["Computational"]["CanonicalStateVector"]] & /@ {qs}]]
     ]
 
 
