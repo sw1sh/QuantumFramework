@@ -176,18 +176,26 @@ QuantumOperatorProp[qo_, "OrderOutputExtra", outputSource_ ? orderQ, outputTarge
     ]
 ]
 
-QuantumOperatorProp[qo_, "SortInput"] := QuantumOperator[qo[
-    "PermuteInput",
-    InversePermutation @ FindPermutation[Ordering @ Ordering @ qo["FullInputOrder"]]
-],
-    {qo["OutputOrder"], Sort @ qo["InputOrder"]}
+QuantumOperatorProp[qo_, "SortInput"] := If[
+    OrderedQ[qo["InputOrder"]],
+    qo,
+    QuantumOperator[qo[
+        "PermuteInput",
+        InversePermutation @ FindPermutation[Ordering @ Ordering @ qo["FullInputOrder"]]
+    ],
+        {qo["OutputOrder"], Sort @ qo["InputOrder"]}
+    ]
 ]
 
-QuantumOperatorProp[qo_, "SortOutput"] := QuantumOperator[qo[
-    "PermuteOutput",
-    InversePermutation @ FindPermutation[Ordering @ Ordering @ qo["FullOutputOrder"]]
-],
-    {Sort @ qo["OutputOrder"], qo["InputOrder"]}
+QuantumOperatorProp[qo_, "SortOutput"] := If[
+    OrderedQ[qo["OutputOrder"]],
+    qo,
+    QuantumOperator[qo[
+        "PermuteOutput",
+        InversePermutation @ FindPermutation[Ordering @ Ordering @ qo["FullOutputOrder"]]
+    ],
+        {Sort @ qo["OutputOrder"], qo["InputOrder"]}
+    ]
 ]
 
 QuantumOperatorProp[qo_, "Sort"] := qo["SortOutput"]["SortInput"]

@@ -29,7 +29,7 @@ QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
                 label,
                 "m",
                 Splice[{label, None, {#, #}} & /@ (#["InputOrder"] - 1)],
-                "cx" | "cy" | "cz",
+                "cx" | "cy" | "cz" | "ch",
                 Module[{c1 = #["Label"][[2]], c0 = #["Label"][[3]], t = #["TargetOrder"], range},
                     range = Join[c1, c0];
                     {
@@ -56,7 +56,7 @@ from wolframclient.language import wl
 from qiskit import QuantumCircuit
 from qiskit.extensions import UnitaryGate
 from qiskit.circuit.gate import Gate
-from qiskit.circuit.library.standard_gates import XGate, YGate, ZGate
+from qiskit.circuit.library.standard_gates import XGate, YGate, ZGate, HGate
 
 import pickle
 
@@ -76,9 +76,13 @@ for name, data, order in <* Wolfram`QuantumFramework`Qiskit`PackagePrivate`opera
             base_gate = YGate()
         elif base_name == 'z':
             base_gate = ZGate()
+        elif base_name == 'h':
+            base_gate = HGate()
         else:
             base_gate = Gate(base_name, n_qubits=data[0])
         circuit.append(base_gate.control(len(data[2]), ctrl_state=data[2]), tuple(order))
+    elif name == 'm':
+        circuit.measure(*tuple(order))
     else:
         circuit.append(UnitaryGate(data, name), tuple(order))
 
@@ -195,7 +199,7 @@ for gate, qubits, clbits in qc:
     elif gate.name == 'unitary':
         ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(*xs, wl.Rule('Label', gate.label)))
     else:
-        print('Uknonwn gate: ', gate.name, gate.params, [q.index for q in qubits])
+        print('Unknonwn gate: ', gate.name, gate.params, [q.index for q in qubits])
 wl.Wolfram.QuantumFramework.QuantumCircuitOperator(ops)
 "]
 ]

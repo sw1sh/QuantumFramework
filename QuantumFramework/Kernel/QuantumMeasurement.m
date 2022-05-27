@@ -219,7 +219,10 @@ QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement ? QuantumMeasurementQ, for
         If[
             ! FailureQ[proba] && AllTrue[proba, NumericQ],
             Show[
-                BarChart[Chop /@ N @ proba, Frame -> {{True, False}, {True, False}}, FrameTicks -> None],
+                BarChart[
+                    Chop /@ N @ proba, Frame -> {{True, False}, {True, False}}, FrameTicks -> None,
+                    ChartLabels -> Placed[KeyValueMap[Column[{##}] &, qm["Probabilities"]], Tooltip]
+                ],
                 ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]}
             ],
             Graphics[{

@@ -295,8 +295,6 @@ With[{order = Range[qs["OutputQudits"]] + Max[Max[qo["FullInputOrder"]] - qs["Ou
         ]
     ];
     ConfirmAssert[top["InputDimension"] == bottom["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
-    (* top = top["SortOutput"];
-    bottom = bottom["SortInput"]; *)
     QuantumOperator[top["State"] @ bottom["State"], {top["OutputOrder"], bottom["InputOrder"]}]
 ]
 

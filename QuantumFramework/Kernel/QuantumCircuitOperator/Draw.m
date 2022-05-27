@@ -106,7 +106,7 @@ drawControlGateBottom[coordinates_List, controlOrder_List, targetOrder_List, Opt
 
 drawMeasurementGate[coordinates_List, order_List, name_, opts : OptionsPattern[Style]] := Module[{width, height, radius, semiCircle, arrow, frame},
     width = 4;
-    height = 5 Length[order] - 3;
+    height = 5 (Max[order] - Min[order] + 1) - 3;
     radius = - 0.3 + width / 2;
     semiCircle = Graphics[{Thickness[0.0025], Circle[coordinates, radius, {0, Pi}]}];
     arrow = Graphics[{Thickness[0.0025], Arrowheads[0.02], Arrow[{coordinates, {First[coordinates] + 1, Last[coordinates] + 1.4}}]}];

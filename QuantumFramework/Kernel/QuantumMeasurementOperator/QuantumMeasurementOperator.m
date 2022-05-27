@@ -215,24 +215,24 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
     top, bottom, result, target, eigens, startQudit
 },
 
-    top = qmo["SuperOperator"];
+    top = qmo["SuperOperator"]["SortOutput"];
     bottom = If[
         QuantumMeasurementOperatorQ[qm],
-        qm["SuperOperator"],
+        qm["SuperOperator"]["SortOutput"],
         QuantumOperator[
             qm["State"],
             {Range[qm["OutputQudits"]] - qm["Eigenqudits"], Automatic}
         ]
     ];
 
-    target = Join[qmo["Target"], qm["Target"]];
+    target = Join[qm["Target"], qmo["Target"]];
     eigens = qmo["Eigenqudits"] + qm["Eigenqudits"];
     startQudit = Min[top["FirstOutputQudit"], bottom["FirstOutputQudit"]];
     top = QuantumOperator[top,
-        {Join[1 + startQudit - Take[Reverse[Range[eigens]], qmo["Eigenqudits"]], Drop[top["OutputOrder"], qmo["Eigenqudits"]]], top["InputOrder"]}
+        {Join[1 - Drop[Reverse[Range[eigens]], qm["Eigenqudits"]], Drop[top["OutputOrder"], qmo["Eigenqudits"]]], top["InputOrder"]}
     ];
     bottom = QuantumOperator[bottom,
-        {Join[1 + startQudit - Drop[Reverse[Range[eigens]], qmo["Eigenqudits"]], Drop[bottom["OutputOrder"], qm["Eigenqudits"]]], bottom["InputOrder"]}
+        {Join[1 - Take[Reverse[Range[eigens]], qm["Eigenqudits"]], Drop[bottom["OutputOrder"], qm["Eigenqudits"]]], bottom["InputOrder"]}
     ];
     result = top[bottom]["SortOutput"];
     If[ QuantumMeasurementQ[qm], QuantumMeasurement, Identity] @

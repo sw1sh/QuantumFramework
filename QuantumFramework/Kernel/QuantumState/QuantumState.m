@@ -103,15 +103,14 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["ElementDimen
     qs["StateType"],
     "Vector",
     QuantumState[
-        Simplify @ SparseArrayFlatten[
-            PseudoInverse[newBasis["OutputMatrix"]] . (qs["OutputMatrix"] . qs["StateMatrix"] . PseudoInverse[qs["InputMatrix"]]) . newBasis["InputMatrix"]
-            (* PseudoInverse[qs["OutputMatrix"]] . qs["StateMatrix"] . newBasis["OutputMatrix"] *)
+        SparseArrayFlatten[
+            SparsePseudoInverse[newBasis["OutputMatrix"]] . (qs["OutputMatrix"] . qs["StateMatrix"] . SparsePseudoInverse[qs["InputMatrix"]]) . newBasis["InputMatrix"]
         ],
         newBasis
     ],
     "Matrix",
     QuantumState[
-        PseudoInverse[newBasis["Matrix"]] . (qs["Basis"]["Matrix"] . qs["DensityMatrix"] . PseudoInverse[qs["Basis"]["Matrix"]]) . newBasis["Matrix"],
+        SparsePseudoInverse[newBasis["Matrix"]] . (qs["Basis"]["Matrix"] . qs["DensityMatrix"] . SparsePseudoInverse[qs["Basis"]["Matrix"]]) . newBasis["Matrix"],
         newBasis
     ]
 ]
@@ -141,11 +140,11 @@ QuantumState /: Equal[qs : _QuantumState ...] :=
     Equal @@ (#["Picture"] & /@ {qs}) &&
     Which[
         And @@ (#["PureStateQ"] & /@ {qs}),
-        Thread[Equal[Chop @ SetPrecisionNumeric[#["Computational"]["CanonicalStateVector"]] & /@ {qs}]],
+        Thread[Equal @@ (Chop @ SetPrecisionNumeric[#["Computational"]["CanonicalStateVector"]] & /@ {qs})],
         And @@ (#["MixedStateQ"] & /@ {qs}),
-        Thread[Equal[Chop @ SetPrecisionNumeric[SparseArrayFlatten @ #["NormalizedMatrixRepresentation"]] & /@ {qs}]],
+        Thread[Equal @@ (Chop @ SetPrecisionNumeric[SparseArrayFlatten @ #["NormalizedMatrixRepresentation"]] & /@ {qs})],
         True,
-        Thread[Equal[Chop @ SetPrecisionNumeric[#["Split", #["Qudits"]]["Bend"]["Computational"]["CanonicalStateVector"]] & /@ {qs}]]
+        Thread[Equal @@ (Chop @ SetPrecisionNumeric[#["Split", #["Qudits"]]["Bend"]["Computational"]["CanonicalStateVector"]] & /@ {qs})]
     ]
 
 

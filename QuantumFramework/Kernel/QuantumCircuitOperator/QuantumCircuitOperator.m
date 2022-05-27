@@ -39,7 +39,7 @@ op_QuantumMeasurementOperator[qco_QuantumCircuitOperator ? QuantumCircuitOperato
 
 
 QuantumCircuitOperator /: Composition[qcos___QuantumCircuitOperator ? QuantumCircuitOperatorQ] :=
-    QuantumCircuitOperator[Catenate[Reverse @ #["Operators"] & /@ Reverse @ {qcos}], Composition @@ (#["Label"] & /@ {qcos})]
+    QuantumCircuitOperator[Catenate[#["Operators"] & /@ Reverse @ {qcos}], Composition @@ (#["Label"] & /@ {qcos})]
 
 QuantumCircuitOperator /: RightComposition[qcos___QuantumCircuitOperator ? QuantumCircuitOperatorQ] :=
     QuantumCircuitOperator[Catenate[#["Operators"] & /@ {qcos}], RightComposition @@ Reverse @ (#["Label"] & /@ {qcos})]

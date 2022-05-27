@@ -27,6 +27,7 @@ PackageScope["toggleShift"]
 PackageScope["alignDimensions"]
 
 PackageScope["SparseArrayFlatten"]
+PackageScope["SparsePseudoInverse"]
 
 PackageScope["$QuantumFrameworkProfile"]
 PackageScope["profile"]
@@ -218,6 +219,9 @@ SparseArrayFlatten[sa_SparseArray] := With[{dims = sa["Dimensions"]},
 ]
 
 SparseArrayFlatten[array_] := Flatten[array]
+
+
+SparsePseudoInverse[matrix_] := SparseArray @ If[SquareMatrixQ[matrix], Inverse[matrix], PseudoInverse[matrix]]
 
 
 (* helpers *)

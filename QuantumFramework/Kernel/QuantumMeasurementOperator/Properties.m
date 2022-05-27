@@ -89,13 +89,19 @@ QuantumMeasurementOperatorProp[qmo_, "CanonicalBasis"] :=
     QuantumBasis[qmo["Basis"], "Output" -> QuantumTensorProduct[qmo["TargetBasis"], qmo["StateBasis"]["Output"]], "Input" -> qmo["Input"]]
 
 
-QuantumMeasurementOperatorProp[qmo_, "Canonical"] /; qmo["Eigendimension"] == qmo["TargetDimension"] := QuantumMeasurementOperator[
-    QuantumOperator[
-        qmo["State"]["PermuteOutput", InversePermutation @ FindPermutation @ qmo["Target"]],
-        {Range[- qmo["Targets"] + 1, qmo["StateQudits"]], qmo["InputOrder"]},
-        qmo["CanonicalBasis"]
-    ],
-    Sort @ qmo["Target"]
+QuantumMeasurementOperatorProp[qmo_, "Canonical"] /; qmo["Eigendimension"] == qmo["TargetDimension"] := With[{
+    basis = qmo["CanonicalBasis"]
+},
+    QuantumMeasurementOperator[
+        QuantumOperator[
+            QuantumState[
+                qmo["State"]["State"],
+                basis
+            ]["PermuteOutput", InversePermutation @ FindPermutation @ qmo["Target"]],
+            {Join[Range[- qmo["Targets"] + 1, 0], Drop[qmo["OutputOrder"], qmo["Eigenqudits"]]], qmo["InputOrder"]}
+        ],
+        Sort @ qmo["Target"]
+    ]
 ]
 
 
@@ -202,7 +208,7 @@ QuantumMeasurementOperatorProp[qmo_, "POVM"] := QuantumMeasurementOperator[qmo["
 
 (* operator properties *)
 
-QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | "Sort" | "Computational", args___] :=
+QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | "Sort" | "SortOutput" | "SortInput" | "Computational", args___] :=
     QuantumMeasurementOperator[qmo["QuantumOperator"][prop, args], qmo["Target"]]
 
 QuantumMeasurementOperatorProp[qmo_, args : PatternSequence[prop_String, ___]] /;
