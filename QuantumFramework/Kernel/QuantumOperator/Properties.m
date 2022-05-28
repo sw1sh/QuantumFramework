@@ -115,12 +115,12 @@ QuantumOperatorProp[qo_, "OutputOrderQuditMapping"] := Thread[qo["FullOutputOrde
 
 QuantumOperatorProp[qo_, "SquareQ"] := qo["OutputDimension"] == qo["InputDimension"]
 
-QuantumOperatorProp[qo_, "Tensor"] := qo["StateTensor"]
+QuantumOperatorProp[qo_, "Tensor"] := qo["Sort"]["StateTensor"]
 
-QuantumOperatorProp[qo_, "TensorRepresentation"] := qo["State"]["TensorRepresentation"]
+QuantumOperatorProp[qo_, "TensorRepresentation"] := qo["Sort"]["State"]["TensorRepresentation"]
 
 
-QuantumOperatorProp[qo_, "Matrix"] := qo["StateMatrix"]
+QuantumOperatorProp[qo_, "Matrix"] := qo["Sort"]["StateMatrix"]
 
 QuantumOperatorProp[qo_, "MatrixRepresentation"] := qo["Computational"]["Matrix"]
 

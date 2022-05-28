@@ -164,8 +164,7 @@ qb_QuantumBasis /; System`Private`HoldNotValidQ[qb] && quantumBasisQ[Unevaluated
 
 (* equality *)
 
-QuantumBasis /: (qb1_QuantumBasis ? QuantumBasisQ) ==
-    (qb2_QuantumBasis ? QuantumBasisQ) := qb1["Input"] == qb2["Input"] && qb1["Output"] == qb2["Output"]
+QuantumBasis /: Equal[qb__QuantumBasis ? QuantumBasisQ] := Equal @@ (#["Input"] & /@ {qb}) && Equal @@ (#["Output"] & /@ {qb})
 
 
 (* N *)
@@ -175,4 +174,14 @@ N[qb_QuantumBasis, n_] /; ! AllTrue[
     InexactNumberQ[#] || ArrayQ[#, _, InexactNumberQ] &] := QuantumBasis[qb, "Output" -> N[qb["Output"], n], "Input" -> N[qb["Input"], n]]
 
 SetAttributes[QuantumBasis, NHoldAll]
+
+
+(* addition *)
+
+QuantumBasis /: Plus[qb__QuantumBasis ? QuantumBasisQ] :=
+    QuantumBasis[
+        "Output" -> Plus @@ (#["Output"] & /@ {qb}),
+        "Input" -> Plus @@ (#["Input"] & /@ {qb}),
+        "Label" -> Plus @@ (#["Label"] & /@ {qb})
+    ]
 

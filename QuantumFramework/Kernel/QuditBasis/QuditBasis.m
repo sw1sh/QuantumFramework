@@ -86,7 +86,7 @@ QuditBasis[qb_QuditBasis ? QuditBasisQ, multiplicity_Integer ? NonNegative] :=
 (* basis cast *)
 
 QuditBasis[source_QuditBasis, target_QuditBasis] := If[
-    target["Dimension"] > source["Dimension"],
+    target["Dimension"] >= source["Dimension"],
     target["TakeDimension", source["Dimension"]],
     QuantumTensorProduct[target, source["DropDimension", target["Dimension"]]]
 ]
@@ -99,8 +99,36 @@ QuditBasis[source_QuditBasis -> target_QuditBasis] := QuditBasis[
 
 (* equality *)
 
-QuditBasis /: qb1_QuditBasis == qb2_QuditBasis := Equal @@ (Chop @ SetPrecision[Values[#], $MachinePrecision - 2] & /@
-    KeyIntersection[{KeyMap[Last] @ qb1["Representations"], KeyMap[Last] @ qb2["Representations"]}])
+QuditBasis /: Equal[qb__QuditBasis ? QuditBasisQ] := Equal @@ (Chop @ SetPrecision[Values[#], $MachinePrecision - 2] & /@
+    KeyIntersection[KeyMap[Last, #["Representations"]] & /@ {qb}])
+
+
+(* addition *)
+
+QuditBasis /: Plus[qb__QuditBasis ? QuditBasisQ] := Module[{
+    repr = MapIndexed[{b, i} |-> KeyValueMap[#1[[2]] -> {#1[[1]]["Name"], SparseArrayFlatten @ #2, First[i]} &, b["Representations"]], {qb}],
+    dims = #["ElementDimensions"] & /@ {qb},
+    maxRank
+},
+    maxRank = Max[Length /@ dims];
+    dims = PadRight[#, maxRank, 1] & /@ dims;
+    QuditBasis @ Association @ KeyValueMap[
+        {k, vs} |-> MapThread[{QuditName[#1], k} -> #2 &] @ {
+            Thread[Subscript[vs[[All, 1]], vs[[All, 3]]]],
+            MapThread[
+                PadRight[
+                    PadLeft[
+                        Replace[#1, x_ ? NumericQ :> {x}],
+                        Total @ Take[dims, #2][[All, k]]
+                    ],
+                    Total @ dims[[All, k]]
+                ] &,
+                {vs[[All, 2]], vs[[All, 3]]}
+            ]
+        },
+        Merge[repr, Identity]
+    ]
+]
 
 
 (* formatting *)

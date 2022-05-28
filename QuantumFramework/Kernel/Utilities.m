@@ -210,13 +210,16 @@ SparseArrayFlatten[sa_SparseArray] := With[{dims = sa["Dimensions"]},
                 1,
                 {
                     {0, sa["ExplicitLength"]},
-                    List /@ (1 + First[cs] * ps + Total[(sa["ColumnIndices"] - 1) * Threaded[Rest @ cs], {2}])
+                    (* List /@ (1 + First[cs] * ps + Total[(sa["ColumnIndices"] - 1) * Threaded[Rest @ cs], {2}]) *)
+                    List /@ (1 + First[cs] * ps + Total[Thread[Rest[cs] #] & /@ (sa["ColumnIndices"] - 1), {2}])
                 },
                 sa["ExplicitValues"]
             }
         ]
     ] /; Length[dims] > 11
 ]
+
+SparseArrayFlatten[x_ ? NumericQ] := x
 
 SparseArrayFlatten[array_] := Flatten[array]
 

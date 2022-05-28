@@ -105,7 +105,7 @@ QuantumBasisProp[qb_, "InputElementDimensions"] := qb["Input"]["ElementDimension
 
 QuantumBasisProp[qb_, "OutputElementDimensions"] := qb["Output"]["ElementDimensions"]
 
-QuantumBasisProp[qb_, "ElementDimensions"] := Join[qb["OutputElementDimensions"], qb["InputElementDimensions"]]
+QuantumBasisProp[qb_, "ElementDimensions"] := If[Length[#] > 0, Replace[DeleteCases[#, 1], {} -> {1}], #] & @ Join[qb["OutputElementDimensions"], qb["InputElementDimensions"]]
 
 
 QuantumBasisProp[qb_, "InputElementDimension"] := qb["Input"]["ElementDimension"]

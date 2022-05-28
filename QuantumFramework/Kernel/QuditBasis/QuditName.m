@@ -91,13 +91,14 @@ qbn_QuditName["Drop", arg_] := (QuditName @@ Drop[Normal[qbn], arg])["Group"]
 
 qbn_QuditName["Delete", arg_] := (QuditName @@ Delete[Normal[qbn], arg])["Group"]
 
+isIdentity[name_] := MatchQ[name, $QuditIdentity | Subscript[$QuditIdentity, _]]
 
 QuantumTensorProduct[qbn1_QuditName, qbn2_QuditName] := Which[
     qbn1["Name"] === $QuditZero || qbn2["Name"] === $QuditZero,
     QuditName[$QuditZero],
-    qbn1["Name"] === $QuditIdentity,
+    isIdentity @ qbn1["Name"],
     qbn2,
-    qbn2["Name"] === $QuditIdentity,
+    isIdentity @ qbn2["Name"],
     qbn1,
     qbn1["DualQ"] === qbn2["DualQ"],
     QuditName[Flatten @ {qbn1["Name"], qbn2["Name"]}, "Dual" -> qbn1["DualQ"]],

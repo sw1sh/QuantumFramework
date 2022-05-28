@@ -111,9 +111,9 @@ QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumPartialTrace[
 
 QuantumMeasurementProp[qm_, "MixedStates"] := With[{rep = If[qm["PureStateQ"], 1, 2]},
     Which[
-        MatchQ[qm["LabelHead"], "Computational"],
-        QuantumState[QuantumState[ArrayReshape[#, Table[qm["StateDimension"], rep]], QuantumBasis[qm["StateDimensions"]]], qm["StateBasis"]] & /@
-            qm["Computational"]["StateDual"]["StateMatrix"],
+        MatchQ[qm["LabelHead"], "Computational" | Automatic],
+        QuantumState[QuantumState[ArrayReshape[#, Table[qm["StateDimension"], rep]], QuantumBasis[qm["StateDimensions"]]], qm["StateBasis"]]["Computational"] & /@
+            qm["StateDual"]["StateMatrix"],
         MatchQ[qm["LabelHead"], "Eigen"] || qm["Eigendimension"] != qm["TargetDimension"],
         QuantumState[ArrayReshape[#, Table[qm["StateDimension"], rep]], qm["StateBasis"]] & /@
             qm["StateDual"]["StateMatrix"],
@@ -127,7 +127,7 @@ QuantumMeasurementProp[qm_, "States"] := If[qm["PureStateQ"], qm["MixedStates"],
 
 QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
     Which[
-        MatchQ[qm["LabelHead"], "Computational"],
+        MatchQ[qm["LabelHead"], "Computational" | Automatic],
         qm["Computational"]["Eigenstate"],
         MatchQ[qm["LabelHead"], "Eigen"] || qm["Eigendimension"] != qm["TargetDimension"],
         qm["Eigenstate"],
@@ -138,7 +138,7 @@ QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
 QuantumMeasurementProp[qm_, "Eigenvalues"] := qm["Eigenstate"]["Names"]
 
 QuantumMeasurementProp[qm_, "Outcomes"] := Which[
-    MatchQ[qm["LabelHead"], "Computational"],
+    MatchQ[qm["LabelHead"], "Computational" | Automatic],
     qm["Computational"],
     MatchQ[qm["LabelHead"], "Eigen"] || qm["Eigendimension"] != qm["TargetDimension"],
     qm,
