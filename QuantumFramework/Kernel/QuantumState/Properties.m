@@ -15,7 +15,7 @@ $QuantumStateProperties = {
     "Projector", "NormalizedProjector",
     "Operator", "NormalizedOperator",
     "Eigenvalues", "Eigenvectors", "Eigenstates",
-    "Computational", "SchmidtBasis", "SpectralBasis",
+    "Computational", "SchmidtBasis", "SpectralBasis", "PrimeBasis",
     "StateTensor", "StateMatrix",
     "VectorState", "MatrixState",
     "Tensor", "Matrix",
@@ -277,6 +277,12 @@ QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /;
         ]
     ]
 ]
+
+
+primeFactors[n_] := Catenate[Table @@@ FactorInteger[n]]
+
+QuantumStateProp[qs_, "PrimeBasis"] := QuantumState[qs, QuantumBasis[primeFactors[qs["OutputDimension"]], primeFactors[qs["InputDimension"]]]]
+
 
 QuantumStateProp[qs_, "Bipartition", bipartition : {{_Integer..}, {_Integer..}}] := With[{
     qudits = Catenate @ bipartition,

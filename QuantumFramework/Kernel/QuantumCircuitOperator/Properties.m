@@ -87,7 +87,7 @@ QuantumCircuitOperatorProp[qco_, "Target"] := Union @@ (#["Target"] & /@ Select[
 
 QuantumCircuitOperatorProp[qco_, "TargetOrder"] := qco["InputOrder"]
 
-QuantumCircuitOperatorProp[qco_, "TargetArity"] := Length @ qco["TargetOrder"]
+QuantumCircuitOperatorProp[qco_, "TargetArity"] := Length @ qco["Target"]
 
 QuantumCircuitOperatorProp[qco_, "QiskitCircuit" | "Qiskit"] := QuantumCircuitOperatorToQiskit[qco]
 

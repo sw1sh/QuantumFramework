@@ -59,8 +59,8 @@ QuditBasis[names_List, elements_ ? ArrayQ] :=
 QuditBasis[elements_Association] /; Not @ AllTrue[elements, NumericQ[#] || SparseArrayQ[#] &] :=
     QuditBasis[Map[If[NumericQ[#], #, SparseArray[#]] &, elements]]
 
-QuditBasis[elements_Association] /; !OrderedQ[Reverse /@ Keys[elements]] :=
-    QuditBasis[KeySortBy[elements, Reverse]]
+(* QuditBasis[elements_Association] /; !OrderedQ[Reverse /@ Keys[elements]] :=
+    QuditBasis[KeySortBy[elements, Reverse]] *)
 
 
 (* tensor product of multiple parameter basis *)
@@ -99,8 +99,8 @@ QuditBasis[source_QuditBasis -> target_QuditBasis] := QuditBasis[
 
 (* equality *)
 
-QuditBasis /: Equal[qb__QuditBasis ? QuditBasisQ] := Equal @@ (Chop @ SetPrecision[Values[#], $MachinePrecision - 2] & /@
-    KeyIntersection[KeyMap[Last, #["Representations"]] & /@ {qb}])
+QuditBasis /: Equal[qb__QuditBasis ? QuditBasisQ] :=
+    Thread[Equal @@ (Chop @ SetPrecision[SparseArrayFlatten @ Values @ #["RemoveIdentities"]["Representations"], $MachinePrecision - 2] & /@ {qb})]
 
 
 (* addition *)

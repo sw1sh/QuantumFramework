@@ -26,6 +26,8 @@ QuantumCircuitOperator[op_ ? QuantumCircuitOperatorQ, args__] := QuantumCircuitO
 
 QuantumCircuitOperator[qco_ ? QuantumCircuitOperatorQ | {qco_ ? QuantumCircuitOperatorQ}] := qco
 
+QuantumCircuitOperator[params_List] := QuantumCircuitOperator[QuantumOperator @@ Replace[#, param : Except[_List] :> {param}] & /@ params]
+
 
 (* composition *)
 
@@ -38,11 +40,15 @@ op_QuantumMeasurementOperator[qco_QuantumCircuitOperator ? QuantumCircuitOperato
     QuantumCircuitOperator[Append[qco["Operators"], op], op["Label"][qco["Label"]]]
 
 
-QuantumCircuitOperator /: Composition[qcos___QuantumCircuitOperator ? QuantumCircuitOperatorQ] :=
-    QuantumCircuitOperator[Catenate[#["Operators"] & /@ Reverse @ {qcos}], Composition @@ (#["Label"] & /@ {qcos})]
+QuantumCircuitOperator /: comp : Composition[___ ? QuantumFrameworkOperatorQ, _QuantumCircuitOperator ? QuantumCircuitOperatorQ, ___ ? QuantumFrameworkOperatorQ] :=
+With[{ops = List @@ Unevaluated[comp]},
+    QuantumCircuitOperator[Flatten[Replace[qco_QuantumCircuitOperator :> qco["Operators"]] /@ Reverse @ ops, 1], Composition @@ (#["Label"] & /@ ops)]
+]
 
-QuantumCircuitOperator /: RightComposition[qcos___QuantumCircuitOperator ? QuantumCircuitOperatorQ] :=
-    QuantumCircuitOperator[Catenate[#["Operators"] & /@ {qcos}], RightComposition @@ Reverse @ (#["Label"] & /@ {qcos})]
+QuantumCircuitOperator /: comp : RightComposition[___ ? QuantumFrameworkOperatorQ, _QuantumCircuitOperator ? QuantumCircuitOperatorQ, ___ ? QuantumFrameworkOperatorQ] :=
+With[{ops = List @@ Unevaluated[comp]},
+    QuantumCircuitOperator[Flatten[Replace[qco_QuantumCircuitOperator :> qco["Operators"]] /@ ops, 1], RightComposition @@ Reverse @ (#["Label"] & /@ ops)]
+]
 
 
 (* equality *)

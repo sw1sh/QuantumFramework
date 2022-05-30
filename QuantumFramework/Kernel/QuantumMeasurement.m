@@ -19,6 +19,8 @@ QuantumMeasurement[qs_ ? QuantumStateQ, target_ ? targetQ] := QuantumMeasurement
 
 QuantumMeasurement[qo_ ? QuantumFrameworkOperatorQ, target_ ? targetQ] := QuantumMeasurement[QuantumMeasurementOperator[qo, target]]
 
+QuantumMeasurement[proba_Association] := Enclose @ QuantumMeasurement[proba, QuantumBasis[2, ConfirmBy[Log2[Length[proba]], IntegerQ]]["PureStates"]]
+
 QuantumMeasurement[proba_Association, states : {_ ? QuantumStateQ..}] /;
     Length[proba] == Length[states] && Equal @@ Map[#["Dimensions"] &, states] :=
 QuantumMeasurement[

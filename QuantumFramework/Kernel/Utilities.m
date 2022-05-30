@@ -28,6 +28,7 @@ PackageScope["alignDimensions"]
 
 PackageScope["SparseArrayFlatten"]
 PackageScope["SparsePseudoInverse"]
+PackageScope["SetPrecisionNumeric"]
 
 PackageScope["$QuantumFrameworkProfile"]
 PackageScope["profile"]
@@ -225,6 +226,11 @@ SparseArrayFlatten[array_] := Flatten[array]
 
 
 SparsePseudoInverse[matrix_] := SparseArray @ If[SquareMatrixQ[matrix], Inverse[matrix], PseudoInverse[matrix]]
+
+
+SetPrecisionNumeric[x_ /; NumericQ[x] || ArrayQ[x, _, NumericQ]] := SetPrecision[x, $MachinePrecision - 2]
+
+SetPrecisionNumeric[x_] := x
 
 
 (* helpers *)

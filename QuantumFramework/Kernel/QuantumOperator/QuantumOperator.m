@@ -204,7 +204,7 @@ QuantumOperator[qo_ ? QuantumOperatorQ, order : (_ ? orderQ | Automatic), opts :
 QuantumOperator[qo_ ? QuantumOperatorQ, order : _ ? autoOrderQ, opts : PatternSequence[Except[_ ? QuantumBasisQ], ___]] := Enclose @
     QuantumOperator[qo, order, ConfirmBy[QuantumBasis[qo["Basis"], opts], QuantumBasisQ]]
 
-QuantumOperator[qo_ ? QuantumOperatorQ, opts : PatternSequence[Except[_ ? autoOrderQ | _ ? QuantumBasisQ], ___]] := Enclose @
+QuantumOperator[qo_ ? QuantumOperatorQ, opts : PatternSequence[Except[_ ? autoOrderQ | _ ? QuantumBasisQ | _ ? QuantumOperatorQ], ___]] := Enclose @
     QuantumOperator[qo, qo["Order"], ConfirmBy[QuantumBasis[qo["Basis"], opts], QuantumBasisQ]]
 
 QuantumOperator[{qo : _ ? QuantumOperatorQ, multiplicity_Integer ? Positive}] := QuantumOperator[{qo, multiplicity}, Range[multiplicity]]
@@ -212,13 +212,12 @@ QuantumOperator[{qo : _ ? QuantumOperatorQ, multiplicity_Integer ? Positive}] :=
 QuantumOperator[{qo : _ ? QuantumOperatorQ, multiplicity_Integer ? Positive}, opts__] :=
     QuantumOperator[QuantumTensorProduct @ Table[qo, multiplicity], opts]
 
-(* change of basis *)
 
-QuantumOperator[qo_ ? QuantumOperatorQ] := qo["Computational"]
+(* change of basis *)
 
 QuantumOperator[qo_ ? QuantumOperatorQ, name_ ? nameQ, opts___] := QuantumOperator[qo, QuantumBasis[name], opts]
 
-QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ] := QuantumOperator[qo, qo["Order"], qb]
+QuantumOperator[qo_ ? QuantumOperatorQ, qb_ ? QuantumBasisQ, opts___] := QuantumOperator[qo, qo["Order"], qb, opts]
 
 QuantumOperator[qo_ ? QuantumOperatorQ, order : _ ? autoOrderQ, qb_ ? QuantumBasisQ, opts___] :=
 Enclose @ Module[{
@@ -343,10 +342,17 @@ addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator 
 ]
 
 
+(* join *)
+
+QuantumOperator[qo_ ? QuantumOperatorQ] := qo
+
+QuantumOperator[qo__QuantumOperator ? QuantumOperatorQ] := QuantumOperator[{"Multiplexer", qo}]
+
+
 (* equality *)
 
 QuantumOperator /: Equal[qo : _QuantumOperator ... ] :=
-    Equal @@ (#["Picture"] & /@ {qo}) && Equal @@ (#["Sort"]["MatrixRepresentation"] & /@ {qo})
+    Equal @@ (#["Picture"] & /@ {qo}) && And @@ Thread[Equal @@ (Chop @ SetPrecisionNumeric @ SparseArrayFlatten @ #["Sort"]["MatrixRepresentation"] & /@ {qo})]
 
 
 (* parameterization *)

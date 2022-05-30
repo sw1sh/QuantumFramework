@@ -323,6 +323,27 @@ QuantumOperatorProp[qo_, "Dual"] := QuantumOperator[qo["State"]["Dual"], qo["Ord
 
 QuantumOperatorProp[qo_, "TraceNorm"] := qo["Unbend"]["TraceNorm"]
 
+QuantumOperatorProp[qo_, "PrimeBasis", outputQudit : _Integer | Automatic : Automatic, inputQudit : _Integer | Automatic : Automatic, opts___] :=
+With[{state = qo["State"]["PrimeBasis"]},
+    QuantumOperator[state, {
+        If[ outputQudit === Automatic,
+            # - Min[#, 1] + 1 &[Max[qo["OutputOrder"]] - Reverse @ Range[state["OutputQudits"]] + 1],
+            outputQudit + Range[state["OutputQudits"]] - 1
+        ],
+        Which[
+            inputQudit === Automatic && outputQudit === Automatic,
+            # - Min[#, 1] + 1 &[Max[qo["InputOrder"]] - Reverse @ Range[state["InputQudits"]] + 1],
+            inputQudit === Automatic && outputQudit =!= Automatic,
+            outputQudit + Range[state["InputQudits"]] - 1,
+            True,
+            inputQudit + Range[state["InputQudits"]] - 1
+        ]
+    },
+    opts,
+    "Label" -> qo["Label"]
+    ]
+]
+
 
 (* evolution *)
 

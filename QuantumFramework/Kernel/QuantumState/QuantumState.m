@@ -89,7 +89,7 @@ QuantumState[state_ ? stateQ, basis_ ? QuantumBasisQ] /; !SparseArrayQ[state] :=
 QuantumState[qs_ ? QuantumStateQ, args : Except[_ ? QuantumBasisQ, Except[Alternatives @@ $QuantumBasisPictures, _ ? nameQ | _Integer]]] :=
     Enclose @ QuantumState[qs, ConfirmBy[QuantumBasis[args], QuantumBasisQ]]
 
-QuantumState[qs_ ? QuantumStateQ, args : PatternSequence[Except[_ ? QuantumBasisQ], ___]] :=
+QuantumState[qs_ ? QuantumStateQ, args : PatternSequence[Except[_ ? QuantumBasisQ | _ ? QuantumStateQ], ___]] :=
     Enclose @ QuantumState[qs, ConfirmBy[QuantumBasis[qs["Basis"], args], QuantumBasisQ]]
 
 
@@ -116,25 +116,7 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["ElementDimen
 ]
 
 
-(* renew basis *)
-
-QuantumState[qs_ ? QuantumStateQ] := qs["Computational"]
-
-(*QuantumState[qs_ ? QuantumStateQ, args__] := With[{
-    newBasis = QuantumBasis[qs["Basis"], args]},
-    If[ qs["Basis"] === newBasis,
-        qs,
-        QuantumState[qs["State"], newBasis]
-    ]
-]
-*)
-
 (* equality *)
-
-SetPrecisionNumeric[x_ /; NumericQ[x] || ArrayQ[x, _, NumericQ]] := SetPrecision[x, $MachinePrecision - 2]
-
-SetPrecisionNumeric[x_] := x
-
 
 QuantumState /: Equal[qs : _QuantumState ...] :=
     Equal @@ (#["Picture"] & /@ {qs}) &&
@@ -203,6 +185,19 @@ QuantumState /: HoldPattern[Times[states : _QuantumState ? QuantumStateQ ...]] :
         Failure["QuantumState", <|"MessageTemplate" -> "Incompatible dimensions"|>]
     ]
 
+
+(* join *)
+
+QuantumState[qs_QuantumState ? QuantumStateQ] := qs
+
+QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
+    If[ And @@ (#["PureStateQ"] & /@ {qs}),
+        SparseArrayFlatten[BlockDiagonalMatrix @@ (#["StateMatrix"] & /@ {qs})],
+        BlockDiagonalMatrix @@ (#["DensityMatrix"] & /@ {qs})
+    ],
+    Plus @@ (#["Basis"] & /@ {qs}),
+    "Label" -> CirclePlus @@ (#["Label"] & /@ {qs})
+]
 
 
 (* composition *)

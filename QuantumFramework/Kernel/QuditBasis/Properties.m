@@ -146,11 +146,9 @@ QuditBasisProp[qb_, "Ordered", qudits_Integer, order_ ? orderQ] := If[qb["Dimens
     ]
 ]
 
-QuditBasisProp[qb_, "RemoveIdentities"] := If[qb["Size"] > 1,
-    QuditBasis[
-        Select[qb["Representations"], TensorRank[#] > 0 &]
-    ],
-    qb
+QuditBasisProp[qb_, "RemoveIdentities"] := QuditBasis @ If[ qb["Dimension"] > 1,
+    Select[qb["Representations"], TensorRank[#] > 0 &],
+    qb["Representations"][[;; 1]]
 ]
 
 QuditBasisProp[qb_, "Split", __] /; qb["Size"] == 0 := {QuditBasis[0], QuditBasis[0]}
@@ -165,7 +163,7 @@ QuditBasisProp[qb_, "Split", n_Integer ? NonNegative] /; n <= qb["Qudits"] := Mo
     idx = AssociationThread[iqb["Index"], Range[iqb["FullQudits"]]];
     {
         If[n > 0, QuditBasis[KeySelect[idx[Last[#]] <= n &] @ repr], QuditBasis[]],
-        If[n < qb["Qudits"], QuditBasis[KeyMap[MapAt[# - n &, 2]] @ KeySelect[idx[Last[#]] > n &] @ repr], QuditBasis[]]
+        If[n < qb["Qudits"], QuditBasis[KeyMap[MapAt[idx[#] - n &, 2]] @ KeySelect[idx[Last[#]] > n &] @ repr], QuditBasis[]]
     }
 ]
 

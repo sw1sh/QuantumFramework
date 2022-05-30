@@ -17,6 +17,7 @@ labelToGate = Replace[{
     "Controlled"[x_String, ___] :> "c" <> Replace[ToLowerCase[x], "not" -> "x"],
     Superscript[x_String, CircleTimes[_]] :> x,
     Superscript[x_String, "\[Dagger]"] :> ToLowerCase[x] <> "dg",
+    Subscript["R", axis_String][angle_] :> {"r" <> ToLowerCase[axis], N @ angle},
     x_String :> ToLowerCase[x]
 }]
 
@@ -25,28 +26,38 @@ QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
         With[{
             label = If[QuantumMeasurementOperatorQ[#], "m", labelToGate @ #["Label"]]
         },
-            Switch[
-                label,
-                "m",
-                Splice[{label, None, {#, #}} & /@ (#["InputOrder"] - 1)],
-                "cx" | "cy" | "cz" | "ch",
-                Module[{c1 = #["Label"][[2]], c0 = #["Label"][[3]], t = #["TargetOrder"], range},
-                    range = Join[c1, c0];
-                    {
-                        "control",
-                        {Length[c1] + Length[c0], label, StringReverse @ StringJoin @ Replace[range, Join[Thread[c1 -> "1"], Thread[c0 -> "0"]], {1}]},
-                        Join[range, t] - 1
-                    }
-                ],
-                _,
-                {
+            Replace[
+                label, {
+                "m" :>
+                    Splice[{label, None, {#, #}} & /@ (#["InputOrder"] - 1)],
+                "cx" | "cy" | "cz" | "ch" :>
+                    Module[{c1 = #["Label"][[2]], c0 = #["Label"][[3]], t = #["TargetOrder"], range},
+                        range = Join[c1, c0];
+                        {
+                            "control",
+                            {Length[c1] + Length[c0], label, StringReverse @ StringJoin @ Replace[range, Join[Thread[c1 -> "1"], Thread[c0 -> "0"]], {1}]},
+                            Join[range, t] - 1
+                        }
+                    ],
+                {name_String /; MemberQ[existingGateNames, name], params___} :> {
+                    name,
+                    {params},
+                    #["InputOrder"] - 1
+                },
+                name_String /; MemberQ[existingGateNames, name] :> {
+                    name,
+                    {},
+                    #["InputOrder"] - 1
+                },
+                _ :> {
                     label,
                     NumericArray @ N @ Normal @ #["MatrixRepresentation"],
                     #["InputOrder"] - 1
                 }
+            }
             ]
         ] &,
-        qco["Operators"]
+        qco["Flatten"]["Operators"]
     ],
     arity = {qco["Width"], Replace[Quiet[qco["Targets"]], Except[_Integer] -> Nothing]}
 },
@@ -67,7 +78,7 @@ circuit = QuantumCircuit(
 
 for name, data, order in <* Wolfram`QuantumFramework`Qiskit`PackagePrivate`operators *>:
     if name.lower() in <* Wolfram`QuantumFramework`Qiskit`PackagePrivate`existingGateNames *>:
-        getattr(circuit, name.lower())(*tuple(order))
+        getattr(circuit, name.lower())(*data, *tuple(order))
     elif name == 'control':
         base_name = data[1][1:]
         if base_name == 'x':
@@ -220,37 +231,68 @@ job.result().get_unitary(qc, decimals=3)
 "]
 ]
 
-Options[qiskitApply] = {"Backend" -> "ibmq_qasm_simulator", "OptimizationLevel" -> 3}
+Options[qiskitApply] = {}
 
 qiskitApply[qc_QiskitCircuit, qs_QuantumState, OptionsPattern[]] := Enclose @ Block[{
     Wolfram`QuantumFramework`$pythonBytes = qc["Bytes"],
-    Wolfram`QuantumFramework`$qubits = qs["OutputQudits"],
-    Wolfram`QuantumFramework`$state = NumericArray @ Normal @ N @ qs["StateVector"],
-    Wolfram`QuantumFramework`$opts = <|"backend_name" -> OptionValue["Backend"], "optimization_level" -> OptionValue["OptimizationLevel"]|>
+    Wolfram`QuantumFramework`$state = NumericArray @ Normal @ N @ qs["Reverse"]["StateVector"],
+    result
 },
     ConfirmAssert[qs["InputDimensions"] == {1}];
     ConfirmAssert[AllTrue[qs["OutputDimensions"], EqualTo[2]]];
-    ExternalEvaluate[$PythonSession, "
+    result = ExternalEvaluate[$PythonSession, "
 import pickle
-from qiskit import IBMQ, QuantumCircuit
+from qiskit import QuantumCircuit
+from qiskit import Aer
+
+# Run the quantum circuit on a statevector simulator backend
+opts = <* Wolfram`QuantumFramework`$opts *>
 
 qc = pickle.loads(<* Wolfram`QuantumFramework`$pythonBytes *>)
 
-qubits = <* Wolfram`QuantumFramework`$qubits *>
-circuit = QuantumCircuit(qubits, qubits)
+circuit = QuantumCircuit(qc.num_qubits, qc.num_clbits)
+
+if qc.num_clbits > 0:
+    backend = Aer.get_backend('qasm_simulator')
+else:
+    backend = Aer.get_backend('statevector_simulator')
+
 circuit.initialize(<* Wolfram`QuantumFramework`$state *>)
 circuit.extend(qc)
 
-if not IBMQ._credentials:
-    provider = IBMQ.load_account()
+result = backend.run(circuit).result()
+
+if qc.num_clbits > 0:
+    result = result.get_counts()
 else:
-    provider = IBMQ.get_provider()
-provider.run_circuits(circuit, ** <* Wolfram`QuantumFramework`$opts *>).result().get_counts()
-"]
+    result = result.get_statevector().data
+
+result
+"];
+    Which[
+        AssociationQ[result],
+        With[{size = StringLength @ First @ Keys[result]},
+            QuantumMeasurement[
+                Join[
+                    Association[# -> 0 & /@ IntegerDigits[Range[2 ^ size] - 1, 2, size]],
+                    KeyMap[Characters[#] /. {"0" -> 0, "1" -> 1} &] @ result
+                ]
+            ]
+        ],
+        NumericArrayQ[result],
+        QuantumState[Chop @ Normal[result]]["Reverse"],
+        True,
+        result
+    ]
 ]
 
 
-qc_QiskitCircuit["Matrix"] := qiskitMatrix[qc]
+qc_QiskitCircuit["QuantumOperator"] := Enclose @ Module[{mat = Chop @ Normal[ConfirmBy[qiskitMatrix[qc], NumericArrayQ]]},
+    ConfirmAssert[SquareMatrixQ[mat]];
+    QuantumOperator[mat]["Reverse"]["Sort"]
+]
+
+qc_QiskitCircuit["Matrix"] := qc["QuantumOperator"]["Matrix"]
 
 qc_QiskitCircuit[qs_QuantumState, opts : OptionsPattern[qiskitApply]] := qiskitApply[qc, qs, opts]
 
