@@ -33,10 +33,6 @@ QuditBasisProp[qb_, "Length"] := Length[qb["Representations"]]
 
 QuditBasisProp[qb_, "Index"] := DeleteDuplicates @ Keys[qb["Representations"]][[All, -1]]
 
-QuditBasisProp[qb_, "IndexMap"] := With[{index = qb["Index"]}, AssociationThread[index -> Range[Length[index]]]]
-
-QuditBasisProp[qb_, "ResetIndex"] := With[{map = qb["IndexMap"]}, QuditBasis @ KeyMap[MapAt[Replace[map], 2], qb["Representations"]]]
-
 normalRepresentations[repr_] := Replace[DeleteCases[repr, Except[_ ? ArrayQ]], <||> -> QuditBasis[]["Representations"]]
 
 QuditBasisProp[qb_, "FullDimensions"] := Values @ KeySort @ ResourceFunction["KeyGroupBy"][qb["Representations"], Last, Length @* normalRepresentations]
@@ -49,10 +45,9 @@ QuditBasisProp[qb_, "Names"] := If[qb["Length"] > 0,
 ]
 
 QuditBasisProp[qb_, "Names", pos_ : All] := If[qb["Length"] > 0,
-    With[{values = Values @ KeySort @ ResourceFunction["KeyGroupBy"][qb["Representations"], Last, Keys[#][[All, 1]] &]},
+    With[{values = Values @ KeySort @ GroupBy[Keys[qb["Representations"]], Last, #[[All, 1]] &]},
         QuantumTensorProduct @* Map[QuditName] /@ If[ pos === All,
             Tuples[values],
-            (* MapThread[Part, {values, 1 + ResourceFunction["TupleFromIndex"][#, Length[values]]}] & /@ pos *)
             MapThread[Part, {values, #}] & /@ Tuples[Range[Length @ #] & /@ values][[pos]]
         ]
     ],
@@ -119,8 +114,6 @@ QuditBasisProp[qb_, "Dual"] := QuditBasis @ KeyMap[MapAt[#["Dual"] &, 1], qb["Re
 
 QuditBasisProp[qb_, "DualQ"] := AllTrue[Keys[qb["Representations"]][[All, 1]], #["DualQ"] &]
 
-QuditBasisProp[qb_, "Reverse"] := QuditBasis @ KeyMap[MapAt[qb["Qudits"] - # + 1 &, 2], qb["Representations"]]
-
 
 QuditBasisProp[qb_, "SortedQ"] := OrderedQ[Reverse /@ Keys @ qb["Representations"]]
 
@@ -130,7 +123,7 @@ QuditBasisProp[qb_, "Permute", perm_Cycles] := Enclose @ If[
     perm === Cycles[{}],
     qb,
     Module[{idx = Delete[qb["Index"], Position[qb["FullDimensions"], 1]], repl},
-        repl = Thread[idx -> Permute[idx, InversePermutation @ perm]];
+        repl = Thread[idx -> PermutationList[perm, Length[idx]][[Ordering @ idx]]];
         QuditBasis[
             KeyMap[MapAt[Replace[repl], 2]] @ qb["Representations"]
         ]
@@ -156,11 +149,10 @@ QuditBasisProp[qb_, "Split", __] /; qb["Size"] == 0 := {QuditBasis[0], QuditBasi
 QuditBasisProp[qb_, "Split", _Integer ? NonNegative] /; qb["Dimension"] == 1 := {QuditBasis[], QuditBasis[]}
 
 QuditBasisProp[qb_, "Split", n_Integer ? NonNegative] /; n <= qb["Qudits"] := Module[{
-    iqb = qb["RemoveIdentities"],
     repr, idx
 },
-    repr = iqb["Representations"];
-    idx = AssociationThread[iqb["Index"], Range[iqb["FullQudits"]]];
+    repr = KeySortBy[qb["RemoveIdentities"]["Representations"], Last];
+    idx = AssociationThread[Union @ Keys[repr][[All, -1]], Range[qb["Qudits"]]];
     {
         If[n > 0, QuditBasis[KeySelect[idx[Last[#]] <= n &] @ repr], QuditBasis[]],
         If[n < qb["Qudits"], QuditBasis[KeyMap[MapAt[idx[#] - n &, 2]] @ KeySelect[idx[Last[#]] > n &] @ repr], QuditBasis[]]

@@ -29,6 +29,7 @@ PackageScope["alignDimensions"]
 PackageScope["SparseArrayFlatten"]
 PackageScope["SparsePseudoInverse"]
 PackageScope["SetPrecisionNumeric"]
+PackageScope["TranscendentalRecognize"]
 
 PackageScope["$QuantumFrameworkProfile"]
 PackageScope["profile"]
@@ -261,6 +262,13 @@ alignDimensions[xs : {_Integer..}, ys : {_Integer..}] := Module[{
 
         Missing[]
     ]
+]
+
+
+TranscendentalRecognize[num_ ? NumericQ, basis : _ ? VectorQ : {Pi}] := Module[{lr, ans},
+  lr = FindIntegerNullVector[Prepend[N[basis, Precision[num]], num]];
+  ans = Rest[lr] . basis / First[lr];
+  Sign[N[ans]] Sign[num] ans
 ]
 
 

@@ -85,6 +85,10 @@ QuantumCircuitOperatorProp[qco_, "OutputDimension"] := Times @@ qco["OutputDimen
 
 QuantumCircuitOperatorProp[qco_, "Target"] := Union @@ (#["Target"] & /@ Select[qco["Operators"], QuantumMeasurementOperatorQ])
 
+QuantumCircuitOperatorProp[qco_, "Targets"] := Length @ qco["Target"]
+
+QuantumCircuitOperatorProp[qco_, "TargetOrder"] := qco["InputOrder"]
+
 QuantumCircuitOperatorProp[qco_, "TargetOrder"] := qco["InputOrder"]
 
 QuantumCircuitOperatorProp[qco_, "TargetArity"] := Length @ qco["Target"]
@@ -101,6 +105,7 @@ QuantumCircuitOperatorProp[qco_, "Flatten", n : _Integer ? NonNegative | Infinit
         ]
     ]
 
+QuantumCircuitOperatorProp[qco_, "Dagger"] := QuantumCircuitOperator[#["Dagger"] & /@ Reverse @ qco["Operators"]]
 
 (* operator properties *)
 

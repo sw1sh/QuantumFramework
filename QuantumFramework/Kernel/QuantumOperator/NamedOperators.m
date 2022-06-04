@@ -76,15 +76,21 @@ QuantumOperator[{"ZRotation", angle_, dimension_Integer : 2}, opts___] := Quantu
     "Label" -> Subscript["R", "Z"][angle]
 ]
 
-QuantumOperator[{"U", theta_, phi_, lambda_}, opts___] := QuantumOperator[
-    Exp[I (lambda + phi) / 2] QuantumOperator[{"ZRotation", phi + Pi / 2}] @ QuantumOperator[{"XRotation", theta}] @ QuantumOperator[{"ZRotation", lambda - Pi / 2}],
+QuantumOperator[{"U" | "U3", theta_, phi_, lambda_}, opts___] := QuantumOperator[
+    {{Cos[theta / 2], - Exp[I lambda] Sin[theta / 2]}, {Exp[I phi] Sin[theta / 2], Exp[I (phi + lambda)] Cos[theta / 2]}},
     opts,
     "Label" -> "U"[theta, phi, lambda]
 ]
 
-QuantumOperator["Phase" | "P", opts___] := QuantumOperator[{"Phase", Pi}, opts]
+QuantumOperator[{"U2", phi_, lambda_}, opts___] := QuantumOperator[
+    1 / Sqrt[2] {{1, - Exp[I lambda]}, {Exp[I phi], Exp[I (phi + lambda)]}},
+    opts,
+    "Label" -> "U2"[phi, lambda]
+]
 
-QuantumOperator[{"Phase" | "P", angle_, dimension_Integer : 2}, opts___] := QuantumOperator[
+QuantumOperator["Phase" | "P" | "U1", opts___] := QuantumOperator[{"Phase", Pi}, opts]
+
+QuantumOperator[{"Phase" | "P" | "U1", angle_, dimension_Integer : 2}, opts___] := QuantumOperator[
     SparseArray[{{1, 1} -> 1, {dimension, dimension} -> Exp[I angle]}],
     opts,
     "Label" -> "P"[angle]
@@ -444,7 +450,7 @@ QuantumOperator[{"Uncurry", dims_List}] := QuantumOperator[{"Uncurry", dims}, {1
 
 QuantumOperator[{"Uncurry", dims_List}, opts___] :=
     QuantumOperator[
-        QuantumOperator[identityMatrix[Times @@ dims], QuantumBasis[QuditBasis[Times @@ dims], QuditBasis[dims]["Dual"]]],
+        QuantumOperator[identityMatrix[Times @@ dims], QuantumBasis[QuditBasis[Times @@ dims], QuditBasis[dims]]],
         opts
     ]
 

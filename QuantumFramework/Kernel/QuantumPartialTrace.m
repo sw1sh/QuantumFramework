@@ -44,7 +44,7 @@ QuantumPartialTrace[qs_QuantumState, qudits : {{_Integer, _Integer} ..}] := With
 },
     QuantumState[
         QuantumState[
-            Flatten @ TensorContract[qs["Tensor"], MapAt[qs["OutputQudits"] + # &, qudits, {All, 2}]],
+            SparseArrayFlatten @ TensorContract[qs["Tensor"], MapAt[qs["OutputQudits"] + # &, qudits, {All, 2}]],
             QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
         ],
         basis
@@ -54,17 +54,23 @@ QuantumPartialTrace[qs_QuantumState, qudits : {{_Integer, _Integer} ..}] := With
 QuantumPartialTrace[qs_QuantumState] := QuantumPartialTrace[qs, Range @ qs["Qudits"]]
 
 
-QuantumPartialTrace[qo_QuantumOperator, qudits : {{_Integer, _Integer} ..}] :=
+QuantumPartialTrace[qo_QuantumOperator, qudits : {{_Integer, _Integer} ..}] := With[{
+    outputIdx = AssociationThread[qo["OutputOrder"], Range[qo["OutputQudits"]]],
+    inputIdx  = AssociationThread[qo["InputOrder"], Range[qo["InputQudits"]]]
+},
     QuantumOperator[
-        QuantumPartialTrace[qo["State"], # - {Min[qo["FullOutputOrder"]], Min[qo["FullOutputOrder"]]} + 1 & /@ qudits],
-        DeleteCases[qo["FullInputOrder"], Alternatives @@ qudits[[All, -1]]]
+        QuantumPartialTrace[qo["State"], {outputIdx[#[[1]]], inputIdx[#[[2]]]} & /@ qudits],
+        {
+            DeleteCases[qo["FullOutputOrder"], Alternatives @@ qudits[[All, 1]]],
+            DeleteCases[qo["FullInputOrder"], Alternatives @@ qudits[[All, 2]]]
+        }
     ]
+]
 
 
 QuantumPartialTrace[op_ ? QuantumFrameworkOperatorQ, qudits : {{_Integer, _Integer} ..}] :=
     Head[op][
-        QuantumPartialTrace[op[If[QuantumCircuitOperatorQ[op], "CircuitOperator", "QuantumOperator"]], qudits](*,
-        op["Order"] /. q_Integer :> q - Count[qudits[[All, -1]], _ ? (LessThan[q])]*)
+        QuantumPartialTrace[op["QuantumOperator"], qudits]
     ]
 
 QuantumPartialTrace[op_ ? QuantumFrameworkOperatorQ, qudits : {_Integer ..}] := QuantumPartialTrace[op, {#, #} & /@ qudits]

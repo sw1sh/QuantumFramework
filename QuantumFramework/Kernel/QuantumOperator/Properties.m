@@ -316,7 +316,19 @@ QuantumOperatorProp[qo_, "Projectors"] := projector /@ SparseArray @ Chop @ qo["
 QuantumOperatorProp[qo_, "Transpose"] := QuantumOperator[
     qo["State"]["Transpose"], {qo["InputOrder"], qo["OutputOrder"]}]
 
-QuantumOperatorProp[qo_, "Dagger" | "ConjugateTranspose"] := QuantumOperator[
+
+simplifyLabel[op_QuantumOperator] := QuantumOperator[op, "Label" -> Replace[op["Label"], {
+    Superscript[label : "X" | "Y" | "Z" | "NOT", "\[Dagger]"] :> label,
+    Superscript[c : "Controlled"["NOT", __], "\[Dagger]"] :> c,
+    Superscript["Controlled"[(r : Subscript["R", _] | "P")[angle_], rest__], "\[Dagger]"] :> "Controlled"[r[-angle], rest],
+    Superscript["Controlled"[x_, rest__], "\[Dagger]"] :> "Controlled"[Superscript[x, "\[Dagger]"], rest],
+    Superscript[(r : Subscript["R", _] | "P")[angle_], "\[Dagger]"] :> r[- angle],
+    Superscript["U2"[a_, b_], "\[Dagger]"] :> "U2"[Pi - a, Pi - b],
+    Superscript[Superscript[label_, "\[Dagger]"], "\[Dagger]"] :> label
+}]
+]
+
+QuantumOperatorProp[qo_, "Dagger" | "ConjugateTranspose"] := simplifyLabel @ QuantumOperator[
     qo["State"]["Dagger"], {qo["InputOrder"], qo["OutputOrder"]}]
 
 QuantumOperatorProp[qo_, "Dual"] := QuantumOperator[qo["State"]["Dual"], qo["Order"]]

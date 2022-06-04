@@ -48,7 +48,7 @@ QuantumMeasurementOperatorProp[qmo_, "Properties"] :=
 
 QuantumMeasurementOperatorProp[_[op_, _], "Operator" | "QuantumOperator"] := op
 
-QuantumMeasurementOperatorProp[_[_, target_], "Target"] := target
+QuantumMeasurementOperatorProp[_[_, target_], "Target" | "TargetOrder"] := target
 
 QuantumMeasurementOperatorProp[qmo_, "Arity" | "Targets"] := Length[qmo["Target"]]
 
@@ -98,7 +98,7 @@ QuantumMeasurementOperatorProp[qmo_, "Canonical"] /; qmo["Eigendimension"] == qm
                 qmo["State"]["State"],
                 basis
             ]["PermuteOutput", InversePermutation @ FindPermutation @ qmo["Target"]],
-            {Join[Range[- qmo["Targets"] + 1, 0], Drop[qmo["OutputOrder"], qmo["Eigenqudits"]]], qmo["InputOrder"]}
+            {Join[Range[- qmo["Targets"] + 1, 0], DeleteCases[qmo["OutputOrder"], _ ? NonPositive]], qmo["InputOrder"]}
         ],
         Sort @ qmo["Target"]
     ]

@@ -26,7 +26,8 @@ QuantumCircuitOperator[op_ ? QuantumCircuitOperatorQ, args__] := QuantumCircuitO
 
 QuantumCircuitOperator[qco_ ? QuantumCircuitOperatorQ | {qco_ ? QuantumCircuitOperatorQ}] := qco
 
-QuantumCircuitOperator[params_List] := QuantumCircuitOperator[QuantumOperator @@ Replace[#, param : Except[_List] :> {param}] & /@ params]
+QuantumCircuitOperator[params: Except[{Alternatives @@ $QuantumCircuitOperatorNames, ___}, _List]] :=
+    Enclose @ QuantumCircuitOperator[ConfirmBy[QuantumOperator[#], QuantumOperatorQ] & @@ Replace[#, param : Except[_List] :> {param}] & /@ params]
 
 
 (* composition *)

@@ -29,11 +29,13 @@ QuantumMeasurement[
             QuantumState[
                 ArrayReshape[
                     Transpose[
-                        TensorProduct[
-                            Sqrt @ Values[proba],
-                            MapThread[Times, {Sqrt @ Values[proba], #["Computational"]["Normalized"]["DensityTensor"] & /@ states}]
+                        With[{probValues = Sqrt @ SparseArray @ Values[proba]},
+                            SparseArray @ TensorProduct[
+                                probValues,
+                                MapThread[Times, {probValues, #["Computational"]["Normalized"]["DensityTensor"] & /@ states}]
+                            ]
                         ],
-                        Cycles[{RotateRight @ Reverse @ Range[Length[states] + 1]}]
+                        Cycles[{RotateRight @ Reverse @ Range[First[states]["Qudits"] + 2]}]
                     ],
                     Table[Length[states] First[states]["Dimension"], 2]
                 ],
