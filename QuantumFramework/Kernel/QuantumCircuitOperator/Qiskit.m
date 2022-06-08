@@ -283,7 +283,7 @@ qiskitApply[qc_QiskitCircuit, qs_QuantumState, OptionsPattern[]] := Enclose @ Bl
     result = ExternalEvaluate[$PythonSession, "
 import pickle
 from qiskit import QuantumCircuit
-from qiskit import Aer
+from qiskit import Aer, transpile
 
 # Run the quantum circuit on a statevector simulator backend
 opts = <* Wolfram`QuantumFramework`$opts *>
@@ -299,6 +299,8 @@ else:
 
 circuit.initialize(<* Wolfram`QuantumFramework`$state *>)
 circuit.extend(qc)
+
+circuit = transpile(circuit, backend)
 
 result = backend.run(circuit, shots = <* Wolfram`QuantumFramework`$shots *>).result()
 

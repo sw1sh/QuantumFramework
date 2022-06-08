@@ -56,21 +56,21 @@ QuantumOperator[{"Identity" | "I", params__}, opts___] :=
     QuantumOperator[{"Identity", QuditBasis[params]}, opts]
 
 
-QuantumOperator[name : "XRotation" | "YRotation" | "ZRotation", opts___] :=  QuantumOperator[{name, Pi / 2}, opts]
+QuantumOperator[name : "XRotation" | "YRotation" | "ZRotation" | "RX" | "RY" | "RZ", opts___] :=  QuantumOperator[{name, Pi / 2}, opts]
 
-QuantumOperator[{"XRotation", angle_, dimension_Integer : 2}, opts___] := QuantumOperator[
+QuantumOperator[{"XRotation" | "RX", angle_, dimension_Integer : 2}, opts___] := QuantumOperator[
     Exp[- I angle / 2 QuantumOperator[{"PauliX", dimension}]],
     opts,
     "Label" -> Subscript["R", "X"][angle]
 ]
 
-QuantumOperator[{"YRotation", angle_, dimension_Integer : 2}, opts___] := QuantumOperator[
+QuantumOperator[{"YRotation" | "RY", angle_, dimension_Integer : 2}, opts___] := QuantumOperator[
     Exp[- I angle / 2 QuantumOperator[{"PauliY", dimension}]],
     opts,
     "Label" -> Subscript["R", "Y"][angle]
 ]
 
-QuantumOperator[{"ZRotation", angle_, dimension_Integer : 2}, opts___] := QuantumOperator[
+QuantumOperator[{"ZRotation" | "RZ", angle_, dimension_Integer : 2}, opts___] := QuantumOperator[
     Exp[- I angle / 2 QuantumOperator[{"PauliZ", dimension}]],
     opts,
     "Label" -> Subscript["R", "Z"][angle]
@@ -365,7 +365,7 @@ QuantumOperator[{"Hadamard" | "H", qudits_Integer ? Positive}, opts : PatternSeq
 
 QuantumOperator[{"Hadamard" | "H", qudits_Integer ? Positive}, order_ ? orderQ, opts___] :=
     QuantumOperator[
-        QuantumTensorProduct[Table[QuantumOperator[HadamardMatrix[2]], qudits]],
+        HadamardMatrix[2 ^ qudits, Method -> "BitComplement"],
         {order, order},
         opts,
         "Label" -> If[qudits > 1, Superscript["H", CircleTimes[qudits]], "H"]

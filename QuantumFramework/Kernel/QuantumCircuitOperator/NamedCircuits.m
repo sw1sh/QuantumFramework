@@ -16,8 +16,8 @@ $QuantumCircuitOperatorNames = {
 }
 
 
-QuantumCircuitOperator[{"Graph", g_Graph}, opts___] := QuantumCircuitOperator[
-    QuantumCircuitOperator[QuantumOperator["CZ", {#1, #2}] & @@@ EdgeList[IndexGraph @ g], "\[ScriptCapitalG]"],
+QuantumCircuitOperator[{"Graph", g_Graph, gate_ : "CNOT"}, opts___] := QuantumCircuitOperator[
+    QuantumCircuitOperator[QuantumOperator[gate, {#1, #2}] & @@@ EdgeList[IndexGraph @ g], "\[ScriptCapitalG]"],
     opts
 ]
 
@@ -61,7 +61,7 @@ QuantumCircuitOperator[{"GroverAmplification0" | "GroverDiffusion0",
     xs : {_Integer ? Positive..},
     gate : _ ? QuantumOperatorQ | Automatic : Automatic
 }, opts___] := Module[{
-    op = If[gate === Automatic, QuantumOperator["NOT", {Max[xs] + 1}], QuantumOperator[gate]], ys
+    op = If[gate === Automatic, QuantumOperator["NOT", {Max[xs]}], QuantumOperator[gate]], ys
 },
     ys = DeleteCases[xs, Alternatives @@ op["OutputOrder"]];
     QuantumCircuitOperator[

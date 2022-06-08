@@ -105,7 +105,8 @@ QuantumCircuitOperatorProp[qco_, "Flatten", n : _Integer ? NonNegative | Infinit
         ]
     ]
 
-QuantumCircuitOperatorProp[qco_, "Dagger"] := QuantumCircuitOperator[#["Dagger"] & /@ Reverse @ qco["Operators"]]
+QuantumCircuitOperatorProp[qco_, "Dagger"] :=
+    QuantumCircuitOperator[#["Dagger"] & /@ Reverse @ qco["Operators"], Superscript[qco["Label"], "\[Dagger]"]]
 
 (* operator properties *)
 
