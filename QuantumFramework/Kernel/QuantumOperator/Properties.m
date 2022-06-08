@@ -71,7 +71,8 @@ QuantumOperatorProp[qo_, "FullArity"] := Max[qo["InputQudits"], qo["Range"]]
 
 QuantumOperatorProp[qo_, "FullInputOrder"] := If[qo["InputDimension"] > 1,
     Take[
-        Join[Complement[Range[Max[qo["InputOrder"]] - qo["InputQudits"] + 1, Max[qo["InputOrder"]]], qo["InputOrder"]], qo["InputOrder"]],
+        If[MatchQ[qo["InputOrder"], {___, _ ? NonPositive, ___}], Identity, # - Min[#, 1] + 1 &] @
+            Join[Complement[Range[Max[qo["InputOrder"]] - qo["InputQudits"] + 1, Max[qo["InputOrder"]]], qo["InputOrder"]], qo["InputOrder"]],
         - qo["InputQudits"]
     ],
     {}
@@ -79,7 +80,8 @@ QuantumOperatorProp[qo_, "FullInputOrder"] := If[qo["InputDimension"] > 1,
 
 QuantumOperatorProp[qo_, "FullOutputOrder"] := If[qo["OutputDimension"] > 1,
     Take[
-        Join[Complement[Range[Max[qo["OutputOrder"]] - qo["OutputQudits"] + 1, Max[qo["OutputOrder"]]], qo["OutputOrder"]], qo["OutputOrder"]],
+        If[MatchQ[qo["OutputOrder"], {___, _ ? NonPositive, ___}], Identity, # - Min[#, 1] + 1 &] @
+            Join[Complement[Range[Max[qo["OutputOrder"]] - qo["OutputQudits"] + 1, Max[qo["OutputOrder"]]], qo["OutputOrder"]], qo["OutputOrder"]],
         - qo["OutputQudits"]
     ],
     {}
@@ -258,7 +260,7 @@ QuantumOperatorProp[qo_, "OrderedInput", order_ ? orderQ, qb_ ? QuditBasisQ] := 
     ConfirmAssert[arity <= qb["Qudits"], "Order size should be less than or equal to number of qudits"];
     If[ arity > qo["InputQudits"],
         QuantumTensorProduct[
-            QuantumOperator[qo, "Input" -> qb["Extract", pos]],
+            QuantumOperator[qo, {qo["OutputOrder"], qo["FullInputOrder"]}, "Input" -> qb["Extract", pos]],
             With[{iqb = qb["Delete", pos]},
                 QuantumOperator[
                     QuantumOperator[{"Identity", iqb}],
@@ -280,7 +282,7 @@ QuantumOperatorProp[qo_, "OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ] :=
     ConfirmAssert[arity <= qb["Qudits"], "Order size should be less than or equal to number of qudits"];
     If[ arity > qo["OutputQudits"],
         QuantumTensorProduct[
-            QuantumOperator[qo, "Output" -> qb["Extract", pos]],
+            QuantumOperator[qo, {qo["FullOutputOrder"], qo["InputOrder"]}, "Output" -> qb["Extract", pos]],
             With[{iqb = qb["Delete", pos]},
                 QuantumOperator[
                     QuantumOperator[{"Identity", iqb}],

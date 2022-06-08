@@ -259,7 +259,7 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 (qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] /; qo["Picture"] === qo["Picture"] && (
     qs["Picture"] =!= "Heisenberg" || Message[QuantumOperator::incompatiblePictures, qo["Picture"], qs["Picture"]]) :=
 With[{order = Range[qs["OutputQudits"]] + Max[Max[qo["FullInputOrder"]] - qs["OutputQudits"], 0]},
-    qo[QuantumOperator[qs, order]]["Sort"]["State"]
+    qo[QuantumOperator[qs, order, Automatic]]["Sort"]["State"]
 ]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumOperatorQ] /; qo["Picture"] === op["Picture"] &&
@@ -278,23 +278,23 @@ With[{order = Range[qs["OutputQudits"]] + Max[Max[qo["FullInputOrder"]] - qs["Ou
     If[ bottom["OutputOrder"] != top["InputOrder"],
         Module[{
             (* order = Union[bottom["OutputOrder"], top["InputOrder"]], *)
-            order = Join[bottom["OutputOrder"], Complement[top["InputOrder"], bottom["OutputOrder"]]],
+            order = Join[bottom["FullOutputOrder"], DeleteCases[top["FullInputOrder"], Alternatives @@ bottom["FullOutputOrder"]]],
             basis
         },
             basis = If[Length[order] > 0,
                 QuantumTensorProduct @@ ReplaceAll[order,
-                    Join[Thread[bottom["OutputOrder"] -> bottom["Output"]["Decompose"]], Thread[top["InputOrder"] -> top["Input"]["Dual"]["Decompose"]]]
+                    Join[Thread[bottom["FullOutputOrder"] -> bottom["Output"]["Decompose"]], Thread[top["FullInputOrder"] -> top["Input"]["Dual"]["Decompose"]]]
                 ],
                 QuditBasis[]
             ];
-            If[ bottom["OutputOrder"] != order,
+            If[ bottom["FullOutputOrder"] != order,
                 bottom = bottom["OrderedOutput", order, basis]
             ];
             top = top["OrderedInput", order, basis];
         ]
     ];
     ConfirmAssert[top["InputDimension"] == bottom["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
-    QuantumOperator[top["State"] @ bottom["State"], {top["OutputOrder"], bottom["InputOrder"]}]
+    QuantumOperator[top["State"] @ bottom["State"], {top["FullOutputOrder"], bottom["FullInputOrder"]}]
 ]
 
 
