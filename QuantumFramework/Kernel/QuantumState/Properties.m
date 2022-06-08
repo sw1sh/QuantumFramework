@@ -324,6 +324,18 @@ QuantumStateProp[qs_, "SpectralBasis"] := QuantumState[
     ]
 ]
 
+QuantumStateProp[qs_, "Disentangle"] /; qs["PureStateQ"] := With[{s = qs["SchmidtBasis"]},
+	MapThread[QuantumState[SparseArray[#1 -> #2, s["Dimension"]], s["Basis"]] &, {s["StateVector"]["ExplicitPositions"], s["StateVector"]["ExplicitValues"]}]
+]
+
+QuantumStateProp[qs_, "Decompose"] /; qs["PureStateQ"] := If[PrimeQ[qs["Dimension"]], {{qs}}, Module[{s = qs["SchmidtBasis"], basis},
+    basis = s["Basis"]["Decompose"];
+	MapIndexed[{v, idx} |->
+		Splice[Catenate /@ Tuples[#["Decompose"] & /@ MapIndexed[QuantumState[SparseArray[idx -> If[#2 === idx, 1, v], #["Dimension"]], #] &, basis]]],
+		s["StateVector"]["ExplicitValues"]
+	]
+]]
+
 
 QuantumStateProp[qs_, "Normalized" | "NormalizedState" | "Normalize"] :=
     QuantumState[If[qs["StateType"] === "Vector", qs["NormalizedStateVector"], qs["NormalizedDensityMatrix"]], qs["Basis"]]
