@@ -99,12 +99,16 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; ! newBasis["Sort
 
 QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Basis"] == newBasis := QuantumState[qs["State"], newBasis]
 
-QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["ElementDimension"] == newBasis["ElementDimension"] := Switch[
+QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] := Switch[
     qs["StateType"],
     "Vector",
     QuantumState[
         SparseArrayFlatten[
-            SparsePseudoInverse[newBasis["OutputMatrix"]] . (qs["OutputMatrix"] . qs["StateMatrix"] . SparsePseudoInverse[qs["InputMatrix"]]) . newBasis["InputMatrix"]
+            Dot[
+                SparsePseudoInverse @ PadRight[newBasis["OutputMatrix"], {qs["OutputElementDimension"], Automatic}],
+                qs["OutputMatrix"] . qs["StateMatrix"] . SparsePseudoInverse[qs["InputMatrix"]],
+                PadRight[newBasis["InputMatrix"], {Automatic, qs["InputElementDimension"]}]
+            ]
         ],
         newBasis
     ],

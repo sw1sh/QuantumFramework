@@ -25,6 +25,7 @@ $QuantumStateProperties = {
     "Trace", "Transpose", "Conjugate", "ConjugateTranspose",
     "ReverseOutput", "ReverseInput", "Reverse",
     "Bipartition",
+    "Disentangle", "Decompose",
     "Formula"
 };
 
@@ -118,7 +119,11 @@ QuantumStateProp[qs_, "Weights"] := If[qs["PureStateQ"],
     Diagonal @ qs["DensityMatrix"]
 ]
 
-QuantumStateProp[qs_, "Probabilities"] := Simplify /@ Re @ (qs["Weights"] / Total[qs["Weights"]])
+QuantumStateProp[qs_, "Probabilities"] := Re @ (qs["Weights"] / Total[qs["Weights"]])
+
+QuantumStateProp[qs_, "ProbabilityAssociation" | "Probability"] := With[{proba = Chop @ SparseArray @ qs["Probabilities"]},
+    AssociationThread[qs["Names", Catenate @ proba["ExplicitPositions"]], proba["ExplicitValues"]]
+]
 
 QuantumStateProp[qs_, "Distribution"] := CategoricalDistribution[qs["Names"], qs["Probabilities"]]
 
@@ -312,7 +317,7 @@ QuantumStateProp[qs_, "Bipartition", dim : _Integer | Automatic : Automatic] := 
 ]
 
 QuantumStateProp[qs_, "SpectralBasis"] := QuantumState[
-    qs["Eigenvalues"],
+    Chop @ SparseArray @ If[qs["VectorQ"], qs["Eigenvalues"], DiagonalMatrix[qs["Eigenvalues"]]],
     QuantumBasis[Association @ Catenate @ MapIndexed[
             If[ qs["InputDimension"] == 1,
                 Subscript["s", First @ #2],
@@ -331,10 +336,53 @@ QuantumStateProp[qs_, "Disentangle"] /; qs["PureStateQ"] := With[{s = qs["Schmid
 QuantumStateProp[qs_, "Decompose"] /; qs["PureStateQ"] := If[PrimeQ[qs["Dimension"]], {{qs}}, Module[{s = qs["SchmidtBasis"], basis},
     basis = s["Basis"]["Decompose"];
 	MapIndexed[{v, idx} |->
-		Splice[Catenate /@ Tuples[#["Decompose"] & /@ MapIndexed[QuantumState[SparseArray[idx -> If[#2 === idx, 1, v], #["Dimension"]], #] &, basis]]],
+		Splice[Catenate /@ Tuples[#["Decompose"] & /@ MapIndexed[QuantumState[SparseArray[idx -> If[#2 === {1}, v, 1], #["Dimension"]], #] &, basis]]],
 		s["StateVector"]["ExplicitValues"]
 	]
 ]]
+
+decompose[qs_] := If[PrimeQ[qs["Dimension"]], {1 -> {qs}}, Module[{s = qs["SchmidtBasis"], basis},
+    basis = s["Basis"]["Decompose"];
+	SubsetMap[Normalize, {All, 1}] @ MapIndexed[{v, idx} |->
+		With[{decomp = decompose /@ Map[QuantumState[SparseArray[idx -> 1, #["Dimension"]], #] &, basis]},
+            Splice @ Thread[v Times @@@ Tuples[decomp[[All, All, 1]]] -> Catenate /@ Tuples[decomp[[All, All, 2]]]]
+        ],
+		s["StateVector"]["ExplicitValues"]
+	]
+]]
+
+QuantumStateProp[qs_, "DecomposeWithProbabilities"] /; qs["PureStateQ"] := SubsetMap[Normalize[#, Total] &, {All, 1}] @ decompose[qs]
+
+
+QuantumStateProp[qs_, "Compress"] := With[{decomp = qs["DecomposeWithProbabilities"]},
+	QuantumState[
+		decomp[[All, 1]],
+		QuantumBasis @ QuditBasis[
+            Array[Subscript[\[FormalC], #] &, Length[decomp]],
+            Join @@@ Map[First @ Extract[#["Basis"]["Representations"], #["State"]["ExplicitPositions"]] &, decomp[[All, 2]], {2}]
+        ]
+	]
+]
+
+PrimesUpTo[n_Integer] := If[n < 2, {}, First @ NestWhile[{Append[#[[1]], Prime[#[[2]]]], #[[2]] + 1} &, {{2}, 2}, Last[#[[1]]] < n &]]
+
+DimensionPartition[n_Integer] := Sort @ First @ TakeSmallestBy[IntegerPartitions[n, All, PrimesUpTo[n]], Apply[Times], 1]
+
+QuantumStateProp[qs_, "Uncompress", ds : {_Integer ? Positive..} | Automatic : Automatic] /; qs["Qudits"] == 1 := Enclose @ Module[{
+    qb = qs["Basis"]["QuditBasis"]["RemoveIdentities"],
+    repr, d,
+    dims
+},
+    repr = Values[qb["Representations"]];
+    d = qb["ElementDimension"];
+    dims = ConfirmBy[Replace[ds, Automatic -> DimensionPartition[d]], Total[#] == d &];
+    QuantumState[
+        qs["StateVector"] . Flatten /@ kroneckerProduct @@@ Map[TakeList[#, dims] &, repr],
+        dims
+    ]
+]
+
+QuantumStateProp[qs_, "Uncompress", dims : {_Integer ? Positive..} | Automatic : Automatic] := QuantumState[qs, QuantumBasis[qs["Dimension"]]]["Uncompress", dims]
 
 
 QuantumStateProp[qs_, "Normalized" | "NormalizedState" | "Normalize"] :=

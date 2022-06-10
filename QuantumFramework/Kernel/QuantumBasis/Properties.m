@@ -7,7 +7,8 @@ $QuantumBasisProperties = {
     "InputElementNames", "OutputElementNames", "ElementNames", "Names",
     "NormalElementNames",
     "InputElements", "OutputElements",
-    "InputElementDimensions", "OutputElementDimensions", "ElementDimensions", "ElementDimension",
+    "InputElementDimensions", "OutputElementDimensions", "InputElementDimension", "OutputElementDimension",
+    "ElementDimensions", "ElementDimension",
     "MatrixElementDimensions",
     "OrthogonalElements",
     "Projectors", "PureStates", "PureEffects", "PureMaps",
@@ -57,6 +58,10 @@ QuantumBasisProp[QuantumBasis[data_Association], "Meta"] := Normal @ data[[Key /
 (* computed *)
 
 QuantumBasisProp[qb_, "LabelHead"] := NestWhile[Head, qb["Label"], MatchQ[Except[_String | _Symbol]]]
+
+QuantumBasisProp[qb_, "QuditBasis"] := QuantumTensorProduct[qb["Output"], qb["Input"]]
+
+QuantumBasisProp[qb_, "Representations"] := qb["QuditBasis"]["Representations"]
 
 QuantumBasisProp[qb_, "InputElementNames", pos_ : All] := qb["Input"]["Names", pos]
 
