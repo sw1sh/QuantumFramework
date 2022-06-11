@@ -40,12 +40,10 @@ QuantumOperator[name_ ? nameQ, basisName : Except[Alternatives @@ $QuantumBasisP
 
 QuantumOperator[] := QuantumOperator["Identity"]
 
-QuantumOperator["Identity" | "I", opts___] := QuantumOperator[{"Identity", 2}, opts]
+QuantumOperator["Identity" | "I", order : _ ? orderQ | Automatic : Automatic, opts___] :=
+    QuantumOperator[{"Identity", Table[2, If[order === Automatic, 1, Length[order]]]}, order, opts]
 
-QuantumOperator["Identity" | "I", order : _ ? orderQ : Automatic, opts___] :=
-    QuantumOperator[{"Identity", Table[2, Length[order]]}, order, opts]
-
-QuantumOperator[{"Identity" | "I", dims_List}, order : _ ? orderQ : Automatic, opts___] := QuantumOperator[
+QuantumOperator[{"Identity" | "I", dims_List}, order : _ ? orderQ | Automatic : Automatic, opts___] := QuantumOperator[
     QuantumState[SparseArrayFlatten @ identityMatrix[Times @@ dims], QuantumBasis[QuditBasis[dims], QuditBasis[dims], "Label" -> "I"]],
     {Sort[#], #} & @ Replace[order, Automatic -> Range[Length[dims]]],
     opts

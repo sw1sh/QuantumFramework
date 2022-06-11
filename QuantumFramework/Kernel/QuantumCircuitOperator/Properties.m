@@ -69,7 +69,7 @@ QuantumCircuitOperatorProp[qco_, "OutputOrder"] := Union @@ qco["OutputOrders"]
 
 QuantumCircuitOperatorProp[qco_, "Arity"] := Length @ qco["InputOrder"]
 
-QuantumCircuitOperatorProp[qco_, "Width"] := Max[qco["InputOrder"], qco["OutputOrder"]]
+QuantumCircuitOperatorProp[qco_, "Width"] := #2 - Min[#1, 1] + 1 & @@ MinMax[{qco["InputOrder"], qco["OutputOrder"]}]
 
 QuantumCircuitOperatorProp[qco_, "InputDimensions"] :=
     (q |-> #["InputDimensions"][[ q /. #["InputOrderQuditMapping"] ]] & @
@@ -86,8 +86,6 @@ QuantumCircuitOperatorProp[qco_, "OutputDimension"] := Times @@ qco["OutputDimen
 QuantumCircuitOperatorProp[qco_, "Target"] := Union @@ (#["Target"] & /@ Select[qco["Operators"], QuantumMeasurementOperatorQ])
 
 QuantumCircuitOperatorProp[qco_, "Targets"] := Length @ qco["Target"]
-
-QuantumCircuitOperatorProp[qco_, "TargetOrder"] := qco["InputOrder"]
 
 QuantumCircuitOperatorProp[qco_, "TargetOrder"] := qco["InputOrder"]
 

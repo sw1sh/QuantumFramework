@@ -52,30 +52,45 @@ ContractEdge[g_, edge : DirectedEdge[v_, v_, {i_, j_}]] := Enclose @ Module[{
 
 ContractTensorNetwork[net_Graph] := Enclose @ Module[{g, edges},
 	{g, {edges}} = Reap @ NestWhile[Confirm @ ContractEdge[#, Sow @ First[EdgeList[#]]] &, net, EdgeCount[#] > 0 &];
-	AnnotationValue[{g, edges[[-1, 2]]}, "Tensor"]
+	Transpose[
+        AnnotationValue[{g, edges[[-1, 2]]}, "Tensor"],
+        InversePermutation @ FindPermutation @ AnnotationValue[{g, edges[[-1, 2]]}, "Index"][[All, 1]]
+    ]
 ]
 
 
 Options[QuantumTensorNetwork] = Options[Graph]
 
-QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Module[{ops, size, orders, vertices, edges, tensors},
+QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Module[{width, ops, size, orders, vertices, edges, tensors},
 	ConfirmAssert[AllTrue[qc["Operators"], #["Order"] === #["FullOrder"] &]];
-    ops = Join[
-        {QuantumOperator[QuantumState[{1}, qc["InputDimensions"], "Label" -> "Initial"], qc["InputOrder"]]},
-        #["Computational"]["Sort"] & /@ qc["Operators"],
-        {QuantumOperator[{"I", qc["OutputDimensions"]}, qc["OutputOrder"], "Label" -> "Final"]}
-    ];
+    width = qc["Width"] + qc["Targets"];
+    ops = Prepend[QuantumOperator[QuantumState[{1}, qc["InputDimensions"], "Label" -> "Initial"], qc["InputOrder"]]] @
+        Module[{m = - qc["Targets"] + 1},
+            Map[
+                If[ !QuantumMeasurementOperatorQ[#],
+                    #,
+                    With[{povm = #["POVM"]},
+                        QuantumOperator[
+                            povm["QuantumOperator"],
+                            {Join[Reverse @ Table[m++, povm["Eigenqudits"]], Drop[povm["OutputOrder"], povm["Eigenqudits"]]], povm["InputOrder"]},
+                            "Label" -> "Measurement"
+                        ]
+                    ]
+                ]["Computational"] &,
+                qc["Operators"]
+            ]
+        ];
 	size = Length[ops];
-	orders = #["Order"] & /@ ops;
-    vertices = Append[Range[Length[ops] - 1], 0];
+	orders = #["Order"] + qc["Targets"] & /@ ops;
+    vertices = Range[Length[ops]];
 	edges = Catenate @ FoldPairList[
 		{prev, order} |-> Module[{output, input, n = Max[prev] + 1, next = prev, indices},
 			{output, input} = order;
-			next[[ output ]] = If[n > size - 1, 0, n];
+			next[[ input ]] = n;
             indices = {prev[[#]][#], next[[#]][-#]} & /@ input;
 			{Thread[DirectedEdge[prev[[ input ]], next[[ input ]], indices]], next}
 		],
-		Table[1, qc["Width"]],
+		Table[1, width],
 		Rest @ orders
 	];
 	tensors = #["Tensor"] & /@ ops;
@@ -84,7 +99,7 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
 		edges,
         opts,
 		AnnotationRules ->
-            MapThread[#1 -> {"Tensor" -> #2, "Index" -> #1 /@ Join[#3[[1]], - #3[[2]]]} &, {vertices, tensors, orders}],
+            MapThread[#1 -> {"Tensor" -> #2, "Index" -> #1 /@ Join[Sort @ #3[[1]], - Sort @ #3[[2]]]} &, {vertices, tensors, orders}],
 		VertexLabels ->
             Thread[vertices -> (Replace[#["Label"], "Controlled"[label_, ___] :> Row[{"C", label}]] & /@ ops)],
         GraphLayout -> "SpringElectricalEmbedding"
