@@ -35,8 +35,7 @@ QuantumOperator[arg : _ ? QuantumStateQ, outputOrder : _ ? orderQ | Automatic, i
     QuantumOperator[QuantumState[arg, opts], {outputOrder, inputOrder}]
 
 QuantumOperator[arg : _ ? QuantumStateQ, order : _ ? orderQ | Automatic] :=
-    QuantumOperator[arg, {Automatic, order}]
-
+    QuantumOperator[arg, {order, Automatic}]
 
 
 QuantumOperator[qs_ ? QuantumStateQ, {Automatic, order_ ? orderQ}, opts___] :=
@@ -258,8 +257,8 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] /; qo["Picture"] === qo["Picture"] && (
     qs["Picture"] =!= "Heisenberg" || Message[QuantumOperator::incompatiblePictures, qo["Picture"], qs["Picture"]]) :=
-With[{order = Range[qs["OutputQudits"]] + Max[Max[qo["FullInputOrder"]] - qs["OutputQudits"], 0]},
-    qo[QuantumOperator[qs, order, Automatic]]["Sort"]["State"]
+Enclose @ With[{order = Range[qs["OutputQudits"]] + Max[Max[qo["FullInputOrder"]] - qs["OutputQudits"], 0]},
+    ConfirmBy[qo[QuantumOperator[qs, order, Automatic]], QuantumOperatorQ]["Sort"]["State"]
 ]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumOperatorQ] /; qo["Picture"] === op["Picture"] &&

@@ -243,10 +243,9 @@ QuantumStateProp[qs_, "DegenerateStateQ"] := qs["Type"] === "Degenerate"
 
 (* transforms *)
 
-QuantumStateProp[qs_, "Computational"] := QuantumState[qs, QuantumBasis[
+QuantumStateProp[qs_, "Computational"] := QuantumState[qs,
     "Output" -> QuditBasis[DeleteCases[qs["OutputDimensions"], 1]],
     "Input" -> QuditBasis[DeleteCases[qs["InputDimensions"], 1]]["Dual"]
-]
 ]
 
 QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /; dim === Automatic || Divisible[qs["Dimension"], dim] := Module[{

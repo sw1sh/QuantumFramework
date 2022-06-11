@@ -97,6 +97,8 @@ QuantumCircuitOperatorProp[qco_, "QiskitCircuit" | "Qiskit"] := QuantumCircuitOp
 
 QuantumCircuitOperatorProp[qco_, "Label"] := "Q"
 
+QuantumCircuitOperatorProp[qco_, "Stats" | "Statistics"] := Counts[#["Arity"] & /@ qco["Operators"]]
+
 QuantumCircuitOperatorProp[qco_, "Flatten", n : _Integer ? NonNegative | Infinity : Infinity] :=
     QuantumCircuitOperator[
         If[ n === Infinity,

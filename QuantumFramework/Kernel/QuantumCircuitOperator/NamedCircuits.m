@@ -161,7 +161,7 @@ QuantumCircuitOperator[{"BooleanOracle", formula_, varSpec : _List | _Associatio
     order = Replace[varSpec, {rules : KeyValuePattern[{_ -> _Integer ? Positive}] :> Values[rules], Except[{__Integer}] :> Range[Length[vars]]}];
     ConfirmAssert[orderQ[order]];
     indices = ConfirmMatch[BooleanIndices[formula, vars], indicesPattern];
-    negIndices = ConfirmMatch[BooleanIndices[Not[formula], vars], indicesPattern];
+    negIndices = ConfirmMatch[BooleanIndices[Not[Replace[formula, bf_BooleanFunction :> bf @@ vars]], vars], indicesPattern];
     If[ Length[negIndices] < Length[indices],
         indices = negIndices;
         isNegative = True;
@@ -195,7 +195,7 @@ QuantumCircuitOperator[{"BooleanOracleR",
     order = Replace[varSpec, {rules : KeyValuePattern[{_ -> _Integer ? Positive}] :> Values[rules], Except[{__Integer}] :> Range[Length[vars]]}];
     ConfirmAssert[orderQ[order]];
     indices = ConfirmMatch[BooleanIndices[formula, vars], indicesPattern];
-    negIndices = ConfirmMatch[BooleanIndices[Not[formula], vars], indicesPattern];
+    negIndices = ConfirmMatch[BooleanIndices[Not[Replace[formula, bf_BooleanFunction :> bf @@ vars]], vars], indicesPattern];
     If[ Length[negIndices] < Length[indices],
         indices = negIndices;
         isNegative = True;

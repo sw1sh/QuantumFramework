@@ -11,7 +11,7 @@ $QuantumOperatorProperties = {
     "OrderedMatrixRepresentation", "OrderedMatrix",
     "OrderedTensorRepresentation", "OrderedTensor",
     "Arity", "MaxArity", "FullArity", "TargetArity",
-    "Range", "FullInputOrder", "FullOutputOrder", "InputQuditOrder", "OutputQuditOrder",
+    "Range", "FullInputOrder", "FullOutputOrder", "InputQuditOrder", "OutputQuditOrder", "QuditOrder",
     "FirstOutputQudit", "LastOutputQudit", "FirstInputQudit", "LastInputQudit", "InputOrderQuditMapping",
     "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors", "Eigensystem", "Projectors",
     "Transpose", "ConjugateTranspose",
@@ -109,6 +109,8 @@ QuantumOperatorProp[qo_, "LastOutputQudit"] := Max @ qo["FullOutputOrder"]
 QuantumOperatorProp[qo_, "InputQuditOrder"] := qo["InputOrder"] - Min[qo["FullInputOrder"]] + 1
 
 QuantumOperatorProp[qo_, "OutputQuditOrder"] := qo["OutputOrder"] - Min[qo["FullOutputOrder"]] + 1
+
+QuantumOperatorProp[qo_, "QuditOrder"] := {qo["OutputQuditOrder"], qo["InputQuditOrder"]}
 
 QuantumOperatorProp[qo_, "InputOrderQuditMapping"] := Thread[qo["FullInputOrder"] -> Range[qo["InputQudits"]]]
 

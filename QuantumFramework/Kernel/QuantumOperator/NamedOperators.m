@@ -16,7 +16,7 @@ $QuantumOperatorNames = {
     "SWAP", "RootSWAP", "CSWAP", "Fredkin",
     "Controlled", "Controlled0", "CX", "CY", "CZ", "CH", "CT", "CS", "CPHASE", "CNOT",
     "XX", "YY", "ZZ",
-    "S", "T",
+    "S", "T", "V",
     "Toffoli", "Deutsch", "RandomUnitary",
     "Spider", "ZSpider", "XSpider",
     "Switch"
@@ -115,6 +115,8 @@ QuantumOperator[{"Diagonal", x_, dimension_Integer : 2}, opts___] := QuantumOper
 QuantumOperator["S", opts___] := QuantumOperator[{"Phase", Pi / 2}, opts, "Label" -> "S"]
 
 QuantumOperator["T", opts___] := QuantumOperator[{"Phase", Pi / 4}, opts, "Label" -> "T"]
+
+QuantumOperator["V" | "SX", opts___] := QuantumOperator[Sqrt[QuantumOperator["X"]], opts, "Label" -> "V"]
 
 
 QuantumOperator["CNOT", opts___] := QuantumOperator[{"CNOT", 2}, opts]
