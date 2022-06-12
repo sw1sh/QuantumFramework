@@ -35,7 +35,33 @@ QuantumCircuitOperator[params: Except[{Alternatives @@ $QuantumCircuitOperatorNa
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[op_ ? QuantumFrameworkOperatorQ] :=
     QuantumCircuitOperator[Prepend[qco["Operators"], op], qco["Label"][op["Label"]]]
 
-(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qs_ ? QuantumStateQ] := Fold[ReverseApplied[Construct], qs, qco["Operators"]]
+Options[quantumCircuitApply] = {Method -> Automatic}
+
+quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[]] :=
+    Switch[
+        OptionValue[Method],
+        "Schrodinger" | "Schroedinger" | "Schrödinger",
+        Fold[ReverseApplied[Construct], qs, qco["Operators"]],
+        Automatic | "TensorNetwork",
+        With[{
+            state = QuantumState[SparseArrayFlatten[#], TensorDimensions[#], "Label" -> qs["Label"] /* qco["Label"]] & @
+                ContractTensorNetwork @ InitializeTensorNetwork[
+                    qco["TensorNetwork"],
+                    qs["Computational"]["Tensor"],
+                    Join[Superscript[0, #] & /@ (Range[qs["OutputQudits"]]), Subscript[0, #] & /@ (Range[qs["InputQudits"]])]
+                ]
+        },
+            If[ qco["Measurements"] > 0,
+                QuantumMeasurement[QuantumMeasurementOperator[QuantumOperator[state, Range[state["Qudits"]] - qco["Measurements"]], qco["Target"]]],
+                state
+            ]
+        ],
+        _,
+        $Failed
+    ]
+
+(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qs_ ? QuantumStateQ, opts : OptionsPattern[quantumCircuitApply]] := quantumCircuitApply[qco, qs, opts]
+
 
 op_QuantumMeasurementOperator[qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ] :=
     QuantumCircuitOperator[Append[qco["Operators"], op], op["Label"][qco["Label"]]]

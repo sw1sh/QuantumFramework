@@ -57,7 +57,7 @@ QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[Join[Options[d
 
 QuantumCircuitOperatorProp[qco_, "CircuitOperator" | "Compile"] := Fold[ReverseApplied[Construct], qco["Flatten"]["Operators"]]
 
-QuantumCircuitOperatorProp[qco_, "Gates" | "Depth"] := Length @ qco["Operators"]
+QuantumCircuitOperatorProp[qco_, "Gates"] := Length @ qco["Operators"]
 
 QuantumCircuitOperatorProp[qco_, "InputOrders"] := #["InputOrder"] & /@ qco["Operators"]
 
@@ -66,6 +66,10 @@ QuantumCircuitOperatorProp[qco_, "InputOrder"] := Union @@ qco["InputOrders"]
 QuantumCircuitOperatorProp[qco_, "OutputOrders"] := #["OutputOrder"] & /@ qco["Operators"]
 
 QuantumCircuitOperatorProp[qco_, "OutputOrder"] := Union @@ qco["OutputOrders"]
+
+QuantumCircuitOperatorProp[qco_, "Orders"] := Thread[{qco["OutputOrders"], qco["InputOrders"]}]
+
+QuantumCircuitOperatorProp[qco_, "Depth"] := Max @ Counts[Catenate[Union @@@ qco["Orders"]]]
 
 QuantumCircuitOperatorProp[qco_, "Arity"] := Length @ qco["InputOrder"]
 
@@ -83,7 +87,9 @@ QuantumCircuitOperatorProp[qco_, "OutputDimensions"] :=
 
 QuantumCircuitOperatorProp[qco_, "OutputDimension"] := Times @@ qco["OutputDimensions"]
 
-QuantumCircuitOperatorProp[qco_, "Target"] := Union @@ (#["Target"] & /@ Select[qco["Operators"], QuantumMeasurementOperatorQ])
+QuantumCircuitOperatorProp[qco_, "Measurements"] := Count[qco["Operators"], _ ? QuantumMeasurementOperatorQ]
+
+QuantumCircuitOperatorProp[qco_, "Target"] := DeleteDuplicates[Join @@ (#["Target"] & /@ Select[qco["Operators"], QuantumMeasurementOperatorQ])]
 
 QuantumCircuitOperatorProp[qco_, "Targets"] := Length @ qco["Target"]
 

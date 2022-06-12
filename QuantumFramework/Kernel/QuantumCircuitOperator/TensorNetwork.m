@@ -15,7 +15,7 @@ TensorNetworkQ[net_Graph] := Module[{
 },
     {tensors, indices} = AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, #] & /@ {"Tensor", "Index"};
     AllTrue[tensors, TensorQ] &&
-    AllTrue[indices, ListQ[#] && DuplicateFreeQ[#] &] &&
+    AllTrue[indices, MatchQ[#, {(Superscript | Subscript)[_, _] ...}] && DuplicateFreeQ[#] &] &&
     With[{ranks = TensorRank /@ tensors},
         And @@ Thread[ranks == Length /@ indices] && Total[ranks] == CountDistinct[Catenate[indices]]
     ] &&
@@ -99,12 +99,15 @@ ContractTensorNetwork[net_Graph ? TensorNetworkQ, OptionsPattern[]] := Switch[
 TensorNetworkFreeIndices[net_Graph ? TensorNetworkQ] :=
     SortBy[Last] @ DeleteCases[Join @@ AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Index"], Alternatives @@ Union @@ EdgeTags[net]]
 
-InitializeTensorNetwork[net_Graph ? TensorNetworkQ, tensor_ ? TensorQ] := Annotate[
+InitializeTensorNetwork[net_Graph ? TensorNetworkQ, tensor_ ? TensorQ, index_List : Automatic] := Annotate[
     {net, 0},
     {
         "Tensor" -> tensor,
-        "Index" -> With[{index = AnnotationValue[{net, 0}, "Index"]},
-            Join[index, Take[Subscript @@@ index, UpTo[Max[0, TensorRank[tensor] - Length[index]]]]]
+        "Index" -> Replace[index, Automatic -> With[{
+                oldIndex = AnnotationValue[{net, 0}, "Index"]
+            },
+                Join[oldIndex, Take[Subscript @@@ oldIndex, UpTo[Max[0, TensorRank[tensor] - Length[oldIndex]]]]]
+            ]
         ]
     }
 ]
@@ -120,9 +123,10 @@ TensorNetworkIndexGraph[net_Graph ? TensorNetworkQ, opts : OptionsPattern[Graph]
 
 Options[QuantumTensorNetwork] = Options[Graph]
 
-QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Module[{width, ops, size, orders, vertices, edges, tensors},
+QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Module[{width, targets, ops, size, orders, vertices, edges, tensors},
 	ConfirmAssert[AllTrue[qc["Operators"], #["Order"] === #["FullOrder"] &]];
-    width = qc["Width"] + qc["Targets"];
+    targets = qc["Targets"];
+    width = qc["Width"];
     ops = Prepend[QuantumOperator[QuantumState[{1}, qc["InputDimensions"], "Label" -> "Initial"], qc["InputOrder"]]] @
         Module[{m = - qc["Targets"] + 1},
             Map[
@@ -140,16 +144,16 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
             ]
         ];
 	size = Length[ops];
-	orders = #["Order"] + qc["Targets"] & /@ ops;
+	orders = #["Order"] & /@ ops;
     vertices = Range[Length[ops]] - 1;
 	edges = Catenate @ FoldPairList[
 		{prev, order} |-> Module[{output, input, n = Max[prev] + 1, next = prev, indices},
 			{output, input} = order;
-			next[[ input ]] = n;
-            indices = {Superscript[prev[[#]], #], Subscript[next[[#]], #]} & /@ input;
-			{Thread[DirectedEdge[prev[[ input ]], next[[ input ]], indices]], next}
+			next[[ input + targets ]] = n;
+            indices = {Superscript[prev[[# + targets]], #], Subscript[next[[# + targets]], #]} & /@ input;
+			{Thread[DirectedEdge[prev[[ input + targets ]], next[[ input + targets ]], indices]], next}
 		],
-		Table[0, width],
+		Table[0, width + targets],
 		Rest @ orders
 	];
 	tensors = #["Tensor"] & /@ ops;
