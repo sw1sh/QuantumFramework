@@ -2,10 +2,31 @@ Package["Wolfram`QuantumFramework`"]
 
 PackageExport["TensorNetworkQ"]
 PackageExport["ContractTensorNetwork"]
+PackageExport["TensorNetworkFreeIndices"]
+PackageExport["InitializeTensorNetwork"]
+PackageExport["TensorNetworkIndexGraph"]
 
 PackageScope["QuantumTensorNetwork"]
 
 
+
+TensorNetworkQ[net_Graph] := Module[{
+    tensors, indices
+},
+    {tensors, indices} = AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, #] & /@ {"Tensor", "Index"};
+    AllTrue[tensors, TensorQ] &&
+    AllTrue[indices, ListQ[#] && DuplicateFreeQ[#] &] &&
+    With[{ranks = TensorRank /@ tensors},
+        And @@ Thread[ranks == Length /@ indices] && Total[ranks] == CountDistinct[Catenate[indices]]
+    ] &&
+    AllTrue[
+        EdgeList[net],
+        MatchQ[
+            _[from_, to_, {i_, j_}] /;
+            MemberQ[indices[[VertexIndex[net, from]]], i] && MemberQ[indices[[VertexIndex[net, to]]], j]
+        ]
+    ]
+]
 
 NeighborhoodEdges[g_, vs_List] := Catenate[EdgeList[g, _[#, __] | _[_, #, ___]] & /@ vs]
 NeighborhoodEdges[g_, v_] := NeighborhoodEdges[g, {v}]
@@ -19,7 +40,7 @@ edgeContract[g_, edge_] := With[{edges = NeighborhoodEdges[g, edge[[1]]]},
 	}, {1}]]
 ]
 
-edgeContractWithIndex[g_, edge : DirectedEdge[from_, to_, {i_, j_}]] := Annotate[
+edgeContractWithIndex[g_, edge : _[from_, to_, {i_, j_}]] := Annotate[
 	{edgeContract[g, edge], to},
 	"Index" -> If[
 		from === to,
@@ -28,7 +49,7 @@ edgeContractWithIndex[g_, edge : DirectedEdge[from_, to_, {i_, j_}]] := Annotate
 	]
 ]
 
-ContractEdge[g_, edge : DirectedEdge[from_, to_, {i_, j_}]] := Enclose @ Module[{
+ContractEdge[g_, edge : _[from_, to_, {i_, j_}]] := Enclose @ Module[{
 	tensors = ConfirmMatch[AnnotationValue[{g, {from, to}}, "Tensor"], {__ ? TensorQ}],
 	indices = Confirm[AnnotationValue[{g, {from, to}}, "Index"]],
 	rank
@@ -43,7 +64,7 @@ ContractEdge[g_, edge : DirectedEdge[from_, to_, {i_, j_}]] := Enclose @ Module[
 	]
 ]
 
-ContractEdge[g_, edge : DirectedEdge[v_, v_, {i_, j_}]] := Enclose @ Module[{
+ContractEdge[g_, edge : _[v_, v_, {i_, j_}]] := Enclose @ Module[{
 	tensor = ConfirmBy[AnnotationValue[{g, v}, "Tensor"], TensorQ],
 	index = Confirm[AnnotationValue[{g, v}, "Index"]]
 },
@@ -51,25 +72,51 @@ ContractEdge[g_, edge : DirectedEdge[v_, v_, {i_, j_}]] := Enclose @ Module[{
 ]
 
 
-ContractTensorNetwork[net_Graph ? TensorNetworkQ] := Enclose @ Module[{g, edges},
+NaiveContractTensorNetwork[net_Graph] := Enclose @ Module[{g, edges},
 	{g, {edges}} = Reap @ NestWhile[Confirm @ ContractEdge[#, Sow @ First[EdgeList[#]]] &, net, EdgeCount[#] > 0 &];
 	Transpose[
         AnnotationValue[{g, edges[[-1, 2]]}, "Tensor"],
-        InversePermutation @ FindPermutation[Replace[#, i_ ? Negative :> Max[#] - i, {1}] & @ AnnotationValue[{g, edges[[-1, 2]]}, "Index"][[All, 1]]]
+        Ordering @ OrderingBy[AnnotationValue[{g, edges[[-1, 2]]}, "Index"], Replace[{Subscript[_, x_] :> {x}, Superscript[_, x_] :> x}]]
     ]
 ]
 
-TensorNetworkQ[net_Graph] := Module[{
-    tensors, indices
-},
-    {tensors, indices} = Thread[AnnotationValue[{net, #}, {"Tensor", "Index"}] & /@ VertexList[net]];
-    AllTrue[tensors, TensorQ] &&
-        AllTrue[indices, ListQ[#] && DuplicateFreeQ[#] &] &&
-            With[{ranks = TensorRank /@ tensors},
-                And @@ Thread[ranks == Length /@ indices] && Total[ranks] == CountDistinct[Catenate[indices]]
-            ]
+FastContractTensorNetwork[net_Graph] := ResourceFunction["EinsteinSummation"][
+    (AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Index"] /. Rule @@@ EdgeTags[net]) -> TensorNetworkFreeIndices[net],
+    AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Tensor"]
 ]
 
+Options[ContractTensorNetwork] = {Method -> Automatic}
+
+ContractTensorNetwork[net_Graph ? TensorNetworkQ, OptionsPattern[]] := Switch[
+    OptionValue[Method],
+    "Naive",
+    NaiveContractTensorNetwork[net],
+    _,
+    FastContractTensorNetwork[net]
+]
+
+
+TensorNetworkFreeIndices[net_Graph ? TensorNetworkQ] :=
+    SortBy[Last] @ DeleteCases[Join @@ AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Index"], Alternatives @@ Union @@ EdgeTags[net]]
+
+InitializeTensorNetwork[net_Graph ? TensorNetworkQ, tensor_ ? TensorQ] := Annotate[
+    {net, 0},
+    {
+        "Tensor" -> tensor,
+        "Index" -> With[{index = AnnotationValue[{net, 0}, "Index"]},
+            Join[index, Take[Subscript @@@ index, UpTo[Max[0, TensorRank[tensor] - Length[index]]]]]
+        ]
+    }
+]
+
+VertexCompleteGraph[vs_List] := With[{n = Length[vs]}, AdjacencyGraph[vs, SparseArray[Band[{1, 1}] -> 0, {n, n}, 1]]]
+
+TensorNetworkIndexGraph[net_Graph ? TensorNetworkQ, opts : OptionsPattern[Graph]] := GraphUnion[
+    DirectedEdge @@@ EdgeTags[net],
+    Sequence @@ (VertexCompleteGraph /@ AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Index"]),
+    opts,
+    VertexLabels -> Automatic
+]
 
 Options[QuantumTensorNetwork] = Options[Graph]
 
@@ -94,15 +141,15 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
         ];
 	size = Length[ops];
 	orders = #["Order"] + qc["Targets"] & /@ ops;
-    vertices = Range[Length[ops]];
+    vertices = Range[Length[ops]] - 1;
 	edges = Catenate @ FoldPairList[
 		{prev, order} |-> Module[{output, input, n = Max[prev] + 1, next = prev, indices},
 			{output, input} = order;
 			next[[ input ]] = n;
-            indices = {prev[[#]][#], next[[#]][-#]} & /@ input;
+            indices = {Superscript[prev[[#]], #], Subscript[next[[#]], #]} & /@ input;
 			{Thread[DirectedEdge[prev[[ input ]], next[[ input ]], indices]], next}
 		],
-		Table[1, width],
+		Table[0, width],
 		Rest @ orders
 	];
 	tensors = #["Tensor"] & /@ ops;
@@ -112,7 +159,12 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
             edges,
             opts,
             AnnotationRules ->
-                MapThread[#1 -> {"Tensor" -> #2, "Index" -> #1 /@ Join[Sort @ #3[[1]], - Sort @ #3[[2]]]} &, {vertices, tensors, orders}],
+                MapThread[#1 -> {
+                        "Tensor" -> #2,
+                        "Index" -> Join[OperatorApplied[Superscript, 2][#1] /@ Sort[#3[[1]]], OperatorApplied[Subscript, 2][#1] /@ Sort @ #3[[2]]]
+                    } &,
+                    {vertices, tensors, orders}
+                ],
             VertexLabels ->
                 Thread[vertices -> (Replace[#["Label"], "Controlled"[label_, ___] :> Row[{"C", label}]] & /@ ops)],
             GraphLayout -> "SpringElectricalEmbedding"
