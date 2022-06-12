@@ -1,5 +1,6 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageExport["TensorNetworkQ"]
 PackageExport["ContractTensorNetwork"]
 
 PackageScope["QuantumTensorNetwork"]
@@ -50,12 +51,23 @@ ContractEdge[g_, edge : DirectedEdge[v_, v_, {i_, j_}]] := Enclose @ Module[{
 ]
 
 
-ContractTensorNetwork[net_Graph] := Enclose @ Module[{g, edges},
+ContractTensorNetwork[net_Graph ? TensorNetworkQ] := Enclose @ Module[{g, edges},
 	{g, {edges}} = Reap @ NestWhile[Confirm @ ContractEdge[#, Sow @ First[EdgeList[#]]] &, net, EdgeCount[#] > 0 &];
 	Transpose[
         AnnotationValue[{g, edges[[-1, 2]]}, "Tensor"],
-        InversePermutation @ FindPermutation @ AnnotationValue[{g, edges[[-1, 2]]}, "Index"][[All, 1]]
+        InversePermutation @ FindPermutation[Replace[#, i_ ? Negative :> Max[#] - i, {1}] & @ AnnotationValue[{g, edges[[-1, 2]]}, "Index"][[All, 1]]]
     ]
+]
+
+TensorNetworkQ[net_Graph] := Module[{
+    tensors, indices
+},
+    {tensors, indices} = Thread[AnnotationValue[{net, #}, {"Tensor", "Index"}] & /@ VertexList[net]];
+    AllTrue[tensors, TensorQ] &&
+        AllTrue[indices, ListQ[#] && DuplicateFreeQ[#] &] &&
+            With[{ranks = TensorRank /@ tensors},
+                And @@ Thread[ranks == Length /@ indices] && Total[ranks] == CountDistinct[Catenate[indices]]
+            ]
 ]
 
 
@@ -94,15 +106,18 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
 		Rest @ orders
 	];
 	tensors = #["Tensor"] & /@ ops;
-	Graph[
-        vertices,
-		edges,
-        opts,
-		AnnotationRules ->
-            MapThread[#1 -> {"Tensor" -> #2, "Index" -> #1 /@ Join[Sort @ #3[[1]], - Sort @ #3[[2]]]} &, {vertices, tensors, orders}],
-		VertexLabels ->
-            Thread[vertices -> (Replace[#["Label"], "Controlled"[label_, ___] :> Row[{"C", label}]] & /@ ops)],
-        GraphLayout -> "SpringElectricalEmbedding"
-	]
+	ConfirmBy[
+        Graph[
+            vertices,
+            edges,
+            opts,
+            AnnotationRules ->
+                MapThread[#1 -> {"Tensor" -> #2, "Index" -> #1 /@ Join[Sort @ #3[[1]], - Sort @ #3[[2]]]} &, {vertices, tensors, orders}],
+            VertexLabels ->
+                Thread[vertices -> (Replace[#["Label"], "Controlled"[label_, ___] :> Row[{"C", label}]] & /@ ops)],
+            GraphLayout -> "SpringElectricalEmbedding"
+        ],
+        TensorNetworkQ
+    ]
 ]
 
