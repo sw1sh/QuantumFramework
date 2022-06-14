@@ -314,7 +314,13 @@ expandQuditBasis[qb_QuditBasis, order1_ ? orderQ, order2_ ? orderQ, defaultDim_I
 
 
 QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator] ...] /; MemberQ[Attributes[f], NumericFunction] :=
-    Enclose @ QuantumOperator[ConfirmBy[MatrixFunction[f[left, #, right] &, qo["Sort"]["Matrix"]], MatrixQ], Sort /@ qo["Order"], qo["Basis"], "Label" -> f[left, qo["Label"], right]]
+    Enclose @ QuantumOperator[
+        ConfirmBy[
+            If[MemberQ[{Minus, Times}, f], f[left, #, right] &, MatrixFunction[f[left, #, right] &, #, Method -> "Jordan"] &] @ qo["Sort"]["Matrix"],
+            MatrixQ
+        ],
+        Sort /@ qo["Order"], qo["Basis"], "Label" -> f[left, qo["Label"], right]
+    ]
 
 
 QuantumOperator /: Plus[ops : _QuantumOperator...] := Fold[addQuantumOperators, {ops}]

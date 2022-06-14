@@ -138,7 +138,7 @@ QuantumState /: Equal[qs : _QuantumState ...] :=
 
 QuantumState /: f_Symbol[left : Except[_QuantumState] ..., qs_QuantumState, right : Except[_QuantumState] ...] /; MemberQ[Attributes[f], NumericFunction] :=
     Enclose @ QuantumState[
-        If[ MemberQ[{Plus, Minus, Times}, f],
+        If[ MemberQ[{Minus, Times}, f],
             ConfirmBy[f[left, qs["State"], right], stateQ],
             ConfirmBy[MatrixFunction[f[left, #, right] &, qs["DensityMatrix"], Method -> "Jordan"], MatrixQ]
         ],
