@@ -10,23 +10,42 @@ PackageScope["QuantumTensorNetwork"]
 
 
 
-TensorNetworkQ[net_Graph] := Module[{
+TensorNetworkQ::msg1 = "Not all vertices are annotated with tensors."
+TensorNetworkQ::msg2 = "Not all indices are duplicate free lists of Subscripts and Superscripts."
+TensorNetworkQ::msg3 = "Tensor ranks and indices are not compatible."
+TensorNetworkQ::msg4 = "Not all edges are tagged with indices."
+
+TensorNetworkQ[net_Graph, verbose : _ ? BooleanQ : False] := Module[{
     tensors, indices
 },
-    {tensors, indices} = AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, #] & /@ {"Tensor", "Index"};
-    AllTrue[tensors, TensorQ] &&
-    AllTrue[indices, MatchQ[#, {(Superscript | Subscript)[_, _] ...}] && DuplicateFreeQ[#] &] &&
-    With[{ranks = TensorRank /@ tensors},
-        And @@ Thread[ranks == Length /@ indices] && Total[ranks] == CountDistinct[Catenate[indices]]
+    {tensors, indices} = AssociationThread[VertexList[net] -> #] & /@
+        (AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, #] & /@ {"Tensor", "Index"});
+    (
+        AllTrue[tensors, TensorQ] ||
+        (If[verbose, Message[TensorNetworkQ::msg1]]; False)
+    ) &&
+    (
+        AllTrue[indices, MatchQ[#, {(Superscript | Subscript)[_, _] ...}] && DuplicateFreeQ[#] &] ||
+        (If[verbose, Message[TensorNetworkQ::msg2]]; False)
+     ) &&
+    With[{ranks = TensorRank /@ Values[tensors]},
+        (And @@ Thread[ranks == Length /@ Values[indices]] && Total[ranks] == CountDistinct[Catenate[Values[indices]]]) ||
+        (If[verbose, Message[TensorNetworkQ::msg3]]; False)
     ] &&
-    AllTrue[
-        EdgeList[net],
-        MatchQ[
-            _[from_, to_, {i_, j_}] /;
-            MemberQ[indices[[VertexIndex[net, from]]], i] && MemberQ[indices[[VertexIndex[net, to]]], j]
-        ]
-    ]
+    (
+        AllTrue[
+            EdgeList[net],
+            MatchQ[
+                _[from_, to_, {i_, j_}] /;
+                MemberQ[indices[from], i] && MemberQ[indices[to], j]
+            ]
+        ] ||
+        (If[verbose, Message[TensorNetworkQ::msg4]]; False)
+    )
 ]
+
+TensorNetworkQ[verbose : _ ? BooleanQ : False][net_Graph] := TensorNetworkQ[net, verbose]
+
 
 NeighborhoodEdges[g_, vs_List] := Catenate[EdgeList[g, _[#, __] | _[_, #, ___]] & /@ vs]
 NeighborhoodEdges[g_, v_] := NeighborhoodEdges[g, {v}]
@@ -87,7 +106,7 @@ FastContractTensorNetwork[net_Graph] := ResourceFunction["EinsteinSummation"][
 
 Options[ContractTensorNetwork] = {Method -> Automatic}
 
-ContractTensorNetwork[net_Graph ? TensorNetworkQ, OptionsPattern[]] := Switch[
+ContractTensorNetwork[net_Graph ? (TensorNetworkQ[True]), OptionsPattern[]] := Switch[
     OptionValue[Method],
     "Naive",
     NaiveContractTensorNetwork[net],
@@ -114,7 +133,7 @@ InitializeTensorNetwork[net_Graph ? TensorNetworkQ, tensor_ ? TensorQ, index_Lis
 
 VertexCompleteGraph[vs_List] := With[{n = Length[vs]}, AdjacencyGraph[vs, SparseArray[Band[{1, 1}] -> 0, {n, n}, 1]]]
 
-TensorNetworkIndexGraph[net_Graph ? TensorNetworkQ, opts : OptionsPattern[Graph]] := GraphUnion[
+TensorNetworkIndexGraph[net_Graph ? (TensorNetworkQ[True]), opts : OptionsPattern[Graph]] := GraphUnion[
     DirectedEdge @@@ EdgeTags[net],
     Sequence @@ (VertexCompleteGraph /@ AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Index"]),
     opts,
