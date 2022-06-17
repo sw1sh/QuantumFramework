@@ -78,7 +78,7 @@ QuantumOperator[{"ZRotation" | "RZ", angle_, dimension_Integer : 2}, opts___] :=
     "Label" -> Subscript["R", "Z"][angle]
 ]
 
-QuantumOperator[{"U" | "U3", theta_, phi_, lambda_}, opts___] := QuantumOperator[
+QuantumOperator[{"U" | "U3", theta_, phi_ : Pi, lambda_ : Pi}, opts___] := QuantumOperator[
     {{Cos[theta / 2], - Exp[I lambda] Sin[theta / 2]}, {Exp[I phi] Sin[theta / 2], Exp[I (phi + lambda)] Cos[theta / 2]}},
     opts,
     "Label" -> "U"[theta, phi, lambda]
@@ -428,7 +428,7 @@ QuantumOperator[{"RandomUnitary", dimension_Integer}, order : (_ ? orderQ) : {1}
 
 QuantumOperator["RandomUnitary", order : (_ ? orderQ) : {1}, opts___] := With[{basis = QuantumBasis[opts]},
     QuantumOperator[
-           RandomVariate @ CircularUnitaryMatrixDistribution[basis["Dimension"]], order, basis, "Label" -> None
+           RandomVariate @ CircularUnitaryMatrixDistribution[basis["Dimension"] ^ Length[order]], order, basis, "Label" -> None
     ]
 ]
 
@@ -541,11 +541,11 @@ QuantumPartialTrace[
 	{Max[order] + 1}
 ]
 
-$upperCasesOperatorNames = AssociationThread[ToUpperCase @ $QuantumOperatorNames, $QuantumOperatorNames]
+$upperCasesOperatorNames := AssociationThread[ToUpperCase @ $QuantumOperatorNames, $QuantumOperatorNames]
 
-QuantumOperator[name_String, opts___] /; KeyExistsQ[$upperCasesOperatorNames, name] :=
+QuantumOperator[name_String, opts___] /; ToUpperCase[name] =!= name && KeyExistsQ[$upperCasesOperatorNames, name] :=
     QuantumOperator[$upperCasesOperatorNames[name], opts]
 
-QuantumOperator[{name_String, params___}, opts___] /; KeyExistsQ[$upperCasesOperatorNames, name] :=
+QuantumOperator[{name_String, params___}, opts___] /; ToUpperCase[name] =!= name && KeyExistsQ[$upperCasesOperatorNames, name] :=
     QuantumOperator[{$upperCasesOperatorNames[name], params}, opts]
 

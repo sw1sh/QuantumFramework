@@ -226,7 +226,7 @@ QuantumStateProp[qs_, "Type"] := Which[
     AllTrue[qs["State"], TrueQ[# == 0] &, If[qs["VectorQ"], 1, 2]],
     (* TrueQ[qs["Purity"] == Indeterminate], *)
     "Degenerate",
-    TrueQ[qs["Purity"] == 1],
+    qs["VectorQ"] || PositiveSemidefiniteMatrixQ[N @ qs["DensityMatrix"]] && TrueQ[qs["Purity"] == 1],
     "Pure",
     PositiveSemidefiniteMatrixQ[N @ qs["DensityMatrix"]],
     "Mixed",

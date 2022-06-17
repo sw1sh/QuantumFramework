@@ -55,7 +55,23 @@ QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[Join[Options[d
     ]
 ]
 
-QuantumCircuitOperatorProp[qco_, "CircuitOperator" | "Compile"] := Fold[ReverseApplied[Construct], qco["Flatten"]["Operators"]]
+Options[quantumCircuitCompile] = {Method -> Automatic}
+
+quantumCircuitCompile[qco_QuantumCircuitOperator, OptionsPattern[]] :=
+    Switch[
+        OptionValue[Method],
+        "Schrodinger" | "Schroedinger" | "Schrödinger",
+        Fold[ReverseApplied[Construct], qco["Flatten"]["Operators"]],
+        Automatic | "TensorNetwork",
+        QuantumOperator[QuantumState[SparseArrayFlatten[#], QuantumBasis @@ TakeDrop[TensorDimensions[#], qco["Arity"]], "Label" -> qco["Label"]], qco["Order"]] & @
+            With[{tn = VertexDelete[qco["TensorNetwork"], 0]},
+                Transpose[ContractTensorNetwork[tn], Ordering @ OrderingBy[TensorNetworkFreeIndices[tn], Replace[{Superscript[_, x_] :> {0, x}, Subscript[_, x_] :> {1, x}}]]]
+            ],
+        _,
+        $Failed
+    ]
+
+QuantumCircuitOperatorProp[qco_, "QuantumOperator" | "CircuitOperator" | "Compile", opts : OptionsPattern[quantumCircuitCompile]] := quantumCircuitCompile[qco, opts]
 
 QuantumCircuitOperatorProp[qco_, "Gates"] := Length @ qco["Operators"]
 
@@ -68,6 +84,8 @@ QuantumCircuitOperatorProp[qco_, "OutputOrders"] := #["OutputOrder"] & /@ qco["O
 QuantumCircuitOperatorProp[qco_, "OutputOrder"] := Union @@ qco["OutputOrders"]
 
 QuantumCircuitOperatorProp[qco_, "Orders"] := Thread[{qco["OutputOrders"], qco["InputOrders"]}]
+
+QuantumCircuitOperatorProp[qco_, "Order"] := {qco["OutputOrder"], qco["InputOrder"]}
 
 QuantumCircuitOperatorProp[qco_, "Depth"] := Max @ Counts[Catenate[Union @@@ qco["Orders"]]]
 
@@ -111,12 +129,18 @@ QuantumCircuitOperatorProp[qco_, "Flatten", n : _Integer ? NonNegative | Infinit
         ]
     ]
 
+QuantumCircuitOperatorProp[qco_, "Sort"] := QuantumCircuitOperator[#["Sort"] & /@ qco["Operators"]]
+
 QuantumCircuitOperatorProp[qco_, "Dagger"] :=
     QuantumCircuitOperator[#["Dagger"] & /@ Reverse @ qco["Operators"], Superscript[qco["Label"], "\[Dagger]"]]
 
 
 QuantumCircuitOperatorProp[qco_, "TensorNetwork", opts : OptionsPattern[QuantumTensorNetwork]] := QuantumTensorNetwork[qco["Flatten"], opts]
 
+
+QuantumCircuitOperatorProp[qco_, "QASM"] :=
+    Enclose[StringTemplate["OPENQASM 3.0;\ninclude \"qelib1.inc\";\nqubit[``] q;\nbit[``] c;\n"][qco["Width"], qco["Targets"]] <>
+        StringRiffle[ConfirmBy[#["QASM"], StringQ] & /@ qco["Flatten"]["Operators"], "\n"]]
 
 (* operator properties *)
 

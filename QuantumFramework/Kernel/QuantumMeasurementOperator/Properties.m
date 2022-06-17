@@ -206,6 +206,9 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
 
 QuantumMeasurementOperatorProp[qmo_, "POVM"] := QuantumMeasurementOperator[qmo["SuperOperator"], qmo["Target"]]
 
+QuantumMeasurementOperatorProp[qmo_, "QASM"] := StringRiffle[MapIndexed[StringTemplate["c[``] = measure q[``];"][First[#2], #1 - 1] &, qmo["Target"]], "\n"]
+
+
 (* operator properties *)
 
 QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | "Sort" | "SortOutput" | "SortInput" | "Computational", args___] :=

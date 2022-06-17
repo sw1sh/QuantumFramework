@@ -44,11 +44,11 @@ QuditBasisProp[qb_, "Names"] := If[qb["Length"] > 0,
     {}
 ]
 
-QuditBasisProp[qb_, "Names", pos_ : All] := If[qb["Length"] > 0,
-    With[{values = Values @ KeySort @ GroupBy[Keys[qb["Representations"]], Last, #[[All, 1]] &]},
+QuditBasisProp[qb_, "Names", pos_ : All] := Enclose @ If[qb["Length"] > 0,
+    With[{values = Values @ KeySort @ ResourceFunction["KeyGroupBy"][qb["Representations"], Last, Keys[normalRepresentations[#]][[All, 1]] &]},
         QuantumTensorProduct @* Map[QuditName] /@ If[ pos === All,
             Tuples[values],
-            MapThread[Part, {values, #}] & /@ Tuples[Range[Length @ #] & /@ values][[pos]]
+            MapThread[ConfirmMatch[Part[##], _QuditName] &, {values, #}] & /@ Tuples[Range[Length @ #] & /@ values][[pos]]
         ]
     ],
     {}

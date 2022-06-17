@@ -12,7 +12,7 @@ $QuantumStateNames = {
     "UniformSuperposition",
     "UniformMixture",
     "RandomPure", "RandomMixed",
-    "GHZ",
+    "GHZ", "Bell",
     "W",
     "Werner",
     "Graph",
@@ -118,6 +118,8 @@ QuantumState["GHZ", args___] := QuantumState[{"GHZ", 3}, args]
 
 QuantumState[{"GHZ", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
     QuantumState[SparseArray[{{1} -> 1 / Sqrt[2], {dimension ^ subsystemCount} -> 1 / Sqrt[2]}, {dimension ^ subsystemCount}], dimension, args]
+
+QuantumState["Bell", args___] := QuantumState[{"GHZ", 2}, args]
 
 
 QuantumState["W", args___] := QuantumState[{"W", 3}, args]

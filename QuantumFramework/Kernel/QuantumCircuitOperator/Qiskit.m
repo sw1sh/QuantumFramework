@@ -1,6 +1,8 @@
 Package["Wolfram`QuantumFramework`"]
 
 PackageExport["QiskitCircuit"]
+PackageExport["ImportQASMCircuit"]
+
 PackageScope["QuantumCircuitOperatorToQiskit"]
 
 
@@ -212,6 +214,10 @@ for gate, qubits, clbits in qc:
                 xs.append(x)
     if gate.name == 'x':
         ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('X', order))
+    elif gate.name == 'y':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('Y', order))
+    elif gate.name == 'z':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('Z', order))
     elif gate.name == 'h':
         ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('H', order))
     elif gate.name == 'p':
@@ -224,6 +230,12 @@ for gate, qubits, clbits in qc:
         ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['U2', *xs], order))
     elif gate.name == 'u3':
         ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['U3', *xs], order))
+    elif gate.name == 'rx':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['RX', *xs], order))
+    elif gate.name == 'ry':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['RY', *xs], order))
+    elif gate.name == 'rz':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['RZ', *xs], order))
     elif gate.name == 'cx':
         ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('CNOT', order))
     elif gate.name == 'cy':
@@ -246,8 +258,12 @@ for gate, qubits, clbits in qc:
         ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Controlled', 'NOT', [order[1]], [order[0]]], order[2:]))
     elif gate.name == 'ccx':
         ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Controlled', 'NOT', order[:2]], order[2:]))
+    elif gate.name == 'mcx':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Controlled', 'NOT', order[:-1]], order[-1:]))
     elif gate.name == 'unitary':
         ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(*xs, wl.Rule('Label', gate.label)))
+    elif gate.name == 'measure':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumMeasurementOperator(order))
     else:
         print('Unknonwn gate: ', gate.name, gate.params, [q.index for q in qubits])
 wl.Wolfram.QuantumFramework.QuantumCircuitOperator(ops)
@@ -346,6 +362,22 @@ qc_QiskitCircuit["Matrix"] := qc["QuantumOperator"]["Matrix"]
 qc_QiskitCircuit[qs_QuantumState, opts : OptionsPattern[qiskitApply]] := qiskitApply[qc, qs, opts]
 
 qc_QiskitCircuit["QASM"] := qc["Eval", "qasm"]
+
+
+ImportQASMCircuit[file_ /; FileExistsQ[file]] := ImportQASMCircuit[Import[file, "String"]]
+
+ImportQASMCircuit[str_String] := Block[{Wolfram`QuantumFramework`$pythonString = str},
+ExternalEvaluate[$PythonSession, "
+import pickle
+from qiskit import QuantumCircuit
+from wolframclient.language import wl
+
+qc = QuantumCircuit.from_qasm_str(<* Wolfram`QuantumFramework`$pythonString *>)
+
+wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(qc))
+"
+]
+]
 
 
 (* Formatting *)

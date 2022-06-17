@@ -424,6 +424,40 @@ QuantumOperatorProp[qo_, "EigenvaluePlot", args___] /; qo["ParameterArity"] == 1
     ]
 
 
+UnitaryEulerAngles[b_, c_] := FullSimplify /@ {2 ArcSin[Abs[b]], Mod[Arg[c], 2 Pi], Mod[Arg[b] - Pi, 2 Pi]}
+UnitaryEulerAngles[u_ ? SquareMatrixQ] /; Dimensions[u] === {2, 2} := UnitaryEulerAngles[u[[1, 2]] , u[[2, 1]]]
+
+QuantumOperatorProp[qo_, "SimpleQASM"] /; qo["Dimensions"] === {2, 2} := Enclose @ With[{
+    angles = StringReplace[ToLowerCase @ ToString[#, InputForm], {"Pi" -> "pi", "I" -> "im"}] & /@
+        ConfirmBy[UnitaryEulerAngles[qo["MatrixRepresentation"]], AllTrue[NumericQ]]
+},
+    StringTemplate["U(``, ``, ``)"][Sequence @@ angles]
+]
+
+QuantumOperatorProp[qo_, "QASM"] /; qo["Dimensions"] === {2, 2} :=
+    qo["SimpleQASM"] <> " " <> StringRiffle[Map[StringTemplate["q[``]"], qo["InputOrder"] - 1], " "] <> ";"
+
+QuantumOperatorProp[qo_, "QASM"] /; qo["ControlOrder"] =!= {} && MatchQ[qo["TargetOrder"], {_}] :=
+    Replace[qo["Label"], {
+        "Controlled"[_, control1_, control0_] :>
+            With[{n = Length[control1], m = Length[control0]},
+                StringTemplate["ctrl(``) @ negctrl(``) @ "][n, m] <>
+                (
+                QuantumTensorProduct[
+                    QuantumOperator[QuantumState[{"Register", n, 2 ^ n - 1}]["Dagger"], {{}, control1}],
+                    QuantumOperator[QuantumState[{"Register", m, 0}]["Dagger"], {{}, control0}]
+                ] @ qo @
+                QuantumTensorProduct[
+                    QuantumOperator[QuantumState[{"Register", n, 2 ^ n - 1}], {control1, {}}],
+                    QuantumOperator[QuantumState[{"Register", m, 0}], {control0, {}}]
+                ]
+                )["SimpleQASM"] <> " " <> StringRiffle[Map[StringTemplate["q[``]"], Join[control1, control0, qo["TargetOrder"]] - 1], " "] <> ";"
+            ],
+        _ :> $Failed
+        }
+    ]
+
+
 (* state properties *)
 
 QuantumOperatorProp[qo_, args : PatternSequence[prop_String, ___] | PatternSequence[{prop_String, ___}, ___]] /;
