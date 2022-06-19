@@ -12,7 +12,8 @@ $QuantumCircuitOperatorNames = {
     "BooleanOracleR",
     "Grover", "GroverPhase",
     "Grover0", "GroverPhase0",
-    "Toffoli"
+    "Toffoli",
+    "BernsteinVaziraniOracle", "BernsteinVazirani"
 }
 
 
@@ -288,6 +289,30 @@ QuantumCircuitOperator[{"Toffoli", n : _Integer ? Positive : 1}, opts___] := Qua
         QuantumOperator["S", {n + 1}]
     }, "Toffoli"],
     opts
+]
+
+QuantumCircuitOperator[{"BernsteinVaziraniOracle", secret : {(0 | 1) ...}}, opts___] := With[{n = Length[secret]},
+    QuantumCircuitOperator[
+        If[MatchQ[secret, {0 ...}], Append[QuantumOperator["I", {n + 1}]], Identity] @
+            MapIndexed[If[#1 === 1, QuantumOperator["CNOT", {First[#2], n + 1}], QuantumOperator["I", #2]] & , secret],
+        opts,
+        "BV Oracle"
+    ]
+]
+
+QuantumCircuitOperator[{"BernsteinVaziraniOracle", secret_String /; StringMatchQ[secret, ("0" | "1") ...]}, opts___] :=
+    QuantumCircuitOperator[{"BernsteinVaziraniOracle", Characters[secret] /. {"0" -> 0, "1" -> 1}}, opts]
+
+QuantumCircuitOperator[{"BernsteinVazirani", (secret : {(0 | 1) ...}) | (secret_String /; StringMatchQ[secret, ("0" | "1") ...])}, opts___] := With[{
+    n = If[ListQ[secret], Length[secret], StringLength[secret]]
+},
+    QuantumCircuitOperator[{
+        Splice @ Table[QuantumOperator["H", {i}], {i, n + 1}],
+        QuantumOperator["Z", {n + 1}],
+        QuantumCircuitOperator[{"BernsteinVaziraniOracle", secret}, opts],
+        Splice @ Table[QuantumOperator["H", {i}], {i, n}],
+        Splice @ Table[QuantumMeasurementOperator[{i}], {i, n}]
+    }]
 ]
 
 
