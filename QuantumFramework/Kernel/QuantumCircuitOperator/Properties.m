@@ -43,7 +43,7 @@ QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[Join[Options[d
     {labels, indices, graphics} = drawGateGraphics[qco["Operators"],
         FilterRules[{opts}, Options[drawGateGraphics]]
     ];
-    graphics = graphics /. {Thickness[t_] :> Thickness[100 scale t], Arrowheads[s_] :> Arrowheads[0.1 scale s]};
+    (* graphics = graphics /. {Thickness[t_] :> Thickness[100 scale t], Arrowheads[s_] :> Arrowheads[0.5 scale s]}; *)
     width = Max[indices];
     height = qco["Arity"];
     sizes = Most @ Rasterize[#, "BoundingBox"] & /@ labels;
@@ -139,7 +139,7 @@ QuantumCircuitOperatorProp[qco_, "TensorNetwork", opts : OptionsPattern[QuantumT
 
 
 QuantumCircuitOperatorProp[qco_, "QASM"] :=
-    Enclose[StringTemplate["OPENQASM 3.0;\ninclude \"qelib1.inc\";\nqubit[``] q;\nbit[``] c;\n"][qco["Width"], qco["Targets"]] <>
+    Enclose[StringTemplate["OPENQASM 3.0;\nqubit[``] q;\nbit[``] c;\n"][qco["Width"], qco["Targets"]] <>
         StringRiffle[ConfirmBy[#["QASM"], StringQ] & /@ qco["Flatten"]["Operators"], "\n"]]
 
 (* operator properties *)

@@ -20,7 +20,8 @@ drawUnaryGate[coordinates_List, name_, opts : OptionsPattern[Style]] := Module[{
     height = 3;
     textGraphics = Graphics[Text[Sow @ Style[name, opts], coordinates]];
     rectangle = Graphics[{
-        EdgeForm[Thickness[0.0025]], White,
+        EdgeForm[Black],
+        FaceForm[White],
         Rectangle[{First[coordinates] - width / 2, Last[coordinates] - height / 2}, {First[coordinates] + width / 2, Last[coordinates] + height / 2}]
     }];
     Show[rectangle, textGraphics]
@@ -34,7 +35,7 @@ drawBinaryGate[{coordinates1_List, coordinates2_List}, name_, opts : OptionsPatt
     height = 3;
     averageCoordinates = (coordinates1 + coordinates2) / 2;
     textGraphics = Graphics[Text[Sow @ Rotate[Style[name, opts], - Pi / 2], averageCoordinates]];
-    rectangle = Graphics[{EdgeForm[Thickness[0.0025]], White,
+    rectangle = Graphics[{EdgeForm[Black], FaceForm[White],
         Rectangle[{First[coordinates1] - width / 2, Last[coordinates1] - height / 2}, {First[coordinates2] + width / 2, Last[coordinates2] + height / 2}]}];
     Show[rectangle, textGraphics]
 ]
@@ -68,7 +69,7 @@ drawRootSwapGate[qudit1Coordinates_List, qudit2Coordinates_List, opts : OptionsP
         averageCoordinates = (qudit1Coordinates + qudit2Coordinates) / 2;
         textGraphics = Graphics[Text[Style["1/2", opts], averageCoordinates]];
         rectangle = Graphics[{
-            EdgeForm[Thickness[0.005]], White,
+            EdgeForm[Black], FaceForm[White],
             Rectangle[
                 {First[averageCoordinates] - width / 2, Last[averageCoordinates] - height / 2},
                 {First[averageCoordinates] + width / 2, Last[averageCoordinates] + height / 2}
@@ -115,8 +116,7 @@ drawMeasurementGate[coordinates_List, order_List, name_, opts : OptionsPattern[S
             Style[name, FontSize -> OptionValue[FontSize] / 2, opts],
             {First[coordinates], Last[coordinates] - 0.9}
         ],
-        EdgeForm[Thickness[0.0025]],
-        FaceForm[],
+        EdgeForm[Black], FaceForm[],
         Rectangle[{First[coordinates]-width / 2, Last[coordinates] - 5 / 3}, {First[coordinates] + width / 2, Last[coordinates] + height}]}];
     Show[semiCircle, arrow, frame]
 ]
@@ -237,7 +237,7 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
 
     graphicsList = {};
     index = 1;
-    positionIndices = ConstantArray[1, Max[Flatten[orders]]];
+    positionIndices = ConstantArray[1, Max[Flatten[orders], 1]];
     labels = First[#[[2]], {}] & @ Reap @ Do[
 
     With[{pos = Complement[Range[Min[targetOrders[[i]]], Max[targetOrders[[i]]]], targetOrders[[i]]]},
