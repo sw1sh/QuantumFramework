@@ -19,7 +19,8 @@ $QuantumOperatorNames = {
     "S", "T", "V",
     "Toffoli", "Deutsch", "RandomUnitary",
     "Spider", "ZSpider", "XSpider",
-    "Switch"
+    "Switch",
+    "Discard"
 }
 
 
@@ -426,9 +427,9 @@ QuantumOperator[{"RandomUnitary", dimension_Integer}, order : (_ ? orderQ) : {1}
            RandomVariate @ CircularUnitaryMatrixDistribution[dimension ^ Length[order]], order, dimension, Length[order], opts, "Label" -> None
     ]
 
-QuantumOperator["RandomUnitary", order : (_ ? orderQ) : {1}, opts___] := With[{basis = QuantumBasis[opts]},
+QuantumOperator["RandomUnitary", order : (_ ? orderQ) : {1}, opts___] := With[{basis = QuantumBasis[opts, "Label" -> None]},
     QuantumOperator[
-           RandomVariate @ CircularUnitaryMatrixDistribution[basis["Dimension"] ^ Length[order]], order, basis, "Label" -> None
+           RandomVariate @ CircularUnitaryMatrixDistribution[basis["Dimension"] ^ Length[order]], order, basis
     ]
 ]
 
@@ -478,7 +479,6 @@ QuantumOperator[{"ZSpider", out_Integer : 1, in_Integer : 1, phase_ : 0}, opts__
             ],
             basis
         ],
-        Range[basis["OutputQudits"]], Range[basis["InputQudits"]],
         opts
     ]
 ]
@@ -540,6 +540,20 @@ QuantumPartialTrace[
     ],
 	{Max[order] + 1}
 ]
+
+
+QuantumOperator["Discard", order : _ ? orderQ : {1}, args___] := With[{basis = QuantumBasis[args]},
+    QuantumOperator[
+        QuantumState["UniformSuperposition",
+            If[ basis["Qudits"] < Length[order],
+                QuantumBasis[basis, Ceiling[Length[order] / basis["Qudits"]]],
+                basis
+            ]
+        ]["Dagger"],
+    {}, order
+    ]
+]
+
 
 $upperCasesOperatorNames := AssociationThread[ToUpperCase @ $QuantumOperatorNames, $QuantumOperatorNames]
 
