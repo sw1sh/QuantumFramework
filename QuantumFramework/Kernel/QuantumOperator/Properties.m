@@ -90,8 +90,14 @@ QuantumOperatorProp[qo_, "FullOutputOrder"] := If[qo["OutputDimension"] > 1,
 
 QuantumOperatorProp[qo_, "FullOrder"] := {qo["FullOutputOrder"], qo["FullInputOrder"]}
 
+QuantumOperatorProp[qo_, "ControlOrder1"] :=
+    FirstCase[qo["Label"], "Controlled"[_, control1_, ___] :> control1, {}, {0}]
+
+QuantumOperatorProp[qo_, "ControlOrder0"] :=
+    FirstCase[qo["Label"], "Controlled"[_, _, control0] :> control0, {}, {0}]
+
 QuantumOperatorProp[qo_, "ControlOrder"] :=
-    FirstCase[qo["Label"], "Controlled"[_, control1_, control0_ : {}] :> Join[control1, control0], Missing["ControlOrder"], {0}]
+    FirstCase[qo["Label"], "Controlled"[_, control1_, control0_ : {}] :> Join[control1, control0], {}, {0}]
 
 QuantumOperatorProp[qo_, "TargetOrder"] := Enclose[DeleteCases[qo["InputOrder"], Alternatives @@ Confirm @ qo["ControlOrder"]], qo["InputOrder"] &]
 
@@ -323,7 +329,7 @@ QuantumOperatorProp[qo_, "Transpose"] := QuantumOperator[
 
 
 simplifyLabel[op_QuantumOperator] := QuantumOperator[op, "Label" -> Replace[op["Label"], {
-    Superscript[label : "X" | "Y" | "Z" | "NOT", "\[Dagger]"] :> label,
+    Superscript[label : "X" | "Y" | "Z" | "NOT" | "H" | "SWAP", "\[Dagger]"] :> label,
     Superscript[c : "Controlled"["NOT", __], "\[Dagger]"] :> c,
     Superscript["Controlled"[(r : Subscript["R", _] | "P")[angle_], rest__], "\[Dagger]"] :> "Controlled"[r[-angle], rest],
     Superscript["Controlled"[x_, rest__], "\[Dagger]"] :> "Controlled"[Superscript[x, "\[Dagger]"], rest],
@@ -432,6 +438,25 @@ QuantumOperatorProp[qo_, "SimpleQASM"] /; qo["Dimensions"] === {2, 2} := Enclose
         ConfirmBy[UnitaryEulerAngles[qo["MatrixRepresentation"]], AllTrue[NumericQ]]
 },
     StringTemplate["U(``, ``, ``)"][Sequence @@ angles]
+]
+
+QuantumOperatorProp[qo_, "TargetOperator"] := Module[{control1, control0, n, m},
+    control1 = qo["ControlOrder1"];
+    control0 = qo["ControlOrder0"];
+    n = Length[control1];
+    m = Length[control0];
+    If[n + m == 0, Return[qo]];
+    QuantumOperator[
+        QuantumTensorProduct[
+            QuantumOperator[QuantumState[{"Register", n, 2 ^ n - 1}]["Dagger"], {{}, control1}],
+            QuantumOperator[QuantumState[{"Register", m, 0}]["Dagger"], {{}, control0}]
+        ] @ qo @
+        QuantumTensorProduct[
+            QuantumOperator[QuantumState[{"Register", n, 2 ^ n - 1}], {control1, {}}],
+            QuantumOperator[QuantumState[{"Register", m, 0}], {control0, {}}]
+        ],
+        "Label" -> Replace[qo["Label"], "Controlled"[label_, ___] :> label]
+    ]
 ]
 
 QuantumOperatorProp[qo_, "QASM"] /; qo["Dimensions"] === {2, 2} :=

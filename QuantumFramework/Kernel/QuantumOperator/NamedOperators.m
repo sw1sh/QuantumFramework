@@ -188,17 +188,6 @@ QuantumOperator[{name : "Controlled0", params : Shortest @ PatternSequence[Excep
     QuantumOperator[{name, QuantumOperator[params, target], control0}, opts]
 
 
-
-(* QuantumOperator[{name : "ControlledU" | "Controlled", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___]}, opts___] := Enclose @
-    With[{op = QuantumOperator[params]},
-        QuantumOperator[{name, ConfirmBy[QuantumOperator[op, op["InputOrder"] + 1], QuantumOperatorQ], {First @ op["InputOrder"]}}, opts]
-    ]
-
-QuantumOperator[{"Controlled0", params : PatternSequence[Except[_ ? QuantumOperatorQ], ___]}, opts___] := Enclose @
-    With[{op = QuantumOperator[params]},
-        QuantumOperator[{"Controlled", ConfirmBy[QuantumOperator[op, op["InputOrder"] + 1], QuantumOperatorQ], {}, {First @ op["InputOrder"]}}, opts]
-    ] *)
-
 QuantumOperator[{name : "ControlledU" | "Controlled" | "Controlled0", qo_ ? QuantumOperatorQ}, opts___] :=
     QuantumOperator[{name, qo, {qo["LastInputQudit"] + 1}}, opts]
 
@@ -207,6 +196,9 @@ QuantumOperator[{name : "ControlledU" | "Controlled" | "Controlled0", qo_ ? Quan
 
 QuantumOperator[{"Controlled0", qo_ ? QuantumOperatorQ, control0 : _ ? orderQ | {}}, opts___] := QuantumOperator[{"Controlled", qo, {}, control0}, opts]
 
+
+QuantumOperator[{"ControlledU" | "Controlled", qo_ ? QuantumOperatorQ /; qo["ControlOrder"] =!= {}, control1 : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}}, opts___] :=
+    QuantumOperator[{"Controlled", qo["TargetOperator"], Join[qo["ControlOrder1"], control1], Join[qo["ControlOrder0"], control0]}, opts]
 
 QuantumOperator[{"ControlledU" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}}, opts___] := Enclose @ With[{
     controls1 = Length[control1],

@@ -6,7 +6,7 @@ PackageScope["drawGateGraphics"]
 
 drawNotGate[coordinates_List, _] := Module[{whiteRadius, whiteCircle, lines},
     whiteRadius = 0.8;
-    whiteCircle = Graphics[{EdgeForm[Thickness[.0025]], Circle[coordinates, whiteRadius]}];
+    whiteCircle = Graphics[{EdgeForm[Thickness[Medium]], Circle[coordinates, whiteRadius]}];
     lines = Graphics[{
         Line[{{First[coordinates] - whiteRadius, Last[coordinates]}, {First[coordinates] + whiteRadius, Last[coordinates]}}],
         Line[{{First[coordinates], Last[coordinates] - whiteRadius}, {First[coordinates], Last[coordinates] + whiteRadius}}]}
@@ -109,8 +109,8 @@ drawMeasurementGate[coordinates_List, order_List, name_, opts : OptionsPattern[S
     width = 4;
     height = 5 (Max[order] - Min[order] + 1) - 3;
     radius = - 0.3 + width / 2;
-    semiCircle = Graphics[{Thickness[0.0025], Circle[coordinates, radius, {0, Pi}]}];
-    arrow = Graphics[{Thickness[0.0025], Arrowheads[0.02], Arrow[{coordinates, {First[coordinates] + 1, Last[coordinates] + 1.4}}]}];
+    semiCircle = Graphics[{Circle[coordinates, radius, {0, Pi}]}];
+    arrow = Graphics[{Arrowheads[Medium], Arrow[{coordinates, {First[coordinates] + 1, Last[coordinates] + 1.4}}]}];
     frame = Graphics[{
         Text[
             Style[name, FontSize -> OptionValue[FontSize] / 2, opts],
@@ -123,7 +123,6 @@ drawMeasurementGate[coordinates_List, order_List, name_, opts : OptionsPattern[S
 
 drawMeasurement[coordinates_] := Module[{width = 4},
     Graphics[{
-        Thickness[0.0025],
         Line[{coordinates + {.125, width / 2 + 0.05}, coordinates {1, 0}  + {.125, - 1}}],
         Line[{coordinates + {-.125, width / 2 + 0.05}, coordinates {1, 0} + {-.125, - 1}}],
         Polygon[coordinates {1, 0} + {0, - 1.4} + # & /@ {{-.75, 0}, {.75, 0}, {0, 1.25}}]
@@ -210,7 +209,7 @@ drawMeasurementWire[positionIndices_List, opts : OptionsPattern[]] := Graphics[{
             {- 1, 0}
         ]
     }],
-    Thickness[0.0025],
+    Thickness[Medium],
     Line[{{0, -.125}, {6 Max[positionIndices], -.125}}],
     Line[{{0, 0.125}, {6 Max[positionIndices], .125}}]
 }]

@@ -5,6 +5,10 @@ PackageExport["QuantumMeasurement"]
 PackageScope["QuantumMeasurementQ"]
 
 
+CategoricalDistribution
+
+
+
 QuantumMeasurementQ[QuantumMeasurement[qmo_ ? QuantumMeasurementOperatorQ]] := True
 
 QuantumMeasurementQ[___] := False
@@ -243,12 +247,12 @@ QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement ? QuantumMeasurementQ, for
                 BoxForm`SummaryItem[{"Target: ", qm["Target"]}]
             },
             {
-                BoxForm`SummaryItem[{"Measurement Outcomes: ", Length[qm["Probabilities"]]}]
+                BoxForm`SummaryItem[{"Measurement Outcomes: ", Length[qm["Outcomes"]]}]
             }
         },
         {
             {
-                BoxForm`SummaryItem[{"Entropy: ", Enclose[N @ ConfirmQuiet[qm["Entropy"]], $Failed &]}]
+                BoxForm`SummaryItem[{"Entropy: ", TimeConstrained[Enclose[ConfirmQuiet[N @ qm["Entropy"]], Indeterminate &], 1]}]
             }
         },
         format,

@@ -131,7 +131,8 @@
             "Spider",
             "ZSpider",
             "XSpider",
-            "Switch"
+            "Switch",
+            "Discard"
         },
         {
             "Computational",
@@ -226,7 +227,13 @@
             "GroverPhase",
             "Grover0",
             "GroverPhase0",
-            "Toffoli"
+            "Toffoli",
+            "BernsteinVaziraniOracle",
+            "BernsteinVazirani",
+            "Fourier",
+            "InverseFourier",
+            "PhaseEstimation",
+            "Controlled"
         }
     }
 }

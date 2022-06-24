@@ -188,11 +188,11 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
     ]
 ]
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qo_ ? QuantumOperatorQ] := With[{
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qo_ ? QuantumOperatorQ] := Enclose @ With[{
     op = qmo["SuperOperator"]
 },
     QuantumMeasurementOperator[
-        QuantumOperator[op, {
+        ConfirmBy[QuantumOperator[op, {
             ReplacePart[
                 op["FullOutputOrder"],
                 Thread[
@@ -201,7 +201,7 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
                 ]
             ],
             op["InputOrder"]
-        }] @ qo,
+        }] @ qo, QuantumOperatorQ],
         If[
             qo["OutputQudits"] < qo["InputQudits"] && qo["OutputDimension"] == qo["InputDimension"],
             Sort @ qo["FullInputOrder"],

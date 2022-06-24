@@ -293,7 +293,7 @@ Enclose @ With[{order = Range[qs["OutputQudits"]] + Max[Max[qo["FullInputOrder"]
         ]
     ];
     ConfirmAssert[top["InputDimension"] == bottom["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
-    QuantumOperator[top["State"] @ bottom["State"], {top["FullOutputOrder"], bottom["FullInputOrder"]}]
+    QuantumOperator[ConfirmBy[top["State"] @ bottom["State"], QuantumStateQ], {top["FullOutputOrder"], bottom["FullInputOrder"]}]
 ]
 
 
@@ -312,11 +312,12 @@ expandQuditBasis[qb_QuditBasis, order1_ ? orderQ, order2_ ? orderQ, defaultDim_I
     QuantumTensorProduct[order2 /. Append[Thread[order1 -> qb["Decompose"]], _Integer -> QuditBasis[defaultDim]]]
 )
 
+matrixFunction[f_, mat_] := Enclose[ConfirmBy[MatrixFunction[f, mat, Method -> "Jordan"], MatrixQ], MatrixFunction[f, mat] &]
 
 QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator] ...] /; MemberQ[Attributes[f], NumericFunction] :=
     Enclose @ QuantumOperator[
         ConfirmBy[
-            If[MemberQ[{Minus, Times}, f], f[left, #, right] &, MatrixFunction[f[left, #, right] &, #, Method -> "Jordan"] &] @ qo["Sort"]["Matrix"],
+            If[MemberQ[{Minus, Times}, f], f[left, #, right] &, matrixFunction[f[left, #, right] &, #] &] @ qo["Sort"]["Matrix"],
             MatrixQ
         ],
         Sort /@ qo["Order"], qo["Basis"], "Label" -> f[left, qo["Label"], right]
