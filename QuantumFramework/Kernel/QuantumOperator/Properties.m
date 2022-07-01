@@ -7,7 +7,10 @@ $QuantumOperatorProperties = {
     "InputOrder", "OutputOrder", "ControlOrder", "TargetOrder",
     "MatrixRepresentation", "Matrix",
     "TensorRepresentation", "Tensor",
-    "Ordered", "OrderedInput", "OrderedOutput", "SortInput", "SortOutput", "Sort", "ReverseOutput", "ReverseInput", "Reverse",
+    "Ordered", "OrderedInput", "OrderedOutput",
+    "SortInput", "SortOutput", "Sort",
+    "ReverseOutput", "ReverseInput", "Reverse",
+    "Shift",
     "OrderedMatrixRepresentation", "OrderedMatrix",
     "OrderedTensorRepresentation", "OrderedTensor",
     "Arity", "MaxArity", "FullArity", "TargetArity",
@@ -305,6 +308,9 @@ QuantumOperatorProp[qo_, "OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ] :=
 ]
 
 
+QuantumOperatorProp[qo_, "Shift", n : _Integer ? NonNegative : 1] := QuantumOperator[qo, qo["Order"] + n]
+
+
 QuantumOperatorProp[qo_, "UnstackOutput", n_Integer : 1] /; 1 <= n <= qo["OutputQudits"] :=
     QuantumOperator[#, {Drop[qo["OutputOrder"], {n}], qo["InputOrder"]}] & /@ qo["State"]["UnstackOutput", n]
 
@@ -432,6 +438,19 @@ QuantumOperatorProp[qo_, "EigenvaluePlot", args___] /; qo["ParameterArity"] == 1
 
 UnitaryEulerAngles[b_, c_] := FullSimplify /@ {2 ArcSin[Abs[b]], Mod[Arg[c], 2 Pi], Mod[Arg[b] - Pi, 2 Pi]}
 UnitaryEulerAngles[u_ ? SquareMatrixQ] /; Dimensions[u] === {2, 2} := UnitaryEulerAngles[u[[1, 2]] , u[[2, 1]]]
+
+UnitaryEulerAnglesWithPhase[u_ ? SquareMatrixQ] /; Dimensions[u] === {2, 2} := With[{b = u[[1, 2]], c = u[[2, 1]]},
+    With[{phase = Arg[u[[1, 1]]]}, {{2 ArcSin[Abs[b]], Mod[Arg[c] - phase, 2 Pi], Mod[Arg[b] - Pi - phase, 2 Pi]}, phase}]
+]
+
+QuantumOperatorProp[qo_, "ZYZ"] /; qo["Dimensions"] === {2, 2} := Enclose @ Module[{angles, phase},
+    {angles, phase} = UnitaryEulerAnglesWithPhase[qo["MatrixRepresentation"]];
+    ConfirmAssert[NumericQ[phase] && AllTrue[angles, NumericQ]];
+    If[ phase == 0,
+        QuantumOperator[{"U", Splice @ angles}],
+        QuantumCircuitOperator[{QuantumOperator[{"GlobalPhase", phase}], QuantumOperator[{"U", Splice @ angles}]}]
+    ]
+]
 
 QuantumOperatorProp[qo_, "SimpleQASM"] /; qo["Dimensions"] === {2, 2} := Enclose @ With[{
     angles = StringReplace[ToLowerCase @ ToString[#, InputForm], {"Pi" -> "pi", "I" -> "im"}] & /@

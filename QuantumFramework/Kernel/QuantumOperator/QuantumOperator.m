@@ -181,6 +181,9 @@ QuantumOperator[matrix_ ? MatrixQ, args___, opts : OptionsPattern[]] := Module[{
 QuantumOperator[array_ ? NumericArrayQ, args___] := QuantumOperator[Normal @ array, args]
 
 
+QuantumOperator[n_Integer, args___] := QuantumOperator[{"PhaseShift", n}, args]
+
+
 (* Mutation *)
 
 QuantumOperator[qo_ ? QuantumOperatorQ, order : (_ ? orderQ | Automatic)] :=

@@ -248,7 +248,7 @@ QuantumCircuitOperator[{"PhaseOracle",
     m : _Integer ? NonNegative : 0
 }, opts___] := Enclose @ Module[{
     esop = Confirm[BooleanConvert[formula, "ESOP"]] /. And -> List,
-    vars = Replace[defaultVars, Automatic -> Replace[BooleanVariables[formula], m_Integer :> Array[\[FormalX], m]]],
+    vars = Replace[defaultVars, Automatic -> Replace[BooleanVariables[formula], k_Integer :> Array[\[FormalX], k]]],
     indices,
     k
 },
@@ -329,12 +329,21 @@ QuantumCircuitOperator[{"BernsteinVazirani", (secret : {(0 | 1) ...}) | (secret_
     }]
 ]
 
+QuantumCircuitOperator[{"Adder", n_Integer ? Positive, m : _Integer ? NonNegative : 0}, opts___] := QuantumCircuitOperator[
+    Table[
+        Splice[QuantumOperator[{"Controlled", {"PhaseShift", #}, {# + i - 1 + m}}, {n + i + m}] & /@ Range[n - i + 1]],
+        {i, n}
+    ],
+    opts,
+	"ADD"
+]
+
 QuantumCircuitOperator[name : "Fourier" | "InverseFourier", opts___] := QuantumCircuitOperator[{name, 2}, opts]
 
 QuantumCircuitOperator[{"Fourier", n_Integer ? Positive, m : _Integer ? NonNegative : 0}, opts___] := QuantumCircuitOperator[Join[
 		Catenate @ Table[{
 			QuantumOperator["H", {i + m}],
-			Splice[QuantumOperator[{"Controlled", {"Phase", 2 Pi / 2 ^ (# + 1)}, {# + i + m}}, {i + m}] & /@ Range[n - i]]
+			Splice[QuantumOperator[{"Controlled", {"PhaseShift", # + 1}, {# + i + m}}, {i + m}] & /@ Range[n - i]]
 		},
 		{i, n}],
 		QuantumOperator["SWAP", {#, n - # + 1 + m}] & /@ Range[Floor[n / 2]]
@@ -361,6 +370,24 @@ QuantumCircuitOperator[{
             Splice @ Catenate @ Table[Table[QuantumOperator[{"Controlled", qo, {i + m}}], 2 ^ (n - i)], {i, n}],
             Splice @ Table[QuantumOperator[{"Controlled", qo ^ 2 ^ (n - i), {i + m}}], {i, n}]
         ]
+    ],
+    QuantumCircuitOperator[{"InverseFourier", n}],
+    Splice @ Table[QuantumMeasurementOperator[{i + m}], {i, n}]
+},
+    opts
+]
+
+QuantumCircuitOperator[{
+    "PhaseEstimation",
+    op_ ? QuantumCircuitOperatorQ /; op["InputDimensions"] === op["OutputDimensions"] && MatchQ[op["OutputDimensions"], {2 ..}],
+    n : _Integer ? Positive : 4,
+    m : _Integer ? NonNegative : 0
+}, opts___] :=
+QuantumCircuitOperator[{
+    Splice @ Table[QuantumOperator["X", {n + i + m}], {i, op["InputQudits"]}],
+    Splice @ Table[QuantumOperator["H", {i + m}], {i, n}],
+    With[{qo = op["Shift", m]},
+        Splice @ Catenate @ Table[Table[QuantumCircuitOperator[{"Controlled", qo, {i + m}}], 2 ^ (n - i)], {i, n}]
     ],
     QuantumCircuitOperator[{"InverseFourier", n}],
     Splice @ Table[QuantumMeasurementOperator[{i + m}], {i, n}]

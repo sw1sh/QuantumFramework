@@ -15,6 +15,18 @@ drawNotGate[coordinates_List, _] := Module[{whiteRadius, whiteCircle, lines},
 ]
 
 
+drawPhaseShiftGate[coordinates_List, name_, opts : OptionsPattern[Style]] := Module[{width, textGraphics, circle},
+    width = 4;
+    textGraphics = Graphics[Text[Sow @ Style[name, opts], coordinates]];
+    circle = Graphics[{
+        EdgeForm[Black],
+        FaceForm[White],
+        Disk[{First[coordinates], Last[coordinates]}, width / 2]
+    }];
+    Show[circle, textGraphics]
+]
+
+
 drawUnaryGate[coordinates_List, name_, opts : OptionsPattern[Style]] := Module[{width, height, textGraphics, rectangle},
     width = 4;
     height = 3;
@@ -240,7 +252,7 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
     labels = First[#[[2]], {}] & @ Reap @ Do[
 
     With[{pos = Complement[Range[Min[targetOrders[[i]]], Max[targetOrders[[i]]]], targetOrders[[i]]]},
-        If[Length[pos] > 0, jumpWires = Join[jumpWires, Thread[pos -> Max @ positionIndices[[Join[targetOrders[[i]], pos]]]]]]
+        If[Length[pos] > 0 && !MatchQ[gates[[i]]["Label"], "Controlled"[__] | "SWAP"], jumpWires = Join[jumpWires, Thread[pos -> Max @ positionIndices[[Join[targetOrders[[i]], pos]]]]]]
     ];
     If[ QuantumMeasurementOperatorQ[gates[[i]]],
         gatePositionIndices = Table[Max[positionIndices], {j, Min[orders[[i]]], Max[orders[[i]]]}];
@@ -310,11 +322,13 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
                 drawRootSwapGate[{-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], - 5 Last[targetQuditsOrder]}, styleOpts],
                 "NOT",
                 drawNotGate[{-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]}, styleOpts],
+                _Integer,
+                drawPhaseShiftGate[{-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]}, label, styleOpts],
                 _,
                 If[ gates[[i]]["TargetArity"] == 1,
                     drawUnaryGate[
                         {-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]},
-                       label /. Composition -> SmallCircle /. None | CircleTimes[] :> Subscript["U", index++],
+                        label /. Composition -> SmallCircle /. None | CircleTimes[] :> Subscript["U", index++],
                         styleOpts
                     ],
                     drawBinaryGate[

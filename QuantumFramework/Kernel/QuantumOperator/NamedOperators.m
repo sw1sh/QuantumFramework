@@ -11,6 +11,7 @@ $QuantumOperatorNames = {
     "Fourier", "InverseFourier",
     "XRotation", "YRotation", "ZRotation", "U", "Phase", "P",
     "Diagonal", "GlobalPhase",
+    "PhaseShift",
     "SUM", "RootNOT",
     "X", "Y", "Z", "PauliX", "PauliY", "PauliZ", "H", "Hadamard",
     "SWAP", "RootSWAP", "CSWAP", "Fredkin",
@@ -99,6 +100,10 @@ QuantumOperator[{"Phase" | "P" | "U1", angle_, dimension_Integer : 2}, opts___] 
     "Label" -> "P"[angle]
 ]
 
+QuantumOperator["PhaseShift", opts___] := QuantumOperator[{"PhaseShift", 1}, opts]
+
+QuantumOperator[{"PhaseShift", k : _Integer | _Symbol : 1}, opts___] := QuantumOperator[{"Phase", 2 Pi / 2 ^ k}, opts, "Label" -> k]
+
 QuantumOperator["GlobalPhase", opts___] := QuantumOperator[{"GlobalPhase", Pi}, opts]
 
 QuantumOperator[{"GlobalPhase", angle_, dimension_Integer : 2}, opts___] := QuantumOperator[{"Diagonal", Exp[I angle], dimension}, opts]
@@ -106,7 +111,7 @@ QuantumOperator[{"GlobalPhase", angle_, dimension_Integer : 2}, opts___] := Quan
 QuantumOperator[{"Diagonal", x_, dimension_Integer : 2}, opts___] := QuantumOperator[
     identityMatrix[dimension] x,
     opts,
-    "Label" -> x
+    "Label" -> HoldForm[x]
 ]
 
 

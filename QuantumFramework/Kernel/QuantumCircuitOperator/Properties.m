@@ -118,8 +118,6 @@ QuantumCircuitOperatorProp[qco_, "TargetArity"] := Length @ qco["Target"]
 
 QuantumCircuitOperatorProp[qco_, "QiskitCircuit" | "Qiskit"] := QuantumCircuitOperatorToQiskit[qco]
 
-QuantumCircuitOperatorProp[qco_, "Label"] := "Q"
-
 QuantumCircuitOperatorProp[qco_, "Stats" | "Statistics"] := Counts[#["Arity"] & /@ qco["Operators"]]
 
 QuantumCircuitOperatorProp[qco_, "Flatten", n : _Integer ? NonNegative | Infinity : Infinity] :=
@@ -131,6 +129,11 @@ QuantumCircuitOperatorProp[qco_, "Flatten", n : _Integer ? NonNegative | Infinit
     ]
 
 QuantumCircuitOperatorProp[qco_, "Sort"] := QuantumCircuitOperator[#["Sort"] & /@ qco["Operators"]]
+
+
+QuantumCircuitOperatorProp[qco_, "Shift", n : _Integer ? NonNegative : 1] :=
+    QuantumCircuitOperatorProp[#["Shift", n] & /@ qco["Operators"], qco["Label"]]
+
 
 QuantumCircuitOperatorProp[qco_, "Dagger"] :=
     QuantumCircuitOperator[#["Dagger"] & /@ Reverse @ qco["Operators"], Superscript[qco["Label"], "\[Dagger]"]]
