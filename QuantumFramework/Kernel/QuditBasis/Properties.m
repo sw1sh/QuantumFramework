@@ -92,7 +92,7 @@ QuditBasisProp[qb_, "Size" | "Dimension"] := If[qb["Length"] > 0, Times @@ qb["D
 QuditBasisProp[qb_, "ElementDimensions"] := Catenate @ Values @ KeySort @ ResourceFunction["KeyGroupBy"][
     qb["Representations"],
     Last,
-    First /* Dimensions /* Replace[{} -> {1}]
+    Map[Dimensions] /* Sort /* Last /* Replace[{} -> {1}]
 ]
 
 QuditBasisProp[qb_, "ElementDimension"] := If[qb["Size"] > 0, Times @@ qb["ElementDimensions"], 0]
