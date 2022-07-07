@@ -605,40 +605,50 @@ QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 :=  W
     ]
 ]
 
-QuantumStateProp[qs_, "BlochPlot" | "BlochSpherePlot"] /; qs["Dimension"] == 2 := Module[{
+
+Options[BlochPlot] = Join[{"ShowLabels" -> True, "ShowGreatCircles" -> True, "ShowAxes" -> True}, Options[Show]]
+
+BlochPlot[qs_, opts : OptionsPattern[]] := Module[{
     greatCircles, referenceStates, u, v, w
 },
-    greatCircles = ParametricPlot3D[
-        {{Cos[t], Sin[t], 0}, {0, Cos[t], Sin[t]}, {Cos[t], 0, Sin[t]}},
-        {t, 0, 2 Pi},
-        PlotStyle -> ConstantArray[{Black, Thin}, 3], Axes -> False, 
-        Boxed -> False,
-        ImageSize -> Medium,
-        PlotRange -> {{-1.7, 1.7}, {-1.7, 1.7}, {-1.7, 1.7}}
+    greatCircles = If[
+        TrueQ[OptionValue["ShowGreatCircles"]],
+        ParametricPlot3D[
+            {{Cos[t], Sin[t], 0}, {0, Cos[t], Sin[t]}, {Cos[t], 0, Sin[t]}},
+            {t, 0, 2 Pi},
+            PlotStyle -> ConstantArray[{Black, Thin}, 3]
+        ],
+        Nothing
     ];
     referenceStates = Graphics3D[{
-        Opacity[0.4], Sphere[], Black, Thick, Opacity[1.0],
-        Line[{{0, 1, 0}, {0, -1, 0}}], Line[{{0, 0, 1}, {0, 0, -1}}], Line[{{1, 0, 0}, {-1, 0, 0}}],
-        Text[Ket[0], {0, 0, 1.3}],  Text[Ket[1], {0, 0, -1.3}],
-        Text[Ket["R"], {0, 1.3, 0}], Text[Ket["L"], {0, -1.3, 0}],
-        Text[Ket["+"], {1.3, 0, 0}], Text[Ket["-"], {-1.3, 0, 0}]
-    },
-        Boxed -> False,
-        Axes -> False,
-        PlotRange -> {{-1.7, 1.7}, {-1.7, 1.7}, {-1.7, 1.7}}
+        Opacity[0.4], Sphere[],Black, Thickness[0.0125], Opacity[1.0],
+        If[ TrueQ[OptionValue["ShowAxes"]],
+            Splice @ {Line[{{0, 1, 0}, {0, -1, 0}}], Line[{{0, 0, 1}, {0, 0, -1}}], Line[{{1, 0, 0}, {-1, 0, 0}}]},
+            Nothing
+        ],
+        If[ TrueQ[OptionValue["ShowLabels"]],
+            Splice @ {
+                Text[Ket[0], {0, 0, 1.3}],  Text[Ket[1], {0, 0, -1.3}],
+                Text[Ket["R"], {0, 1.3, 0}], Text[Ket["L"], {0, -1.3, 0}],
+                Text[Ket["+"], {1.3, 0, 0}], Text[Ket["-"], {-1.3, 0, 0}]
+            },
+            Nothing
+        ],
+        Red, Arrowheads[0.05], Arrow[Tube[{{0, 0, 0}, {u, v, w}}, 0.03], {0, -0.01}]
+    }
     ];
     {u, v, w} = qs["BlochCartesianCoordinates"];
-    Show[Join[{greatCircles, referenceStates}, {
-        Graphics3D[
-            {Red, Arrowheads[0.05], Arrow[Tube[{{0, 0, 0}, {u, v, w}}, 0.03], {0, -0.01}]},
-            Boxed -> False,
-            PlotRange -> {{-1.7, 1.7}, {-1.7, 1.7}, {-1.7, 1.7}}
-        ]}],
+    Show[{greatCircles, referenceStates},
+        FilterRules[{opts}, Options[Show]],
         PlotRange -> All,
-        ViewPoint -> {1, 1, 1}
+        ViewPoint -> {1, 1, 1},
+        Axes -> False,
+        Boxed -> False,
+        PlotRange -> {{-1.7, 1.7}, {-1.7, 1.7}, {-1.7, 1.7}}
     ]
 ]
 
+QuantumStateProp[qs_, "BlochPlot" | "BlochSpherePlot", opts : OptionsPattern[BlochPlot]] /; qs["Dimension"] == 2 := BlochPlot[qs, opts]
 
 (* basis properties *)
 
