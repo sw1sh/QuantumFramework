@@ -62,7 +62,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qs_ ? QuantumStateQ, opts : OptionsPattern[quantumCircuitApply]] := quantumCircuitApply[qco, qs, opts]
 
-(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[quantumCircuitApply]] := qco[QuantumState[{"Register", qco["Arity"]}], opts]
+(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[quantumCircuitApply]] := qco[QuantumState[{"Register", qco["Width"]}], opts]
 
 
 op_QuantumMeasurementOperator[qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ] :=

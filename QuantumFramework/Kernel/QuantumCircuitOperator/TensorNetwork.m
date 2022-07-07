@@ -146,7 +146,7 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
 	ConfirmAssert[AllTrue[qc["Operators"], #["Order"] === #["FullOrder"] &]];
     targets = qc["Targets"];
     width = qc["Width"];
-    ops = Prepend[QuantumOperator[QuantumState[{1}, qc["InputDimensions"], "Label" -> "Initial"], qc["InputOrder"]]] @
+    ops = Prepend[QuantumOperator[QuantumState[{1}, PadLeft[qc["InputDimensions"], qc["Width"], 2], "Label" -> "Initial"], Range @ qc["Width"]]] @
         Module[{m = - qc["Targets"] + 1},
             Map[
                 If[ !QuantumMeasurementOperatorQ[#],
