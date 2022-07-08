@@ -329,16 +329,24 @@ QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOpera
 
 QuantumOperator /: Plus[ops : _QuantumOperator...] := Fold[addQuantumOperators, {ops}]
 
-addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator ? QuantumOperatorQ] := Enclose @ With[{
-    ordered1 = qo1[
-        Sequence @@ With[{order = Union[qo1["InputOrder"], qo2["InputOrder"]]}, {"OrderedInput", order, expandQuditBasis[qo1["Input"], qo1["InputOrder"], order]}]][
-        Sequence @@ With[{order = Union[qo1["OutputOrder"], qo2["OutputOrder"]]}, {"OrderedOutput", order, expandQuditBasis[qo1["Output"], qo1["OutputOrder"], order]}]
-    ]["Sort"],
-    ordered2 = qo2[
-        Sequence @@ With[{order = Union[qo1["InputOrder"], qo2["InputOrder"]]}, {"OrderedInput", order, expandQuditBasis[qo2["Input"], qo2["InputOrder"], order]}][
-        Sequence @@ With[{order = Union[qo1["OutputOrder"], qo2["OutputOrder"]]}, {"OrderedOutput", order, expandQuditBasis[qo2["Output"], qo2["OutputOrder"], order]}]]
-    ]["Sort"]
+addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator ? QuantumOperatorQ] := Enclose @ Module[{
+    orderInput, orderOutput,
+    ordered1, ordered2
 },
+    orderInput = Sequence @@ With[{
+            order = Union[qo1["InputOrder"], qo2["InputOrder"]],
+            qbMap = Association[Thread[qo1["InputOrder"] -> qo1["Input"]["Decompose"]], Thread[qo2["InputOrder"] -> qo2["Input"]["Decompose"]]]
+        },
+            {"OrderedInput", order, QuantumTensorProduct[order /. qbMap]}
+    ];
+    orderOutput = Sequence @@ With[{
+            order = Union[qo1["OutputOrder"], qo2["OutputOrder"]],
+            qbMap = Association[Thread[qo1["OutputOrder"] -> qo1["Output"]["Decompose"]], Thread[qo2["OutputOrder"] -> qo2["Output"]["Decompose"]]]
+        },
+            {"OrderedOutput", order, QuantumTensorProduct[order /. qbMap]}
+    ];
+    ordered1 = qo1[orderInput]["Sort"][orderOutput]["Sort"];
+    ordered2 = qo2[orderInput]["Sort"][orderOutput]["Sort"];
     ConfirmAssert[ordered1["Dimensions"] == ordered2["Dimensions"]];
     QuantumOperator[
         QuantumOperator[
