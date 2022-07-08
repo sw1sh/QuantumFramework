@@ -421,12 +421,12 @@ QuantumOperator["RandomUnitary", opts___] := QuantumOperator[{"RandomUnitary", 2
 
 QuantumOperator[{"RandomUnitary", dimension_Integer}, order : (_ ? orderQ) : {1}, opts___] :=
     QuantumOperator[
-           RandomVariate @ CircularUnitaryMatrixDistribution[dimension ^ Length[order]], order, dimension, Length[order], opts, "Label" -> None
+           RandomVariate @ CircularUnitaryMatrixDistribution[dimension ^ Length[order]], {order, order}, dimension, Length[order], opts, "Label" -> None
     ]
 
 QuantumOperator["RandomUnitary", order : (_ ? orderQ) : {1}, opts___] := With[{basis = QuantumBasis[opts, "Label" -> None]},
     QuantumOperator[
-           RandomVariate @ CircularUnitaryMatrixDistribution[basis["Dimension"] ^ Length[order]], order, basis
+           RandomVariate @ CircularUnitaryMatrixDistribution[basis["Dimension"] ^ Length[order]], {order, order}, basis
     ]
 ]
 
