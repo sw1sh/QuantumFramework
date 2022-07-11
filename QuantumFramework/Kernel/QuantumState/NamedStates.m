@@ -70,10 +70,11 @@ QuantumState[{"BasisState", basisElement_List}, dimension : (_Integer ? Positive
 ]
 
 
-QuantumState[{"Register", subsystemCount_Integer}, args___] := QuantumState[{"Register", subsystemCount, 0}, args]
-
-QuantumState[{"Register", subsystemCount_Integer, state_Integer ? NonNegative}, dimension : (_Integer ? Positive) : 2, args___] :=
+QuantumState[{"Register", subsystemCount_Integer, state : _Integer ? NonNegative : 0}, dimension : (_Integer ? Positive) : 2, args___] :=
     QuantumState[SparseArray[{{state + 1} -> 1}, {dimension ^ subsystemCount}], Table[dimension, subsystemCount], args]
+
+QuantumState[{"Register", dims : {__Integer ? Positive}, state : _Integer ? NonNegative : 0}, args___] :=
+    QuantumState[SparseArray[{{state + 1} -> 1}, {Times @@ dims}], dims, args]
 
 
 QuantumState["UniformSuperposition", args___] := With[{basis = QuantumBasis[args]},
