@@ -164,6 +164,9 @@ QuantumOperator["CT", opts___] := QuantumOperator[{"ControlledU", "T"}, opts]
 QuantumOperator["CS", opts___] := QuantumOperator[{"ControlledU", "S"}, opts]
 
 
+QuantumOperator[{"ControlledU" | "Controlled", qo : Except[_ ? QuantumOperatorQ], control1 : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}}, opts___] :=
+    QuantumOperator[{"Controlled", QuantumOperator[qo, opts], control1, control0}]
+
 QuantumOperator[{name : "ControlledU" | "Controlled", params : PatternSequence[___, Except[_ ? orderQ | {}]]}, order_ ? orderQ, opts___] :=
     With[{op = QuantumOperator[params, Replace[Rest @ order, {} -> {First @ order + 1}]]},
         QuantumOperator[{name, op, {First @ order}}, opts]

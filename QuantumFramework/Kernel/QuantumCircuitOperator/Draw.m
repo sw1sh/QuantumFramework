@@ -321,7 +321,7 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
                 "RootSWAP",
                 drawRootSwapGate[{-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], - 5 Last[targetQuditsOrder]}, styleOpts],
                 "NOT",
-                drawNotGate[{-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]}, styleOpts],
+                Show[drawNotGate[{-2 + 6 Max[gatePositionIndices], - 5 #}, styleOpts] & /@ targetQuditsOrder],
                 _Integer,
                 drawPhaseShiftGate[{-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]}, label, styleOpts],
                 _,
