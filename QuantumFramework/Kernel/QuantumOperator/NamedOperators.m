@@ -242,9 +242,9 @@ QuantumOperator[{"ControlledU" | "Controlled", qo_ ? QuantumOperatorQ, control1 
 QuantumOperator[{"Multiplexer", qos__}, opts___] := With[{sorted = QuantumOperator[#]["Sort"] & /@ {qos}},
     QuantumOperator[
         QuantumOperator[
-            BlockDiagonalMatrix @@ (#["Matrix"] & /@ sorted),
+            BlockDiagonalMatrix @@ (#["MatrixRepresentation"] & /@ sorted),
             {Union @@ (#["OutputOrder"] & /@ sorted), Union @@ (#["InputOrder"] & /@ sorted)},
-            Plus @@ (#["Basis"] & /@ sorted)
+            Plus @@ (QuantumBasis[#["OutputDimensions"], #["InputDimensions"]] & /@ sorted)
         ],
         opts,
         "Label" -> CirclePlus @@ (#["Label"] & /@ sorted)
