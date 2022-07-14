@@ -2,6 +2,18 @@ Package["Wolfram`QuantumFramework`"]
 
 
 
+QuantumOperator /: MakeBoxes[qo_QuantumOperator, TraditionalForm] /; QuantumOperatorQ[qo] :=
+    With[{formula = TooltipBox[
+            ToBoxes[qo["Formula"], StandardForm],
+            ToBoxes[
+                Row[{"QuantumOperator: ", Thread[Subscript[qo["InputDimensions"], qo["InputOrder"]]] ->
+                    Thread[Subscript[qo["OutputDimensions"], qo["OutputOrder"]]]}]
+            ]
+        ]
+    },
+        InterpretationBox[formula, qo]
+    ]
+
 QuantumOperator /: MakeBoxes[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated @ qo], format_] := Enclose[With[{
     icon = If[
         qo["Dimension"] < 2 ^ 9,

@@ -38,13 +38,13 @@ QuantumState[s_String /; StringMatchQ[s, DigitCharacter..], dim : (_Integer ? Po
     QuantumState[{"BasisState", digits}, dim, "Label" -> s, args]
 ]
 
-QuantumState["Plus", args___] := QuantumState[Normalize @ {1, 1}, "Label" -> "+", args]
+QuantumState["Plus" | "+", args___] := QuantumState[Normalize @ {1, 1}, "Label" -> "+", args]
 
-QuantumState["Minus", args___] := QuantumState[Normalize @ {-1, 1}, "Label" -> "-", args]
+QuantumState["Minus" | "-", args___] := QuantumState[Normalize @ {-1, 1}, "Label" -> "-", args]
 
-QuantumState["Left", args___] := QuantumState[Normalize @ {I, 1}, "Label" -> "L", args]
+QuantumState["Left" | "L", args___] := QuantumState[Normalize @ {I, 1}, "Label" -> "L", args]
 
-QuantumState["Right", args___] := QuantumState[Normalize @ {-I, 1}, "Label" -> "R", args]
+QuantumState["Right" | "R", args___] := QuantumState[Normalize @ {-I, 1}, "Label" -> "R", args]
 
 QuantumState["PhiPlus", args___] := QuantumState[Normalize @ {1, 0, 0, 1}, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(+\)]", args]
 

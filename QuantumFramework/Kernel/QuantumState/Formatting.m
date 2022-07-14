@@ -2,7 +2,18 @@ Package["Wolfram`QuantumFramework`"]
 
 
 
-QuantumState /: MakeBoxes[qs_QuantumState /; Quiet @ QuantumStateQ[Unevaluated @ qs], format_] := Enclose[With[{
+QuantumState /: MakeBoxes[qs_QuantumState, TraditionalForm] /; QuantumStateQ[qs] :=
+    With[{formula = TooltipBox[
+            ToBoxes[qs["Formula"], StandardForm],
+            ToBoxes[
+                Row[{"QuantumState: ", qs["InputDimensions"] -> qs["OutputDimensions"]}]
+            ]
+        ]
+    },
+        InterpretationBox[formula, qs]
+    ]
+
+QuantumState /: MakeBoxes[qs_QuantumState /; QuantumStateQ[Unevaluated @ qs], format_] := Enclose[With[{
     icon = If[
         qs["Dimension"] < 2 ^ 9,
         MatrixPlot[

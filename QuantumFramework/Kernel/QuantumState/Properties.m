@@ -26,7 +26,7 @@ $QuantumStateProperties = {
     "ReverseOutput", "ReverseInput", "Reverse",
     "Bipartition",
     "Disentangle", "Decompose",
-    "Formula"
+    "Formula", "Simplify"
 };
 
 QuantumState["Properties"] := Union @ Join[$QuantumStateProperties, QuantumBasis["Properties"]]
@@ -132,6 +132,8 @@ QuantumStateProp[qs_, "Formula", OptionsPattern["Normalize" -> False]] := With[{
         With[{pos = Catenate @ v["ExplicitPositions"]}, s["Names", Thread[{Quotient[pos - 1, d] + 1, Mod[pos - 1, d] + 1}]]] . v["ExplicitValues"]
     ]
 ]
+
+QuantumStateProp[qs_, "Simplify"] := QuantumState[Map[Simplify, qs["State"], {If[qs["VectorQ"], 1, 2]}], qs["Basis"]]
 
 
 (* normalization *)

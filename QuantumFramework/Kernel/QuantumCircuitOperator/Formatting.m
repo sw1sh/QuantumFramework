@@ -2,8 +2,18 @@ Package["Wolfram`QuantumFramework`"]
 
 
 
-QuantumCircuitOperator /: MakeBoxes[qco_QuantumCircuitOperator /; QuantumCircuitOperatorQ[Unevaluated @ qco], format_] := Enclose[
-ConfirmQuiet @ BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
+QuantumCircuitOperator /: MakeBoxes[qco_QuantumCircuitOperator, TraditionalForm] /; QuantumCircuitOperatorQ[qco] :=
+    With[{diagram = TooltipBox[
+            ToBoxes[qco["Diagram"], StandardForm],
+            ToBoxes[
+                Row[{"QuantumCircuitOperator: ", <|"Depth" -> qco["Depth"], "Width" -> qco["Width"]|>}]
+            ]]
+    },
+        InterpretationBox[diagram, qco]
+    ]
+
+QuantumCircuitOperator /: MakeBoxes[qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ, format_] := Enclose[
+BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
     qco,
     Magnify[qco["Diagram", FontSize -> 12], .2], {
         {

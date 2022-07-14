@@ -373,6 +373,8 @@ With[{state = qo["State"]["PrimeBasis"]},
     ]
 ]
 
+QuantumOperatorProp[qo_, "Simplify"] := QuantumOperator[qo["State"]["Simplify"], qo["Order"]]
+
 
 (* evolution *)
 

@@ -207,6 +207,8 @@ QuantumMeasurementProp[qm_, "SimulatedStateMeasurement", n_] := Part[qm["StateAs
 
 QuantumMeasurementProp[qm_, "MeanState"] := qm["Mean"] /. qm["StateAssociation"]
 
+QuantumMeasurementProp[qm_, "Simplify"] := QuantumMeasurement[qm["QuantumOperator"]["Simplify"]]
+
 
 (* qmo properties *)
 
