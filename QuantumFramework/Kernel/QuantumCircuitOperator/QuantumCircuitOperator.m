@@ -85,7 +85,8 @@ With[{ops = List @@ Unevaluated[comp]},
 
 (* equality *)
 
-QuantumCircuitOperator /: Equal[qco : _QuantumCircuitOperator ... ] := Equal @@ (#["CircuitOperator"] & /@ {qco})
+QuantumCircuitOperator /: Equal[left___, qco_QuantumCircuitOperator, right___] :=
+    Equal @@ (If[QuantumCircuitOperatorQ[#], #["CircuitOperator"], #] & /@ {left, qco, right})
 
 
 (* part *)

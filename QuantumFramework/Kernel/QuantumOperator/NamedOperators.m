@@ -21,7 +21,8 @@ $QuantumOperatorNames = {
     "Toffoli", "Deutsch", "RandomUnitary",
     "Spider", "ZSpider", "XSpider",
     "Switch",
-    "Discard"
+    "Discard",
+    "Multiplexer"
 }
 
 
@@ -242,7 +243,7 @@ QuantumOperator[{"ControlledU" | "Controlled", qo_ ? QuantumOperatorQ, control1 
     ]["Sort"]
 ]
 
-QuantumOperator[{"Multiplexer", qos__}, opts___] := With[{sorted = QuantumOperator[#]["Sort"] & /@ {qos}},
+QuantumOperator[{"Multiplexer", qos__}, opts___] := Block[{sorted = QuantumOperator[#]["Sort"] & /@ {qos}},
     QuantumOperator[
         QuantumOperator[
             BlockDiagonalMatrix @@ (#["MatrixRepresentation"] & /@ sorted),
@@ -251,7 +252,7 @@ QuantumOperator[{"Multiplexer", qos__}, opts___] := With[{sorted = QuantumOperat
         ],
         opts,
         "Label" -> CirclePlus @@ (#["Label"] & /@ sorted)
-    ]
+    ]["SetFullOrder"]
 ]
 
 

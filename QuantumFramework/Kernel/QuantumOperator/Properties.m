@@ -93,6 +93,13 @@ QuantumOperatorProp[qo_, "FullOutputOrder"] := If[qo["OutputDimension"] > 1,
 
 QuantumOperatorProp[qo_, "FullOrder"] := {qo["FullOutputOrder"], qo["FullInputOrder"]}
 
+QuantumOperatorProp[qo_, "SetFullOutputOrder"] := QuantumOperator[qo, {qo["FullOutputOrder"], qo["InputOrder"]}]
+
+QuantumOperatorProp[qo_, "SetFullInputOrder"] := QuantumOperator[qo, {qo["OutputOrder"], qo["FullInputOrder"]}]
+
+QuantumOperatorProp[qo_, "SetFullOrder"] := QuantumOperator[qo, {qo["FullOutputOrder"], qo["FullInputOrder"]}]
+
+
 QuantumOperatorProp[qo_, "ControlOrder1"] :=
     FirstCase[qo["Label"], "Controlled"[_, control1_, ___] :> control1, {}, {0}]
 
