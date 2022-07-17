@@ -92,7 +92,7 @@ QuantumCircuitOperatorProp[qco_, "Depth"] := Max @ Counts[Catenate[Union @@@ qco
 
 QuantumCircuitOperatorProp[qco_, "Arity"] := Length @ qco["InputOrder"]
 
-QuantumCircuitOperatorProp[qco_, "Width"] := #2 - Min[#1, 1] + 1 & @@ MinMax[{qco["InputOrder"], qco["OutputOrder"]}]
+QuantumCircuitOperatorProp[qco_, "Width"] := #2 - Min[Max[#1, 1], 1] + 1 & @@ MinMax[{qco["InputOrder"], qco["OutputOrder"]}]
 
 QuantumCircuitOperatorProp[qco_, "InputDimensions"] :=
     (q |-> #["InputDimensions"][[ q /. #["InputOrderQuditMapping"] ]] & @
@@ -108,13 +108,24 @@ QuantumCircuitOperatorProp[qco_, "OutputDimension"] := Times @@ qco["OutputDimen
 
 QuantumCircuitOperatorProp[qco_, "Measurements"] := Count[qco["Operators"], _ ? QuantumMeasurementOperatorQ]
 
-QuantumCircuitOperatorProp[qco_, "Target"] := DeleteDuplicates[Join @@ (#["Target"] & /@ Select[qco["Operators"], QuantumMeasurementOperatorQ])]
+QuantumCircuitOperatorProp[qco_, "Channels"] := Count[qco["Operators"], _ ? QuantumChannelQ]
+
+QuantumCircuitOperatorProp[qco_, "Target"] := Join @@ (
+    #["Target"] & /@ Select[qco["Operators"], QuantumMeasurementOperatorQ]
+)
 
 QuantumCircuitOperatorProp[qco_, "Targets"] := Length @ qco["Target"]
 
 QuantumCircuitOperatorProp[qco_, "TargetOrder"] := qco["InputOrder"]
 
 QuantumCircuitOperatorProp[qco_, "TargetArity"] := Length @ qco["Target"]
+
+QuantumCircuitOperatorProp[qco_, "Eigenqudits"] := Total[#["Eigenqudits"] & /@ Select[qco["Operators"], QuantumMeasurementOperatorQ]]
+
+QuantumCircuitOperatorProp[qco_, "TraceOrder"] := Union @@ (#["TraceOrder"] & /@ Select[qco["Operators"], QuantumChannelQ])
+
+QuantumCircuitOperatorProp[qco_, "TraceQudits"] := Total[#["TraceQudits"] & /@ Select[qco["Operators"], QuantumChannelQ]]
+
 
 QuantumCircuitOperatorProp[qco_, "QiskitCircuit" | "Qiskit"] := QuantumCircuitOperatorToQiskit[qco]
 

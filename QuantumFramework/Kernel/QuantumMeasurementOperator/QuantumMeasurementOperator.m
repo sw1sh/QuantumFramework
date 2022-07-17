@@ -212,7 +212,7 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
 
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qm : _ ? QuantumMeasurementOperatorQ | _ ? QuantumMeasurementQ] := Enclose @ Module[{
-    top, bottom, result, target, eigens, startQudit
+    top, bottom, result, target, eigens
 },
 
     top = qmo["SuperOperator"]["SortOutput"];
@@ -227,7 +227,6 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
 
     target = Join[qm["Target"], qmo["Target"]];
     eigens = qmo["Eigenqudits"] + qm["Eigenqudits"];
-    startQudit = Min[top["FirstOutputQudit"], bottom["FirstOutputQudit"]];
     top = QuantumOperator[top,
         {Join[1 - Drop[Reverse[Range[eigens]], qm["Eigenqudits"]], Drop[top["OutputOrder"], qmo["Eigenqudits"]]], top["InputOrder"]}
     ];

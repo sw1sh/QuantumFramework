@@ -43,7 +43,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
         "Schrodinger" | "Schroedinger" | "Schrödinger",
         Fold[ReverseApplied[Construct], qs, qco["Operators"]],
         Automatic | "TensorNetwork",
-        With[{
+        Block[{
             state = QuantumState[SparseArrayFlatten[#], TensorDimensions[#], "Label" -> qs["Label"] /* qco["Label"]] & @
                 ContractTensorNetwork @ InitializeTensorNetwork[
                     qco["TensorNetwork"],
@@ -51,8 +51,11 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
                     Join[Superscript[0, #] & /@ (Range[qs["OutputQudits"]]), Subscript[0, #] & /@ (Range[qs["InputQudits"]])]
                 ]
         },
+            If[ qco["Channels"] > 0,
+                state = QuantumPartialTrace[state, qco["Eigenqudits"] + qco["TraceQudits"] + qco["TraceOrder"]]
+            ];
             If[ qco["Measurements"] > 0,
-                QuantumMeasurement[QuantumMeasurementOperator[QuantumOperator[state, Range[state["Qudits"]] - qco["Measurements"]], qco["Target"]]],
+                QuantumMeasurement[QuantumMeasurementOperator[QuantumOperator[state, Range[state["Qudits"]] - qco["Eigenqudits"]], qco["Target"]]],
                 state
             ]
         ],
