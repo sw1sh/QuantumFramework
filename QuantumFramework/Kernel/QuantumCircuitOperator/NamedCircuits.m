@@ -12,7 +12,7 @@ $QuantumCircuitOperatorNames = {
     "BooleanOracleR",
     "Grover", "GroverPhase",
     "Grover0", "GroverPhase0",
-    "Toffoli",
+    "Bell", "Toffoli",
     "BernsteinVaziraniOracle", "BernsteinVazirani",
     "Fourier", "InverseFourier",
     "PhaseEstimation",
@@ -278,6 +278,10 @@ QuantumCircuitOperator[{"PhaseOracle",
 QuantumCircuitOperator[{"PhaseOracle", formula_, vars : KeyValuePattern[_ -> _Integer ? Positive], n : _Integer ? NonNegative : Automatic}, opts___] :=
     QuantumCircuitOperator[{"PhaseOracle", formula, Lookup[Reverse /@ Normal @ vars, Range[Max[vars]]], n}, opts]
 
+
+
+QuantumCircuitOperator["Bell", order : _ ? orderQ : {1, 2}, opts___] /; Length[order] == 2 :=
+    QuantumCircuitOperator[{QuantumOperator["H", First[order]], QuantumOperator["CNOT", order]}, opts, "Bell"]
 
 
 QuantumCircuitOperator["Toffoli", opts___] := QuantumCircuitOperator[{"Toffoli"}, opts]
