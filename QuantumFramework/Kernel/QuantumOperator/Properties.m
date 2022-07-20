@@ -1,5 +1,8 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageScope["UnitaryEulerAngles"]
+PackageScope["UnitaryEulerAnglesWithPhase"]
+
 
 
 $QuantumOperatorProperties = {
@@ -448,9 +451,14 @@ QuantumOperatorProp[qo_, "EigenvaluePlot", args___] /; qo["ParameterArity"] == 1
 UnitaryEulerAngles[b_, c_] := FullSimplify /@ {2 ArcSin[Abs[b]], Mod[Arg[c], 2 Pi], Mod[Arg[b] - Pi, 2 Pi]}
 UnitaryEulerAngles[u_ ? SquareMatrixQ] /; Dimensions[u] === {2, 2} := UnitaryEulerAngles[u[[1, 2]] , u[[2, 1]]]
 
+UnitaryEulerAngles[qo_QuantumOperator] := UnitaryEulerAngles[qo["MatrixRepresentation"]]
+
 UnitaryEulerAnglesWithPhase[u_ ? SquareMatrixQ] /; Dimensions[u] === {2, 2} := With[{b = u[[1, 2]], c = u[[2, 1]]},
     With[{phase = Arg[u[[1, 1]]]}, {{2 ArcSin[Abs[b]], Mod[Arg[c] - phase, 2 Pi], Mod[Arg[b] - Pi - phase, 2 Pi]}, phase}]
 ]
+
+UnitaryEulerAnglesWithPhase[qo_QuantumOperator] := UnitaryEulerAnglesWithPhase[qo["MatrixRepresentation"]]
+
 
 QuantumOperatorProp[qo_, "ZYZ"] /; qo["Dimensions"] === {2, 2} := Enclose @ Module[{angles, phase},
     {angles, phase} = UnitaryEulerAnglesWithPhase[qo["MatrixRepresentation"]];
