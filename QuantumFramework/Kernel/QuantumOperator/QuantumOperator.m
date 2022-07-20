@@ -187,13 +187,16 @@ QuantumOperator[n_Integer, args___] := QuantumOperator[{"PhaseShift", n}, args]
 (* Mutation *)
 
 QuantumOperator[qo_ ? QuantumOperatorQ, order : (_ ? orderQ | Automatic)] :=
-    QuantumOperator[qo["State"], {order, order}]
+    QuantumOperator[qo, {order, order}]
 
 QuantumOperator[qo_ ? QuantumOperatorQ, outputOrder : (_ ? orderQ | Automatic), inputOrder : (_ ? orderQ | Automatic)] :=
-    QuantumOperator[qo["State"], {outputOrder, inputOrder}]
+    QuantumOperator[qo, {outputOrder, inputOrder}]
 
-QuantumOperator[qo_ ? QuantumOperatorQ, order : {_ ? orderQ | Automatic, _ ? orderQ | Automatic}] :=
-    QuantumOperator[qo["State"], order]
+QuantumOperator[qo_ ? QuantumOperatorQ, order : {_ ? orderQ | Automatic, _ ? orderQ | Automatic}] := With[{
+    repl = Thread[qo["ControlOrder"] -> Take[order[[1]], UpTo[Length[qo["ControlOrder"]]]]]
+},
+    QuantumOperator[qo["State"], order, "Label" -> Replace[qo["Label"], "Controlled"[name_, c1_, c0_] :> "Controlled"[name, c1 /. repl, c0 /. repl]]]
+]
 
 
 QuantumOperator[qo_ ? QuantumOperatorQ, opts : PatternSequence[Except[_ ? QuantumBasisQ], ___],
