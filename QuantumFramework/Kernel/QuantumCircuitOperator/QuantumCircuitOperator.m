@@ -44,15 +44,31 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
         Fold[ReverseApplied[Construct], qs, qco["Operators"]],
         Automatic | "TensorNetwork",
         Block[{
-            state = QuantumState[SparseArrayFlatten[#], TensorDimensions[#], "Label" -> qs["Label"] /* qco["Label"]] & @
-                ContractTensorNetwork @ InitializeTensorNetwork[
-                    qco["TensorNetwork"],
-                    qs["Computational"]["Tensor"],
-                    Join[Superscript[0, #] & /@ (Range[qs["OutputQudits"]]), Subscript[0, #] & /@ (Range[qs["InputQudits"]])]
+            state = If[
+                qs["PureStateQ"],
+                QuantumState[SparseArrayFlatten[#], TensorDimensions[#], "Label" -> qs["Label"] /* qco["Label"]] & @
+                    ContractTensorNetwork @ InitializeTensorNetwork[
+                        qco["TensorNetwork"],
+                        qs["Computational"]["Tensor"],
+                        Join[Superscript[0, #] & /@ (Range[qs["OutputQudits"]]), Subscript[0, #] & /@ (Range[qs["InputQudits"]])]
+                    ],
+                QuantumState[
+                    (qco["Dagger"] /* qs["Operator"] /* qco)["QuantumOperator", Method -> "TensorNetwork"]["Unbend"],
+                    "Label" -> qs["Label"] /* qco["Label"]
                 ]
+            ]
         },
             If[ qco["Channels"] > 0,
-                state = QuantumPartialTrace[state, qco["Eigenqudits"] + qco["TraceQudits"] + qco["TraceOrder"]]
+                state = QuantumPartialTrace[state,
+                    First @ Fold[
+                        {
+                            Join[#1[[1]], If[QuantumChannelQ[#2], #1[[2]] + Range[#2["TraceQudits"]], {}]],
+                             #1[[2]] + Which[QuantumChannelQ[#2], #2["TraceQudits"], QuantumMeasurementOperatorQ[#2], #2["Eigenqudits"], True, 0]
+                        } &,
+                        {{}, 0},
+                        qco["Operators"]
+                    ]
+                ]
             ];
             If[ qco["Measurements"] > 0,
                 QuantumMeasurement[QuantumMeasurementOperator[QuantumOperator[state, Range[state["Qudits"]] - qco["Eigenqudits"]], qco["Target"]]],

@@ -381,18 +381,18 @@ QuantumOperator /: Equal[qo : _QuantumOperator ... ] :=
     QuantumOperator[qo["State"][ps], qo["Order"]]
 
 
-
 StackQuantumOperators[ops : {_ ? QuantumOperatorQ ..}, name_ : "E"] := With[{
     basis = First[ops]["Basis"],
     order = MapAt[Prepend[#, Min[#] - 1] &, First[ops]["Order"], {1}]
 },
     QuantumOperator[
         QuantumOperator[
-            QuantumOperator[#, basis]["Matrix"] & /@ ops,
-            "Output" -> QuantumTensorProduct[QuditBasis[Subscript[name, #] & /@ Range @ Length @ ops], basis["Output"]],
-            "Input" -> basis["Input"]
+            SparseArray[#["MatrixRepresentation"] & /@ ops],
+            QuantumBasis[
+                QuantumTensorProduct[QuditBasis[Subscript[name, #] & /@ Range @ Length @ ops], basis["Output"]],
+                basis["Input"]
+            ]
         ],
-        order
+    order
     ]
 ]
-

@@ -21,7 +21,7 @@ quantumChannel[args___] := With[{qo = QuantumOperator[args]}, QuantumChannel @
 ]
 
 QuantumChannel[{"AmplitudeDamping", gamma_}, args___] :=
-    quantumChannel[{{{1, 0}, {0, Sqrt[1 - gamma]}}, {{0, Sqrt[gamma]}, {0, 0}}}, args, "Label" -> "AmplitudeDamping"]
+    quantumChannel[{{{1, 0}, {0, Sqrt[1 - gamma]}}, {{0, Sqrt[gamma]}, {0, 0}}}, args, "Label" -> "AmplitudeDamping"[gamma]]
 
 QuantumChannel[{"GeneralizedAmplitudeDamping", gamma_, p_}, args___] :=
 	quantumChannel[{
@@ -31,21 +31,21 @@ QuantumChannel[{"GeneralizedAmplitudeDamping", gamma_, p_}, args___] :=
         Sqrt[1 - p] {{0, 0}, {Sqrt[gamma], 0}}
     },
         args,
-        "Label" -> "GeneralizedAmplitudeDamping"
+        "Label" -> "GeneralizedAmplitudeDamping"[gamma, p]
     ]
 
 QuantumChannel[{"PhaseDamping", lambda_}, args___] :=
-    quantumChannel[{{{1, 0}, {0, Sqrt[1 - lambda]}}, {{0, 0}, {0, Sqrt[lambda]}}}, args, "Label" -> "PhaseDamping"]
+    quantumChannel[{{{1, 0}, {0, Sqrt[1 - lambda]}}, {{0, 0}, {0, Sqrt[lambda]}}}, args, "Label" -> "PhaseDamping"[lambda]]
 
 
 QuantumChannel[{"BitFlip", p_}, args___] :=
-    quantumChannel[{Sqrt[p] IdentityMatrix[2], Sqrt[1 - p] {{0, 1}, {1, 0}}}, args, "Label" -> "BitFlip"]
+    quantumChannel[{Sqrt[p] IdentityMatrix[2], Sqrt[1 - p] {{0, 1}, {1, 0}}}, args, "Label" -> "BitFlip"[p]]
 
 QuantumChannel[{"PhaseFlip", p_}, args___] :=
-    quantumChannel[{Sqrt[p]*IdentityMatrix[2], Sqrt[1 - p]*{{1, 0}, {0, -1}}}, args, "Label" -> "PhaseFlip"]
+    quantumChannel[{Sqrt[p]*IdentityMatrix[2], Sqrt[1 - p]*{{1, 0}, {0, -1}}}, args, "Label" -> "PhaseFlip"[p]]
 
 QuantumChannel[{"BitPhaseFlip", p_}, args___] :=
-    quantumChannel[{Sqrt[p] IdentityMatrix[2], Sqrt[1 - p] {{0, -I}, {I ,0}}}, args, "Label" -> "BitPhaseFlip"]
+    quantumChannel[{Sqrt[p] IdentityMatrix[2], Sqrt[1 - p] {{0, -I}, {I ,0}}}, args, "Label" -> "BitPhaseFlip"[p]]
 
 QuantumChannel[{"Depolarizing", p_}, args___] :=
     quantumChannel[{
@@ -55,6 +55,6 @@ QuantumChannel[{"Depolarizing", p_}, args___] :=
         Sqrt[p] (1 / 2) {{1, 0}, {0, -1}}
     },
         args,
-        "Label" -> "Depolarizing"
+        "Label" -> "Depolarizing"[p]
     ]
 

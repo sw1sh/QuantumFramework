@@ -27,10 +27,11 @@ drawPhaseShiftGate[coordinates_List, name_, opts : OptionsPattern[Style]] := Mod
 ]
 
 
-drawUnaryGate[coordinates_List, name_, opts : OptionsPattern[Style]] := Module[{width, height, textGraphics, rectangle},
-    width = 4;
-    height = 3;
-    textGraphics = Graphics[Text[Sow @ Style[name, opts], coordinates]];
+Options[drawUnaryGate] = Join[{"Width" -> 4, "Height" -> 3}, Options[Style]];
+drawUnaryGate[coordinates_List, name_, opts : OptionsPattern[]] := Module[{
+    width = OptionValue["Width"], height = OptionValue["Height"], textGraphics, rectangle
+},
+    textGraphics = Graphics[Text[Sow @ Style[name, FilterRules[{opts}, Options[Style]]], coordinates]];
     rectangle = Graphics[{
         EdgeForm[Black],
         FaceForm[White],
@@ -39,14 +40,12 @@ drawUnaryGate[coordinates_List, name_, opts : OptionsPattern[Style]] := Module[{
     Show[rectangle, textGraphics]
 ]
 
-
-drawBinaryGate[{coordinates1_List, coordinates2_List}, name_, opts : OptionsPattern[Style]] := Module[{
-    width, height, averageCoordinates, textGraphics, rectangle
+Options[drawBinaryGate] = Join[{"Width" -> 4, "Height" -> 3}, Options[Style]];
+drawBinaryGate[{coordinates1_List, coordinates2_List}, name_, opts : OptionsPattern[]] := Module[{
+    width = OptionValue["Width"], height = OptionValue["Height"], averageCoordinates, textGraphics, rectangle
 },
-    width = 4;
-    height = 3;
     averageCoordinates = (coordinates1 + coordinates2) / 2;
-    textGraphics = Graphics[Text[Sow @ Rotate[Style[name, opts], - Pi / 2], averageCoordinates]];
+    textGraphics = Graphics[Text[Sow @ Rotate[Style[name, FilterRules[{opts}, Options[Style]]], - Pi / 2], averageCoordinates]];
     rectangle = Graphics[{EdgeForm[Black], FaceForm[White],
         Rectangle[{First[coordinates1] - width / 2, Last[coordinates1] - height / 2}, {First[coordinates2] + width / 2, Last[coordinates2] + height / 2}]}];
     Show[rectangle, textGraphics]
@@ -230,7 +229,7 @@ drawMeasurementWire[positionIndices_List, opts : OptionsPattern[]] := Graphics[{
 Options[drawGateGraphics] = Join[Options[Style], Options[drawWireGraphics], Options[drawMeasurementWire]]
 
 drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
-    width, height, orders, targetOrders, graphicsList, index, positionIndices, gatePositionIndices,
+    orders, targetOrders, graphicsList, index, positionIndices, gatePositionIndices,
     targetQuditsOrder,
     controlQuditsOrder,
     controlQuditsOrderTop, controlQuditsOrderBottom,
@@ -241,8 +240,6 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
     styleOpts = Join[FilterRules[{opts}, Options[Style]], {FontSize -> 24, FontFamily -> "Times"}],
     jumpWires = {}
 },
-    width = 4;
-    height = 3;
     orders = #["InputOrder"] & /@ gates;
     targetOrders = #["TargetOrder"] & /@ gates;
 
@@ -254,10 +251,28 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
     With[{pos = Complement[Range[Min[targetOrders[[i]]], Max[targetOrders[[i]]]], targetOrders[[i]]]},
         If[Length[pos] > 0 && !MatchQ[gates[[i]]["Label"], "Controlled"[__] | "SWAP"], jumpWires = Join[jumpWires, Thread[pos -> Max @ positionIndices[[Join[targetOrders[[i]], pos]]]]]]
     ];
-    If[ QuantumMeasurementOperatorQ[gates[[i]]],
+    label = Replace[gates[[i]]["Label"], "Controlled"[x_, ___] :> x];
+    If[ QuantumMeasurementOperatorQ[gates[[i]]] || QuantumChannelQ[gates[[i]]],
         gatePositionIndices = Table[Max[positionIndices], {j, Min[orders[[i]]], Max[orders[[i]]]}];
         includeMeasurement = True;
         Which[
+            QuantumChannelQ[gates[[i]]],
+            AppendTo[graphicsList,
+                If[ gates[[i]]["TargetArity"] == 1,
+                    drawUnaryGate[
+                        {-2 + 6 Max[gatePositionIndices], - 5 Max[orders[[i]]]},
+                        label,
+                        styleOpts,
+                        "Height" -> 4
+                    ],
+                    drawBinaryGate[
+                        {{-2 + 6 Max[gatePositionIndices], - 5 Max[orders[[i]]]}, {-2 + 6 Max[gatePositionIndices], - 5 Min[orders[[i]]]}},
+                        label,
+                        styleOpts,
+                        "Height" -> 4
+                    ]
+                ]
+            ],
             gates[[i]]["POVMQ"],
             AppendTo[graphicsList, drawMeasurementGate[{-2 + 6 Max[gatePositionIndices], - 5 Max[orders[[i]]]}, orders[[i]], "POVM", styleOpts]],
             True,
@@ -266,7 +281,7 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
                 drawMeasurementGate[
                     {-2 + 6 Max[gatePositionIndices], - 5 Max[orders[[i]]]},
                     orders[[i]],
-                    gates[[i]]["Label"] /. None | "Computational" | "Computational"[_] -> "M",
+                    label /. None | "Computational" | "Computational"[_] -> "M",
                     styleOpts
                 ]
             ]
@@ -274,9 +289,8 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
         AppendTo[graphicsList, drawMeasurement[{-2 + 6 Max[gatePositionIndices], - 5 Min[orders[[i]]]}]];
         positionIndices = ConstantArray[Max[positionIndices] + 1, Length[positionIndices]];
     ];
-    label = Replace[gates[[i]]["Label"], "Controlled"[x_, ___] :> x];
 
-    If[ QuantumOperatorQ[gates[[i]]] || QuantumChannelQ[gates[[i]]] || QuantumCircuitOperatorQ[gates[[i]]],
+    If[ QuantumOperatorQ[gates[[i]]] || QuantumCircuitOperatorQ[gates[[i]]],
         gatePositionIndices = Table[positionIndices[[j]], {j, Min[orders[[i]]], Max[orders[[i]]]}];
         If[ MatchQ[gates[[i]]["Label"], "CX" | "CY" | "CZ" | "CNOT" | "CPHASE" | "CSWAP" | "Controlled"[__]],
             If[ MatchQ[gates[[i]]["Label"], "Controlled"[__]],

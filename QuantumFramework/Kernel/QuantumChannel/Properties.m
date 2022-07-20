@@ -56,6 +56,8 @@ QuantumChannelProp[qc_, "NEvolutionChannel"] := QuantumChannel[
     (I #)["NEvolutionOperator"] & /@  qc["UnstackOutput", 1]
 ]
 
+QuantumChannelProp[qc_, name : "Dagger"] := QuantumChannel[qc["Operator"][name]]
+
 
 (* operator properties *)
 
