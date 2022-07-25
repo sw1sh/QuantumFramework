@@ -206,7 +206,7 @@ QuantumOperatorProp[qo_, "SortInput"] := If[
     QuantumOperator[qo[
         "PermuteInput",
         InversePermutation @ FindPermutation[Ordering @ Ordering @ qo["FullInputOrder"]]
-    ],
+    ]["State"],
         {qo["OutputOrder"], Sort @ qo["InputOrder"]}
     ]
 ]
@@ -217,7 +217,7 @@ QuantumOperatorProp[qo_, "SortOutput"] := If[
     QuantumOperator[qo[
         "PermuteOutput",
         InversePermutation @ FindPermutation[Ordering @ Ordering @ qo["FullOutputOrder"]]
-    ],
+    ]["State"],
         {Sort @ qo["OutputOrder"], qo["InputOrder"]}
     ]
 ]

@@ -193,9 +193,12 @@ QuantumOperator[qo_ ? QuantumOperatorQ, outputOrder : (_ ? orderQ | Automatic), 
     QuantumOperator[qo, {outputOrder, inputOrder}]
 
 QuantumOperator[qo_ ? QuantumOperatorQ, order : {_ ? orderQ | Automatic, _ ? orderQ | Automatic}] := With[{
-    repl = Thread[qo["ControlOrder"] -> Take[order[[1]], UpTo[Length[qo["ControlOrder"]]]]]
+    repl = Join[
+        Thread[Join[qo["ControlOrder"], qo["TargetOrder"]] -> Take[Replace[order[[2]], Automatic -> qo["InputOrder"]], UpTo[Length[qo["InputOrder"]]]]],
+        Thread[qo["OutputOrder"] -> Take[Replace[order[[1]], Automatic -> qo["OutputOrder"]], UpTo[Length[qo["OutputOrder"]]]]]
+    ]
 },
-    QuantumOperator[qo["State"], order, "Label" -> Replace[qo["Label"], "Controlled"[name_, c1_, c0_] :> "Controlled"[name, c1 /. repl, c0 /. repl]]]
+    QuantumOperator[qo["State"], qo["Order"] /. repl, "Label" -> Replace[qo["Label"], "Controlled"[name_, c1_, c0_] :> "Controlled"[name, c1 /. repl, c0 /. repl]]]
 ]
 
 
