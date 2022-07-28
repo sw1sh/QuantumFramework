@@ -192,13 +192,34 @@ QuantumOperator[qo_ ? QuantumOperatorQ, order : (_ ? orderQ | Automatic)] :=
 QuantumOperator[qo_ ? QuantumOperatorQ, outputOrder : (_ ? orderQ | Automatic), inputOrder : (_ ? orderQ | Automatic)] :=
     QuantumOperator[qo, {outputOrder, inputOrder}]
 
-QuantumOperator[qo_ ? QuantumOperatorQ, order : {_ ? orderQ | Automatic, _ ? orderQ | Automatic}] := With[{
-    repl = Join[
-        Thread[Join[qo["ControlOrder"], qo["TargetOrder"]] -> Take[Replace[order[[2]], Automatic -> qo["InputOrder"]], UpTo[Length[qo["InputOrder"]]]]],
-        Thread[qo["OutputOrder"] -> Take[Replace[order[[1]], Automatic -> qo["OutputOrder"]], UpTo[Length[qo["OutputOrder"]]]]]
-    ]
+QuantumOperator[qo_ ? QuantumOperatorQ, order : {order1 : _ ? orderQ | Automatic, order2 : _ ? orderQ | Automatic}, opts___] := Block[{
+    outputOrder = Replace[order1, Automatic -> qo["OutputOrder"]],
+    inputOrder = Replace[order2, Automatic -> qo["InputOrder"]],
+    outputQudits = qo["OutputQudits"],
+    inputQudits = qo["InputQudits"]
 },
-    QuantumOperator[qo["State"], qo["Order"] /. repl, "Label" -> Replace[qo["Label"], "Controlled"[name_, c1_, c0_] :> "Controlled"[name, c1 /. repl, c0 /. repl]]]
+    QuantumOperator[
+        {qo, LCM[Quotient[Length[outputOrder], outputQudits], Quotient[Length[inputOrder], inputQudits]]},
+        {outputOrder, inputOrder},
+        opts
+     ] /;
+        Length[outputOrder] > outputQudits && Divisible[Length[outputOrder], outputQudits] &&
+        Length[inputOrder] > inputQudits && Divisible[Length[inputOrder], inputQudits]
+]
+
+
+QuantumOperator[qo_ ? QuantumOperatorQ, order : {_ ? orderQ | Automatic, _ ? orderQ | Automatic}] := With[{
+    inputRepl =
+        Thread[Join[qo["ControlOrder"], qo["TargetOrder"]] -> Take[Replace[order[[2]], Automatic -> qo["InputOrder"]], UpTo[Length[qo["InputOrder"]]]]],
+    outputRepl =
+        Thread[qo["OutputOrder"] -> Take[Replace[order[[1]], Automatic -> qo["OutputOrder"]], UpTo[Length[qo["OutputOrder"]]]]]
+},
+    QuantumOperator[
+        QuantumOperator[qo,
+            "Label" -> Replace[qo["Label"], "Controlled"[name_, c1_, c0_] :> "Controlled"[name, c1 /. inputRepl, c0 /. inputRepl]]
+        ]["State"],
+        {qo["OutputOrder"] /. outputRepl, qo["InputOrder"] /. inputRepl}
+    ]
 ]
 
 
