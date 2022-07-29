@@ -3,7 +3,7 @@ Package["Wolfram`QuantumFramework`"]
 
 
 QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator, TraditionalForm] /; QuantumMeasurementOperatorQ[qmo] :=
-    With[{formula = ToBoxes[qmo["SuperOperator"], StandardForm]}, InterpretationBox[formula, qmo]]
+    With[{formula = ToBoxes[qmo["SuperOperator"], TraditionalForm]}, InterpretationBox[formula, qmo]]
 
 QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; QuantumMeasurementOperatorQ[Unevaluated @ qmo], format_] := With[{
     icon = If[

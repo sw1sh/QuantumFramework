@@ -53,7 +53,13 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
                         Join[Superscript[0, #] & /@ (Range[qs["OutputQudits"]]), Subscript[0, #] & /@ (Range[qs["InputQudits"]])]
                     ],
                 QuantumState[
-                    (qco["Dagger"] /* qs["Operator"] /* qco)["QuantumOperator", Method -> "TensorNetwork"]["Unbend"],
+                    quantumCircuitApply[QuantumTensorProduct[qco, qco["Conjugate"]], qs["Bend"]]["State"]["PermuteOutput",
+                        With[{a = qco["Eigenqudits"] + qco["TraceQudits"], b = qs["Qudits"]},
+                           FindPermutation[
+                                Join[Array[0, a], Array[1, a], Array[2, b], Array[3, b]],
+                                Join[Array[0, a], Array[2, b], Array[1, a], Array[3, b]]
+                            ]
+                        ]]["Unbend"],
                     "Label" -> qs["Label"] /* qco["Label"]
                 ]
             ]
@@ -71,7 +77,17 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
                 ]
             ];
             If[ qco["Measurements"] > 0,
-                QuantumMeasurement[QuantumMeasurementOperator[QuantumOperator[state, Range[state["Qudits"]] - qco["Eigenqudits"]], qco["Target"]]],
+                QuantumMeasurement @
+                    QuantumMeasurementOperator[
+                        QuantumOperator[
+                            state,
+                            {
+                                Join[Range[- qco["Eigenqudits"] + 1, 0], DeleteCases[qco["OutputOrder"], _ ? NonPositive]],
+                                qco["InputOrder"]
+                            }
+                        ],
+                        qco["Target"]
+                    ],
                 state
             ]
         ],

@@ -64,7 +64,14 @@ quantumCircuitCompile[qco_QuantumCircuitOperator, OptionsPattern[]] :=
         "Schrodinger" | "Schroedinger" | "Schrödinger",
         Fold[ReverseApplied[Construct], qco["Flatten"]["Operators"]],
         Automatic | "TensorNetwork",
-        QuantumOperator[QuantumState[SparseArrayFlatten[#], QuantumBasis @@ TakeDrop[TensorDimensions[#], qco["Arity"]], "Label" -> qco["Label"]], qco["Order"]] & @
+        Which[
+            qco["Eigenqudits"] > 0,
+            QuantumMeasurementOperator[QuantumOperator[#, {Join[Range[- qco["Eigenqudits"] + 1, 0], qco["OutputOrder"]], qco["InputOrder"]}], qco["Target"]] &,
+            qco["TraceQudits"] > 0,
+            QuantumChannel[QuantumOperator[#, qco["Order"]]] &,
+            True,
+            QuantumOperator[#, qco["Order"]] &
+        ] @ QuantumState[SparseArrayFlatten[#], QuantumBasis @@ Reverse @ TakeDrop[TensorDimensions[#], - qco["Arity"]], "Label" -> qco["Label"]] & @
             With[{tn = VertexDelete[qco["TensorNetwork"], 0]},
                 Transpose[ContractTensorNetwork[tn], Ordering @ OrderingBy[TensorNetworkFreeIndices[tn], Replace[{Superscript[_, x_] :> {0, x}, Subscript[_, x_] :> {1, x}}]]]
             ],
@@ -143,12 +150,18 @@ QuantumCircuitOperatorProp[qco_, "Sort"] := QuantumCircuitOperator[#["Sort"] & /
 
 
 QuantumCircuitOperatorProp[qco_, "Shift", n : _Integer ? NonNegative : 1] :=
-    QuantumCircuitOperatorProp[#["Shift", n] & /@ qco["Operators"], qco["Label"]]
+    QuantumCircuitOperator[#["Shift", n] & /@ qco["Operators"], qco["Label"]]
 
 
 QuantumCircuitOperatorProp[qco_, "Dagger"] :=
     QuantumCircuitOperator[#["Dagger"] & /@ Reverse @ qco["Operators"], Superscript[qco["Label"], "\[Dagger]"]]
 
+QuantumCircuitOperatorProp[qco_, prop : "Conjugate" | "Dual"] :=
+    QuantumCircuitOperator[#[prop] & /@ qco["Operators"], SuperStar[qco["Label"]]]
+
+
+QuantumCircuitOperatorProp[qco_, "Normal"] :=
+    QuantumCircuitOperator[Which[QuantumMeasurementOperatorQ[#], #["SuperOperator"], QuantumChannelQ[#], #["QuantumOperator"], True, #] & /@ qco["Operators"], qco["Label"]]
 
 QuantumCircuitOperatorProp[qco_, "TensorNetwork", opts : OptionsPattern[QuantumTensorNetwork]] := QuantumTensorNetwork[qco["Flatten"], opts]
 

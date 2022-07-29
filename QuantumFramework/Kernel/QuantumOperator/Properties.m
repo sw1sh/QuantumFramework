@@ -318,7 +318,7 @@ QuantumOperatorProp[qo_, "OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ] :=
 ]
 
 
-QuantumOperatorProp[qo_, "Shift", n : _Integer ? NonNegative : 1] := QuantumOperator[qo, qo["Order"] + n]
+QuantumOperatorProp[qo_, "Shift", n : _Integer ? NonNegative : 1] := QuantumOperator[qo, qo["Order"] /. k_Integer ? Positive :> k + n]
 
 
 QuantumOperatorProp[qo_, "UnstackOutput", n_Integer : 1] /; 1 <= n <= qo["OutputQudits"] :=
@@ -358,7 +358,13 @@ simplifyLabel[op_QuantumOperator] := QuantumOperator[op, "Label" -> Replace[op["
 QuantumOperatorProp[qo_, "Dagger" | "ConjugateTranspose"] := simplifyLabel @ QuantumOperator[
     qo["State"]["Dagger"], {qo["InputOrder"], qo["OutputOrder"]}]
 
-QuantumOperatorProp[qo_, "Dual"] := QuantumOperator[qo["State"]["Dual"], qo["Order"]]
+QuantumOperatorProp[qo_, prop : "Conjugate" | "Dual"] := QuantumOperator[qo["State"][prop], qo["Order"]]
+
+QuantumOperatorProp[qo_, "TensorReverseInput", order_ ? orderQ] :=
+    QuantumOperator[qo["State"]["TensorReverseInput", order /. qo["InputOrderQuditMapping"]], qo["Order"]]
+
+QuantumOperatorProp[qo_, "TensorReverseOutput", order_ ? orderQ] :=
+    QuantumOperator[qo["State"]["TensorReverseOutput", order /. qo["OutputOrderQuditMapping"]], qo["Order"]]
 
 QuantumOperatorProp[qo_, "TraceNorm"] := qo["Unbend"]["TraceNorm"]
 

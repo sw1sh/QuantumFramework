@@ -98,4 +98,11 @@ QuantumTensorProduct[qmo1_QuantumMeasurementOperator, qmo2_QuantumMeasurementOpe
 
 QuantumTensorProduct[qm1_QuantumMeasurement, qm2_QuantumMeasurement] := QuantumMeasurement @ QuantumTensorProduct[qm1["State"], qm2["State"]]
 
+
+(* circuit x circuit *)
+
+QuantumTensorProduct[qc1_QuantumCircuitOperator, qc2_QuantumCircuitOperator] :=
+    QuantumCircuitOperator[Join[qc1["Operators"], qc2["Shift", qc1["Width"]]["Operators"]], CircleTimes[qc1["Label"], qc2["Label"]]]
+
+
 QuantumTensorProduct[_, _] := Failure[QuantumTensorProduct, "Undefined"]

@@ -47,7 +47,7 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
     newTarget = Replace[target, Automatic -> op["FullInputOrder"]];
     order = PadRight[newTarget, op["InputQudits"], DeleteCases[op["FullInputOrder"], Alternatives @@ newTarget]];
     qmo = QuantumMeasurementOperator[
-        QuantumOperator[op, {Automatic, Sort @ order}],
+        QuantumOperator[op["State"], {Automatic, Sort @ order}],
         order[[;; Length @ newTarget]],
         args
     ];
@@ -227,10 +227,10 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
 
     target = Join[qm["Target"], qmo["Target"]];
     eigens = qmo["Eigenqudits"] + qm["Eigenqudits"];
-    top = QuantumOperator[top,
+    top = QuantumOperator[top["State"],
         {Join[1 - Drop[Reverse[Range[eigens]], qm["Eigenqudits"]], Drop[top["OutputOrder"], qmo["Eigenqudits"]]], top["InputOrder"]}
     ];
-    bottom = QuantumOperator[bottom,
+    bottom = QuantumOperator[bottom["State"],
         {Join[1 - Take[Reverse[Range[eigens]], qm["Eigenqudits"]], Drop[bottom["OutputOrder"], qm["Eigenqudits"]]], bottom["InputOrder"]}
     ];
     result = top[bottom]["SortOutput"];

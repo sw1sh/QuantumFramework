@@ -13,7 +13,8 @@ $QuantumMeasurementOperatorProperties = {
     "TargetDimensions", "TargetDimension",
     "StateQudits", "TargetBasis", "StateBasis", "CanonicalBasis", "Canonical",
     "ProjectionQ", "POVMQ",
-    "SuperOperator", "POVM"
+    "SuperOperator", "POVM",
+    "Shift"
 };
 
 
@@ -209,10 +210,21 @@ QuantumMeasurementOperatorProp[qmo_, "POVM"] := QuantumMeasurementOperator[qmo["
 QuantumMeasurementOperatorProp[qmo_, "QASM"] := StringRiffle[MapIndexed[StringTemplate["c[``] = measure q[``];"][First[#2] - 1, #1 - 1] &, qmo["Target"]], "\n"]
 
 
+QuantumMeasurementOperatorProp[qmo_, "Shift", n : _Integer ? NonNegative : 1] :=
+    QuantumMeasurementOperator[qmo["QuantumOperator"]["Shift", n], qmo["Target"] + n]
+
+
+QuantumMeasurementOperatorProp[qmo_, prop : "Conjugate" | "Dual"] :=
+    QuantumMeasurementOperator[qmo["SuperOperator"][prop], qmo["Target"]]
+
 (* operator properties *)
 
 QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | "Sort" | "SortOutput" | "SortInput" | "Computational" | "Simplify", args___] :=
     QuantumMeasurementOperator[qmo["QuantumOperator"][prop, args], qmo["Target"]]
+
+QuantumMeasurementOperatorProp[qmo_, prop : "Dagger", args___] :=
+    qmo["SuperOperator"][prop, args]
+
 
 QuantumMeasurementOperatorProp[qmo_, args : PatternSequence[prop_String, ___]] /;
     MemberQ[Intersection[qmo["Operator"]["Properties"], qmo["Properties"]], prop] := qmo["Operator"][args]

@@ -24,6 +24,7 @@ $QuantumStateProperties = {
     "Pure", "Mixed",
     "Trace", "Transpose", "Conjugate", "ConjugateTranspose",
     "ReverseOutput", "ReverseInput", "Reverse",
+    "TensorReverseOutput", "TensorReverseInput",
     "Bipartition",
     "Disentangle", "Decompose",
     "Formula", "Simplify"
@@ -446,15 +447,28 @@ QuantumStateProp[qs_, "Trace"] := QuantumPartialTrace[qs]
 
 QuantumStateProp[qs_, "Trace", qudits : {_Integer...}] := QuantumPartialTrace[qs, qudits]
 
-QuantumStateProp[qs_, "Conjugate" | "Dual"] := With[{qb = qs["Basis"]["Dual"]},
-    QuantumState[If[qs["StateType"] === "Vector", SparseArrayFlatten, ArrayReshape[#, qb["MatrixDimensions"]] &] @ Conjugate[qs["StateMatrix"]], qb]
-]
+QuantumStateProp[qs_, "Dual"] := QuantumState[Conjugate[qs["State"]], qs["Basis"]["Dual"]]
+
+QuantumStateProp[qs_, "Conjugate"] := QuantumState[Conjugate[qs["State"]], qs["Basis"]]
+
 
 QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := With[{qb = qs["Basis"]["ConjugateTranspose"]},
     QuantumState[
         If[qs["VectorQ"], Flatten @ Conjugate @ qs["Transpose"]["State"], ConjugateTranspose @ qs["State"]],
         qb
     ]
+]
+
+QuantumStateProp[qs_, "TensorReverseOutput", qudits : {_Integer...}] := QuantumState[
+    If[qs["VectorQ"], SparseArrayFlatten, ArrayReshape[#, qs["MatrixDimensions"]] &] @
+        Reverse[qs["StateTensor"], If[qs["VectorQ"], qudits, Join[qudits, qs["Qudits"] + qudits]]],
+    qs["Basis"]
+]
+
+QuantumStateProp[qs_, "TensorReverseInput", qudits : {_Integer...}] := QuantumState[
+    If[qs["VectorQ"], SparseArrayFlatten, ArrayReshape[#, qs["MatrixDimensions"]] &] @
+        Reverse[qs["StateTensor"], qs["OutputQudits"] + If[qs["VectorQ"], qudits, Join[qudits, qs["Qudits"] + qudits]]],
+    qs["Basis"]
 ]
 
 

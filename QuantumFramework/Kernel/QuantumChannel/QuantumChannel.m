@@ -47,3 +47,7 @@ QuantumChannel[opArgs_List, args___] := Enclose @ Block[{ops = QuantumOperator[#
     QuantumChannel[result]
 ]
 
+
+(* equality *)
+
+QuantumChannel /: Equal[qc : _QuantumChannel ... ] := Equal @@ (#["QuantumOperator"] & /@ {qc})

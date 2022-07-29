@@ -109,7 +109,7 @@ QuantumOperator[{"Phase" | "P" | "U1", angle_, dimension_Integer : 2}, opts___] 
     QuantumOperator[
         SparseArray[{{1, 1} -> 1, {dimension, dimension} -> Exp[I angle]}],
         "Label" -> "P"[angle]
-    ]
+    ],
     opts
 ]
 
@@ -352,7 +352,7 @@ QuantumOperator[{"PauliX" | "X", dimension_Integer}, opts___] := QuantumOperator
 ]
 
 QuantumOperator[{"PauliY" | "Y", dimension_Integer}, opts___] := QuantumOperator[
-    QuantumOperator[pauliMatrix[2, dimension], dimension, "Label" -> "Y"]
+    QuantumOperator[pauliMatrix[2, dimension], dimension, "Label" -> "Y"],
     opts
 ]
 
