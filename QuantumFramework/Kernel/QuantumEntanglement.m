@@ -18,7 +18,7 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Conc
 },
 
     s = ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ];
-    ds = s["Dimensions"];
+    ds = ConfirmBy[s["Dimensions"], Length[#] == 2 &];
     twoQuditPauliY = QuantumTensorProduct[QuantumOperator[{"Y", ds[[1]]}], QuantumOperator[{"Y", ds[[2]]}]];
 
     Max[0, Fold[Subtract, SingularValueList[Sqrt[s]["DensityMatrix"] . Sqrt[twoQuditPauliY[s["Conjugate"]]]["DensityMatrix"]]]]
@@ -26,15 +26,15 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Conc
 
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Negativity"] :=
-    Enclose[(ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ]["Transpose", {2}]["TraceNorm"] - 1) / 2]
+    Enclose[(ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]["Transpose", {2}]["TraceNorm"] - 1) / 2]
 
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "LogNegativity"] :=
-    Enclose @ Log2 @ ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ]["Transpose", {2}]["TraceNorm"]
+    Enclose @ Log2 @ ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]["Transpose", {2}]["TraceNorm"]
 
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "EntanglementEntropy"] :=
-    Enclose @ QuantumPartialTrace[ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ], {1}]["VonNeumannEntropy"]
+    Enclose @ QuantumPartialTrace[ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &], {1}]["VonNeumannEntropy"]
 
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "RenyiEntanglementEntropy" | "RenyiEntropy"] :=
@@ -44,7 +44,7 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, {"Ren
     Enclose[
         (1 / (1 - alpha)) Log[2, Tr @ MatrixPower[
             QuantumPartialTrace[
-                ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ],
+                ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &],
                 {1}
             ]["DensityMatrix"], alpha]]
     ]

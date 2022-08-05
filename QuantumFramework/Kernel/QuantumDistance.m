@@ -13,8 +13,8 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Fidelity"] := With[
 ]
 
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativeEntropy"] := Enclose @ Module[{
-    e1 = qs1["Eigenvalues"],
-    e2 = qs2["Eigenvalues"],
+    e1 = qs1["Eigenvalues"] // Chop,
+    e2 = qs2["Eigenvalues"] // Chop,
     positiveEigenvaluePositions
 },
     positiveEigenvaluePositions = ConfirmBy[Position[e1, _ ? Positive], Length[#] > 0 &];

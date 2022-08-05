@@ -263,7 +263,7 @@ QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /;
     mat
 },
     m = qs["Dimension"] / n;
-    mat = If[ qs["VectorQ"],
+    mat = If[ qs["PureStateQ"],
         ArrayReshape[state["StateVector"], {n, m}],
         ArrayReshape[
             Transpose[ArrayReshape[state["DensityMatrix"], {n, m, n, m}], 2 <-> 3],
@@ -272,7 +272,7 @@ QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /;
     ];
     {uMatrix, alphaValues, wMatrix} = SingularValueDecomposition[mat];
     QuantumState[
-        If[ qs["VectorQ"],
+        If[ qs["PureStateQ"],
             Flatten @ alphaValues,
             ArrayReshape[Transpose[ArrayReshape[alphaValues, {n, n, m, m}], 2 <-> 3], {n * m, n * m}]
         ],
