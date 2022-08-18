@@ -350,7 +350,7 @@ QuantumCircuitOperator[{"Fourier", n_Integer ? Positive, m : _Integer ? NonNegat
 			Splice[QuantumOperator[{"Controlled", {"PhaseShift", # + 1}, {# + i + m}}, {i + m}] & /@ Range[n - i]]
 		},
 		{i, n}],
-		QuantumOperator["SWAP", {#, n - # + 1 + m}] & /@ Range[Floor[n / 2]]
+		QuantumOperator["SWAP", {# + m, n - # + 1 + m}] & /@ Range[Floor[n / 2]]
 	],
     opts,
 	"QFT"
