@@ -284,11 +284,7 @@ QuantumOperatorProp[qo_, "OrderedInput", order_ ? orderQ, qb_ ? QuditBasisQ] := 
         QuantumTensorProduct[
             QuantumOperator[qo, {qo["OutputOrder"], qo["FullInputOrder"]}, "Input" -> qb["Extract", pos]],
             With[{iqb = qb["Delete", pos]},
-                QuantumOperator[
-                    QuantumOperator[{"Identity", iqb}],
-                    Automatic,
-                    Max[qo["LastOutputQudit"], qo["LastInputQudit"]] + Range @ iqb["Qudits"]
-                ]
+                QuantumOperator[{"Identity", iqb}, Max[qo["LastOutputQudit"], qo["LastInputQudit"]] + Range @ iqb["Qudits"]]
             ]
         ],
         QuantumOperator[qo, "Input" -> qb["Extract", pos]]
@@ -306,11 +302,7 @@ QuantumOperatorProp[qo_, "OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ] :=
         QuantumTensorProduct[
             QuantumOperator[qo, {qo["FullOutputOrder"], qo["InputOrder"]}, "Output" -> qb["Extract", pos]],
             With[{iqb = qb["Delete", pos]},
-                QuantumOperator[
-                    QuantumOperator[{"Identity", iqb}],
-                    Max[qo["LastOutputQudit"], qo["LastInputQudit"]] + Range @ iqb["Qudits"],
-                    Automatic
-                ]
+                QuantumOperator[{"Identity", iqb}, Max[qo["LastOutputQudit"], qo["LastInputQudit"]] + Range @ iqb["Qudits"]]
             ]
         ],
         QuantumOperator[qo, "Output" -> qb["Extract", pos]]
