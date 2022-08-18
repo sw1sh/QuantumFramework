@@ -83,7 +83,7 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			EdgeForm[Lookup[gateBoundaryStyle, "PhaseShift", Black]],
 			FaceForm[Lookup[gateBackgroundStyle, "PhaseShift", White]],
 			Disk[center, size / 2],
-			Text[Tooltip[Style[n, labelStyleOpts], "P"[Pi] ^ (2 ^ (1 - n))], center]
+			Text[Tooltip[Style[n, labelStyleOpts], Superscript["P"[Pi], 2 ^ (1 - n)]], center]
 		},
 		SuperDagger[subLabel_] | Superscript[subLabel_, "\[Dagger]"] | subLabel_ :> {
 			EdgeForm[Lookup[gateBoundaryStyle, subLabel, Black]],
