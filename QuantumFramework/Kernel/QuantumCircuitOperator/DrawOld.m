@@ -15,9 +15,9 @@ drawNotGate[coordinates_List, _] := Module[{whiteRadius, whiteCircle, lines},
 ]
 
 
-drawPhaseShiftGate[coordinates_List, name_, opts : OptionsPattern[Style]] := Module[{width, textGraphics, circle},
+drawPhaseShiftGate[coordinates_List, name_, opts : OptionsPattern[Style]] := Module[{width, textGraphics, circle, phase = Replace[name, "PhaseShift"[p_] :> p]},
     width = 4;
-    textGraphics = Graphics[Text[Sow @ Style[name, opts], coordinates]];
+    textGraphics = Graphics[Text[Tooltip[Sow @ Style[phase, opts], "P"[Pi] ^ 2 ^ (1 - phase)], coordinates]];
     circle = Graphics[{
         EdgeForm[Black],
         FaceForm[White],
@@ -336,7 +336,7 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
                 drawRootSwapGate[{-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]}, {-2 + 6 Max[gatePositionIndices], - 5 Last[targetQuditsOrder]}, styleOpts],
                 "NOT",
                 Show[drawNotGate[{-2 + 6 Max[gatePositionIndices], - 5 #}, styleOpts] & /@ targetQuditsOrder],
-                _Integer,
+                "PhaseShift"[_] | _Integer,
                 drawPhaseShiftGate[{-2 + 6 Max[gatePositionIndices], - 5 First[targetQuditsOrder]}, label, styleOpts],
                 _,
                 If[ gates[[i]]["TargetArity"] == 1,

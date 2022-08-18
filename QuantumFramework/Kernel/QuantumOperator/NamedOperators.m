@@ -115,7 +115,10 @@ QuantumOperator[{"Phase" | "P" | "U1", angle_, dimension_Integer : 2}, opts___] 
 
 QuantumOperator["PhaseShift", opts___] := QuantumOperator[{"PhaseShift", 1}, opts]
 
-QuantumOperator[{"PhaseShift", k : _Integer | _Symbol : 1}, opts___] := QuantumOperator[QuantumOperator[{"Phase", 2 Pi / 2 ^ k},  "Label" -> k], opts]
+QuantumOperator[{"PhaseShift", k : _Integer | _Symbol : 1}, opts___] := QuantumOperator[
+    QuantumOperator[{"Phase", 2 Pi / 2 ^ k}, "Label" -> "PhaseShift"[k]],
+    opts
+]
 
 QuantumOperator["GlobalPhase", opts___] := QuantumOperator[{"GlobalPhase", Pi}, opts]
 

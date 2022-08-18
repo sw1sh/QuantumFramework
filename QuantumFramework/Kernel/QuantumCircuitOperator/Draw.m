@@ -8,7 +8,7 @@ $GateDefaultBackgroundStyle = <|
 	"H" -> LightOrange,
 	"T" -> LightPurple,
 	"S" -> LightPurple,
-	"PhaseShift" -> LightBlue, 
+	"PhaseShift" -> LightBlue,
 	"Measurement" -> LightPink
 |>;
 
@@ -22,7 +22,7 @@ $GateDefaultBoundaryStyle = <|
 
 positionCorners[{vpos_, hpos_}, size_, gapSize_] := Thread[{MinMax[hpos] + size / 2 {-1, 1}, MinMax[-vpos gapSize] + size / 2 {-1, 1}}]
 
-Options[drawGate] = DeleteDuplicatesBy[First] @ Join[{
+Options[drawGate] := DeleteDuplicatesBy[First] @ Join[{
 	"RotateLabel" -> Automatic,
 	"Size" -> .75,
 	"GapSize" -> 1,
@@ -38,7 +38,8 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 	gateBackgroundStyle = OptionValue["GateBackgroundStyle"],
 	gateBoundaryStyle = OptionValue["GateBoundaryStyle"],
 	corners,
-	center
+	center,
+	vposIndex = PositionIndex[Developer`ToList[vpos]]
 },
 	corners = positionCorners[pos, size, gapSize];
 	center = Mean[corners];
@@ -47,8 +48,8 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			{
 				Line[{{center[[1]], - Min[vpos]}, {center[[1]], - Max[vpos]}}],
 				If[ Length[target] > 1,
-					MapIndexed[drawGate[{#1, hpos}, Labeled[subLabel, First[#2]], opts] &, target],
-					Map[drawGate[{#, hpos}, subLabel, opts] &, target]
+					MapIndexed[drawGate[{{#1}, hpos}, Labeled[subLabel, First[#2]], opts] &, target],
+					Map[drawGate[{{#}, hpos}, subLabel, opts] &, target]
 				],
 				drawGate[{{#}, hpos}, "1", opts] & /@ control1,
 				drawGate[{{#}, hpos}, "0", opts] & /@ control0
@@ -78,11 +79,11 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 		    Line[{top + size / 4 {1, -1}, top + size / 4 {-1, 1}}],
 		    Line[{bottom, top}]
 		}],
-		n_Integer :> {
+		"PhaseShift"[n_] | n_Integer :> {
 			EdgeForm[Lookup[gateBoundaryStyle, "PhaseShift", Black]],
 			FaceForm[Lookup[gateBackgroundStyle, "PhaseShift", White]],
 			Disk[center, size / 2],
-			Text[Style[n, labelStyleOpts], center]
+			Text[Tooltip[Style[n, labelStyleOpts], "P"[Pi] ^ (2 ^ (1 - n))], center]
 		},
 		SuperDagger[subLabel_] | Superscript[subLabel_, "\[Dagger]"] | subLabel_ :> {
 			EdgeForm[Lookup[gateBoundaryStyle, subLabel, Black]],
@@ -166,9 +167,9 @@ drawWireLabels[wireLabels_, width_, height_, pad_, opts : OptionsPattern[]] := B
 ]
 
 
-Options[drawOutline] = Join[{"Size" -> .75, "GapSize" -> 1}, Options[Rectangle]];
-drawOutline[width_, height_, pad_, opts : OptionsPattern[]] := With[{size = OptionValue["Size"], gapSize = OptionValue["GapSize"]},
-	{EdgeForm[Black], FaceForm[Transparent], Rectangle[{.5, - pad - gapSize / 2}, {height - .5, - pad - width - gapSize / 2}, FilterRules[{opts}, Options[Rectangle]]]}
+Options[drawOutline] = Join[{"GapSize" -> 1, "OutlineStyle" -> Directive[EdgeForm[Black], FaceForm[Transparent]]}, Options[Rectangle]];
+drawOutline[width_, height_, pad_, opts : OptionsPattern[]] := With[{gapSize = OptionValue["GapSize"]},
+	{OptionValue["OutlineStyle"], Rectangle[{.5, - pad - gapSize / 2}, {height - .5, - pad - width - gapSize / 2}, FilterRules[{opts}, Options[Rectangle]]]}
 ]
 
 Options[drawLabel] = Join[{"GapSize" -> 1}, Options[Style]];
@@ -176,15 +177,19 @@ drawLabel[label_, height_, pad_, opts : OptionsPattern[]] := With[{gapSize = Opt
 	Text[Style[label, FilterRules[{opts}, Options[Style]], Background -> White], {height / 2, - gapSize (pad + 1 / 2)}]
 ]
 
-Options[circuitDraw] = DeleteDuplicatesBy[First] @
+Options[circuitDraw] := DeleteDuplicatesBy[First] @
 	Join[{
-		"WireLabels" -> Automatic, "ShowWires" -> True, "ShowLabel" -> False, "ShowMeasurementWire" -> True, "Outline" -> False, "WirePadding" -> True
+		"WireLabels" -> Automatic, "ShowWires" -> True, "ShowLabel" -> False,
+		"ShowMeasurementWire" -> True, "WirePadding" -> True,
+		"Outline" -> False,
+		"SubcircuitLevel" -> 1
 	},
 	Options[drawGate], Options[drawMeasurement], Options[drawWires], Options[drawWireLabels], Options[drawOutline], Options[Style]];
 circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	numGates = circuit["Gates"],
 	width = circuit["Width"],
 	order = circuit["InputOrder"],
+	level = OptionValue["SubcircuitLevel"],
 	span,
 	pad,
 	height,
@@ -194,11 +199,11 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	gatePositions,
 	wires,
 	wirePaddingQ = TrueQ[OptionValue["WirePadding"]],
-	showMeasurementWireQ = TrueQ[OptionValue["ShowMeasurementWire"]] || circuit["Measurements"] > 0
+	showMeasurementWireQ = TrueQ[OptionValue["ShowMeasurementWire"]] && circuit["Measurements"] > 0
 },
 	span = If[showMeasurementWireQ, width, #2 - #1 + 1 & @@ MinMax @ order];
 	pad = width - span;
-	positions = circuitPositions[circuit];
+	positions = circuitPositions[circuit, level];
 	wires = circuitWires[circuit];
 	If[ !wirePaddingQ,
 		wires = DeleteCases[wires, _[_, _, i_ /; ! MemberQ[order, i]]]
@@ -212,12 +217,19 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 		If[showMeasurementWireQ, drawMeasurementWire[height, FilterRules[{opts}, Options[drawMeasurementWire]]], Nothing],
 		MapThread[
 			Which[
-				Wolfram`QuantumFramework`PackageScope`QuantumCircuitOperatorQ[#1],
-				Translate[
-					circuitDraw[#1, opts, "WireLabels" -> None, "Outline" -> True, "ShowLabel" -> True, "ShowMeasurementWire" -> False, "WirePadding" -> False],
-					{Max[#3[[#1["InputOrder"]]]], 0}
+				QuantumCircuitOperatorQ[#1],
+				If[ level > 0,
+					Translate[
+						circuitDraw[#1,
+							"SubcircuitLevel" -> level - 1,
+							opts,
+							"WireLabels" -> None, "Outline" -> True, "ShowLabel" -> True, "ShowMeasurementWire" -> False, "WirePadding" -> False
+						],
+						{Max[#3[[#1["InputOrder"]]]], 0}
+					],
+					drawGate[#2, #1["Label"], FilterRules[{opts}, Options[drawGate]]]
 				],
-				Wolfram`QuantumFramework`PackageScope`QuantumMeasurementOperatorQ[#1],
+				QuantumMeasurementOperatorQ[#1],
 				drawMeasurement[#2, FilterRules[{opts}, Options[drawMeasurement]]],
 				True,
 				drawGate[#2, #1["Label"], FilterRules[{opts}, Options[drawGate]]]
@@ -233,28 +245,28 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	}
 ]
 
-circuitPositions[circuit_QuantumCircuitOperator] := With[{width = circuit["Width"]},
+circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1] := With[{width = circuit["Width"]},
 	Rest @ FoldList[
 		Block[{
 			order = #2["InputOrder"],
-			gatePos = #1[[-1]], 
+			gatePos = #1[[-1]],
 			shift
 		},
-			shift = If[ Wolfram`QuantumFramework`PackageScope`QuantumCircuitOperatorQ[#2],
-				ReplacePart[ConstantArray[0, width], Thread[order -> Max[circuitPositions[#2][[-1, 2]]]]],
+			shift = If[ level > 0 && QuantumCircuitOperatorQ[#2],
+				ReplacePart[ConstantArray[0, width], Thread[order -> Max[circuitPositions[#2, level - 1][[-1, 2]]]]],
 				ReplacePart[ConstantArray[0, width], Thread[order -> 1]]
 			];
 			{
 				gatePos = Which[
-					Wolfram`QuantumFramework`PackageScope`QuantumMeasurementOperatorQ[#2],
+					QuantumMeasurementOperatorQ[#2],
 					SubsetMap[ConstantArray[Max[#], Length[#]] &, gatePos, List /@ Range[Max[order]]],
-					Wolfram`QuantumFramework`PackageScope`QuantumCircuitOperatorQ[#2],
+					level > 0 && QuantumCircuitOperatorQ[#2],
 					SubsetMap[ConstantArray[Max[gatePos[[Span @@ MinMax[order]]]], Length[order]] &, gatePos, List /@ order],
 					True,
 					SubsetMap[ConstantArray[Max[#], Length[order]] &, gatePos, List /@ order]
 				],
 				If[
-					Wolfram`QuantumFramework`PackageScope`QuantumMeasurementOperatorQ[#2],
+					QuantumMeasurementOperatorQ[#2],
 					gatePos + 1,
 					gatePos + shift
 				]
@@ -279,13 +291,12 @@ circuitWires[qc_QuantumCircuitOperator] := Block[{
 	]
 ]
 
-Options[CircuitDraw] = Join[Options[circuitDraw], Options[Graphics]];
+Options[CircuitDraw] := Join[Options[circuitDraw], Options[Graphics]];
 CircuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Graphics[
 	circuitDraw[
 		circuit,
 		FilterRules[{opts}, Options[circuitDraw]],
-		RoundingRadius -> 0.2, FontFamily -> "Source Serif Pro", FontSize -> 20,
-		ImageSize -> Scaled[.5]
+		RoundingRadius -> 0.2, FontFamily -> "Source Serif Pro", FontSize -> 20
 	],
 	FilterRules[{opts}, Options[Graphics]]
 ]

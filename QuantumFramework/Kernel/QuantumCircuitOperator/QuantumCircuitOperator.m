@@ -14,11 +14,20 @@ QuantumCircuitOperatorQ[___] := False
 
 (* constructors *)
 
-QuantumCircuitOperator[operators_ /; VectorQ[operators, QuantumFrameworkOperatorQ]] :=
-    QuantumCircuitOperator[<|"Operators" -> operators, "Label" -> RightComposition @@ (#["Label"] & /@ operators)|>]
+toOperator[op_ ? QuantumFrameworkOperatorQ] := op
+toOperator[order_ ? orderQ] := QuantumMeasurementOperator[order]
+toOperator[args_List] := QuantumOperator @@ args
+toOperator[lhs_List -> rhs_] := QuantumOperator[Sequence @@ lhs, rhs]
+toOperator[lhs_ -> rhs_] := QuantumOperator[lhs, rhs]
+toOperator[arg_] := QuantumOperator[arg]
 
-QuantumCircuitOperator[operators_ /; VectorQ[operators, QuantumFrameworkOperatorQ], label_, ___] :=
-    QuantumCircuitOperator[<|"Operators" -> operators, "Label" -> label|>]
+
+QuantumCircuitOperator[operators_ ? ListQ] := With[{ops = toOperator /@ operators},
+    QuantumCircuitOperator[<|"Operators" -> ops, "Label" -> RightComposition @@ (#["Label"] & /@ ops)|>]
+]
+
+QuantumCircuitOperator[operators_ ? ListQ, label_, ___] :=
+    QuantumCircuitOperator[<|"Operators" -> toOperator /@ operators, "Label" -> label|>]
 
 QuantumCircuitOperator[op : Except[_ ? QuantumCircuitOperatorQ, _ ? QuantumFrameworkOperatorQ], args___] := QuantumCircuitOperator[{op}, args]
 
@@ -97,7 +106,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qs_ ? QuantumStateQ, opts : OptionsPattern[quantumCircuitApply]] := quantumCircuitApply[qco, qs, opts]
 
-(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[quantumCircuitApply]] := qco[QuantumState[{"Register", qco["Width"]}], opts]
+(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[quantumCircuitApply]] := qco[QuantumState[{"Register", qco["InputDimensions"]}], opts]
 
 
 op_QuantumMeasurementOperator[qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ] :=

@@ -401,7 +401,9 @@ QuantumOperator /: Equal[qo : _QuantumOperator ... ] :=
 
 (* parameterization *)
 
-(qo_QuantumOperator ? QuantumOperatorQ)[ps___] /; Length[{ps}] <= qo["ParameterArity"] :=
+(qo_QuantumOperator ? QuantumOperatorQ)[] := qo[QuantumState[{"Register", qo["InputDimensions"]}]]
+
+(qo_QuantumOperator ? QuantumOperatorQ)[ps__] /; Length[{ps}] <= qo["ParameterArity"] :=
     QuantumOperator[qo["State"][ps], qo["Order"]]
 
 
