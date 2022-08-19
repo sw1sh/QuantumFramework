@@ -199,8 +199,11 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	gatePositions,
 	wires,
 	wirePaddingQ = TrueQ[OptionValue["WirePadding"]],
-	showMeasurementWireQ = TrueQ[OptionValue["ShowMeasurementWire"]] && circuit["Measurements"] > 0
+	showMeasurementWireQ = TrueQ[OptionValue["ShowMeasurementWire"]] && circuit["Measurements"] > 0,
+	labelCount = 0,
+	labelCounter
 },
+	labelCounter = Replace[None :> (labelCount++; Subscript["U", labelCount])];
 	span = If[showMeasurementWireQ, width, #2 - #1 + 1 & @@ MinMax @ order];
 	pad = width - span;
 	positions = circuitPositions[circuit, level];
@@ -227,12 +230,12 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 						],
 						{Max[#3[[#1["InputOrder"]]]], 0}
 					],
-					drawGate[#2, #1["Label"], FilterRules[{opts}, Options[drawGate]]]
+					drawGate[#2, labelCounter @ #1["Label"], FilterRules[{opts}, Options[drawGate]]]
 				],
 				QuantumMeasurementOperatorQ[#1],
 				drawMeasurement[#2, FilterRules[{opts}, Options[drawMeasurement]]],
 				True,
-				drawGate[#2, #1["Label"], FilterRules[{opts}, Options[drawGate]]]
+				drawGate[#2, labelCounter @ #1["Label"], FilterRules[{opts}, Options[drawGate]]]
 			] &,
 			{circuit["Operators"], gatePositions, positions[[All, 1]]}
 		],
