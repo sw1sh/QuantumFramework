@@ -337,13 +337,14 @@ QuantumOperatorProp[qo_, "Transpose"] := QuantumOperator[
 
 
 simplifyLabel[op_QuantumOperator] := QuantumOperator[op, "Label" -> Replace[op["Label"], {
-    Superscript[label : "X" | "Y" | "Z" | "NOT" | "H" | "SWAP", "\[Dagger]"] :> label,
-    Superscript[c : "Controlled"["NOT", __], "\[Dagger]"] :> c,
-    Superscript["Controlled"[(r : Subscript["R", _] | "P")[angle_], rest__], "\[Dagger]"] :> "Controlled"[r[-angle], rest],
-    Superscript["Controlled"[x_, rest__], "\[Dagger]"] :> "Controlled"[Superscript[x, "\[Dagger]"], rest],
-    Superscript[(r : Subscript["R", _] | "P")[angle_], "\[Dagger]"] :> r[- angle],
-    Superscript["U2"[a_, b_], "\[Dagger]"] :> "U2"[Pi - a, Pi - b],
-    Superscript[Superscript[label_, "\[Dagger]"], "\[Dagger]"] :> label
+    SuperDagger[label : "X" | "Y" | "Z" | "NOT" | "H" | "SWAP"] :> label,
+    SuperDagger[c : "Controlled"["NOT", __]] :> c,
+    SuperDagger["Controlled"[(r : Subscript["R", _] | "P")[angle_], rest__]] :> "Controlled"[r[-angle], rest],
+    SuperDagger["Controlled"[x_, rest__]] :> "Controlled"[SuperDagger[x], rest],
+    SuperDagger[(r : Subscript["R", _] | "P")[angle_]] :> r[- angle],
+    SuperDagger["PhaseShift"[n_] | n_Integer] :> "PhaseShift"[-n],
+    SuperDagger["U2"[a_, b_]] :> "U2"[Pi - a, Pi - b],
+    SuperDagger[SuperDagger[label_]] :> label
 }]
 ]
 

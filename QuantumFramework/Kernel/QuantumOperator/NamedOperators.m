@@ -302,7 +302,7 @@ QuantumOperator[{"InverseFourier", dimension_Integer}, opts___, order : (_ ? ord
     ],
     {order, order},
     opts,
-    "Label" -> Superscript["QFT", "\[Dagger]"]
+    "Label" -> SuperDagger["QFT"]
 ]
 
 

@@ -85,7 +85,7 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			Disk[center, size / 2],
 			Text[Tooltip[Style[n, labelStyleOpts], Superscript["P"[Pi], 2 ^ (1 - n)]], center]
 		},
-		SuperDagger[subLabel_] | Superscript[subLabel_, "\[Dagger]"] | subLabel_ :> {
+		SuperDagger[subLabel_] | subLabel_ :> {
 			EdgeForm[Lookup[gateBoundaryStyle, subLabel, Black]],
 			FaceForm[Lookup[gateBackgroundStyle, subLabel, White]],
 			Rectangle[Sequence @@ corners, FilterRules[{opts}, Options[Rectangle]]],

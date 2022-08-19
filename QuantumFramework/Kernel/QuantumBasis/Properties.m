@@ -238,7 +238,7 @@ QuantumBasisProp[qb_, "SplitDual", n_Integer] :=
 
 QuantumBasisProp[qb_, "Dagger" | "ConjugateTranspose"] := QuantumBasis[qb,
     "Input" -> qb["Output"]["Dual"], "Output" -> qb["Input"]["Dual"],
-    "Label" -> Superscript[qb["Label"], "\[Dagger]"]
+    "Label" -> SuperDagger[qb["Label"]]
 ]
 
 QuantumBasisProp[qb_, "PermuteInput", perm_Cycles] := QuantumBasis[qb, "Input" -> qb["Input"]["Permute", perm]]
