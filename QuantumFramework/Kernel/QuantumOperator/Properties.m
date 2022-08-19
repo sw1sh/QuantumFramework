@@ -396,7 +396,7 @@ With[{
                 \[FormalU]'[parameter] == 1 / I qo["Matrix"] . \[FormalU][parameter],
                 \[FormalU][0] == IdentityMatrix[qo["InputDimension"]]
             },
-            \[FormalU][parameter] \[Element] Matrices[qo["Dimensions"]],
+            \[FormalU][parameter] \[Element] Matrices[qo["MatrixNameDimensions"]],
             parameter,
             args
         ],
@@ -426,8 +426,8 @@ QuantumOperatorProp[qo_, "NEvolutionOperator", args___] /; qo["ParameterArity"] 
                 Flatten[IdentityMatrix[qo["OutputDimension"]]]
             };
         QuantumOperator[
-            Values @ Partition[Flatten @
-                NDSolve[
+            Partition[Flatten @
+                NDSolveValue[
                     Join[equations, initialEquations],
                     Subscript["u", #][parameter] & /@ Range[qo["OutputDimension"] ^ 2],
                     Evaluate @ parameterSpec,
