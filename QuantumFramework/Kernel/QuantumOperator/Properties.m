@@ -330,7 +330,7 @@ QuantumOperatorProp[qo_, "Eigenvectors", opts___] /; qo["SquareQ"] := eigenvecto
 
 QuantumOperatorProp[qo_, "Eigensystem", opts___] /; qo["SquareQ"] := eigensystem[qo["MatrixRepresentation"], opts, "Sort" -> False, "Normalize" -> True]
 
-QuantumOperatorProp[qo_, "Projectors"] := projector /@ SparseArray @ Chop @ qo["Eigenvectors"]
+QuantumOperatorProp[qo_, "Projectors", opts___] := projector /@ SparseArray @ Chop @ qo["Eigenvectors", opts]
 
 QuantumOperatorProp[qo_, "Transpose"] := QuantumOperator[
     qo["State"]["Transpose"], {qo["InputOrder"], qo["OutputOrder"]}]

@@ -151,7 +151,7 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
         ];
 
         {eigenvalues, eigenvectors} = profile["Eigensystem"] @ tracedOperator["Eigensystem", "Sort" -> True];
-        projectors = tracedOperator["Projectors"];
+        projectors = tracedOperator["Projectors", "Sort" -> True];
 
         eigenBasis = QuditBasis[
             MapIndexed[
