@@ -202,7 +202,15 @@ qc = pickle.loads(<* Wolfram`QuantumFramework`$pythonBytes *>)
 
 ops = []
 for gate, qubits, clbits in qc:
-    order = [q.index + 1 for q in qubits]
+    order = []
+    for q in qubits:
+        size = 0
+        for r in qc.qubits:
+            if r.register.name == q.register.name:
+                order.append(size + q.index + 1)
+                break
+            else:
+                size = r.index + 1
     if len(gate.params) > 0:
         xs = []
         for x in gate.params:
@@ -246,6 +254,10 @@ for gate, qubits, clbits in qc:
         ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('T', order))
     elif gate.name == 'tdg':
         ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('T', order)('Dagger'))
+    elif gate.name == 's':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('S', order))
+    elif gate.name == 'sdg':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('S', order)('Dagger'))
     elif gate.name == 'ccrx':
         ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Controlled', ['XRotation', *xs], order[:2]], order[2:]))
     elif gate.name == 'ccrx_o0':
@@ -260,10 +272,14 @@ for gate, qubits, clbits in qc:
         ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Controlled', 'NOT', order[:2]], order[2:]))
     elif gate.name == 'mcx':
         ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Controlled', 'NOT', order[:-1]], order[-1:]))
+    elif gate.name == 'swap':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('SWAP', order))
     elif gate.name == 'unitary':
         ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(*xs, wl.Rule('Label', gate.label)))
     elif gate.name == 'measure':
         ops.append(wl.Wolfram.QuantumFramework.QuantumMeasurementOperator(order))
+    elif gate.name == 'barrier':
+        pass
     else:
         print('Unknonwn gate: ', gate.name, gate.params, [q.index for q in qubits])
 wl.Wolfram.QuantumFramework.QuantumCircuitOperator(ops)
