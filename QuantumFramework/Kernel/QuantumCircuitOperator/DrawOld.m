@@ -17,7 +17,7 @@ drawNotGate[coordinates_List, _] := Module[{whiteRadius, whiteCircle, lines},
 
 drawPhaseShiftGate[coordinates_List, name_, opts : OptionsPattern[Style]] := Module[{width, textGraphics, circle, phase = Replace[name, "PhaseShift"[p_] :> p]},
     width = 4;
-    textGraphics = Graphics[Text[Tooltip[Sow @ Style[phase, opts], "P"[Pi] ^ 2 ^ (1 - phase)], coordinates]];
+    textGraphics = Graphics[Text[Tooltip[Sow @ Style[phase, opts], Superscript["P"[If[TrueQ[Negative[phase]], -Pi, Pi]], 2 ^ (1 - Abs[phase])]], coordinates]];
     circle = Graphics[{
         EdgeForm[Black],
         FaceForm[White],

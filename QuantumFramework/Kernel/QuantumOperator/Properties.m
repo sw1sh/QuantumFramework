@@ -336,17 +336,16 @@ QuantumOperatorProp[qo_, "Transpose"] := QuantumOperator[
     qo["State"]["Transpose"], {qo["InputOrder"], qo["OutputOrder"]}]
 
 
-simplifyLabel[op_QuantumOperator] := QuantumOperator[op, "Label" -> Replace[op["Label"], {
+simplifyLabel[op_QuantumOperator] := QuantumOperator[op, "Label" -> simplifyLabel[op["Label"]]]
+
+simplifyLabel[l_] := Replace[l, {
     SuperDagger[label : "X" | "Y" | "Z" | "NOT" | "H" | "SWAP"] :> label,
-    SuperDagger[c : "Controlled"["NOT", __]] :> c,
-    SuperDagger["Controlled"[(r : Subscript["R", _] | "P")[angle_], rest__]] :> "Controlled"[r[-angle], rest],
-    SuperDagger["Controlled"[x_, rest__]] :> "Controlled"[SuperDagger[x], rest],
+    SuperDagger["Controlled"[x_, rest__]] :> "Controlled"[simplifyLabel[x], rest],
     SuperDagger[(r : Subscript["R", _] | "P")[angle_]] :> r[- angle],
     SuperDagger["PhaseShift"[n_] | n_Integer] :> "PhaseShift"[-n],
     SuperDagger["U2"[a_, b_]] :> "U2"[Pi - a, Pi - b],
     SuperDagger[SuperDagger[label_]] :> label
 }]
-]
 
 QuantumOperatorProp[qo_, "Dagger" | "ConjugateTranspose"] := simplifyLabel @ QuantumOperator[
     qo["State"]["Dagger"], {qo["InputOrder"], qo["OutputOrder"]}]
