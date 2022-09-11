@@ -22,12 +22,12 @@ toOperator[lhs_ -> rhs_] := QuantumOperator[lhs, rhs]
 toOperator[arg_] := QuantumOperator[arg]
 
 
-QuantumCircuitOperator[operators_ ? ListQ] := With[{ops = toOperator /@ operators},
+QuantumCircuitOperator[operators_ ? ListQ] := With[{ops = toOperator /@ Flatten[operators]},
     QuantumCircuitOperator[<|"Operators" -> ops, "Label" -> RightComposition @@ (#["Label"] & /@ ops)|>]
 ]
 
 QuantumCircuitOperator[operators_ ? ListQ, label_, ___] :=
-    QuantumCircuitOperator[<|"Operators" -> toOperator /@ operators, "Label" -> label|>]
+    QuantumCircuitOperator[<|"Operators" -> toOperator /@ Flatten[operators], "Label" -> label|>]
 
 QuantumCircuitOperator[op : Except[_ ? QuantumCircuitOperatorQ, _ ? QuantumFrameworkOperatorQ], args___] := QuantumCircuitOperator[{op}, args]
 
@@ -46,7 +46,7 @@ QuantumCircuitOperator[params: Except[{Alternatives @@ $QuantumCircuitOperatorNa
 
 Options[quantumCircuitApply] = {Method -> Automatic}
 
-quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[]] :=
+quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[]] /; qco["Arity"] == qs["OutputQudits"] :=
     Switch[
         OptionValue[Method],
         "Schrodinger" | "Schroedinger" | "Schrödinger",
@@ -59,7 +59,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
                     ContractTensorNetwork @ InitializeTensorNetwork[
                         qco["TensorNetwork"],
                         qs["Computational"]["Tensor"],
-                        Join[Superscript[0, #] & /@ (Range[qs["OutputQudits"]]), Subscript[0, #] & /@ (Range[qs["InputQudits"]])]
+                        Join[Superscript[0, #] & /@ qco["InputOrder"], Subscript[0, #] & /@ (Range[qs["InputQudits"]])]
                     ],
                 QuantumState[
                     quantumCircuitApply[QuantumTensorProduct[qco, qco["Conjugate"]], qs["Bend"]]["State"]["PermuteOutput",
@@ -86,7 +86,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
                 ]
             ];
             If[ qco["Measurements"] > 0,
-                QuantumMeasurement @
+                QuantumMeasurement[
                     QuantumMeasurementOperator[
                         QuantumOperator[
                             state,
@@ -97,6 +97,8 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
                         ],
                         qco["Target"]
                     ],
+                    Fold[ReverseApplied[Construct], Select[qco["Operators"], QuantumMeasurementOperatorQ]]["POVM"]["Sort"]["OutputBasis"]
+                ],
                 state
             ]
         ],

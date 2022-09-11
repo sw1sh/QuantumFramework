@@ -8,8 +8,8 @@ QuantumTensorProduct[args_List] := Fold[QuantumTensorProduct, args]
 
 QuantumTensorProduct[args___] := QuantumTensorProduct[{args}]
 
-resetIndex[qb_QuditBasis] := With[{index = qb["Index"]},
-    KeyMap[MapAt[Replace[Thread[index -> Range[Length[index]]]], 2], qb["Representations"]]
+resetIndex[qb_QuditBasis] := With[{index = Sort @ qb["Index"]},
+    KeyMap[MapAt[Replace[Thread[index -> Range[Length[index]]]], 2], KeySortBy[Last] @ qb["Representations"]]
 ]
 
 QuantumTensorProduct[qb1_QuditBasis, qb2_QuditBasis] := If[qb1["Size"] == 0 || qb2["Size"] == 0, QuditBasis[0],
