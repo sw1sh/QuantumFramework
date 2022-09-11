@@ -67,7 +67,8 @@ $QuantumMeasurementProperties = {
     "Outcomes", "Probabilities",
     "Mean", "States", "StateAssociation",
     "Entropy",
-    "PostMeasurementState"
+    "PostMeasurementState",
+    "Eigenvalues", "EigenvalueVectors"
 };
 
 
@@ -92,7 +93,7 @@ QuantumMeasurement[qm_QuantumMeasurement, args___] := QuantumMeasurement[Quantum
 QuantumMeasurement[qmo_QuantumMeasurementOperator, args__] := QuantumMeasurement[QuantumMeasurementOperator[qmo, args]]
 
 
-QuantumMeasurementProp[qm_, "Properties"] := DeleteDuplicates @ Join[$QuantumMeasurementProperties, qm["QuantumOperator"]["Properties"]]
+QuantumMeasurementProp[qm_, "Properties"] := Union @ Join[$QuantumMeasurementProperties, qm["QuantumOperator"]["Properties"]]
 
 QuantumMeasurementProp[QuantumMeasurement[qmo_], "QuantumOperator"] := qmo
 
@@ -145,6 +146,8 @@ QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
 
 QuantumMeasurementProp[qm_, "Eigenvalues"] := qm["Eigenstate"]["Names"]
 
+QuantumMeasurementProp[qm_, "EigenvalueVectors"] := Replace[Flatten[{#["Name"]}] & /@ qm["Eigenvalues"], {Interpretation[_, {v_, _}] :> v, v_ :> Ket[v]}, {2}]
+
 QuantumMeasurementProp[qm_, "Outcomes"] := Which[
     MatchQ[qm["LabelHead"], "Computational" | Automatic],
     qm["Computational"],
@@ -184,7 +187,7 @@ QuantumMeasurementProp[qm_, "SimulatedMeasurement"] := RandomVariate[qm["Distrib
 
 QuantumMeasurementProp[qm_, "SimulatedMeasurement", n_Integer] := RandomVariate[qm["Distribution"], n]
 
-QuantumMeasurementProp[qm_, "Mean"] := qm["Eigenvalues"] . qm["ProbabilitiesList"]
+QuantumMeasurementProp[qm_, "Mean"] := Replace[Total @ MapThread[Times, {qm["ProbabilitiesList"], qm["EigenvalueVectors"]}], {x_} :> x]
 
 QuantumMeasurementProp[qm_, "StateAssociation" | "StatesAssociation"] := Part[
     KeySort @ AssociationThread[qm["Outcomes"], qm["States"]],
