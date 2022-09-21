@@ -17,7 +17,7 @@ PackageScope["identityMatrix"]
 PackageScope["kroneckerProduct"]
 PackageScope["projector"]
 PackageScope["MatrixPartialTrace"]
-PackageScope["BlockDiagonalMatrix"]
+PackageScope["blockDiagonalMatrix"]
 PackageScope["eigenvectors"]
 PackageScope["eigensystem"]
 PackageScope["pauliMatrix"]
@@ -103,20 +103,8 @@ emptyTensorQ[t_ ? TensorQ] := Last[Dimensions[t]] === 0
 
 matrixQ[m_] := MatrixQ[m] && ! emptyTensorQ[m]
 
-BlockDiagonalMatrix[m1_ ? matrixQ, m2_ ? matrixQ] := Module[{
-    r1, r2, c1, c2
-},
-  	{r1, c1} = Dimensions @ m1;
-  	{r2, c2} = Dimensions @ m2;
-    Join[
-        Join[m1, ConstantArray[0, {r1, c2}, SparseArray], 2],
-        Join[ConstantArray[0, {r2, c1}, SparseArray], m2, 2]
-    ]
-]
 
-BlockDiagonalMatrix[mm__ ? matrixQ] := Fold[BlockDiagonalMatrix, {mm}]
-
-BlockDiagonalMatrix[mm__ ? MatrixQ] := BlockDiagonalMatrix @@ DeleteCases[{mm}, _ ? emptyTensorQ]
+blockDiagonalMatrix[ms : {__ ? MatrixQ}] := BlockDiagonalMatrix[DeleteCases[ms, _ ? emptyTensorQ]]
 
 
 Options[eigenvectors] = {"Sort" -> False, "Normalize" -> False, Chop -> False}

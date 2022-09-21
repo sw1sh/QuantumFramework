@@ -206,8 +206,8 @@ QuantumState[qs_QuantumState ? QuantumStateQ] := qs
 
 QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
     If[ And @@ (#["PureStateQ"] & /@ {qs}),
-        SparseArrayFlatten[BlockDiagonalMatrix @@ (#["StateMatrix"] & /@ {qs})],
-        BlockDiagonalMatrix @@ (#["DensityMatrix"] & /@ {qs})
+        SparseArrayFlatten[blockDiagonalMatrix[#["StateMatrix"] & /@ {qs}]],
+        blockDiagonalMatrix[#["DensityMatrix"] & /@ {qs}]
     ],
     Plus @@ (#["Basis"] & /@ {qs}),
     "Label" -> CirclePlus @@ (#["Label"] & /@ {qs})

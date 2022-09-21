@@ -233,11 +233,11 @@ QuantumOperator[{"ControlledU" | "Controlled", qo_ ? QuantumOperatorQ, control1 
 },
     (*ConfirmAssert[! IntersectingQ[qo["Order"], control], "Target and control qudits shouldn't intersect"];*)
     QuantumOperator[
-        BlockDiagonalMatrix[
+        blockDiagonalMatrix[{
             identityMatrix[(2 ^ controls1 - 1) qo["OutputDimension"]],
             qo["Matrix"],
             identityMatrix[(2 ^ controls0 - 1) 2 ^ controls1 qo["OutputDimension"]]
-        ],
+        }],
         With[{order = Join[
             control0,
             control1,
@@ -263,7 +263,7 @@ QuantumOperator[{"ControlledU" | "Controlled", qo_ ? QuantumOperatorQ, control1 
 QuantumOperator[{"Multiplexer", qos__}, opts___] := Block[{sorted = QuantumOperator[#]["Sort"] & /@ {qos}},
     QuantumOperator[
         QuantumOperator[
-            BlockDiagonalMatrix @@ (#["MatrixRepresentation"] & /@ sorted),
+            blockDiagonalMatrix[#["MatrixRepresentation"] & /@ sorted],
             {Union @@ (#["OutputOrder"] & /@ sorted), Union @@ (#["InputOrder"] & /@ sorted)},
             Plus @@ (QuantumBasis[#["OutputDimensions"], #["InputDimensions"]] & /@ sorted)
         ],
