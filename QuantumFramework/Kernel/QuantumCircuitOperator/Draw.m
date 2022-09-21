@@ -1,6 +1,6 @@
 Package["Wolfram`QuantumFramework`"]
 
-PackageExport["CircuitDraw"]
+PackageScope["CircuitDraw"]
 
 
 

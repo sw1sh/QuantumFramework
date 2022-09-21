@@ -33,7 +33,7 @@ QuantumCircuitOperator::undefprop = "property `` is undefined for this circuit";
 
 QuantumCircuitOperatorProp[QuantumCircuitOperator[data_Association], key_String] /; KeyExistsQ[data, key] := data[key]
 
-QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[Join[Options[drawGateGraphics], Options[Graphics]]]] := Module[{
+QuantumCircuitOperatorProp[qco_, "OldDiagram", opts : OptionsPattern[Join[Options[drawGateGraphics], Options[Graphics]]]] := Module[{
     labels, indices, graphics,
     width, height,
     sizes,
@@ -55,6 +55,9 @@ QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[Join[Options[d
         ImageSize -> If[width > height, {imageWidth, Automatic}, {Automatic, imageHeight}]
     ]
 ]
+
+QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[Options[CircuitDraw]]] :=
+    CircuitDraw[qco, opts]
 
 Options[quantumCircuitCompile] = {Method -> Automatic}
 
