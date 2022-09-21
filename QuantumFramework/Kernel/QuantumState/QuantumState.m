@@ -61,6 +61,11 @@ QuantumState["Eigenvalues" -> eigenvalues_ ? VectorQ, basisArgs___] := With[{
 ]
 
 
+(* number *)
+
+QuantumState[x_ ? NumberQ, basisArgs___] := QuantumState[{x}, QuantumBasis[basisArgs]]
+
+
 (* expand basis *)
 
 QuantumState[state : Except[_ ? QuantumStateQ], args : Except[_ ? QuantumBasisQ]] :=
@@ -188,6 +193,11 @@ QuantumState /: HoldPattern[Times[states : _QuantumState ? QuantumStateQ ...]] :
     If[ Equal @@ (#["Dimension"] & /@ {states}), Fold[multiplyQuantumStates, {states}],
         Failure["QuantumState", <|"MessageTemplate" -> "Incompatible dimensions"|>]
     ]
+
+
+(* differentiation *)
+
+QuantumState /: D[qs : _QuantumState, args___] := QuantumState[D[qs["State"], args], qs["Basis"]]
 
 
 (* join *)

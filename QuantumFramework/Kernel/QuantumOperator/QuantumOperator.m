@@ -121,7 +121,7 @@ QuantumOperator[matrix_ ? MatrixQ, order : _ ? autoOrderQ, args___, opts : Optio
         o : Except[{_ ? orderQ | Automatic, _ ? orderQ | Automatic}] :> {op["OutputOrder"], Replace[o, Automatic -> op["InputOrder"]]},
         Automatic -> op["Order"]
     }];
-    newInputOrder = PadRight[newInputOrder, op["InputQudits"], Drop[op["FullInputOrder"], UpTo @ Length[newInputOrder]]];
+    newInputOrder = Join[newInputOrder, Take[DeleteElements[op["FullInputOrder"], newInputOrder], UpTo[op["InputQudits"] - Length[newInputOrder]]]];
     newOutputOrder = newOutputOrder - Min[newOutputOrder] + Min[newInputOrder];
     If[ op["InputQudits"] < Length[newInputOrder],
         QuantumOperator[{op, Ceiling[Length[newInputOrder], op["InputQudits"]] / op["InputQudits"]}, {Automatic, newInputOrder}, opts],
@@ -156,8 +156,8 @@ QuantumOperator[matrix_ ? MatrixQ, args___, opts : OptionsPattern[]] := Module[{
 
             newMatrix = kroneckerProduct[
                 newMatrix,
-                Replace[{} -> {{1}}] @ identityMatrix[Max[newOutputQuditBasis["Dimension"] - outputs, newInputQuditBasis["Dimension"] - inputs, 0]][[
-                    ;; Max[newOutputQuditBasis["Dimension"] - outputs, 0], ;; Max[newInputQuditBasis["Dimension"] - inputs, 0]
+                Replace[{} -> {{1}}] @ identityMatrix[Max[Ceiling[newOutputQuditBasis["Dimension"] / outputs], Ceiling[newInputQuditBasis["Dimension"] / inputs] 0]][[
+                    ;; Max[Ceiling[newOutputQuditBasis["Dimension"] / outputs], 0], ;; Max[Ceiling[newInputQuditBasis["Dimension"] / inputs], 0]
                 ]]
             ];
             basis = QuantumBasis[basis,
@@ -384,6 +384,11 @@ addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator 
         ordered1["Basis"]
     ]
 ]
+
+
+(* differentiation *)
+
+QuantumOperator /: D[op : _QuantumOperator, args___] := QuantumOperator[D[op["State"], args], op["Order"]]
 
 
 (* join *)

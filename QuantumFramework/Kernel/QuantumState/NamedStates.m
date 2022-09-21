@@ -101,7 +101,7 @@ QuantumState[{"RandomPure", subsystemCount_Integer}, dimension : (_Integer ? Pos
 QuantumState["RandomPure", args : PatternSequence[Except[_ ? QuantumBasisQ], ___]] :=  QuantumState["RandomPure", QuantumBasis[args]]
 
 QuantumState["RandomPure", qb_ ? QuantumBasisQ] :=
-    QuantumState[RandomComplex[{-1 - I, 1 + I}, qb["Dimension"]], qb]
+    QuantumOperator[{"RandomUnitary", qb}][]
 
 QuantumState["RandomPure"] := QuantumState["RandomPure", QuantumBasis[]]
 

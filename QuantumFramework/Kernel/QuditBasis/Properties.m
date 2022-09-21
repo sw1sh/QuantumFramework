@@ -112,7 +112,7 @@ QuditBasisProp[qb_, "Matrix"] := ArrayReshape[qb["Tensor"], qb["MatrixDimensions
 
 QuditBasisProp[qb_, "Dual"] := QuditBasis @ KeyMap[MapAt[#["Dual"] &, 1], qb["Representations"]]
 
-QuditBasisProp[qb_, "DualQ"] := AllTrue[Keys[qb["Representations"]][[All, 1]], #["DualQ"] &]
+QuditBasisProp[qb_, "DualQ"] := AllTrue[Keys[qb["RemoveIdentities"]["Representations"]][[All, 1]], #["DualQ"] &]
 
 
 QuditBasisProp[qb_, "SortedQ"] := OrderedQ[Reverse /@ Keys @ qb["Representations"]]
