@@ -89,7 +89,7 @@ QuantumOperator[{"ZRotation" | "RZ", angle_, dimension_Integer : 2}, opts___] :=
 
 QuantumOperator[{"U" | "U3", theta_, phi_ : Pi, lambda_ : Pi}, opts___] := QuantumOperator[
     QuantumOperator[
-        {{Cos[theta / 2], - Exp[I lambda] Sin[theta / 2]}, {Exp[I phi] Sin[theta / 2], Exp[I (phi + lambda)] Cos[theta / 2]}},
+        {{Cos[theta / 2], - Exp[I lambda] Sin[theta / 2]}, {Exp[I phi] Sin[theta / 2], Exp[I * (phi + lambda)] Cos[theta / 2]}},
          "Label" -> "U"[theta, phi, lambda]
     ],
     opts
@@ -97,7 +97,7 @@ QuantumOperator[{"U" | "U3", theta_, phi_ : Pi, lambda_ : Pi}, opts___] := Quant
 
 QuantumOperator[{"U2", phi_, lambda_}, opts___] := QuantumOperator[
     QuantumOperator[
-        1 / Sqrt[2] {{1, - Exp[I lambda]}, {Exp[I phi], Exp[I (phi + lambda)]}},
+        1 / Sqrt[2] {{1, - Exp[I lambda]}, {Exp[I phi], Exp[I * (phi + lambda)]}},
         "Label" -> "U2"[phi, lambda]
     ],
     opts

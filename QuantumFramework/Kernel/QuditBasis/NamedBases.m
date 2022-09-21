@@ -132,7 +132,7 @@ QuditBasis["Dirac", args___] := Module[{
             KroneckerProduct[pauliBasis3, pauliBasis3],
             KroneckerProduct[pauliBasis3, pauliBasis4],
             gamma1 . gamma2, gamma1 . gamma3, gamma1 . gamma4, gamma2 . gamma3, gamma2 . gamma4, gamma3 . gamma4,
-            -I (gamma2 . gamma3 . gamma4), I (gamma1 . gamma3 . gamma4), -I (gamma1 . gamma2 . gamma4), I (gamma1 . gamma2 . gamma3),
+            -I * (gamma2 . gamma3 . gamma4), I * (gamma1 . gamma3 . gamma4), -I * (gamma1 . gamma2 . gamma4), I * (gamma1 . gamma2 . gamma3),
             gamma1 . gamma2 . gamma3 . gamma4
        }],
        args
