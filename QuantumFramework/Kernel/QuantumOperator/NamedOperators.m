@@ -444,18 +444,14 @@ QuantumOperator[{"ZZ", angle_}, opts___] := QuantumOperator[
     opts
 ]
 
+QuantumOperator["RandomUnitary", order : (_ ? orderQ) : {1}, opts___] := QuantumOperator[{"RandomUnitary", QuantumBasis[2, Length[order], opts]}, order]
 
-QuantumOperator["RandomUnitary", opts___] := QuantumOperator[{"RandomUnitary", 2}, opts]
-
-QuantumOperator[{"RandomUnitary", args___}, order : (_ ? orderQ) : {1}, opts___] :=
-    QuantumOperator[{"RandomUnitary", QuantumBasis[args]}, order, opts]
-
-QuantumOperator[{"RandomUnitary", qb_ ? QuantumBasisQ}, order : (_ ? orderQ) : {1}, opts___] :=
+QuantumOperator[{"RandomUnitary", qb_ ? QuantumBasisQ}, order : (_ ? orderQ) : {1}] :=
 With[{
     padOrder = Join[order, Complement[Min[order] - 1 + Range[Length[qb["Dimensions"]]], order]]
 },
     QuantumOperator[
-           RandomVariate @ CircularUnitaryMatrixDistribution[qb["Dimension"]], order, qb, opts
+           RandomVariate @ CircularUnitaryMatrixDistribution[qb["Dimension"]], order, qb
     ]
 ]
 
