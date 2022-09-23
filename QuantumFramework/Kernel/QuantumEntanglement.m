@@ -45,11 +45,12 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Reny
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, {"RenyiEntanglementEntropy" | "RenyiEntropy", alpha_}] :=
     Enclose[
-        Re @ (1 / (1 - alpha)) Log[2, Tr @ MatrixPower[
+        Re[(1 / (1 - alpha)) Log[2, Tr @ MatrixPower[
             QuantumPartialTrace[
                 ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &],
                 {1}
             ]["DensityMatrix"], alpha]]
+        ]
     ]
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Realignment"] :=
