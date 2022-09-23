@@ -133,7 +133,8 @@
             "ZSpider",
             "XSpider",
             "Switch",
-            "Discard"
+            "Discard",
+            "Multiplexer"
         },
         {
             "Computational",
@@ -236,6 +237,17 @@
             "InverseFourier",
             "PhaseEstimation",
             "Controlled"
+        }
+    },
+    "QuantumEntanglementMonotone" -> {
+        0,
+        {
+            "Concurrence",
+            "Negativity",
+            "LogNegativity",
+            "EntanglementEntropy",
+            "RenyiEntropy",
+            "Realignment"
         }
     }
 }

@@ -1,12 +1,17 @@
 Needs["Wolfram`QuantumFramework`"]
 
-$AutoCompletionData = With[{
-    basisNames = Wolfram`QuantumFramework`PackageScope`$QuditBasisNames,
-    stateNames = Wolfram`QuantumFramework`PackageScope`$QuantumStateNames,
-    operatorNames = Wolfram`QuantumFramework`PackageScope`$QuantumOperatorNames,
-    measurementOperatorNames = Wolfram`QuantumFramework`PackageScope`$QuantumMeasurementOperatorNames,
-    channelNames =  Wolfram`QuantumFramework`PackageScope`$QuantumChannelNames,
-    circuitNames = Wolfram`QuantumFramework`PackageScope`$QuantumCircuitOperatorNames
+$AutoCompletionData = Block[{$ContextPath},
+Needs["Wolfram`QuantumFramework`"];
+Needs["Wolfram`QuantumFramework`PackageScope`"];
+With[{
+    basisNames = `$QuditBasisNames,
+    stateNames = `$QuantumStateNames,
+    operatorNames = `$QuantumOperatorNames,
+    measurementOperatorNames = `$QuantumMeasurementOperatorNames,
+    channelNames = `$QuantumChannelNames,
+    circuitNames = `$QuantumCircuitOperatorNames,
+
+    entanglementMonotones = `$QuantumEntanglementMonotones
 },
     {
         "QuditBasis" -> {basisNames},
@@ -15,8 +20,10 @@ $AutoCompletionData = With[{
         "QuantumOperator" -> {operatorNames, basisNames},
         "QuantumMeasurementOperator" -> {Join[basisNames, measurementOperatorNames], basisNames},
         "QuantumChannel" -> {channelNames, basisNames},
-        "QuantumCircuitOperator" -> {circuitNames}
+        "QuantumCircuitOperator" -> {circuitNames},
+        "QuantumEntanglementMonotone" -> {0, entanglementMonotones}
     }
+]
 ]
 
 $path = FileNameJoin @ {DirectoryName[$InputFileName], "AutoCompletionData"}
