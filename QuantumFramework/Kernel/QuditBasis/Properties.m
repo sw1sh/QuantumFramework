@@ -75,12 +75,16 @@ QuditBasisProp[qb_, "Elements"] /; computationalBasisQ[qb["Representations"]] :=
 ]
 
 QuditBasisProp[qb_, "Elements"] := If[qb["Length"] > 0,
-    SparseArray[TensorProduct @@@ Tuples @ Values @ KeySort @
-        ResourceFunction["KeyGroupBy"][
-            qb["Representations"],
-            Last,
-            SparseArray @* Values @* normalRepresentations
-        ]
+    ArrayReshape[
+        Transpose[
+            Outer[Times,
+                Sequence @@ Values @ ResourceFunction["KeyGroupBy"][
+                    qb["RemoveIdentities"]["Representations"], Last, SparseArray @* Values @* normalRepresentations
+                ]
+            ],
+            FindPermutation[Join[Range[1, 2 qb["Qudits"], 2], Range[2, 2 qb["Qudits"], 2]]]
+        ],
+        Prepend[qb["Dimensions"], qb["Dimension"]]
     ],
     {}
 ]
