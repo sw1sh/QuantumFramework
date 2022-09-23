@@ -2,11 +2,14 @@ Package["Wolfram`QuantumFramework`"]
 
 PackageExport["QuantumEntangledQ"]
 PackageExport["QuantumEntanglementMonotone"]
+PackageScope["$QuantumEntanglementMonotones"]
 
 
+
+$QuantumEntanglementMonotones = {"Concurrence", "Negativity", "LogNegativity", "EntanglementEntropy", "RenyiEntropy", "Realignment"}
 
 QuantumEntangledQ[qs_ ? QuantumStateQ, biPartition_ : Automatic] :=
-    Enclose[ConfirmMatch[QuantumEntanglementMonotone[qs, biPartition, "Concurrence"], _ ? NumericQ] > 0, Indeterminate &]
+    Enclose[ConfirmMatch[QuantumEntanglementMonotone[qs, biPartition, "Realignment"], _ ? NumericQ] > 1, Indeterminate &]
 
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition : Except[_String] : Automatic] :=
@@ -42,10 +45,15 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Reny
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, {"RenyiEntanglementEntropy" | "RenyiEntropy", alpha_}] :=
     Enclose[
-        (1 / (1 - alpha)) Log[2, Tr @ MatrixPower[
+        Re @ (1 / (1 - alpha)) Log[2, Tr @ MatrixPower[
             QuantumPartialTrace[
                 ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &],
                 {1}
             ]["DensityMatrix"], alpha]]
+    ]
+
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Realignment"] :=
+    With[{bqs = qs["Bipartition", biPartition]["Normalized"]},
+        Total @ SingularValueList @ ArrayReshape[Transpose[bqs["Bend"]["Tensor"], 2 <-> 3], bqs["Dimensions"] ^ 2]
     ]
 
