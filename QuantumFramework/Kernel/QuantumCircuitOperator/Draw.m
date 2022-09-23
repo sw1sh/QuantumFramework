@@ -4,21 +4,21 @@ PackageScope["CircuitDraw"]
 
 
 
+$DefaultGray = RGBColor[0.537254, 0.537254, 0.537254];
+
 $GateDefaultBoundaryStyle = {
 	"H" -> RGBColor[0.368417, 0.506779, 0.709798],
 	"T" | "S" -> RGBColor[0.922526, 0.385626, 0.209179],
-	"X" -> RGBColor[0.880722, 0.611041, 0.142051],
+	"X" | "Y" | "Z" -> RGBColor[0.880722, 0.611041, 0.142051],
 	"P"[_] | "PhaseShift"[_] | _Integer -> RGBColor[0.560181, 0.691569, 0.194885],
 	Subscript["R", _][_] -> RGBColor[0.528488, 0.470624, 0.701351],
 	"Measurement" -> RGBColor[0.7367, 0.358, 0.5030],
-	_ -> Black
+	_ -> $DefaultGray
 };
 
 $GateDefaultBackgroundStyle = MapAt[Directive[#, Opacity[0.15]] &, Append[Most[$GateDefaultBoundaryStyle], _ -> White], {All, 2}]
 
 $DefaultFontStyleOptions = {FontFamily -> "Roboto", FontSize -> 11, FontColor -> Black};
-
-$DefaultGray = RGBColor[0.537254, 0.537254, 0.537254];
 
 $DefaultWireLabelStyle = {FontSlant -> Italic, FontSize -> 10, FontColor -> $DefaultGray};
 
@@ -61,11 +61,14 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			{
 				$DefaultGray,
 				Line[{
-					{center[[1]], - #[[1]] - size If[MemberQ[target, #[[1]]] && ! MatchQ[subLabel, "NOT"], 1 / 2, 1 / 5]},
-					{center[[1]], - #[[2]] + size If[MemberQ[target, #[[2]]] && ! MatchQ[subLabel, "NOT"], 1 / 2, 1 / 5]}
-				}] & /@ Partition[Sort[vpos], 2, 1],
+					{center[[1]], - #[[1]] - size If[MemberQ[target, #[[1]]], Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2], 1 / 5]},
+					{center[[1]], - #[[2]] + size If[MemberQ[target, #[[2]]], Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2], 1 / 5]}
+				}] & /@ Select[Partition[Sort[vpos], 2, 1], Not @* ContainsExactly[target]],
 				If[ Length[target] > 1,
-					MapIndexed[drawGate[{{#1}, hpos}, Labeled[subLabel, First[#2]], opts] &, target],
+					If[	MatchQ[subLabel, "SWAP"],
+						drawGate[{target, hpos}, subLabel],
+						MapIndexed[drawGate[{{#1}, hpos}, Labeled[subLabel, First[#2]], opts] &, target]
+					],
 					Map[drawGate[{{#}, hpos}, subLabel, opts] &, target]
 				],
 				drawGate[{{#}, hpos}, "1", opts] & /@ control1,
@@ -302,7 +305,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 		],
 		drawWireLabels[
 			If[wirePaddingQ, Identity, Replace[Automatic -> Range[width - span + 1, width]]] @ OptionValue["WireLabels"],
-			If[wirePaddingQ, width, span], height, pad,
+			If[wirePaddingQ, width, span], height, If[wirePaddingQ, 0, pad],
 			FilterRules[{opts}, Options[drawWireLabels]]
 		],
 		If[TrueQ[OptionValue["ShowLabel"]], drawLabel[circuit["Label"], height, pad, FilterRules[{opts}, Options[drawLabel]]]]
