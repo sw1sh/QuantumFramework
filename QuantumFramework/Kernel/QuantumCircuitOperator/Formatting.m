@@ -15,7 +15,7 @@ QuantumCircuitOperator /: MakeBoxes[qco_QuantumCircuitOperator, TraditionalForm]
 QuantumCircuitOperator /: MakeBoxes[qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ, format_] := Enclose[
 BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
     qco,
-    qco["Diagram", FontSize -> 1, "MeasurementWireLabel" -> "", ImageSize -> Tiny],
+    qco["Diagram", "ShowTextLabels" -> False, ImageSize -> Tiny],
     {
         {
             BoxForm`SummaryItem[{"Gates: ", qco["Gates"]}]
@@ -23,8 +23,12 @@ BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
     },
     {
         {
-            BoxForm`SummaryItem[{"Dimension: ", Row[{qco["InputDimension"], "\[RightArrow]", qco["InputDimension"]}]}],
-            BoxForm`SummaryItem[{"Order: ", Row[{qco["InputOrder"], "\[RightArrow]", qco["OutputOrder"]}]}],
+            BoxForm`SummaryItem[{"Dimension: ", Row[{qco["InputDimension"], "\[RightArrow]", qco["InputDimension"]}]}]
+        },
+        {
+            BoxForm`SummaryItem[{"Order: ", Row[{qco["InputOrder"], "\[RightArrow]", qco["OutputOrder"]}]}]
+        },
+        {
             BoxForm`SummaryItem[{"Target: ", qco["Target"]}]
         }
     },
