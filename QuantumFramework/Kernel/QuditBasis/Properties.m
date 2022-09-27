@@ -84,7 +84,7 @@ QuditBasisProp[qb_, "Elements"] := If[qb["Length"] > 0,
             ],
             FindPermutation[Join[Range[1, 2 qb["Qudits"], 2], Range[2, 2 qb["Qudits"], 2]]]
         ],
-        Prepend[qb["Dimensions"], qb["Dimension"]]
+        Prepend[qb["ElementDimensions"], qb["Dimension"]]
     ],
     {}
 ]
