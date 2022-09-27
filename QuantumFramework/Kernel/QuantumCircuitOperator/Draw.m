@@ -10,13 +10,13 @@ $GateDefaultBoundaryStyle = {
 	"H" -> RGBColor[0.368417, 0.506779, 0.709798],
 	"T" | "S" -> RGBColor[0.922526, 0.385626, 0.209179],
 	"X" | "Y" | "Z" -> RGBColor[0.880722, 0.611041, 0.142051],
-	"P"[_] | "PhaseShift"[_] | _Integer -> RGBColor[0.560181, 0.691569, 0.194885],
+	"P"[_] | (Superscript | Power)["P"[_], _] | "PhaseShift"[_] | _Integer -> RGBColor[0.560181, 0.691569, 0.194885],
 	Subscript["R", _][_] -> RGBColor[0.528488, 0.470624, 0.701351],
 	"Measurement" -> RGBColor[0.7367, 0.358, 0.5030],
 	_ -> $DefaultGray
 };
 
-$GateDefaultBackgroundStyle = MapAt[Directive[#, Opacity[0.15]] &, Append[Most[$GateDefaultBoundaryStyle], _ -> White], {All, 2}]
+$GateDefaultBackgroundStyle = MapAt[Directive[#, Opacity[0.15]] &, Append[Most[$GateDefaultBoundaryStyle], _ -> $DefaultGray], {All, 2}]
 
 $DefaultFontStyleOptions = {FontFamily -> "Roboto", FontSize -> 11, FontColor -> Black};
 
@@ -108,6 +108,22 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			Line[{top + size / 4 {-1, -1}, top + size / 4 {1, 1}}],
 		    Line[{top + size / 4 {1, -1}, top + size / 4 {-1, 1}}]
 		}],
+		"RootSWAP" -> With[{bottom = {center[[1]], -vpos[[1]] gapSize}, top = {center[[1]], -vpos[[-1]] gapSize}}, {
+			$DefaultGray,
+		    Line[{bottom - {size / 2, 0}, bottom + {size / 2, 0}}],
+		    Line[{top - {size / 2, 0}, top + {size / 2, 0}}],
+		    Line[{bottom, center + {0, size / 4}}],
+			Line[{center - {0, size / 4}, top}],
+			$DefaultGray, Opacity[0.8], Thickness[Large],
+		    Line[{bottom + size / 4 {-1, -1}, bottom + size / 4 {1, 1}}],
+		    Line[{bottom + size / 4 {1, -1}, bottom + size / 4 {-1, 1}}],
+			Line[{top + size / 4 {-1, -1}, top + size / 4 {1, 1}}],
+		    Line[{top + size / 4 {1, -1}, top + size / 4 {-1, 1}}],
+			EdgeForm[Replace[subLabel, gateBoundaryStyle]],
+			FaceForm[Replace[subLabel, gateBackgroundStyle]],
+			Rectangle[center - size / 4, center + size / 4, FilterRules[{opts}, Options[Rectangle]]],
+			Text[Style["1 / 2", labelStyleOpts], center]
+		}],
 		"PhaseShift"[n_] | n_Integer :> {
 			EdgeForm[Replace[label, gateBoundaryStyle]],
 			FaceForm[Replace[label, gateBackgroundStyle]],
@@ -189,8 +205,11 @@ drawMeasurementWire[x_, width_, OptionsPattern[]] := With[{
 		Line[{{size / 2, y - size / 32}, {x - size / 2, y - size / 32}}],
 		Line[{{size / 2, y + size / 32}, {x - size / 2, y + size / 32}}],
 		Replace[label, {
-			Placed[l_, p_] :> Text[l, {Replace[p, {Left -> - size / 2, Right -> x + size / 2}], y}],
-			l_ :> Text[l, {- size / 2, y}]
+			Placed[l_, p_] :> Text[l,
+				{Replace[p, {Left -> 3 size / 8, Right -> x - 3 size / 8}], y},
+				Replace[p, {Left -> {1, 0}, Right -> {-1, 0}}]
+			],
+			l_ :> Text[l, {3 size / 8, y}, {1, 0}]
 		}]
 	}
 ]]
@@ -201,19 +220,24 @@ drawWireLabels[wireLabels_, width_, height_, pad_, opts : OptionsPattern[]] := B
     labels = MapIndexed[{label, index} |-> With[{i = pad + First @ index},
         Map[
             Replace[{
-                Placed[l_, p_] :>
+                Placed[l_, p_] :> With[{
+					text = Style[Replace[l, Automatic -> i], FilterRules[{opts}, Options[Style]], $DefaultWireLabelStyle],
+					ps = Developer`ToList[Replace[p, Automatic -> {Left, Center}]]
+				},
                     Text[
-                        Style[Replace[l, Automatic -> i], FilterRules[{opts}, Options[Style]], $DefaultWireLabelStyle],
-                        Total @ Replace[If[MemberQ[#, Center], #, Append[#, Center]] & @ Developer`ToList[Replace[p, Automatic -> {Left, Center}]], {
+                        text,
+                        Total @ Replace[If[MemberQ[#, Center], #, Append[#, Center]] & @ ps, {
 							Center -> {0, -i},
                             Above -> {0, -i + size / 2},
                             Below -> {0, -i - size / 2},
-                            Left -> {- size / 2, 0},
-                            Right -> {height + size / 2, 0}
+                            Left -> {3 size / 8, 0},
+                            Right -> {height - 3 size / 8, 0}
                         },
-						{1}]
-                    ],
-                l_ :> Text[Style[l, FilterRules[{opts}, Options[Style]], $DefaultWireLabelStyle], {- size / 2 , -i}]
+						{1}],
+						If[MemberQ[ps, Left], {1, 0}, {-1, 0}]
+					]
+				],
+                l_ :> Text[Style[l, FilterRules[{opts}, Options[Style]], $DefaultWireLabelStyle], {3 size / 8, -i}, {1, 0}]
                 }
             ],
             Developer`ToList[label]
@@ -267,7 +291,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	labelCount = 0,
 	labelCounter
 },
-	labelCounter = Replace[None :> (labelCount++; Subscript["U", labelCount])];
+	labelCounter = ReplaceAll[None :> (labelCount++; Subscript["U", labelCount])];
 	span = If[showMeasurementWireQ, width, #2 - #1 + 1 & @@ MinMax @ order];
 	pad = width - span;
 	positions = circuitPositions[circuit, level, OptionValue["GatePacking"] === Automatic];
