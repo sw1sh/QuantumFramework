@@ -152,7 +152,8 @@ Options[drawMeasurement] = Join[{
 	"Arrowhead" -> 0.005,
 	"MeasurementBackgroundStyle" -> Replace["Measurement", $GateDefaultBackgroundStyle],
 	"MeasurementBoundaryStyle" -> Replace["Measurement", $GateDefaultBoundaryStyle],
-	"MeasurementWirePosition" -> Top
+	"MeasurementWirePosition" -> Top,
+	"ShowMeasurementWire" -> True
 },
 	Options[Style],
 	Options[Rectangle]
@@ -162,6 +163,7 @@ drawMeasurement[pos_, width_, opts : OptionsPattern[]] := Block[{
 	vGapSize = OptionValue["VerticalGapSize"],
 	hGapSize = OptionValue["HorizontalGapSize"],
 	arrowhead = OptionValue["Arrowhead"],
+	showMeasurementWireQ = OptionValue["ShowMeasurementWire"],
 	corners,
 	center
 },
@@ -170,28 +172,30 @@ drawMeasurement[pos_, width_, opts : OptionsPattern[]] := Block[{
 	{
 		EdgeForm[OptionValue["MeasurementBoundaryStyle"]], FaceForm[OptionValue["MeasurementBackgroundStyle"]],
 		Rectangle[Sequence @@ corners, FilterRules[{opts}, Options[Rectangle]]],
-		(* Arrowheads[arrowhead], Arrow[{center, (center + corners[[2]]) / 2}], Circle[center, size / 3, {0, Pi}], *)
-		{
-			Thickness[Small],
-			Table[Line[{center + 0.25 size {Cos[a], Sin[a]} - {0, size / 4}, center + 0.35 size {Cos[a], Sin[a]} - {0, size / 4}}], {a, Pi Subdivide[.2, .8, 7]}],
-			Thickness[Medium],
-			With[{a = 0.35 Pi}, Line[{center - {0, size / 4}, center + 0.5 size {Cos[a], Sin[a]} - {0, size / 4}}]]
-		},
-		$DefaultGray,
-		If[ OptionValue["MeasurementWirePosition"] === Top, {
-			Line[{{center[[1]] - size / 32, corners[[2, 2]]}, {center[[1]] - size / 32, - size / 4 - size / 32}}],
-			Line[{{center[[1]] + size / 32, corners[[2, 2]]}, {center[[1]] + size / 32, - size / 4 - size / 32}}]
-		}, {
-			Line[{{center[[1]] - size / 32, corners[[1, 2]]}, {center[[1]] - size / 32, - vGapSize width - vGapSize + size / 4 + size / 32}}],
-			Line[{{center[[1]] + size / 32, corners[[1, 2]]}, {center[[1]] + size / 32, - vGapSize width - vGapSize + size / 4 + size / 32}}]
-		}
-		],
-        EdgeForm[Directive[$DefaultGray, Opacity[0.3]]], FaceForm[Directive[$DefaultGray, Opacity[0.8]]],
-		If[ OptionValue["MeasurementWirePosition"] === Top,
-        	Polygon[{center[[1]], - size / 4 - size / 32} + size # / 4 & /@ {{- 1 / 2, 0}, {1 / 2, 0}, {0, 1}}],
-			Polygon[{center[[1]], - vGapSize width - vGapSize + size / 4 + size / 32} + size # / 4 & /@ {{- 1 / 2, 0}, {1 / 2, 0}, {0, -1}}]
-		]
 
+		Thickness[Small],
+		Table[Line[{center + 0.25 size {Cos[a], Sin[a]} - {0, size / 4}, center + 0.35 size {Cos[a], Sin[a]} - {0, size / 4}}], {a, Pi Subdivide[.2, .8, 7]}],
+		Thickness[Medium],
+		With[{a = 0.35 Pi}, Line[{center - {0, size / 4}, center + 0.5 size {Cos[a], Sin[a]} - {0, size / 4}}]],
+
+		If[	showMeasurementWireQ, {
+			$DefaultGray,
+			If[ OptionValue["MeasurementWirePosition"] === Top, {
+				Line[{{center[[1]] - size / 32, corners[[2, 2]]}, {center[[1]] - size / 32, - size / 4 - size / 32}}],
+				Line[{{center[[1]] + size / 32, corners[[2, 2]]}, {center[[1]] + size / 32, - size / 4 - size / 32}}]
+			}, {
+				Line[{{center[[1]] - size / 32, corners[[1, 2]]}, {center[[1]] - size / 32, - vGapSize width - vGapSize + size / 4 + size / 32}}],
+				Line[{{center[[1]] + size / 32, corners[[1, 2]]}, {center[[1]] + size / 32, - vGapSize width - vGapSize + size / 4 + size / 32}}]
+			}
+			],
+			EdgeForm[Directive[$DefaultGray, Opacity[0.3]]], FaceForm[Directive[$DefaultGray, Opacity[0.8]]],
+			If[ OptionValue["MeasurementWirePosition"] === Top,
+				Polygon[{center[[1]], - size / 4 - size / 32} + size # / 4 & /@ {{- 1 / 2, 0}, {1 / 2, 0}, {0, 1}}],
+				Polygon[{center[[1]], - vGapSize width - vGapSize + size / 4 + size / 32} + size # / 4 & /@ {{- 1 / 2, 0}, {1 / 2, 0}, {0, -1}}]
+			]
+		},
+			Nothing
+		]
 	}
 ]
 Options[drawWires] = {"Size" -> .75, "VerticalGapSize" -> 1, "HorizontalGapSize" -> 1};
@@ -363,7 +367,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 			],
 			Nothing
 		],
-		If[textLabelsQ && TrueQ[OptionValue["ShowLabel"]], drawLabel[circuit["Label"], height, pad, FilterRules[{opts}, Options[drawLabel]]]]
+		If[textLabelsQ && TrueQ[OptionValue["ShowLabel"]], drawLabel[circuit["Label"], height, pad, FilterRules[{opts}, Options[drawLabel]]], Nothing]
 	}
 ]
 
