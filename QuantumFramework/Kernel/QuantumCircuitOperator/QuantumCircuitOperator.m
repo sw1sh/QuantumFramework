@@ -14,20 +14,23 @@ QuantumCircuitOperatorQ[___] := False
 
 (* constructors *)
 
-toOperator[op_ ? QuantumFrameworkOperatorQ] := op
-toOperator[order_ ? orderQ] := QuantumMeasurementOperator[order]
-toOperator[args_List] := QuantumOperator @@ args
-toOperator[lhs_List -> rhs_] := QuantumOperator[Sequence @@ lhs, rhs]
-toOperator[lhs_ -> rhs_] := QuantumOperator[lhs, rhs]
-toOperator[arg_] := QuantumOperator[arg]
+toOperators[op_ ? QuantumFrameworkOperatorQ] := op
+toOperators[order_ ? orderQ] := QuantumMeasurementOperator[order]
+toOperators[{name_, args___}] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}]
+toOperators[{name_, args___} -> order_ ? orderQ] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, order]
+toOperators[{name_, args___} -> args_List] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, Sequence @@ args]
+toOperators[lhs_ -> order_ ? orderQ] := QuantumOperator[lhs, order]
+toOperators[lhs_ -> args_List] := QuantumOperator[lhs, Sequence @@ args]
+toOperators[l_List] := QuantumCircuitOperator[toOperators /@ l]
+toOperators[arg_] := QuantumOperator[arg]
 
 
-QuantumCircuitOperator[operators_ ? ListQ] := With[{ops = toOperator /@ Flatten[operators]},
+QuantumCircuitOperator[operators_ ? ListQ] := With[{ops = toOperators /@ operators},
     QuantumCircuitOperator[<|"Operators" -> ops, "Label" -> RightComposition @@ (#["Label"] & /@ ops)|>]
 ]
 
 QuantumCircuitOperator[operators_ ? ListQ, label_, ___] :=
-    QuantumCircuitOperator[<|"Operators" -> toOperator /@ Flatten[operators], "Label" -> label|>]
+    QuantumCircuitOperator[<|"Operators" -> toOperators /@ operators, "Label" -> label|>]
 
 QuantumCircuitOperator[op : Except[_ ? QuantumCircuitOperatorQ, _ ? QuantumFrameworkOperatorQ], args___] := QuantumCircuitOperator[{op}, args]
 
