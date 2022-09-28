@@ -393,6 +393,8 @@ qc_QiskitCircuit["QuantumOperator"] := Enclose @ Module[{mat = Chop @ Normal[Con
 
 qc_QiskitCircuit["Matrix"] := qc["QuantumOperator"]["Matrix"]
 
+qc_QiskitCircuit[opts : OptionsPattern[qiskitApply]] := qiskitApply[qc, QuantumState[{"Register", qc["Qubits"]}], opts]
+
 qc_QiskitCircuit[qs_QuantumState, opts : OptionsPattern[qiskitApply]] := qiskitApply[qc, qs, opts]
 
 qc_QiskitCircuit["QASM"] := qc["Eval", "qasm"]
