@@ -8,8 +8,8 @@ PackageScope["$QuantumEntanglementMonotones"]
 
 $QuantumEntanglementMonotones = {"Concurrence", "Negativity", "LogNegativity", "EntanglementEntropy", "RenyiEntropy", "Realignment"}
 
-QuantumEntangledQ[qs_ ? QuantumStateQ, biPartition_ : Automatic] :=
-    Enclose[ConfirmMatch[QuantumEntanglementMonotone[qs, biPartition, "Realignment"], _ ? NumericQ] > 1, Indeterminate &]
+QuantumEntangledQ[qs_ ? QuantumStateQ, biPartition_ : Automatic, method_String : "Realignment"] /; MemberQ[$QuantumEntanglementMonotones, method] :=
+    Enclose[ConfirmMatch[QuantumEntanglementMonotone[qs, biPartition, method], _ ? NumericQ] > 0, Indeterminate &]
 
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition : Except[_String] : Automatic] :=
@@ -55,6 +55,6 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, {"Ren
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Realignment"] :=
     With[{bqs = qs["Bipartition", biPartition]["Normalized"]},
-        Total @ SingularValueList @ ArrayReshape[Transpose[bqs["Bend"]["Tensor"], 2 <-> 3], bqs["Dimensions"] ^ 2]
+        Total @ SingularValueList @ ArrayReshape[Transpose[bqs["Bend"]["Tensor"], 2 <-> 3], bqs["Dimensions"] ^ 2] - 1
     ]
 
