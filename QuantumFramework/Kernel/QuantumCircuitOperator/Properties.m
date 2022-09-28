@@ -57,7 +57,7 @@ QuantumCircuitOperatorProp[qco_, "OldDiagram", opts : OptionsPattern[Join[Option
 ]
 
 QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[Options[CircuitDraw]]] :=
-    CircuitDraw[qco, opts]
+    CircuitDraw[qco, opts, ImageSize -> Medium]
 
 Options[quantumCircuitCompile] = {Method -> Automatic}
 

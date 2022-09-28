@@ -69,9 +69,9 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 					{center[[1]], - vGapSize #[[2]] + size If[MemberQ[target, #[[2]]], Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2], 1 / 5]}
 				}] & /@ Select[Partition[Sort[vpos], 2, 1], Not @* ContainsExactly[target]],
 				If[ Length[target] > 1,
-					If[	MatchQ[subLabel, "SWAP"],
-						drawGate[{target, hpos}, subLabel],
-						MapIndexed[drawGate[{{#1}, hpos}, Labeled[subLabel, First[#2]], opts] &, target]
+					If[	MatchQ[subLabel, "NOT"],
+						MapIndexed[drawGate[{{#1}, hpos}, Labeled[subLabel, First[#2]], opts] &, target],
+						drawGate[{target, hpos}, subLabel, opts]
 					],
 					Map[drawGate[{{#}, hpos}, subLabel, opts] &, target]
 				],
@@ -244,8 +244,13 @@ drawWireLabels[wireLabels_, width_, height_, pad_, opts : OptionsPattern[]] := B
 	hGapSize = OptionValue["HorizontalGapSize"],
 	labels
 },
-	labels = Replace[wireLabels, {l : Placed[Automatic, _] :> Table[l, width], Automatic -> Range[width], None -> {}}];
-    labels = MapIndexed[{label, index} |-> With[{i = vGapSize (pad + First @ index)},
+	labels = Replace[wireLabels, {
+		rules : {_Rule...} | _Association :> ReplacePart[Range[width], Cases[Normal[rules], HoldPattern[i_Integer /; 1 <= i <= width -> _]]],
+		l : Placed[Automatic, _] :> Table[l, width],
+		Automatic -> Range[width],
+		None -> {}
+	}];
+    labels = MapIndexed[{label, index} |-> With[{i = vGapSize (pad + First[index])},
         Map[
             Replace[{
                 Placed[l_, p_] :> With[{
