@@ -210,9 +210,9 @@ QuantumOperator[qo_ ? QuantumOperatorQ, order : {order1 : _ ? orderQ | Automatic
 
 QuantumOperator[qo_ ? QuantumOperatorQ, order : {_ ? orderQ | Automatic, _ ? orderQ | Automatic}] := With[{
     inputRepl =
-        Thread[Join[qo["ControlOrder"], qo["TargetOrder"]] -> Take[Replace[order[[2]], Automatic -> qo["InputOrder"]], UpTo[Length[qo["InputOrder"]]]]],
+        Thread[Take[Join[qo["ControlOrder"], qo["TargetOrder"]], UpTo[Length[order[[2]]]]] -> Take[Replace[order[[2]], Automatic -> qo["InputOrder"]], UpTo[Length[qo["InputOrder"]]]]],
     outputRepl =
-        Thread[qo["OutputOrder"] -> Take[Replace[order[[1]], Automatic -> qo["OutputOrder"]], UpTo[Length[qo["OutputOrder"]]]]]
+        Thread[Take[qo["OutputOrder"], UpTo[Length[order[[1]]]]] -> Take[Replace[order[[1]], Automatic -> qo["OutputOrder"]], UpTo[Length[qo["OutputOrder"]]]]]
 },
     QuantumOperator[
         QuantumOperator[qo,
@@ -222,6 +222,8 @@ QuantumOperator[qo_ ? QuantumOperatorQ, order : {_ ? orderQ | Automatic, _ ? ord
     ]
 ]
 
+QuantumOperator[qo_ ? QuantumOperatorQ, order1 : _ ? orderQ | Automatic -> order2 : _ ? orderQ | Automatic, opts___] :=
+    QuantumOperator[qo, {order2, order1}, opts]
 
 QuantumOperator[qo_ ? QuantumOperatorQ, opts : PatternSequence[Except[_ ? QuantumBasisQ], ___],
     outputOrder : (_ ? orderQ | Automatic), inputOrder : (_ ? orderQ | Automatic)] := Enclose @

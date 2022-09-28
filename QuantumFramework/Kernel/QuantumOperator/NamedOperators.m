@@ -242,7 +242,7 @@ QuantumOperator[{"ControlledU" | "Controlled", qo_ ? QuantumOperatorQ, control1 
             control0,
             control1,
             If[ IntersectingQ[control, qo["FullInputOrder"]],
-                With[{order = Complement[Range @@ MinMax[Join[control, qo["FullInputOrder"]]], control]},
+                With[{order = Take[Complement[Range @@ MinMax[Join[control, qo["FullInputOrder"]]], control], UpTo[qo["InputQudits"]]]},
                     Join[order, Max[qo["FullInputOrder"], control] + Range[qo["Arity"] - Length[order]]]
                 ],
                 qo["InputOrder"]
