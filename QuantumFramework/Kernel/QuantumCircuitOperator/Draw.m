@@ -18,7 +18,7 @@ $GateDefaultBoundaryStyle = {
 
 $GateDefaultBackgroundStyle = Append[
 	MapAt[Directive[#, Opacity[0.15]] &, Most[$GateDefaultBoundaryStyle], {All, 2}],
-	_ -> Directive[RGBColor[0.898039, 0.898039, 0.898039], Opacity[.3]]
+	_ -> Directive[RGBColor[0.898039, 0.898039, 0.898039], Opacity[.5]]
 ]
 
 $DefaultFontStyleOptions = {FontFamily -> "Roboto", FontSize -> 11, FontColor -> Black};
@@ -236,15 +236,15 @@ drawWires[wires_List, OptionsPattern[]] := With[{
 	}
 ]
 
-Options[drawMeasurementWire] = {
+Options[drawMeasurementWire] = Join[{
 	"Size" -> .75,
 	"VerticalGapSize" -> 1,
 	"HorizontalGapSize" -> 1,
 	"MeasurementWirePosition" -> Top,
 	"MeasurementWireLabel" -> "c",
 	"ShowTextLabels" -> True
-};
-drawMeasurementWire[x_, width_, OptionsPattern[]] := With[{
+}, Options[Style]];
+drawMeasurementWire[x_, width_, opts : OptionsPattern[]] := With[{
 	size = OptionValue["Size"],
 	vGapSize = OptionValue["VerticalGapSize"],
 	hGapSize = OptionValue["HorizontalGapSize"],
@@ -254,16 +254,18 @@ drawMeasurementWire[x_, width_, OptionsPattern[]] := With[{
 	y = If[OptionValue["MeasurementWirePosition"] === Top, 0, - vGapSize width - vGapSize]
 },
 	{
-		$DefaultGray, Opacity[.3],
-		Line[{{size / 2, y - size / 32}, {hGapSize x - size / 2, y - size / 32}}],
-		Line[{{size / 2, y + size / 32}, {hGapSize x - size / 2, y + size / 32}}],
+		{
+			$DefaultGray, Opacity[.3],
+			Line[{{size / 2, y - size / 32}, {hGapSize x - size / 2, y - size / 32}}],
+			Line[{{size / 2, y + size / 32}, {hGapSize x - size / 2, y + size / 32}}]
+		},
 		If[	textLabelsQ,
 			Replace[label, {
-				Placed[l_, p_] :> Text[l,
+				Placed[l_, p_] :> Text[Style[l, FilterRules[{opts}, Options[Style]], $DefaultWireLabelStyle],
 					{Replace[p, {Left -> 3 size / 8, Right -> hGapSize x - 3 size / 8}], y},
 					Replace[p, {Left -> {1, 0}, Right -> {-1, 0}}]
 				],
-				l_ :> Text[l, {3 size / 8, y}, {1, 0}]
+				l_ :> Text[Style[l, FilterRules[{opts}, Options[Style]], $DefaultWireLabelStyle], {3 size / 8, y}, {1, 0}]
 			}],
 			Nothing
 		]
@@ -321,7 +323,7 @@ Options[drawOutline] = Join[{"VerticalGapSize" -> 1, "HorizontalGapSize" -> 1, "
 	Options[Rectangle]
 ];
 drawOutline[width_, height_, pad_, opts : OptionsPattern[]] := With[{vGapSize = OptionValue["VerticalGapSize"], hGapSize = OptionValue["HorizontalGapSize"]},
-	{OptionValue["OutlineStyle"], Rectangle[{hGapSize / 2, - pad - vGapSize / 2}, {hGapSize height - hGapSize / 2, - pad - vGapSize width - vGapSize / 2}, FilterRules[{opts}, Options[Rectangle]]]}
+	{OptionValue["OutlineStyle"], Rectangle[{3 hGapSize / 4, - pad - vGapSize / 2}, {hGapSize height - 3 hGapSize / 4, - pad - vGapSize width - vGapSize / 2}, FilterRules[{opts}, Options[Rectangle]]]}
 ]
 
 Options[drawLabel] = Join[{"VerticalGapSize" -> 1}, Options[Style]];
