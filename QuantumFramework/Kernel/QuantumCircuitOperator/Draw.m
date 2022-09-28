@@ -16,7 +16,10 @@ $GateDefaultBoundaryStyle = {
 	_ -> $DefaultGray
 };
 
-$GateDefaultBackgroundStyle = MapAt[Directive[#, Opacity[0.15]] &, Append[Most[$GateDefaultBoundaryStyle], _ -> $DefaultGray], {All, 2}]
+$GateDefaultBackgroundStyle = Append[
+	MapAt[Directive[#, Opacity[0.15]] &, Most[$GateDefaultBoundaryStyle], {All, 2}],
+	_ -> Directive[RGBColor[0.898039, 0.898039, 0.898039], Opacity[.3]]
+]
 
 $DefaultFontStyleOptions = {FontFamily -> "Roboto", FontSize -> 11, FontColor -> Black};
 
@@ -63,11 +66,12 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 		_ /; gateShapeFunction =!= None -> gateShapeFunction[center, label, size, vpos],
 		"Controlled"[subLabel_, control1_, control0_] :> With[{target = Complement[vpos, control1, control0]},
 			{
-				$DefaultGray,
+				$DefaultGray, Opacity[.3],
 				Line[{
 					{center[[1]], - vGapSize #[[1]] - size If[MemberQ[target, #[[1]]], Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2], 1 / 5]},
 					{center[[1]], - vGapSize #[[2]] + size If[MemberQ[target, #[[2]]], Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2], 1 / 5]}
 				}] & /@ Select[Partition[Sort[vpos], 2, 1], Not @* ContainsExactly[target]],
+				Opacity[1.0],
 				If[ Length[target] > 1,
 					If[	MatchQ[subLabel, "NOT"],
 						MapIndexed[drawGate[{{#1}, hpos}, Labeled[subLabel, First[#2]], opts] &, target],
@@ -80,20 +84,20 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			}
 		],
 		"1" -> {
-			$DefaultGray,
+			$DefaultGray, Opacity[.3],
 			Line[{center - {size / 2, 0}, center - {size / 5, 0}}],
 			Line[{center + {size / 5, 0}, center + {size / 2, 0}}],
 			FaceForm[$DefaultGray], Opacity[0.8],
 			Disk[center, size / 5]
 		},
 		"0" -> {
-			$DefaultGray,
+			$DefaultGray, Opacity[.3],
 			Line[{center - {size / 2, 0}, center - {size / 5, 0}}],
 			Line[{center + {size / 5, 0}, center + {size / 2, 0}}],
 			EdgeForm[RGBColor[0.749019, 0.749019, 0.749019, .8]], FaceForm[White], Opacity[1],
 			Disk[center, size / 5]},
 		"NOT" -> {
-			$DefaultGray,
+			$DefaultGray, Opacity[.3],
 			Line[{center - {size / 2, 0}, center - {size / 5, 0}}],
 			Line[{center + {size / 5, 0}, center + {size / 2, 0}}],
 			EdgeForm[$DefaultGray], FaceForm[RGBColor[0.960784, 0.960784, 0.960784]],
@@ -102,30 +106,30 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			Line[{center + size / 5 {-1, 0}, center + size / 5 {1, 0}}], Line[{center + size / 5 {0, -1}, center + size / 5 {0, 1}}]
 		},
 		"SWAP" -> With[{bottom = {center[[1]], -vpos[[1]] vGapSize}, top = {center[[1]], -vpos[[-1]] vGapSize}}, {
-			$DefaultGray,
+			$DefaultGray, Opacity[.3],
 		    Line[{bottom - {size / 2, 0}, bottom + {size / 2, 0}}],
 		    Line[{top - {size / 2, 0}, top + {size / 2, 0}}],
 		    Line[{bottom, top}],
-			$DefaultGray, Opacity[0.8], Thickness[Large],
-		    Line[{bottom + size / 4 {-1, -1}, bottom + size / 4 {1, 1}}],
-		    Line[{bottom + size / 4 {1, -1}, bottom + size / 4 {-1, 1}}],
-			Line[{top + size / 4 {-1, -1}, top + size / 4 {1, 1}}],
-		    Line[{top + size / 4 {1, -1}, top + size / 4 {-1, 1}}]
+			$DefaultGray, Opacity[0.8], Thickness[Medium],
+		    Line[{bottom + size / 5 {-1, -1} / Sqrt[2], bottom + size / 5 {1, 1} / Sqrt[2]}],
+		    Line[{bottom + size / 5 {1, -1} / Sqrt[2], bottom + size / 5 {-1, 1} / Sqrt[2]}],
+			Line[{top + size / 5 {-1, -1} / Sqrt[2], top + size / 5 {1, 1} / Sqrt[2]}],
+		    Line[{top + size / 5 {1, -1} / Sqrt[2], top + size / 5 {-1, 1} / Sqrt[2]}]
 		}],
 		"RootSWAP" -> With[{bottom = {center[[1]], -vpos[[1]] vGapSize}, top = {center[[1]], -vpos[[-1]] vGapSize}}, {
-			$DefaultGray,
+			$DefaultGray, Opacity[.3],
 		    Line[{bottom - {size / 2, 0}, bottom + {size / 2, 0}}],
 		    Line[{top - {size / 2, 0}, top + {size / 2, 0}}],
-		    Line[{bottom, center + {0, size / 4}}],
-			Line[{center - {0, size / 4}, top}],
-			$DefaultGray, Opacity[0.8], Thickness[Large],
-		    Line[{bottom + size / 4 {-1, -1}, bottom + size / 4 {1, 1}}],
-		    Line[{bottom + size / 4 {1, -1}, bottom + size / 4 {-1, 1}}],
-			Line[{top + size / 4 {-1, -1}, top + size / 4 {1, 1}}],
-		    Line[{top + size / 4 {1, -1}, top + size / 4 {-1, 1}}],
+		    Line[{bottom, center + {0, size / 5}}],
+			Line[{center - {0, size / 5}, top}],
+			$DefaultGray, Opacity[0.8], Thickness[Medium],
+		    Line[{bottom + size / 5 {-1, -1} / Sqrt[2], bottom + size / 5 {1, 1} / Sqrt[2]}],
+		    Line[{bottom + size / 5 {1, -1} / Sqrt[2], bottom + size / 5 {-1, 1} / Sqrt[2]}],
+			Line[{top + size / 5 {-1, -1} / Sqrt[2], top + size / 5 {1, 1} / Sqrt[2]}],
+		    Line[{top + size / 5 {1, -1} / Sqrt[2], top + size / 5 {-1, 1} / Sqrt[2]}],
 			EdgeForm[Replace[subLabel, gateBoundaryStyle]],
 			FaceForm[Replace[subLabel, gateBackgroundStyle]],
-			Rectangle[center - size / 4, center + size / 4, FilterRules[{opts}, Options[Rectangle]]],
+			Rectangle[center - size / 5, center + size / 5, FilterRules[{opts}, Options[Rectangle]]],
 			If[textLabelsQ, Text[Style["1 / 2", labelStyleOpts], center], Nothing]
 		}],
 		"PhaseShift"[n_] | n_Integer :> {
@@ -180,12 +184,18 @@ drawMeasurement[pos_, width_, opts : OptionsPattern[]] := Block[{
 
 		If[	showMeasurementWireQ, {
 			$DefaultGray,
-			If[ OptionValue["MeasurementWirePosition"] === Top, {
+			(* If[ OptionValue["MeasurementWirePosition"] === Top, {
 				Line[{{center[[1]] - size / 32, corners[[2, 2]]}, {center[[1]] - size / 32, - size / 4 - size / 32}}],
 				Line[{{center[[1]] + size / 32, corners[[2, 2]]}, {center[[1]] + size / 32, - size / 4 - size / 32}}]
 			}, {
 				Line[{{center[[1]] - size / 32, corners[[1, 2]]}, {center[[1]] - size / 32, - vGapSize width - vGapSize + size / 4 + size / 32}}],
 				Line[{{center[[1]] + size / 32, corners[[1, 2]]}, {center[[1]] + size / 32, - vGapSize width - vGapSize + size / 4 + size / 32}}]
+			}
+			], *)
+			If[ OptionValue["MeasurementWirePosition"] === Top, {
+				Line[{{center[[1]], corners[[2, 2]]}, {center[[1]], - size / 4}}]
+			}, {
+				Line[{{center[[1]], corners[[1, 2]]}, {center[[1]], - vGapSize width - vGapSize + size / 4}}]
 			}
 			],
 			EdgeForm[Directive[$DefaultGray, Opacity[0.3]]], FaceForm[Directive[$DefaultGray, Opacity[0.8]]],
@@ -198,9 +208,32 @@ drawMeasurement[pos_, width_, opts : OptionsPattern[]] := Block[{
 		]
 	}
 ]
-Options[drawWires] = {"Size" -> .75, "VerticalGapSize" -> 1, "HorizontalGapSize" -> 1};
-drawWires[wires_List, OptionsPattern[]] := With[{size = OptionValue["Size"], vGapSize = OptionValue["VerticalGapSize"], hGapSize = OptionValue["HorizontalGapSize"]},
-	{$DefaultGray, Map[Apply[Line[{{hGapSize #1[[1]] + size / 2, - vGapSize #1[[2]]}, {hGapSize #2[[1]] - size / 2, - vGapSize #2[[2]]}}] &], wires]}
+Options[drawWires] = {"Size" -> .75, "VerticalGapSize" -> 1, "HorizontalGapSize" -> 1, "ShortOuterWires" -> True};
+drawWires[wires_List, OptionsPattern[]] := With[{
+	size = OptionValue["Size"],
+	vGapSize = OptionValue["VerticalGapSize"],
+	hGapSize = OptionValue["HorizontalGapSize"],
+	height = Max[wires[[All, 2, 1]]]
+},
+	{
+		$DefaultGray, Opacity[.3],
+		Map[
+			Apply[Line[
+				If[	TrueQ[OptionValue["ShortOuterWires"]],
+					{{hGapSize #1[[1]] + size / 2, - vGapSize #1[[2]]}, {hGapSize #2[[1]] - size / 2, - vGapSize #2[[2]]}},
+					Which[
+						#1[[1]] == 0,
+						{{hGapSize - size / 2, - vGapSize #1[[2]]}, {hGapSize #2[[1]] - size / 2, - vGapSize #2[[2]]}},
+						#2[[1]] == height,
+						{{hGapSize #1[[1]] + size / 2, - vGapSize #1[[2]]}, {hGapSize (#2[[1]] - 1) + size / 2, - vGapSize #2[[2]]}},
+						True,
+						{{hGapSize #1[[1]] + size / 2, - vGapSize #1[[2]]}, {hGapSize #2[[1]] - size / 2, - vGapSize #2[[2]]}}
+					]
+				]
+			] &],
+			wires
+		]
+	}
 ]
 
 Options[drawMeasurementWire] = {
@@ -221,7 +254,7 @@ drawMeasurementWire[x_, width_, OptionsPattern[]] := With[{
 	y = If[OptionValue["MeasurementWirePosition"] === Top, 0, - vGapSize width - vGapSize]
 },
 	{
-		$DefaultGray,
+		$DefaultGray, Opacity[.3],
 		Line[{{size / 2, y - size / 32}, {hGapSize x - size / 2, y - size / 32}}],
 		Line[{{size / 2, y + size / 32}, {hGapSize x - size / 2, y + size / 32}}],
 		If[	textLabelsQ,
@@ -281,14 +314,14 @@ drawWireLabels[wireLabels_, width_, height_, pad_, opts : OptionsPattern[]] := B
     labels
 ]
 
-Options[drawOutline] = Join[{"VerticalGapSize" -> 1, "OutlineStyle" -> Directive[
+Options[drawOutline] = Join[{"VerticalGapSize" -> 1, "HorizontalGapSize" -> 1, "OutlineStyle" -> Directive[
 	EdgeForm[Directive[Dashing[{Tiny, Tiny}], $DefaultGray, Opacity[0.8]]],
 	FaceForm[RGBColor[0.898039, 0.898039, 0.898039, .3]]
 	]},
 	Options[Rectangle]
 ];
-drawOutline[width_, height_, pad_, opts : OptionsPattern[]] := With[{vGapSize = OptionValue["VerticalGapSize"]},
-	{OptionValue["OutlineStyle"], Rectangle[{.5, - pad - vGapSize / 2}, {height - .5, - pad - vGapSize width - vGapSize / 2}, FilterRules[{opts}, Options[Rectangle]]]}
+drawOutline[width_, height_, pad_, opts : OptionsPattern[]] := With[{vGapSize = OptionValue["VerticalGapSize"], hGapSize = OptionValue["HorizontalGapSize"]},
+	{OptionValue["OutlineStyle"], Rectangle[{hGapSize / 2, - pad - vGapSize / 2}, {hGapSize height - hGapSize / 2, - pad - vGapSize width - vGapSize / 2}, FilterRules[{opts}, Options[Rectangle]]]}
 ]
 
 Options[drawLabel] = Join[{"VerticalGapSize" -> 1}, Options[Style]];
@@ -350,7 +383,8 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 					Translate[
 						circuitDraw[#1,
 							"SubcircuitLevel" -> level - 1,
-							"WireLabels" -> None, "Outline" -> True, "ShowLabel" -> True, "ShowMeasurementWire" -> False, "WirePadding" -> False,
+							"WireLabels" -> None, "Outline" -> True, "ShowLabel" -> True,
+							"ShowMeasurementWire" -> False, "WirePadding" -> False, "ShortOuterWires" -> False,
 							opts
 						],
 						{hGapSize Max[#3[[#1["InputOrder"]]]], 0}
