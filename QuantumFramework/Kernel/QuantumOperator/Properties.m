@@ -391,11 +391,11 @@ With[{
     parameter = First @ qo["Parameters"]
 },
     QuantumOperator[
-        If[ FreeQ[qo["Matrix"], parameter],
+        If[ FreeQ[Normal[qo["Matrix"]], parameter],
             MatrixExp[-I parameter qo["Matrix"]],
             DSolveValue[
                 {
-                    \[FormalU]'[parameter] == 1 / I qo["Matrix"] . \[FormalU][parameter],
+                    \[FormalU]'[parameter] == 1 / I TrigToExp[qo["Matrix"]] . \[FormalU][parameter],
                     \[FormalU][0] == IdentityMatrix[qo["InputDimension"]]
                 },
                 \[FormalU][parameter] \[Element] Matrices[qo["MatrixNameDimensions"]],
