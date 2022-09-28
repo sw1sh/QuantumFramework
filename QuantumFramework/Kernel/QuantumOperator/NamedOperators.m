@@ -451,9 +451,11 @@ With[{
     padOrder = Join[order, Complement[Min[order] - 1 + Range[Length[qb["Dimensions"]]], order]]
 },
     QuantumOperator[
-           RandomVariate @ CircularUnitaryMatrixDistribution[qb["Dimension"]], order, qb
+           RandomVariate @ CircularUnitaryMatrixDistribution[qb["Dimension"]], order, qb, "Label" -> None
     ]
 ]
+
+QuantumOperator[{"RandomUnitary", args___}, order : (_ ? orderQ) : {1}] := QuantumOperator[{"RandomUnitary", QuantumBasis[args]}, order]
 
 
 QuantumOperator[{"Permutation", perm_Cycles}, opts___] := QuantumOperator[{"Permutation", 2, perm}, opts]
