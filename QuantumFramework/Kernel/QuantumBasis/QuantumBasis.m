@@ -158,6 +158,8 @@ QuantumBasis[param : _ ? nameQ | _Integer, args___] :=
 
 QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) | OptionsPattern[]) ...] := QuantumBasis["Computational", args]
 
+QuantumBasis[_QuantumBasis, args__] := QuantumBasis[args]
+
 
 qb_QuantumBasis /; System`Private`HoldNotValidQ[qb] && quantumBasisQ[Unevaluated @ qb] := System`Private`HoldSetValid[qb]
 
