@@ -102,7 +102,7 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			Line[{center + {size / 5, 0}, center + {size / 2, 0}}],
 			EdgeForm[$DefaultGray], FaceForm[RGBColor[0.960784, 0.960784, 0.960784]],
 			Disk[center, size / 5],
-			RGBColor[0.650980, 0.650980, 0.650980],
+			RGBColor[0.650980, 0.650980, 0.650980], Opacity[1],
 			Line[{center + size / 5 {-1, 0}, center + size / 5 {1, 0}}], Line[{center + size / 5 {0, -1}, center + size / 5 {0, 1}}]
 		},
 		"SWAP" -> With[{bottom = {center[[1]], -vpos[[1]] vGapSize}, top = {center[[1]], -vpos[[-1]] vGapSize}}, {
