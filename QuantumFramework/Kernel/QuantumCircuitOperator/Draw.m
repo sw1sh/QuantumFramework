@@ -189,14 +189,6 @@ drawMeasurement[pos : {vpos_, hpos_}, width_, opts : OptionsPattern[]] := Block[
 		If[connectorsQ, {FaceForm[Directive[$DefaultGray, Opacity[1]]], Disk[#, size / 32] & /@ {{center[[1]] - size / 2, - vGapSize #}, {center[[1]] + size / 2, - vGapSize #}} & /@ vpos}, Nothing],
 		If[	showMeasurementWireQ, {
 			$DefaultGray,
-			(* If[ OptionValue["MeasurementWirePosition"] === Top, {
-				Line[{{center[[1]] - size / 32, corners[[2, 2]]}, {center[[1]] - size / 32, - size / 4 - size / 32}}],
-				Line[{{center[[1]] + size / 32, corners[[2, 2]]}, {center[[1]] + size / 32, - size / 4 - size / 32}}]
-			}, {
-				Line[{{center[[1]] - size / 32, corners[[1, 2]]}, {center[[1]] - size / 32, - vGapSize width - vGapSize + size / 4 + size / 32}}],
-				Line[{{center[[1]] + size / 32, corners[[1, 2]]}, {center[[1]] + size / 32, - vGapSize width - vGapSize + size / 4 + size / 32}}]
-			}
-			], *)
 			If[ OptionValue["MeasurementWirePosition"] === Top, {
 				Line[{{center[[1]], corners[[2, 2]]}, {center[[1]], - size / 4 - size / 32}}]
 			}, {
@@ -349,7 +341,8 @@ Options[circuitDraw] := DeleteDuplicatesBy[First] @
 		"GatePacking" -> None,
 		"MeasurementWirePosition" -> Top,
 		"HorizontalGapSize" -> 1,
-		"ShowTextLabels" -> True
+		"ShowTextLabels" -> True,
+		"SubcircuitOptions" -> {}
 	},
 	Options[drawGate], Options[drawMeasurement], Options[drawWires], Options[drawWireLabels], Options[drawOutline], Options[Style]];
 circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
@@ -393,6 +386,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 				If[ level > 0,
 					Translate[
 						circuitDraw[#1,
+							OptionValue["SubcircuitOptions"],
 							"SubcircuitLevel" -> level - 1,
 							"WireLabels" -> None, "ShowOutline" -> True, "ShowLabel" -> True,
 							"ShowMeasurementWire" -> False, "WirePadding" -> False, "ShortOuterWires" -> False,
@@ -418,7 +412,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 			],
 			Nothing
 		],
-		If[textLabelsQ && TrueQ[OptionValue["ShowLabel"]], drawLabel[circuit["Label"], height, pad, FilterRules[{opts}, Options[drawLabel]]], Nothing]
+		If[TrueQ[OptionValue["ShowLabel"]], drawLabel[circuit["Label"], height, pad, FilterRules[{opts}, Options[drawLabel]]], Nothing]
 	}
 ]
 
