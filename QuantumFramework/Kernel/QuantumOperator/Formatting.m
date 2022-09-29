@@ -17,7 +17,7 @@ QuantumOperator /: MakeBoxes[qo_QuantumOperator, TraditionalForm] /; QuantumOper
 QuantumOperator /: MakeBoxes[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated @ qo], format_] := Enclose[With[{
     icon = If[
         qo["Dimension"] < 2 ^ 9,
-        MatrixPlot[
+        ComplexArrayPlot[
             Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], qo["Sort"]["MatrixRepresentation"], {2}],
             ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},
             Frame -> False,

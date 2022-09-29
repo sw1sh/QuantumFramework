@@ -16,7 +16,7 @@ QuantumState /: MakeBoxes[qs_QuantumState, TraditionalForm] /; QuantumStateQ[qs]
 QuantumState /: MakeBoxes[qs_QuantumState /; QuantumStateQ[Unevaluated @ qs], format_] := Enclose[With[{
     icon = If[
         qs["Dimension"] < 2 ^ 9,
-        MatrixPlot[
+        ComplexArrayPlot[
             Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], qs["MatrixRepresentation"], {2}],
             ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},
             Frame -> False,

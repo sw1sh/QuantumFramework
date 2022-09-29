@@ -8,7 +8,7 @@ QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator, Traditio
 QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; QuantumMeasurementOperatorQ[Unevaluated @ qmo], format_] := With[{
     icon = If[
         qmo["Dimension"] < 2 ^ 9,
-        MatrixPlot[
+        ComplexArrayPlot[
             Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]],
                 qmo["Sort"]["MatrixRepresentation"],
                 {2}
