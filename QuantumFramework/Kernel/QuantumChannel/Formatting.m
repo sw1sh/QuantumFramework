@@ -11,7 +11,7 @@ QuantumChannel /: MakeBoxes[qc_QuantumChannel /; QuantumChannelQ[qc], format_] :
     icon = If[
         qc["Dimension"] < 2 ^ 9,
         ComplexArrayPlot[
-            Map[Replace[x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]]], qc["Sort"]["MatrixRepresentation"], {2}],
+            Map[Replace[{x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]], x_ :> N[x]}], qc["Sort"]["MatrixRepresentation"], {2}],
             ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},
             Frame -> False,
             FrameTicks -> None
