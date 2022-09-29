@@ -116,6 +116,18 @@ QuantumCircuitOperatorProp[qco_, "OutputDimensions"] :=
 
 QuantumCircuitOperatorProp[qco_, "OutputDimension"] := Times @@ qco["OutputDimensions"]
 
+QuantumCircuitOperatorProp[qco_, "Input"] :=
+    QuantumTensorProduct[
+        (q |-> #["Input"]["Extract", {q /. #["InputOrderQuditMapping"]}] & @
+            SelectFirst[qco["Operators"], op |-> MemberQ[op["FullInputOrder"], q]]) /@ qco["InputOrder"]
+    ]
+
+QuantumCircuitOperatorProp[qco_, "Output"] :=
+    QuantumTensorProduct[
+        (q |-> #["Output"]["Extract", {q /. #["OutputOrderQuditMapping"]}] & @
+            SelectFirst[qco["Operators"], op |-> MemberQ[op["FullOutputOrder"], q]]) /@ qco["OutputOrder"]
+    ]
+
 QuantumCircuitOperatorProp[qco_, "Measurements"] := Count[qco["Operators"], _ ? QuantumMeasurementOperatorQ]
 
 QuantumCircuitOperatorProp[qco_, "Channels"] := Count[qco["Operators"], _ ? QuantumChannelQ]
