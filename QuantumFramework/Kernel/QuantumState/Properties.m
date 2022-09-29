@@ -15,7 +15,7 @@ $QuantumStateProperties = {
     "Projector", "NormalizedProjector",
     "Operator", "NormalizedOperator",
     "Eigenvalues", "Eigenvectors", "Eigenstates",
-    "Computational", "SchmidtBasis", "SpectralBasis", "PrimeBasis",
+    "Computational", "SchmidtBasis", "SpectralBasis", "PrimeBasis", "UniformBasis",
     "StateTensor", "StateMatrix",
     "VectorState", "MatrixState",
     "Tensor", "Matrix",
@@ -329,6 +329,10 @@ QuantumStateProp[qs_, "SpectralBasis"] := QuantumState[
             {2}
         ]
     ]
+]
+
+QuantumStateProp[qs_, "UniformBasis"] /; qs["VectorQ"] := QuantumState[Table[1 / Sqrt[qs["Dimension"]], qs["Dimension"]],
+    QuantumBasis[AssociationThread[Array[Subscript["u", #] &, qs["Dimension"]], Normal[DiagonalMatrix[Sqrt[qs["Dimension"]] qs["StateVector"]]]]]
 ]
 
 QuantumStateProp[qs_, "Disentangle"] /; qs["PureStateQ"] := With[{s = qs["SchmidtBasis"]},
