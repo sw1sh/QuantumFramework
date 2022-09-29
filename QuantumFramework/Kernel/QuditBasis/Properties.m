@@ -9,6 +9,7 @@ QuditBasis["Properties"] = {
     "Dimensions", "FullDimensions", "NameRank", "NameTensor",
     "ElementDimensions", "ElementDimension", "Rank",
     "MatrixDimensions", "TensorDimensions",
+    "ElementsDimensions",
     "Matrix", "Tensor",
     "Dual", "Reverse"
 }
@@ -78,13 +79,13 @@ QuditBasisProp[qb_, "Elements"] := If[qb["Length"] > 0,
     ArrayReshape[
         Transpose[
             Outer[Times,
-                Sequence @@ Values @ ResourceFunction["KeyGroupBy"][
+                Sequence @@ Values @ KeySort @ ResourceFunction["KeyGroupBy"][
                     qb["RemoveIdentities"]["Representations"], Last, SparseArray @* Values @* normalRepresentations
                 ]
             ],
             FindPermutation[Join[Range[1, 2 qb["Qudits"], 2], Range[2, 2 qb["Qudits"], 2]]]
         ],
-        Prepend[qb["ElementDimensions"], qb["Dimension"]]
+        Prepend[DeleteCases[qb["ElementDimensions"], 1], qb["Dimension"]]
     ],
     {}
 ]
@@ -107,8 +108,10 @@ QuditBasisProp[qb_, "MatrixDimensions"] := {qb["ElementDimension"], qb["Dimensio
 
 QuditBasisProp[qb_, "TensorDimensions"] := Join[qb["ElementDimensions"], qb["Dimensions"]]
 
+QuditBasisProp[qb_, "ElementsDimensions"] := Prepend[qb["ElementDimensions"], qb["Dimension"]]
+
 QuditBasisProp[qb_, "Tensor"] := If[qb["Rank"] > 0,
-    ArrayReshape[Transpose[qb["Elements"], Cycles[{RotateRight @ Range[qb["Rank"] + 1, 1 , -1]}]], qb["TensorDimensions"]],
+    ArrayReshape[Transpose[ArrayReshape[qb["Elements"], DeleteCases[qb["ElementsDimensions"], 1]], Cycles[{RotateRight @ Range[qb["Rank"] + 1, 1 , -1]}]], qb["TensorDimensions"]],
     qb["Elements"]
 ]
 

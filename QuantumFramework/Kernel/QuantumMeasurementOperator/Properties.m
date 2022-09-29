@@ -96,7 +96,7 @@ QuantumMeasurementOperatorProp[qmo_, "Canonical"] /; qmo["Eigendimension"] == qm
     QuantumMeasurementOperator[
         QuantumOperator[
             QuantumState[
-                qmo["State"]["State"],
+                qmo["State"],
                 basis
             ]["PermuteOutput", InversePermutation @ FindPermutation @ qmo["Target"]],
             {Join[Range[- qmo["Targets"] + 1, 0], DeleteCases[qmo["OutputOrder"], _ ? NonPositive]], qmo["InputOrder"]}
@@ -201,7 +201,7 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
                 "PermuteInput", InversePermutation @ FindPermutation[Join[traceQudits, qmo["Target"] - Min[qmo["InputOrder"]] + 1]]
             ],
             {Prepend[Sort @ qmo["OutputOrder"], 0], Sort @ qmo["InputOrder"]}
-        ]
+        ]["Simplify"]
     ]
 ]
 

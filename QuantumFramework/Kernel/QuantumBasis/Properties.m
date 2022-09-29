@@ -67,9 +67,9 @@ QuantumBasisProp[qb_, "InputElementNames", pos_ : All] := qb["Input"]["Names", p
 
 QuantumBasisProp[qb_, "OutputElementNames", pos_ : All] := qb["Output"]["Names", pos]
 
-QuantumBasisProp[qb_, "InputElements"] := qb["Input"]["Elements"]
+QuantumBasisProp[qb_, "InputElements"] := ArrayReshape[qb["Input"]["Elements"], DeleteCases[qb["Input"]["ElementsDimensions"], 1]]
 
-QuantumBasisProp[qb_, "OutputElements"] := qb["Output"]["Elements"]
+QuantumBasisProp[qb_, "OutputElements"] := ArrayReshape[qb["Output"]["Elements"], DeleteCases[qb["Output"]["ElementsDimensions"], 1]]
 
 
 QuantumBasisProp[qb_, "ElementNames" | "Names"] :=
@@ -81,10 +81,9 @@ QuantumBasisProp[qb_, "ElementNames" | "Names", pos : {{_Integer ..} ...}] :=
 QuantumBasisProp[qb_, "ElementNames" | "Names", outPos : {_Integer ..} : All, inPos : {_Integer ..} : All] :=
     QuantumTensorProduct @@@ Tuples[{qb["OutputElementNames", outPos], qb["InputElementNames", inPos]}]
 
-QuantumBasisProp[qb_, "Elements"] := ArrayReshape[Transpose[
-    TensorProduct[qb["OutputElements"], qb["InputElements"]],
-    FindPermutation[Join[{1, qb["OutputRank"] + 2}, Range[qb["OutputRank"]] + 1]]
-],
+QuantumBasisProp[qb_, "Elements"] := ArrayReshape[
+    If[ qb["InputRank"] > 0, Transpose[#, FindPermutation[Join[{1, qb["OutputRank"] + 2}, Range[qb["OutputRank"]] + 1]]], #] & @
+        TensorProduct[qb["OutputElements"], qb["InputElements"]],
     Prepend[qb["ElementDimensions"], qb["OutputSize"] qb["InputSize"]]
 ]
 
