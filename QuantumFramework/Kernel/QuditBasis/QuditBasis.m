@@ -133,6 +133,37 @@ QuditBasis /: Plus[qb__QuditBasis ? QuditBasisQ] := Module[{
 
 (* formatting *)
 
-QuditBasis /: MakeBoxes[qb_QuditBasis /; QuditBasisQ[Unevaluated @ qb], format_] :=
-    With[{boxes = ToBoxes[Normal /@ qb["Association"], format]}, InterpretationBox[boxes, qb]]
+QuditBasis /: MakeBoxes[qb_QuditBasis /; QuditBasisQ[Unevaluated @ qb], format_] := With[{
+    icon = If[
+        qb["ElementDimension"] < 2 ^ 9,
+        ComplexArrayPlot[
+            Map[Replace[{x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]], x_ :> N[x]}], qb["Matrix"], {2}],
+            ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},
+            Frame -> False,
+            FrameTicks -> None
+        ],
+        RawBoxes @ $SparseArrayBox
+    ]
+},
+    BoxForm`ArrangeSummaryBox["QuditBasis", qb, icon,
+    {
+        {
+            BoxForm`SummaryItem[{"Qudits: ", qb["Qudits"]}]
+        },
+        {
+            BoxForm`SummaryItem[{"Dimension: ", qb["Dimension"]}]
+        }
+    },
+    {
+        {
+            BoxForm`SummaryItem[{"Dimensions: ", qb["Dimensions"]}]
+        },
+        {
+            BoxForm`SummaryItem[{"Element dimensions: ", qb["ElementDimensions"]}]
+        }
+    },
+    format,
+    "Interpretable" -> Automatic
+    ]
+]
 
