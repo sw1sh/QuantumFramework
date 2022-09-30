@@ -35,13 +35,13 @@ simpleLabel[label_] := Replace[label,
 ]
 
 Options[drawGate] := DeleteDuplicatesBy[First] @ Join[{
-	"RotateLabel" -> Automatic,
-	"ShowTextLabels" -> True,
+	"RotateGateLabel" -> Automatic,
+	"ShowGateLabels" -> True,
 	"Size" -> .75,
 	"VerticalGapSize" -> 1,
 	"HorizontalGapSize" -> 1,
-	"GateBackgroundStyle" -> $GateDefaultBackgroundStyle,
-	"GateBoundaryStyle" -> $GateDefaultBoundaryStyle,
+	"GateBackgroundStyle" -> Automatic,
+	"GateBoundaryStyle" -> Automatic,
 	"GateShapeFunction" -> Automatic,
 	"ShowConnectors" -> False
 },
@@ -51,21 +51,23 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 	size = OptionValue["Size"],
 	vGapSize = OptionValue["VerticalGapSize"],
 	hGapSize = OptionValue["HorizontalGapSize"],
-	rotateLabel = Replace[OptionValue["RotateLabel"], Automatic -> If[Length[vpos] > 1, Pi / 2, 0]],
+	rotateLabel = Replace[OptionValue["RotateGateLabel"], Automatic -> If[Length[vpos] > 1, Pi / 2, 0]],
 	labelStyleOpts = {Background -> Transparent, FilterRules[{opts}, Options[Style]], $DefaultFontStyleOptions},
-	gateBackgroundStyle = Flatten[{OptionValue["GateBackgroundStyle"]}],
-	gateBoundaryStyle = Flatten[{OptionValue["GateBoundaryStyle"]}],
+	gateBackgroundStyle = DeleteDuplicatesBy[First] @
+		Flatten[{Replace[OptionValue["GateBackgroundStyle"], Automatic -> $GateDefaultBackgroundStyle], $GateDefaultBackgroundStyle}],
+	gateBoundaryStyle = DeleteDuplicatesBy[First] @
+		Flatten[{Replace[OptionValue["GateBoundaryStyle"], Automatic -> $GateDefaultBoundaryStyle], $GateDefaultBoundaryStyle}],
 	gateShapeFunction = Replace[label, Flatten[{Replace[OptionValue["GateShapeFunction"], Automatic -> Nothing], _ -> None}]],
 	corners,
 	center,
 	vposIndex = PositionIndex[Developer`ToList[vpos]],
-	textLabelsQ = TrueQ[OptionValue["ShowTextLabels"]],
+	gateLabelsQ = TrueQ[OptionValue["ShowGateLabels"]],
 	connectorsQ = TrueQ[OptionValue["ShowConnectors"]]
 },
 	corners = positionCorners[pos, size, vGapSize, hGapSize];
 	center = Mean[corners];
 	Replace[label, {
-		_ /; gateShapeFunction =!= None -> gateShapeFunction[center, label, size, vpos],
+		_ /; gateShapeFunction =!= None -> gateShapeFunction[center, label, hGapSize hpos, - vGapSize vpos],
 		"Controlled"[subLabel_, control1_, control0_] :> With[{target = Complement[vpos, control1, control0]},
 			{
 				$DefaultGray, Opacity[.3],
@@ -132,27 +134,26 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			EdgeForm[Replace[subLabel, gateBoundaryStyle]],
 			FaceForm[Replace[subLabel, gateBackgroundStyle]],
 			Rectangle[center - size / 5, center + size / 5, FilterRules[{opts}, Options[Rectangle]]],
-			If[textLabelsQ, Text[Style["1 / 2", labelStyleOpts], center], Nothing]
+			If[gateLabelsQ, Rotate[Text[Style["1 / 2", labelStyleOpts], center], rotateLabel], Nothing]
 		}],
 		"PhaseShift"[n_] | n_Integer :> {
 			EdgeForm[Replace[label, gateBoundaryStyle]],
 			FaceForm[Replace[label, gateBackgroundStyle]],
 			Disk[center, size / 2],
 			If[connectorsQ, {FaceForm[Directive[$DefaultGray, Opacity[1]]], Disk[#, size / 32] & /@ {{center[[1]] - size / 2, - vGapSize #}, {center[[1]] + size / 2, - vGapSize #}} & /@ vpos}, Nothing],
-			If[textLabelsQ, Text[Style[Superscript[If[TrueQ[Negative[n]], -Pi, Pi], InputForm[2 ^ (1 - Abs[n])]], labelStyleOpts], center], Nothing]
+			If[gateLabelsQ, Rotate[Text[Style[Superscript[If[TrueQ[Negative[n]], -Pi, Pi], InputForm[2 ^ (1 - Abs[n])]], labelStyleOpts], center], rotateLabel], Nothing]
 		},
 		SuperDagger[subLabel_] | subLabel_ :> {
 			EdgeForm[Replace[subLabel, gateBoundaryStyle]],
 			FaceForm[Replace[subLabel, gateBackgroundStyle]],
 			Rectangle[Sequence @@ corners, FilterRules[{opts}, Options[Rectangle]]],
 			If[connectorsQ, {FaceForm[Directive[$DefaultGray, Opacity[1]]], Disk[#, size / 32] & /@ {{center[[1]] - size / 2, - vGapSize #}, {center[[1]] + size / 2, - vGapSize #}} & /@ vpos}, Nothing],
-			If[textLabelsQ, Rotate[Text[Style[label, labelStyleOpts], center], rotateLabel], Nothing]
+			If[gateLabelsQ, Rotate[Text[Style[label, labelStyleOpts], center], rotateLabel], Nothing]
 		}
 	}]
 ]
 
 Options[drawMeasurement] = Join[{
-	"RotateLabel" -> Automatic,
 	"Size" -> .75,
 	"VerticalGapSize" -> 1,
 	"HorizontalGapSize" -> 1,
@@ -205,13 +206,13 @@ drawMeasurement[pos : {vpos_, hpos_}, width_, opts : OptionsPattern[]] := Block[
 		]
 	}
 ]
-Options[drawWires] = {"Size" -> .75, "VerticalGapSize" -> 1, "HorizontalGapSize" -> 1, "ShortOuterWires" -> True, "ShowWireConnectors" -> False};
+Options[drawWires] = {"Size" -> .75, "VerticalGapSize" -> 1, "HorizontalGapSize" -> 1, "ShortOuterWires" -> True, "ShowWireEndpoints" -> False};
 drawWires[wires_List, OptionsPattern[]] := With[{
 	size = OptionValue["Size"],
 	vGapSize = OptionValue["VerticalGapSize"],
 	hGapSize = OptionValue["HorizontalGapSize"],
 	height = Max[wires[[All, 2, 1]]],
-	connectorsQ = TrueQ[OptionValue["ShowWireConnectors"]]
+	endpointsQ = TrueQ[OptionValue["ShowWireEndpoints"]]
 },
 	{
 		$DefaultGray, Opacity[.3],
@@ -229,7 +230,7 @@ drawWires[wires_List, OptionsPattern[]] := With[{
 				]},
 			{
 				Line[points],
-				If[connectorsQ, {Opacity[1], PointSize[Scaled[0.003]], Point /@ points} , Nothing]
+				If[endpointsQ, {Opacity[1], PointSize[Scaled[0.003]], Point /@ points} , Nothing]
 	 		}
 		 ] &],
 			wires
@@ -243,14 +244,14 @@ Options[drawMeasurementWire] = Join[{
 	"HorizontalGapSize" -> 1,
 	"MeasurementWirePosition" -> Top,
 	"MeasurementWireLabel" -> "c",
-	"ShowTextLabels" -> True
+	"ShowGateLabels" -> True
 }, Options[Style]];
 drawMeasurementWire[x_, width_, opts : OptionsPattern[]] := With[{
 	size = OptionValue["Size"],
 	vGapSize = OptionValue["VerticalGapSize"],
 	hGapSize = OptionValue["HorizontalGapSize"],
 	label = OptionValue["MeasurementWireLabel"],
-	textLabelsQ = OptionValue["ShowTextLabels"]
+	gateLabelsQ = OptionValue["ShowGateLabels"]
 }, With[{
 	y = If[OptionValue["MeasurementWirePosition"] === Top, 0, - vGapSize width - vGapSize]
 },
@@ -260,7 +261,7 @@ drawMeasurementWire[x_, width_, opts : OptionsPattern[]] := With[{
 			Line[{{size / 2, y - size / 32}, {hGapSize x - size / 2, y - size / 32}}],
 			Line[{{size / 2, y + size / 32}, {hGapSize x - size / 2, y + size / 32}}]
 		},
-		If[	textLabelsQ,
+		If[	gateLabelsQ,
 			Replace[label, {
 				Placed[l_, p_] :> Text[Style[l, Background -> Transparent, FilterRules[{opts}, Options[Style]], $DefaultWireLabelStyle],
 					{Replace[p, {Left -> 3 size / 8, Right -> hGapSize x - 3 size / 8}], y},
@@ -295,15 +296,16 @@ drawWireLabels[wireLabels_, width_, height_, pad_, opts : OptionsPattern[]] := B
 				},
                     Text[
                         text,
-                        Total @ Replace[If[MemberQ[#, Center], #, Append[#, Center]] & @ ps, {
+                        Total @ Replace[If[MemberQ[#, Left | Right], #, Append[#, Left]] & @
+								If[MemberQ[#, Center], #, Append[#, Center]] & @ ps, {
 							Center -> {0, -i},
-                            Above -> {0, -i + size / 2},
-                            Below -> {0, -i - size / 2},
+                            Above -> {0, size / 8},
+                            Below -> {0, - size / 8},
                             Left -> {3 size / 8, 0},
                             Right -> {hGapSize height - 3 size / 8, 0}
                         },
 						{1}],
-						If[MemberQ[ps, Left], {1, 0}, {-1, 0}]
+						If[MemberQ[ps, Right], {-1, 0}, {1, 0}]
 					]
 				],
                 l_ :> Text[Style[l, Background -> Transparent, FilterRules[{opts}, Options[Style]], $DefaultWireLabelStyle], {3 size / 8, -i}, {1, 0}]
@@ -335,13 +337,13 @@ drawLabel[label_, height_, pad_, opts : OptionsPattern[]] := With[{vGapSize = Op
 Options[circuitDraw] := DeleteDuplicatesBy[First] @
 	Join[{
 		"WireLabels" -> Automatic, "MeasurementWireLabel" -> "c", "ShowWires" -> True, "ShowLabel" -> False,
-		"ShowMeasurementWire" -> True, "WirePadding" -> True,
+		"ShowMeasurementWire" -> True, "ShowEmptyWires" -> True,
 		"ShowOutline" -> False,
 		"SubcircuitLevel" -> 1,
 		"GatePacking" -> None,
 		"MeasurementWirePosition" -> Top,
 		"HorizontalGapSize" -> 1,
-		"ShowTextLabels" -> True,
+		"ShowGateLabels" -> True,
 		"SubcircuitOptions" -> {}
 	},
 	Options[drawGate], Options[drawMeasurement], Options[drawWires], Options[drawWireLabels], Options[drawOutline], Options[Style]];
@@ -359,25 +361,25 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	positions,
 	gatePositions,
 	wires,
-	wirePaddingQ = TrueQ[OptionValue["WirePadding"]],
+	emptyWiresQ = TrueQ[OptionValue["ShowEmptyWires"]],
 	showMeasurementWireQ = TrueQ[OptionValue["ShowMeasurementWire"]] && circuit["Measurements"] > 0,
 	labelCount = 0,
 	labelCounter,
-	textLabelsQ = TrueQ[OptionValue["ShowTextLabels"]]
+	gateLabelsQ = TrueQ[OptionValue["ShowGateLabels"]]
 },
 	labelCounter = ReplaceAll[None :> (labelCount++; Subscript["U", labelCount])];
 	span = If[showMeasurementWireQ, width, #2 - #1 + 1 & @@ MinMax @ order];
 	pad = width - span;
-	positions = circuitPositions[circuit, level, OptionValue["GatePacking"] === Automatic];
+	positions = circuitPositions[circuit, level, MatchQ[OptionValue["GatePacking"], Automatic | True]];
 	wires = circuitWires[circuit];
-	If[ !wirePaddingQ,
+	If[ !emptyWiresQ,
 		wires = DeleteCases[wires, _[_, _, i_ /; ! MemberQ[order, i]]]
 	];
 	gatePositions = MapThread[With[{gateOrder = #1["InputOrder"]}, {gateOrder, #2[[gateOrder]]}] &, {circuit["Operators"], positions[[All, 2]]}];
 	height = Max[positions] + 1;
 	wires = Replace[wires, _[from_, to_, i_] :> {{If[from == 0, 0, positions[[from, 2, i]]], i}, {If[to == -1, height, positions[[to, 1, i]] + 1], i}}, {1}];
 	{
-		If[TrueQ[OptionValue["ShowOutline"]], drawOutline[If[wirePaddingQ, width, span], height, pad, FilterRules[{opts}, Options[drawOutline]]], Nothing],
+		If[TrueQ[OptionValue["ShowOutline"]], drawOutline[If[emptyWiresQ, width, span], height, pad, FilterRules[{opts}, Options[drawOutline]]], Nothing],
 		If[TrueQ[OptionValue["ShowWires"]], drawWires[wires, FilterRules[{opts}, Options[drawWires]]], Nothing],
 		If[showMeasurementWireQ, drawMeasurementWire[height, width, FilterRules[{opts}, Options[drawMeasurementWire]]], Nothing],
 		MapThread[
@@ -389,8 +391,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 							OptionValue["SubcircuitOptions"],
 							"SubcircuitLevel" -> level - 1,
 							"WireLabels" -> None, "ShowOutline" -> True, "ShowLabel" -> True,
-							"ShowMeasurementWire" -> False, "WirePadding" -> False, "ShortOuterWires" -> False,
-							"ShowWireConnectors" -> False,
+							"ShowMeasurementWire" -> False, "ShowEmptyWires" -> False, "ShortOuterWires" -> False,
 							opts
 						],
 						{hGapSize Max[#3[[#1["InputOrder"]]]], 0}
@@ -404,13 +405,10 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 			] &,
 			{circuit["Operators"], gatePositions, positions[[All, 1]]}
 		],
-		If[	textLabelsQ,
-			drawWireLabels[
-				If[wirePaddingQ, Identity, Replace[Automatic -> Range[width - span + 1, width]]] @ OptionValue["WireLabels"],
-				If[wirePaddingQ, width, span], height, If[wirePaddingQ, 0, pad],
-				FilterRules[{opts}, Options[drawWireLabels]]
-			],
-			Nothing
+		drawWireLabels[
+			If[emptyWiresQ, Identity, Replace[Automatic -> Range[width - span + 1, width]]] @ OptionValue["WireLabels"],
+			If[emptyWiresQ, width, span], height, If[emptyWiresQ, 0, pad],
+			FilterRules[{opts}, Options[drawWireLabels]]
 		],
 		If[TrueQ[OptionValue["ShowLabel"]], drawLabel[circuit["Label"], height, pad, FilterRules[{opts}, Options[drawLabel]]], Nothing]
 	}
@@ -428,7 +426,7 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, pack_ : Fals
 				ReplacePart[ConstantArray[0, width], Thread[Range[Max[order]] -> 1]],
 				level > 0 && QuantumCircuitOperatorQ[#2],
 				ReplacePart[ConstantArray[0, width], Thread[Range @@ MinMax[order] -> Max[circuitPositions[#2, level - 1][[-1, 2]]]]],
-				! TrueQ[pack] && (MatchQ[#2["Label"], "Controlled"[__] | "SWAP"] || QuantumCircuitOperatorQ[#2]),
+				! TrueQ[pack] || (MatchQ[#2["Label"], "Controlled"[__] | "SWAP"] || QuantumCircuitOperatorQ[#2]),
 				ReplacePart[ConstantArray[0, width], Thread[Range @@ MinMax[order] -> 1]],
 				True,
 				ReplacePart[ConstantArray[0, width], Thread[order -> 1]]
@@ -439,7 +437,7 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, pack_ : Fals
 					SubsetMap[ConstantArray[Max[#], Length[#]] &, gatePos, List /@ Range[Max[order]]],
 					level > 0 && QuantumCircuitOperatorQ[#2],
 					SubsetMap[ConstantArray[Max[gatePos[[Span @@ MinMax[order]]]], Length[order]] &, gatePos, List /@ order],
-					! TrueQ[pack] && (MatchQ[#2["Label"], "Controlled"[__] | "SWAP"] || QuantumCircuitOperatorQ[#2]),
+					! TrueQ[pack] || (MatchQ[#2["Label"], "Controlled"[__] | "SWAP"] || QuantumCircuitOperatorQ[#2]),
 					SubsetMap[ConstantArray[Max[#], Length[#]] &, gatePos, List /@ Range @@ MinMax[order]],
 					True,
 					SubsetMap[ConstantArray[Max[#], Length[order]] &, gatePos, List /@ order]
