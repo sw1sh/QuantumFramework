@@ -9,7 +9,7 @@ PackageScope["controlledZGate"]
 $QuantumOperatorNames = {
     "Identity", "Permutation", "Curry", "Uncurry",
     "Fourier", "InverseFourier",
-    "XRotation", "YRotation", "ZRotation", "U", "Phase", "P",
+    "XRotation", "YRotation", "ZRotation", "U", "Phase", "P", "RX", "RY", "RZ",
     "Diagonal", "GlobalPhase",
     "PhaseShift",
     "SUM", "RootNOT",

@@ -89,17 +89,17 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 		],
 		"1" -> {
 			$DefaultGray, Opacity[.3],
-			Line[{center - {size / 2, 0}, center - {size / 5, 0}}],
-			Line[{center + {size / 5, 0}, center + {size / 2, 0}}],
+			Line[{center - {size / 2, 0}, center - {size / 8, 0}}],
+			Line[{center + {size / 8, 0}, center + {size / 2, 0}}],
 			FaceForm[$DefaultGray], Opacity[0.8],
-			Disk[center, size / 5]
+			Disk[center, size / 8]
 		},
 		"0" -> {
 			$DefaultGray, Opacity[.3],
-			Line[{center - {size / 2, 0}, center - {size / 5, 0}}],
-			Line[{center + {size / 5, 0}, center + {size / 2, 0}}],
+			Line[{center - {size / 2, 0}, center - {size / 8, 0}}],
+			Line[{center + {size / 8, 0}, center + {size / 2, 0}}],
 			EdgeForm[RGBColor[0.749019, 0.749019, 0.749019, .8]], FaceForm[Transparent],
-			Disk[center, size / 5]},
+			Disk[center, size / 8]},
 		"NOT" -> {
 			$DefaultGray, Opacity[.3],
 			Line[{center - {size / 2, 0}, center - {size / 5, 0}}],
@@ -351,7 +351,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	numGates = circuit["Gates"],
 	width = circuit["Width"],
 	order = circuit["InputOrder"],
-	level = OptionValue["SubcircuitLevel"],
+	level = Max[OptionValue["SubcircuitLevel"]],
 	hGapSize = OptionValue["HorizontalGapSize"],
 	span,
 	pad,
@@ -425,7 +425,7 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, pack_ : Fals
 				QuantumMeasurementOperatorQ[#2],
 				ReplacePart[ConstantArray[0, width], Thread[Range[Max[order]] -> 1]],
 				level > 0 && QuantumCircuitOperatorQ[#2],
-				ReplacePart[ConstantArray[0, width], Thread[Range @@ MinMax[order] -> Max[circuitPositions[#2, level - 1][[-1, 2]]]]],
+				ReplacePart[ConstantArray[0, width], Thread[Range @@ MinMax[order] -> Max[circuitPositions[#2, level - 1, pack][[-1, 2]]]]],
 				! TrueQ[pack] || (MatchQ[#2["Label"], "Controlled"[__] | "SWAP"] || QuantumCircuitOperatorQ[#2]),
 				ReplacePart[ConstantArray[0, width], Thread[Range @@ MinMax[order] -> 1]],
 				True,

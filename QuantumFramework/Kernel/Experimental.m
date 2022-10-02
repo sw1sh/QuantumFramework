@@ -1,7 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
-PackageExport["DecomposedQuantumStateProbabilities"]
-PackageExport["QuantumBeamSearch"]
+PackageScope["DecomposedQuantumStateProbabilities"]
+PackageScope["QuantumBeamSearch"]
 
 
 
