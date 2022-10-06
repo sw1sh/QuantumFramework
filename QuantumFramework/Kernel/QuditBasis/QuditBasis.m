@@ -137,7 +137,7 @@ QuditBasis /: MakeBoxes[qb_QuditBasis /; QuditBasisQ[Unevaluated @ qb], format_]
     icon = If[
         qb["ElementDimension"] < 2 ^ 9,
         ComplexArrayPlot[
-            Map[Replace[{x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]], x_ :> N[x]}], qb["Matrix"], {2}],
+            Map[Replace[{x_ ? (Not @* NumericQ) :> BlockRandom[RandomComplex[], RandomSeeding -> Hash[x]], x_ :> N[x]}], qb["Matrix"], {2}],
             ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},
             Frame -> False,
             FrameTicks -> None

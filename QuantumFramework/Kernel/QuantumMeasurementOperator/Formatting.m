@@ -9,7 +9,7 @@ QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; Quantu
     icon = If[
         qmo["Dimension"] < 2 ^ 9,
         ComplexArrayPlot[
-            Map[Replace[{x_ ? (Not @* NumericQ) :> BlockRandom[RandomColor[], RandomSeeding -> Hash[x]], x_ :> N[x]}],
+            Map[Replace[{x_ ? (Not @* NumericQ) :> BlockRandom[RandomComplex[], RandomSeeding -> Hash[x]], x_ :> N[x]}],
                 qmo["Sort"]["MatrixRepresentation"],
                 {2}
             ],
