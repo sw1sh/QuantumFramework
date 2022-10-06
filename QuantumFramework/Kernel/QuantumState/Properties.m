@@ -8,7 +8,7 @@ $QuantumStateProperties = {
     "NormalizedState", "NormalizedAmplitudes", "NormalizedStateVector", "NormalizedDensityMatrix",
     "Entropy", "VonNeumannEntropy",
     "Purity", "Type", "PureStateQ", "MixedStateQ",
-    "Kind",
+    "Kind", "Number",
     "Norm", "TraceNorm", "NormalizedQ",
     "BlochSphericalCoordinates", "BlochCartesianCoordinates",
     "BlochPlot",
@@ -114,6 +114,8 @@ QuantumStateProp[qs_, "StateVector"] := Module[{result},
     ];
     result /; !FailureQ[result]
 ]
+
+QuantumStateProp[qs_, "Number"] /; qs["Kind"] === "Number" := First[Flatten[qs["State"]]]
 
 QuantumStateProp[qs_, "Weights"] := If[qs["PureStateQ"],
     Abs[qs["StateVector"]] ^ 2,
