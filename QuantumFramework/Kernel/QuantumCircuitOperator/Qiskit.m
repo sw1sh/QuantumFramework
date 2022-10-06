@@ -16,12 +16,12 @@ existingGateNames = {
 };
 
 labelToGate = Replace[{
-    "Controlled"[x_String, ___] :> "c" <> Replace[ToLowerCase[x], "not" -> "x"],
+    "C"[x_String, ___] :> "c" <> Replace[ToLowerCase[x], "not" -> "x"],
     Superscript[x_String, CircleTimes[_]] :> x,
     SuperDagger[x_String] :> ToLowerCase[x] <> "dg",
     Subscript["R", axis_String][angle_] :> {"r" <> ToLowerCase[axis], N @ angle},
-    "Controlled"[Subscript["R", axis_String][angle_], ___] :> {"cr" <> ToLowerCase[axis], N @ angle},
-    "Controlled"[Superscript[Subscript["R", axis_String][angle_], CircleTimes[range_]], ___] :> {"cr" <> ToLowerCase[axis], N @ angle, range},
+    "C"[Subscript["R", axis_String][angle_], ___] :> {"cr" <> ToLowerCase[axis], N @ angle},
+    "C"[Superscript[Subscript["R", axis_String][angle_], CircleTimes[range_]], ___] :> {"cr" <> ToLowerCase[axis], N @ angle, range},
     x_String :> ToLowerCase[x],
     x_String[params___] :> {ToLowerCase[x], params}
 }]

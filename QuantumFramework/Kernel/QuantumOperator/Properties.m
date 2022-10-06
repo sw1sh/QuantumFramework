@@ -104,13 +104,13 @@ QuantumOperatorProp[qo_, "SetFullOrder"] := QuantumOperator[qo, {qo["FullOutputO
 
 
 QuantumOperatorProp[qo_, "ControlOrder1"] :=
-    FirstCase[qo["Label"], "Controlled"[_, control1_, ___] :> control1, {}, {0}]
+    FirstCase[qo["Label"], "C"[_, control1_, ___] :> control1, {}, {0}]
 
 QuantumOperatorProp[qo_, "ControlOrder0"] :=
-    FirstCase[qo["Label"], "Controlled"[_, _, control0] :> control0, {}, {0}]
+    FirstCase[qo["Label"], "C"[_, _, control0] :> control0, {}, {0}]
 
 QuantumOperatorProp[qo_, "ControlOrder"] :=
-    FirstCase[qo["Label"], "Controlled"[_, control1_, control0_ : {}] :> Join[control1, control0], {}, {0}]
+    FirstCase[qo["Label"], "C"[_, control1_, control0_ : {}] :> Join[control1, control0], {}, {0}]
 
 QuantumOperatorProp[qo_, "TargetOrder"] := Enclose[DeleteCases[qo["InputOrder"], Alternatives @@ Confirm @ qo["ControlOrder"]], qo["InputOrder"] &]
 
@@ -340,7 +340,7 @@ simplifyLabel[op_QuantumOperator] := QuantumOperator[op, "Label" -> simplifyLabe
 
 simplifyLabel[l_] := Replace[l, {
     SuperDagger[label : "X" | "Y" | "Z" | "NOT" | "H" | "SWAP"] :> label,
-    SuperDagger["Controlled"[x_, rest__]] :> "Controlled"[simplifyLabel[x], rest],
+    SuperDagger["C"[x_, rest__]] :> "C"[simplifyLabel[x], rest],
     SuperDagger[(r : Subscript["R", _] | "P")[angle_]] :> r[- angle],
     SuperDagger["PhaseShift"[n_] | n_Integer] :> "PhaseShift"[-n],
     SuperDagger["U2"[a_, b_]] :> "U2"[Pi - a, Pi - b],
@@ -492,7 +492,7 @@ QuantumOperatorProp[qo_, "TargetOperator"] := Module[{control1, control0, n, m},
             QuantumOperator[QuantumState[{"Register", n, 2 ^ n - 1}], {control1, {}}],
             QuantumOperator[QuantumState[{"Register", m, 0}], {control0, {}}]
         ],
-        "Label" -> Replace[qo["Label"], "Controlled"[label_, ___] :> label]
+        "Label" -> Replace[qo["Label"], "C"[label_, ___] :> label]
     ]
 ]
 
@@ -501,7 +501,7 @@ QuantumOperatorProp[qo_, "QASM"] /; qo["Dimensions"] === {2, 2} :=
 
 QuantumOperatorProp[qo_, "QASM"] /; qo["ControlOrder"] =!= {} && MatchQ[qo["TargetOrder"], {_}] :=
     Replace[qo["Label"], {
-        "Controlled"[_, control1_, control0_] :>
+        "C"[_, control1_, control0_] :>
             With[{n = Length[control1], m = Length[control0]},
                 StringTemplate["ctrl(``) @ negctrl(``) @ "][n, m] <>
                 (

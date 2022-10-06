@@ -399,8 +399,8 @@ QuantumCircuitOperator[{
     opts
 ]
 
-QuantumCircuitOperator[{"Controlled", qc_ ? QuantumCircuitOperatorQ, control1_, control0_ : {}}] :=
-    QuantumCircuitOperator[If[QuantumOperatorQ[#], QuantumOperator[{"Controlled", #, control1, control0}], #] & /@ qc["Operators"], "Controlled"[qc["Label"], control1, control0]]
+QuantumCircuitOperator[{"C" | "Controlled", qc_ ? QuantumCircuitOperatorQ, control1_, control0_ : {}}] :=
+    QuantumCircuitOperator[If[QuantumOperatorQ[#], QuantumOperator[{"Controlled", #, control1, control0}], #] & /@ qc["Operators"], "C"[qc["Label"], control1, control0]]
 
 
 QuantumCircuitOperator[pauliString_String] := With[{chars = Characters[pauliString]},

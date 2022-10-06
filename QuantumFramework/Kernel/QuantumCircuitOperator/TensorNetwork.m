@@ -198,7 +198,7 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
                     {vertices, tensors, orders}
                 ],
             VertexLabels ->
-                Thread[vertices -> (Replace[#["Label"], "Controlled"[label_, ___] :> Row[{"C", label}]] & /@ ops)],
+                Thread[vertices -> (Replace[#["Label"], "C"[label_, ___] :> Row[{"C", label}]] & /@ ops)],
             GraphLayout -> "SpringElectricalEmbedding"
         ],
         TensorNetworkQ

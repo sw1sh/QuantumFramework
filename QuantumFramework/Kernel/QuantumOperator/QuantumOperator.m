@@ -216,7 +216,7 @@ QuantumOperator[qo_ ? QuantumOperatorQ, order : {_ ? orderQ | Automatic, _ ? ord
 },
     QuantumOperator[
         QuantumOperator[qo,
-            "Label" -> Replace[qo["Label"], "Controlled"[name_, c1_, c0_] :> "Controlled"[name, c1 /. inputRepl, c0 /. inputRepl]]
+            "Label" -> Replace[qo["Label"], "C"[name_, c1_, c0_] :> "C"[name, c1 /. inputRepl, c0 /. inputRepl]]
         ]["State"],
         {qo["OutputOrder"] /. outputRepl, qo["InputOrder"] /. inputRepl}
     ]

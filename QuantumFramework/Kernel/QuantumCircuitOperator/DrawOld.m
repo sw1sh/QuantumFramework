@@ -249,9 +249,9 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
     labels = First[#[[2]], {}] & @ Reap @ Do[
 
     With[{pos = Complement[Range[Min[targetOrders[[i]]], Max[targetOrders[[i]]]], targetOrders[[i]]]},
-        If[Length[pos] > 0 && !MatchQ[gates[[i]]["Label"], "Controlled"[__] | "SWAP"], jumpWires = Join[jumpWires, Thread[pos -> Max @ positionIndices[[Join[targetOrders[[i]], pos]]]]]]
+        If[Length[pos] > 0 && !MatchQ[gates[[i]]["Label"], "C"[__] | "SWAP"], jumpWires = Join[jumpWires, Thread[pos -> Max @ positionIndices[[Join[targetOrders[[i]], pos]]]]]]
     ];
-    label = Replace[gates[[i]]["Label"], "Controlled"[x_, ___] :> x];
+    label = Replace[gates[[i]]["Label"], "C"[x_, ___] :> x];
     If[ QuantumMeasurementOperatorQ[gates[[i]]] || QuantumChannelQ[gates[[i]]],
         gatePositionIndices = Table[Max[positionIndices], {j, Min[orders[[i]]], Max[orders[[i]]]}];
         includeMeasurement = True;
@@ -292,8 +292,8 @@ drawGateGraphics[gates_List, opts : OptionsPattern[]] := Module[{
 
     If[ QuantumOperatorQ[gates[[i]]] || QuantumCircuitOperatorQ[gates[[i]]],
         gatePositionIndices = Table[positionIndices[[j]], {j, Min[orders[[i]]], Max[orders[[i]]]}];
-        If[ MatchQ[gates[[i]]["Label"], "CX" | "CY" | "CZ" | "CNOT" | "CPHASE" | "CSWAP" | "Controlled"[__]],
-            If[ MatchQ[gates[[i]]["Label"], "Controlled"[__]],
+        If[ MatchQ[gates[[i]]["Label"], "CX" | "CY" | "CZ" | "CNOT" | "CPHASE" | "CSWAP" | "C"[__]],
+            If[ MatchQ[gates[[i]]["Label"], "C"[__]],
                 controlQuditsOrder = If[Length[gates[[i]]["Label"]] > 1, Join @@ List @@ gates[[i]]["Label"][[2 ;; ]], orders[[i]][[;; 1]]];
                 colors = Join[Table[Black, Length[gates[[i]]["Label"][[2]]]], Table[White, Length[gates[[i]]["Label"][[3]]]]];
                 targetQuditsOrder = Complement[orders[[i]], controlQuditsOrder],

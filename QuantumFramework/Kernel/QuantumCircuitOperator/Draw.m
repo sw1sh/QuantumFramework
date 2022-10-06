@@ -68,12 +68,12 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 	center = Mean[corners];
 	Replace[label, {
 		_ /; gateShapeFunction =!= None -> gateShapeFunction[center, label, hGapSize hpos, - vGapSize vpos],
-		"Controlled"[subLabel_, control1_, control0_] :> With[{target = Complement[vpos, control1, control0]},
+		"C"[subLabel_, control1_, control0_] :> With[{target = Complement[vpos, control1, control0]},
 			{
-				$DefaultGray, Opacity[.3],
+				Replace[subLabel, gateBoundaryStyle],
 				Line[{
-					{center[[1]], - vGapSize #[[1]] - size If[MemberQ[target, #[[1]]], Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2], 1 / 5]},
-					{center[[1]], - vGapSize #[[2]] + size If[MemberQ[target, #[[2]]], Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2], 1 / 5]}
+					{center[[1]], - vGapSize #[[1]] - size If[MemberQ[target, #[[1]]], Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2], 1 / 8]},
+					{center[[1]], - vGapSize #[[2]] + size If[MemberQ[target, #[[2]]], Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2], 1 / 8]}
 				}] & /@ Select[Partition[Sort[vpos], 2, 1], Not @* ContainsExactly[target]],
 				Opacity[1.0],
 				If[ Length[target] > 1,
@@ -83,28 +83,38 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 					],
 					Map[drawGate[{{#}, hpos}, subLabel, opts] &, target]
 				],
-				drawGate[{{#}, hpos}, "1", opts] & /@ control1,
-				drawGate[{{#}, hpos}, "0", opts] & /@ control0
+				drawGate[{{#}, hpos}, "1",
+					"GateBoundaryStyle" -> {"1" -> Replace[subLabel, gateBoundaryStyle]},
+					"GateBackgroundStyle" -> {"1" -> Replace[subLabel, gateBoundaryStyle]},
+					opts
+				] & /@ control1,
+				drawGate[{{#}, hpos}, "0",
+					"GateBoundaryStyle" -> {"0" -> Replace[subLabel, gateBoundaryStyle]},
+					"GateBackgroundStyle" -> {"0" -> Replace[subLabel, gateBackgroundStyle]},
+					opts
+				] & /@ control0
 			}
 		],
 		"1" -> {
 			$DefaultGray, Opacity[.3],
 			Line[{center - {size / 2, 0}, center - {size / 8, 0}}],
 			Line[{center + {size / 8, 0}, center + {size / 2, 0}}],
-			FaceForm[$DefaultGray], Opacity[0.8],
+			EdgeForm[Replace["1", gateBoundaryStyle]],
+			FaceForm[Replace["1", gateBackgroundStyle]],
 			Disk[center, size / 8]
 		},
 		"0" -> {
 			$DefaultGray, Opacity[.3],
 			Line[{center - {size / 2, 0}, center - {size / 8, 0}}],
 			Line[{center + {size / 8, 0}, center + {size / 2, 0}}],
-			EdgeForm[RGBColor[0.749019, 0.749019, 0.749019, .8]], FaceForm[Transparent],
+			EdgeForm[Replace["0", gateBoundaryStyle]],
+			FaceForm[Transparent],
 			Disk[center, size / 8]},
 		"NOT" -> {
 			$DefaultGray, Opacity[.3],
 			Line[{center - {size / 2, 0}, center - {size / 5, 0}}],
 			Line[{center + {size / 5, 0}, center + {size / 2, 0}}],
-			EdgeForm[$DefaultGray], FaceForm[RGBColor[0.960784, 0.960784, 0.960784]],
+			EdgeForm[$DefaultGray], FaceForm[White],
 			Disk[center, size / 5],
 			RGBColor[0.650980, 0.650980, 0.650980], Opacity[1],
 			Line[{center + size / 5 {-1, 0}, center + size / 5 {1, 0}}], Line[{center + size / 5 {0, -1}, center + size / 5 {0, 1}}]
@@ -331,7 +341,7 @@ drawOutline[width_, height_, pad_, opts : OptionsPattern[]] := With[{size = Opti
 
 Options[drawLabel] = Join[{"VerticalGapSize" -> 1, "HorizontalGapSize" -> 1}, Options[Style]];
 drawLabel[label_, height_, pad_, opts : OptionsPattern[]] := With[{vGapSize = OptionValue["VerticalGapSize"], hGapSize = OptionValue["HorizontalGapSize"]},
-	Text[Style[label, Background -> Transparent, FilterRules[{opts}, Options[Style]]], {hGapSize height / 2, - vGapSize (pad + 1 / 2)}]
+	Text[Style[label, Background -> Transparent, FilterRules[{opts}, Options[Style]], FontFamily -> "Times"], {hGapSize height / 2, - vGapSize (pad + 1 / 2)}]
 ]
 
 Options[circuitDraw] := DeleteDuplicatesBy[First] @
@@ -426,7 +436,7 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, pack_ : Fals
 				ReplacePart[ConstantArray[0, width], Thread[Range[Max[order]] -> 1]],
 				level > 0 && QuantumCircuitOperatorQ[#2],
 				ReplacePart[ConstantArray[0, width], Thread[Range @@ MinMax[order] -> Max[circuitPositions[#2, level - 1, pack][[-1, 2]]]]],
-				! TrueQ[pack] || (MatchQ[#2["Label"], "Controlled"[__] | "SWAP"] || QuantumCircuitOperatorQ[#2]),
+				! TrueQ[pack] || (MatchQ[#2["Label"], "C"[__] | "SWAP"] || QuantumCircuitOperatorQ[#2]),
 				ReplacePart[ConstantArray[0, width], Thread[Range @@ MinMax[order] -> 1]],
 				True,
 				ReplacePart[ConstantArray[0, width], Thread[order -> 1]]
@@ -437,7 +447,7 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, pack_ : Fals
 					SubsetMap[ConstantArray[Max[#], Length[#]] &, gatePos, List /@ Range[Max[order]]],
 					level > 0 && QuantumCircuitOperatorQ[#2],
 					SubsetMap[ConstantArray[Max[gatePos[[Span @@ MinMax[order]]]], Length[order]] &, gatePos, List /@ order],
-					! TrueQ[pack] || (MatchQ[#2["Label"], "Controlled"[__] | "SWAP"] || QuantumCircuitOperatorQ[#2]),
+					! TrueQ[pack] || (MatchQ[#2["Label"], "C"[__] | "SWAP"] || QuantumCircuitOperatorQ[#2]),
 					SubsetMap[ConstantArray[Max[#], Length[#]] &, gatePos, List /@ Range @@ MinMax[order]],
 					True,
 					SubsetMap[ConstantArray[Max[#], Length[order]] &, gatePos, List /@ order]

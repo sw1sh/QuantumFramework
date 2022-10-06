@@ -20,6 +20,7 @@ toOperators[{name_, args___}] /; MemberQ[$QuantumOperatorNames, name] := Quantum
 toOperators[{name_, args___} -> order_ ? orderQ] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, order]
 toOperators[{name_, args___} -> rest_List] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, Sequence @@ rest]
 toOperators[lhs_ -> order_ ? orderQ] := QuantumOperator[lhs, order]
+toOperators[lhs_ -> n_Integer] := QuantumOperator[lhs, {n}]
 toOperators[lhs_ -> rest_List] := QuantumOperator[lhs, Sequence @@ rest]
 toOperators[l_List] := QuantumCircuitOperator[toOperators /@ l]
 toOperators[arg_] := QuantumOperator[arg]
