@@ -14,24 +14,15 @@ QuantumCircuitOperatorQ[___] := False
 
 (* constructors *)
 
-toOperators[op_ ? QuantumFrameworkOperatorQ] := op
-toOperators[order_ ? orderQ] := QuantumMeasurementOperator[order]
-toOperators[{name_, args___}] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}]
-toOperators[{name_, args___} -> order_ ? orderQ] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, order]
-toOperators[{name_, args___} -> rest_List] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, Sequence @@ rest]
-toOperators[lhs_ -> order_ ? orderQ] := QuantumOperator[lhs, order]
-toOperators[lhs_ -> n_Integer] := QuantumOperator[lhs, {n}]
-toOperators[lhs_ -> rest_List] := QuantumOperator[lhs, Sequence @@ rest]
-toOperators[l_List] := QuantumCircuitOperator[toOperators /@ l]
-toOperators[arg_] := QuantumOperator[arg]
+FromCircuitOperatorShorthand[arg_] := Replace[FromOperatorShorthand[arg], ops_List :> QuantumCircuitOperator[ops]]
 
 
-QuantumCircuitOperator[operators_ ? ListQ] := With[{ops = toOperators /@ operators},
+QuantumCircuitOperator[operators_ ? ListQ] := With[{ops = FromCircuitOperatorShorthand /@ operators},
     QuantumCircuitOperator[<|"Operators" -> ops, "Label" -> RightComposition @@ (#["Label"] & /@ ops)|>]
 ]
 
 QuantumCircuitOperator[operators_ ? ListQ, label_, ___] :=
-    QuantumCircuitOperator[<|"Operators" -> toOperators /@ operators, "Label" -> label|>]
+    QuantumCircuitOperator[<|"Operators" -> FromCircuitOperatorShorthand /@ operators, "Label" -> label|>]
 
 QuantumCircuitOperator[op : Except[_ ? QuantumCircuitOperatorQ, _ ? QuantumFrameworkOperatorQ], args___] := QuantumCircuitOperator[{op}, args]
 

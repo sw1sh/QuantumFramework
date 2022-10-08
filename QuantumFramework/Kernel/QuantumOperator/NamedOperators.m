@@ -3,11 +3,12 @@ Package["Wolfram`QuantumFramework`"]
 PackageScope["$QuantumOperatorNames"]
 PackageScope["pauliZGate"]
 PackageScope["controlledZGate"]
+PackageScope["FromOperatorShorthand"]
 
 
 
 $QuantumOperatorNames = {
-    "Identity", "Permutation", "Curry", "Uncurry",
+    "Identity", "I", "Permutation", "Curry", "Uncurry",
     "Fourier", "InverseFourier",
     "XRotation", "YRotation", "ZRotation", "U", "Phase", "P", "RX", "RY", "RZ",
     "Diagonal", "GlobalPhase",
@@ -36,6 +37,19 @@ controlledZGate = ReplacePart[
         Flatten[pauliZGate]
     ]
 ];
+
+
+FromOperatorShorthand[op_ ? QuantumFrameworkOperatorQ] := op
+FromOperatorShorthand[order_ ? orderQ] := QuantumMeasurementOperator[order]
+FromOperatorShorthand[name_] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[name]
+FromOperatorShorthand[{name_, args___}] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}]
+FromOperatorShorthand[{name_, args___} -> order_ ? orderQ] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, order]
+FromOperatorShorthand[{name_, args___} -> rest_List] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, Sequence @@ rest]
+FromOperatorShorthand[lhs_ -> order_ ? orderQ] := QuantumOperator[lhs, order]
+FromOperatorShorthand[lhs_ -> n_Integer] := QuantumOperator[lhs, {n}]
+FromOperatorShorthand[lhs_ -> rest_List] := QuantumOperator[lhs, Sequence @@ rest]
+FromOperatorShorthand[args_List] := FromOperatorShorthand /@ args
+FromOperatorShorthand[arg_] := QuantumOperator[arg]
 
 
 QuantumOperator[name_ ? nameQ, basisName : Except[Alternatives @@ $QuantumBasisPictures, _ ? nameQ]] :=
@@ -591,6 +605,11 @@ QuantumOperator["Discard", order : _ ? orderQ : {1}, args___] := With[{basis = Q
 ]
 
 
+QuantumOperator[pauliString_String] := With[{chars = Characters[pauliString]},
+    QuantumTensorProduct[MapIndexed[QuantumOperator, chars]] /; ContainsOnly[chars, {"I", "X", "Y", "Z"}]
+]
+
+
 $upperCasesOperatorNames := AssociationThread[ToUpperCase @ $QuantumOperatorNames, $QuantumOperatorNames]
 
 QuantumOperator[name_String, opts___] /; ToUpperCase[name] =!= name && KeyExistsQ[$upperCasesOperatorNames, name] :=
@@ -598,4 +617,7 @@ QuantumOperator[name_String, opts___] /; ToUpperCase[name] =!= name && KeyExists
 
 QuantumOperator[{name_String, params___}, opts___] /; ToUpperCase[name] =!= name && KeyExistsQ[$upperCasesOperatorNames, name] :=
     QuantumOperator[{$upperCasesOperatorNames[name], params}, opts]
+
+QuantumOperator[ops_List] /; AllTrue[ops, MatchQ[_Rule | (({name_, args___} | name_) /; MemberQ[$QuantumOperatorNames, name])]] :=
+    QuantumTensorProduct[Flatten[FromOperatorShorthand /@ ops]]
 
