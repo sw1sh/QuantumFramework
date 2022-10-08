@@ -184,6 +184,10 @@ QuantumOperator[array_ ? NumericArrayQ, args___] := QuantumOperator[Normal @ arr
 QuantumOperator[n_Integer, args___] := QuantumOperator[{"PhaseShift", n}, args]
 
 
+QuantumOperator[arg_, order1 : _ ? orderQ -> order2 : _ ? orderQ, opts___] :=
+    QuantumOperator[arg, {order2, order1}, opts]
+
+
 (* Mutation *)
 
 QuantumOperator[qo_ ? QuantumOperatorQ, order : (_ ? orderQ | Automatic)] :=
@@ -289,8 +293,21 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] /; qo["Picture"] === qo["Picture"] && (
     qs["Picture"] =!= "Heisenberg" || Message[QuantumOperator::incompatiblePictures, qo["Picture"], qs["Picture"]]) :=
-Enclose @ With[{order = Range[qs["OutputQudits"]] + Max[Max[qo["FullInputOrder"]] - qs["OutputQudits"], 0]},
-    ConfirmBy[qo[QuantumOperator[qs, order, Automatic]], QuantumOperatorQ]["Sort"]["State"]
+Enclose @ With[{
+    order = Range[qs["OutputQudits"]] + Max[Max[qo["FullInputOrder"]] - qs["OutputQudits"], 0]
+},
+    With[{
+        op = ConfirmBy[qo[QuantumOperator[qs, order, Automatic]], QuantumOperatorQ]["Sort"]
+    },
+        Which[
+            op["OutputQudits"] < Length[op["OutputOrder"]],
+            QuantumTensorProduct[op["State"], QuantumState[{"UniformSuperposition", Length[op["OutputOrder"]] - op["OutputQudits"]}]],
+            op["OutputQudits"] > Length[op["OutputOrder"]],
+            QuantumOperator["Discard", Range[op["OutputQudits"] - Length[op["OutputOrder"]]]][op["State"]],
+            True,
+            op["State"]
+        ]
+    ]
 ]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumOperatorQ] /; qo["Picture"] === op["Picture"] &&
@@ -298,7 +315,7 @@ Enclose @ With[{order = Range[qs["OutputQudits"]] + Max[Max[qo["FullInputOrder"]
     ! IntersectingQ[qo["OutputOrder"], op["OutputOrder"]] && ! IntersectingQ[qo["InputOrder"], op["InputOrder"]] :=
     QuantumTensorProduct[qo, op]
 
-(qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumOperatorQ] /; qo["Picture"] === op["Picture"] := Enclose @ Module[{
+(qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumOperatorQ] /; qo["Picture"] === op["Picture"] := Enclose @ Block[{
     top, bottom
 },
     top = qo;
@@ -325,7 +342,7 @@ Enclose @ With[{order = Range[qs["OutputQudits"]] + Max[Max[qo["FullInputOrder"]
         ]
     ];
     ConfirmAssert[top["InputDimension"] == bottom["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
-    QuantumOperator[ConfirmBy[top["State"] @ bottom["State"], QuantumStateQ], {top["FullOutputOrder"], bottom["FullInputOrder"]}]
+    QuantumOperator[ConfirmBy[top["State"] @ bottom["State"], QuantumStateQ], {top["OutputOrder"], bottom["InputOrder"]}]
 ]
 
 
@@ -404,6 +421,11 @@ QuantumOperator[qo__QuantumOperator ? QuantumOperatorQ] := QuantumOperator[{"Mul
 
 QuantumOperator /: Equal[qo : _QuantumOperator ... ] :=
     Equal @@ (#["Picture"] & /@ {qo}) && And @@ Thread[Equal @@ (Chop @ SetPrecisionNumeric @ SparseArrayFlatten @ #["Sort"]["MatrixRepresentation"] & /@ {qo})]
+
+
+(* conversion *)
+
+QuantumOperator[obj : _QuantumMeasurementOperator | _QuantumMeasurement | _QuantumChannel | _QuantumCircuitOperator] := obj["QuantumOperator"]
 
 
 (* parameterization *)

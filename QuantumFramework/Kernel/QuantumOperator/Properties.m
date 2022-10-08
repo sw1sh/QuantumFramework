@@ -80,7 +80,10 @@ QuantumOperatorProp[qo_, "FullArity"] := Max[qo["InputQudits"], qo["Range"]]
 QuantumOperatorProp[qo_, "FullInputOrder"] := If[qo["InputDimension"] > 1,
     Take[
         If[MatchQ[qo["InputOrder"], {___, _ ? NonPositive, ___}], Identity, # - Min[#, 1] + 1 &] @
-            Join[Complement[Range[Max[qo["InputOrder"]] - qo["InputQudits"] + 1, Max[qo["InputOrder"]]], qo["InputOrder"]], qo["InputOrder"]],
+            If[ Length[qo["InputOrder"]] > 0,
+                Join[Complement[Range[Max[qo["InputOrder"]] - qo["InputQudits"] + 1, Max[qo["InputOrder"]]], qo["InputOrder"]], qo["InputOrder"]],
+                Range[qo["InputQudits"]]
+            ],
         - qo["InputQudits"]
     ],
     {}
@@ -88,8 +91,11 @@ QuantumOperatorProp[qo_, "FullInputOrder"] := If[qo["InputDimension"] > 1,
 
 QuantumOperatorProp[qo_, "FullOutputOrder"] := If[qo["OutputDimension"] > 1,
     Take[
-        If[MatchQ[qo["OutputOrder"], {___, _ ? NonPositive, ___}], Identity, # - Min[#, 1] + 1 &] @
-            Join[Complement[Range[Max[qo["OutputOrder"]] - qo["OutputQudits"] + 1, Max[qo["OutputOrder"]]], qo["OutputOrder"]], qo["OutputOrder"]],
+        If[ MatchQ[qo["OutputOrder"], {___, _ ? NonPositive, ___}], Identity, # - Min[#, 1] + 1 &] @
+            If[ Length[qo["OutputOrder"]] > 0,
+                Join[Complement[Range[Max[qo["OutputOrder"]] - qo["OutputQudits"] + 1, Max[qo["OutputOrder"]]], qo["OutputOrder"]], qo["OutputOrder"]],
+                Range[qo["OutputQudits"]]
+            ],
         - qo["OutputQudits"]
     ],
     {}

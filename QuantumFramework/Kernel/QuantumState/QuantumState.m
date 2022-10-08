@@ -60,6 +60,11 @@ QuantumState["Eigenvalues" -> eigenvalues_ ? VectorQ, basisArgs___] := With[{
     ] /; Length[eigenvalues] == basis["Dimension"]
 ]
 
+(* conversion *)
+
+QuantumState[obj : _QuantumOperator | _QuantumMeasurementOperator | _QuantumMeasurement | _QuantumChannel | _QuantumCircuitOperator] := obj["State"]
+
+
 (* number *)
 
 QuantumState[x : Except[_ ? QuantumStateQ | _ ? stateQ], basisArgs___] := QuantumState[{x}, QuantumBasis[basisArgs]]
