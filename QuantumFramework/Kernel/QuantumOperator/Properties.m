@@ -493,6 +493,10 @@ QuantumOperatorProp[qo_, "SimpleQASM"] /; qo["Dimensions"] === {2, 2} := Enclose
     StringTemplate["U(``, ``, ``)"][Sequence @@ angles]
 ]
 
+QuantumOperatorProp[qo_, "SimpleQASM"] /; qo["Label"] == "SWAP" := "swap"
+
+QuantumOperatorProp[qo_, "SimpleQASM"] := StringTemplate["// Unimplimented QASM for operator with label: `` ----"][qo["Label"]]
+
 QuantumOperatorProp[qo_, "TargetOperator"] := Module[{control1, control0, n, m},
     control1 = qo["ControlOrder1"];
     control0 = qo["ControlOrder0"];
@@ -511,9 +515,6 @@ QuantumOperatorProp[qo_, "TargetOperator"] := Module[{control1, control0, n, m},
         "Label" -> Replace[qo["Label"], "C"[label_, ___] :> label]
     ]
 ]
-
-QuantumOperatorProp[qo_, "QASM"] /; qo["Dimensions"] === {2, 2} :=
-    qo["SimpleQASM"] <> " " <> StringRiffle[Map[StringTemplate["q[``]"], qo["InputOrder"] - 1], " "] <> ";"
 
 QuantumOperatorProp[qo_, "QASM"] /; qo["ControlOrder"] =!= {} && MatchQ[qo["TargetOrder"], {_}] :=
     Replace[qo["Label"], {
@@ -534,6 +535,10 @@ QuantumOperatorProp[qo_, "QASM"] /; qo["ControlOrder"] =!= {} && MatchQ[qo["Targ
         _ :> $Failed
         }
     ]
+
+QuantumOperatorProp[qo_, "QASM"] /; MatchQ[qo["Dimensions"], {2 ..}] :=
+    qo["SimpleQASM"] <> " " <> StringRiffle[Map[StringTemplate["q[``]"], qo["InputOrder"] - 1], " "] <> ";"
+
 
 
 (* state properties *)
