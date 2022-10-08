@@ -105,7 +105,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
                         ReverseApplied[Construct],
                         Prepend[
                             Select[qco["Operators"] , QuantumMeasurementOperatorQ],
-                            QuantumOperator["I", Complement[Range[qco["Arity"]], qco["Target"]]]
+                            If[Length[#] > 0, QuantumOperator["I", #], Nothing] & @ Complement[Range[qco["Arity"]], qco["Target"]]
                         ]
                     ]["POVM"]["Sort"]["OutputBasis"]
                 ],

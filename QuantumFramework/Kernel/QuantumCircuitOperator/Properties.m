@@ -4,7 +4,7 @@ Package["Wolfram`QuantumFramework`"]
 
 $QuantumCircuitOperatorProperties = {
      "Operators", "Diagram", "Gates", "Orders", "CircuitOperator", "QiskitCircuit", "Label",
-     "Depth", "Arity", "Width"
+     "Depth", "Arity", "Width", "TensorNetwork"
 };
 
 
