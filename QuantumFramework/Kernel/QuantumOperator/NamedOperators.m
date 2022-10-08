@@ -61,7 +61,7 @@ QuantumOperator[] := QuantumOperator["Identity"]
 QuantumOperator["Identity" | "I", order : _ ? orderQ | Automatic : Automatic, opts___] :=
     QuantumOperator[{"Identity", Table[2, If[order === Automatic, 1, Length[order]]]}, order, opts]
 
-QuantumOperator[{"Identity" | "I", dims_List}, order : _ ? orderQ | Automatic : Automatic, opts___] := QuantumOperator[
+QuantumOperator[{"Identity" | "I", dims : {_Integer ? Positive ..}}, order : _ ? orderQ | Automatic : Automatic, opts___] := QuantumOperator[
     QuantumState[SparseArrayFlatten @ identityMatrix[Times @@ dims], QuantumBasis[QuditBasis[dims], QuditBasis[dims], "Label" -> "I"]],
     {Sort[#], #} & @ Replace[order, Automatic -> Range[Length[dims]]],
     opts
@@ -73,7 +73,7 @@ QuantumOperator[{"Identity" | "I", qb_ ? QuditBasisQ}, opts___] := QuantumOperat
 ]
 
 QuantumOperator[{"Identity" | "I", params__}, opts___] :=
-    QuantumOperator[{"Identity", QuditBasis[params]}, opts]
+    Enclose @ QuantumOperator[{"Identity", ConfirmBy[QuditBasis[params], QuditBasisQ]}, opts]
 
 
 QuantumOperator[name : "XRotation" | "YRotation" | "ZRotation" | "RX" | "RY" | "RZ", opts___] :=  QuantumOperator[{name, Pi / 2}, opts]
@@ -482,6 +482,8 @@ With[{
 },
     QuantumState["RandomMixed", qb]["Operator"]
 ]
+
+QuantumOperator[{"RandomHermitian", args___}, order : (_ ? orderQ) : {1}] := QuantumOperator[{"RandomHermitian", QuantumBasis[args]}, order]
 
 
 QuantumOperator[{"Permutation", perm_Cycles}, opts___] := QuantumOperator[{"Permutation", 2, perm}, opts]
