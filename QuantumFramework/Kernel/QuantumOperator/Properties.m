@@ -26,7 +26,8 @@ $QuantumOperatorProperties = {
     "QuantumOperator", "Operator",
     "Computational",
     "Dagger", "Dual",
-    "TraceNorm"
+    "TraceNorm",
+    "PauliDecompose"
 };
 
 QuantumOperator["Properties"] := Union @ Join[$QuantumOperatorProperties, Complement[QuantumState["Properties"], {
@@ -447,6 +448,21 @@ QuantumOperatorProp[qo_, "EigenvaluePlot", args___] /; qo["ParameterArity"] == 1
     ReImPlot[Evaluate @ qo["Eigenvalues"], Evaluate @ First @ qo["ParameterSpec"],
         args
     ]
+
+
+QuantumOperatorProp[qo_, "PauliDecompose"] /; qo["InputDimensions"] == qo["OutputDimensions"] := With[{
+    dims = qo["InputDimensions"], dim = qo["InputDimension"], n = Length[qo["InputDimensions"]], cqo = qo["Computational"]
+},
+	Association @ Map[
+		With[{
+			op = QuantumTensorProduct[MapIndexed[QuantumOperator, Thread[{#, dims}]]],
+            c = Times @@ MapThread[If[#1 === "I", 1 / #2, 1 / 2 / Binomial[#2 + 1, 3]] &, {#, dims}]
+		},
+			If[# =!= 0, op -> Simplify[c #], Nothing] & @ QuantumPartialTrace[op[cqo], Range[n]]["Number"]
+		] &,
+		Tuples[{"I", "X", "Y", "Z"}, n]
+	]
+]
 
 
 UnitaryEulerAngles[b_, c_] := FullSimplify /@ {2 ArcSin[Abs[b]], Mod[Arg[c], 2 Pi], Mod[Arg[b] - Pi, 2 Pi]}
