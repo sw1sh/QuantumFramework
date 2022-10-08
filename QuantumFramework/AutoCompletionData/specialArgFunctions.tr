@@ -82,6 +82,7 @@
     "QuantumOperator" -> {
         {
             "Identity",
+            "I",
             "Permutation",
             "Curry",
             "Uncurry",
@@ -255,6 +256,18 @@
             "EntanglementEntropy",
             "RenyiEntropy",
             "Realignment"
+        }
+    },
+    "QuantumDistance" -> {
+        0,
+        0,
+        {
+            "Fidelity",
+            "RelativeEntropy",
+            "Trace",
+            "BuresAngle",
+            "HilbertSchmidt",
+            "Bloch"
         }
     }
 }

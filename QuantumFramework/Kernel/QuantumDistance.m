@@ -1,7 +1,11 @@
 Package["Wolfram`QuantumFramework`"]
 
 PackageExport["QuantumDistance"]
+PackageScope["$QuantumDistances"]
 
+
+
+$QuantumDistances = {"Fidelity", "RelativeEntropy", "Trace", "BuresAngle", "HilbertSchmidt", "Bloch"}
 
 
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ] := QuantumDistance[qs1, qs2, "Fidelity"]

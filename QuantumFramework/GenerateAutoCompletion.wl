@@ -1,16 +1,17 @@
-Needs["Wolfram`QuantumFramework`"]
+Get["Wolfram`QuantumFramework`"]
 
-$AutoCompletionData = WithCleanup[
-    Begin["Wolfram`QuantumFramework`PackageScope`"],
+$AutoCompletionData = Block[{$ContextPath},
+    AppendTo[$ContextPath, "Wolfram`QuantumFramework`PackageScope`"];
     With[{
-        basisNames = `$QuditBasisNames,
-        stateNames = `$QuantumStateNames,
-        operatorNames = `$QuantumOperatorNames,
-        measurementOperatorNames = `$QuantumMeasurementOperatorNames,
-        channelNames = `$QuantumChannelNames,
-        circuitNames = `$QuantumCircuitOperatorNames,
+        basisNames = $QuditBasisNames,
+        stateNames = $QuantumStateNames,
+        operatorNames = $QuantumOperatorNames,
+        measurementOperatorNames = $QuantumMeasurementOperatorNames,
+        channelNames = $QuantumChannelNames,
+        circuitNames = $QuantumCircuitOperatorNames,
 
-        entanglementMonotones = `$QuantumEntanglementMonotones
+        entanglementMonotones = $QuantumEntanglementMonotones,
+        distances = $QuantumDistances
     },
         {
             "QuditBasis" -> {basisNames},
@@ -20,10 +21,10 @@ $AutoCompletionData = WithCleanup[
             "QuantumMeasurementOperator" -> {Join[basisNames, measurementOperatorNames], basisNames},
             "QuantumChannel" -> {channelNames, basisNames},
             "QuantumCircuitOperator" -> {circuitNames},
-            "QuantumEntanglementMonotone" -> {0, entanglementMonotones}
+            "QuantumEntanglementMonotone" -> {0, entanglementMonotones},
+            "QuantumDistance" -> {0, 0, distances}
         }
-    ],
-    End[]
+    ]
 ]
 
 $path = FileNameJoin @ {DirectoryName[$InputFileName], "AutoCompletionData"}
