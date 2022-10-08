@@ -16,7 +16,8 @@ $QuantumCircuitOperatorNames = {
     "BernsteinVaziraniOracle", "BernsteinVazirani",
     "Fourier", "InverseFourier",
     "PhaseEstimation",
-    "Controlled"
+    "Controlled",
+    "Trotterization"
 }
 
 
@@ -405,5 +406,38 @@ QuantumCircuitOperator[{"C" | "Controlled", qc_ ? QuantumCircuitOperatorQ, contr
 
 QuantumCircuitOperator[pauliString_String] := With[{chars = Characters[pauliString]},
     QuantumCircuitOperator[MapIndexed[QuantumOperator, chars]] /; ContainsOnly[chars, {"I", "X", "Y", "Z"}]
+]
+
+
+trotterCoeffs[l_, 1, c_ : 1] := ConstantArray[c, l]
+trotterCoeffs[l_, 2, c_ : 1] := With[{s = trotterCoeffs[l, 1, c / 2]}, Join[s, Reverse[s]]]
+trotterCoeffs[l_, n_ ? EvenQ, c_ : 1] := With[{p = 1 / (4 - 4 ^ (1 / (n - 1)))},
+	With[{s = trotterCoeffs[l, n - 2, c p]}, Join[s, s, trotterCoeffs[l, n - 2, (1 - 4 p) c], s, s]]
+]
+trotterCoeffs[l_, n_ ? OddQ, c_ : 1] := trotterCoeffs[l, Round[n, 2], c]
+
+trotterExpand[l_List, 1] := l
+trotterExpand[l_List, 2] := Join[l, Reverse[l]]
+trotterExpand[l_List, n_ ? EvenQ] := Catenate @ Table[trotterExpand[l, n - 2], 5]
+trotterExpand[l_List, n_ ? OddQ] := trotterExpand[l, Round[n, 2]]
+
+Trotterization[ops : {__QuantumOperator}, order : _Integer ? Positive : 1, reps : _Integer ? Positive : 1, const_ : 1] := With[{
+	newOps = Thread[Times[const trotterCoeffs[Length[ops], order, 1 / reps], trotterExpand[ops, order]]]
+},
+	Table[newOps, reps]
+]
+
+QuantumCircuitOperator[{"Trotterization", opArgs_, args___}] := Block[{
+    ops = QuantumCircuitOperator[opArgs]["Flatten"]["Operators"],
+    trotterization
+},
+    trotterization = Trotterization[ops, args];
+    QuantumCircuitOperator[
+        If[ Length[trotterization] > 1,
+            MapIndexed[QuantumCircuitOperator[Exp[- I #1], First[#2]] &, trotterization],
+            Exp[- I Catenate[trotterization]]
+        ],
+        "Trotterization"
+    ]
 ]
 
