@@ -37,6 +37,7 @@ simpleLabel[label_] := Replace[label,
 Options[drawGate] := DeleteDuplicatesBy[First] @ Join[{
 	"RotateGateLabel" -> Automatic,
 	"ShowGateLabels" -> True,
+	"GateLabels" -> {},
 	"Size" -> .75,
 	"VerticalGapSize" -> 1,
 	"HorizontalGapSize" -> 1,
@@ -51,7 +52,7 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 	size = OptionValue["Size"],
 	vGapSize = OptionValue["VerticalGapSize"],
 	hGapSize = OptionValue["HorizontalGapSize"],
-	rotateLabel = Replace[OptionValue["RotateGateLabel"], Automatic -> If[Length[vpos] > 1, Pi / 2, 0]],
+	rotateLabel = Replace[OptionValue["RotateGateLabel"], {True | Automatic -> If[Length[vpos] > 1, Pi / 2, 0], False | None -> 0}],
 	labelStyleOpts = {Background -> Transparent, FilterRules[{opts}, Options[Style]], $DefaultFontStyleOptions},
 	gateBackgroundStyle = DeleteDuplicatesBy[First] @
 		Flatten[{Replace[OptionValue["GateBackgroundStyle"], Automatic -> $GateDefaultBackgroundStyle], $GateDefaultBackgroundStyle}],
@@ -158,7 +159,7 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			FaceForm[Replace[subLabel, gateBackgroundStyle]],
 			Rectangle[Sequence @@ corners, FilterRules[{opts}, Options[Rectangle]]],
 			If[connectorsQ, {FaceForm[Directive[$DefaultGray, Opacity[1]]], Disk[#, size / 32] & /@ {{center[[1]] - size / 2, - vGapSize #}, {center[[1]] + size / 2, - vGapSize #}} & /@ vpos}, Nothing],
-			If[gateLabelsQ, Rotate[Text[Style[label, labelStyleOpts], center], rotateLabel], Nothing]
+			If[gateLabelsQ, Rotate[Text[Style[Replace[label, OptionValue["GateLabels"]], labelStyleOpts], center], rotateLabel], Nothing]
 		}
 	}]
 ]
