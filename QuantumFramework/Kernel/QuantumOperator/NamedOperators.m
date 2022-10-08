@@ -450,7 +450,7 @@ QuantumOperator["RandomUnitary", order : (_ ? orderQ) : {1}, opts___] := Quantum
 
 QuantumOperator[{"RandomUnitary", qb_ ? QuantumBasisQ}, order : (_ ? orderQ) : {1}] :=
 With[{
-    padOrder = Join[order, Complement[Min[order] - 1 + Range[qb["Qudits"]], order]]
+    padOrder = Join[order, Complement[Min[order] - 1 + Range[qb["FullQudits"]], order]]
 },
     QuantumOperator[
            RandomVariate @ CircularUnitaryMatrixDistribution[qb["Dimension"]], order, qb, "Label" -> None
@@ -464,7 +464,7 @@ QuantumOperator["RandomHermitian", order : (_ ? orderQ) : {1}, opts___] := Quant
 
 QuantumOperator[{"RandomHermitian", qb_ ? QuantumBasisQ}, order : (_ ? orderQ) : {1}] :=
 With[{
-    padOrder = Join[order, Complement[Min[order] - 1 + Range[qb["Qudits"]], order]]
+    padOrder = Join[order, Complement[Min[order] - 1 + Range[qb["FullQudits"]], order]]
 },
     QuantumState["RandomMixed", qb]["Operator"]
 ]

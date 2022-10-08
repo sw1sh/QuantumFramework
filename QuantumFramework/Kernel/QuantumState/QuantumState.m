@@ -60,10 +60,9 @@ QuantumState["Eigenvalues" -> eigenvalues_ ? VectorQ, basisArgs___] := With[{
     ] /; Length[eigenvalues] == basis["Dimension"]
 ]
 
-
 (* number *)
 
-QuantumState[x_ ? NumberQ, basisArgs___] := QuantumState[{x}, QuantumBasis[basisArgs]]
+QuantumState[x : Except[_ ? QuantumStateQ | _ ? stateQ], basisArgs___] := QuantumState[{x}, QuantumBasis[basisArgs]]
 
 
 (* expand basis *)
@@ -74,7 +73,7 @@ QuantumState[state : Except[_ ? QuantumStateQ], args : Except[_ ? QuantumBasisQ]
 QuantumState[state_ ? stateQ, basis_ ? QuantumBasisQ] := QuantumState[
     state,
     QuantumTensorProduct[basis, QuantumBasis[Max[2, Length[state] - basis["Dimension"]]]]
-] /; Length[state] > basis["Dimension"]
+] /; Length[state] > basis["Dimension"] > 0
 
 
 (* pad state *)
@@ -87,8 +86,8 @@ QuantumState[state_ ? stateQ, basis_ ? QuantumBasisQ] := QuantumState[
 
 (* Mutation *)
 
-QuantumState[state_ ? stateQ, basis_ ? QuantumBasisQ] /; !SparseArrayQ[state] :=
-    QuantumState[SparseArray[state], basis]
+QuantumState[state_ ? stateQ, basis_ ? QuantumBasisQ] /; !SparseArrayQ[state] && state =!= {} :=
+    QuantumState[SparseArray[state, Length[state]], basis]
 
 
 QuantumState[qs_ ? QuantumStateQ, args : Except[_ ? QuantumBasisQ, Except[Alternatives @@ $QuantumBasisPictures, _ ? nameQ | _Integer]]] :=

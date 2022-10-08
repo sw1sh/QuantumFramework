@@ -148,7 +148,7 @@ QuditBasisProp[qb_, "Ordered", qudits_Integer, order_ ? orderQ] := If[qb["Dimens
 
 QuditBasisProp[qb_, "RemoveIdentities"] := QuditBasis @ If[ qb["Dimension"] > 1,
     Select[qb["Representations"], TensorRank[#] > 0 &],
-    qb["Representations"][[;; 1]]
+    qb["Representations"][[;; UpTo[1]]]
 ]
 
 QuditBasisProp[qb_, "Split", __] /; qb["Size"] == 0 := {QuditBasis[0], QuditBasis[0]}

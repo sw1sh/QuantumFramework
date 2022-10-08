@@ -28,7 +28,7 @@ QuantumOperator[arg : _ ? QuantumStateQ, order : {_ ? orderQ, _ ? orderQ}, opts_
 QuantumOperator[qs_ ? QuantumStateQ] :=
     QuantumOperator[
         qs,
-        If[qs["InputDimension"] > 1, {Automatic, Range[qs["InputQudits"]]}, {Range[qs["OutputQudits"]], Automatic}]
+        If[qs["InputDimension"] > 1, {Automatic, Range[qs["FullInputQudits"]]}, {Range[qs["FullOutputQudits"]], Automatic}]
     ]
 
 QuantumOperator[arg : _ ? QuantumStateQ, outputOrder : _ ? orderQ | Automatic, inputOrder : _ ? orderQ | Automatic, opts___] :=
@@ -42,7 +42,7 @@ QuantumOperator[qs_ ? QuantumStateQ, {Automatic, order_ ? orderQ}, opts___] :=
     QuantumOperator[
         qs,
         {
-            Reverse @ Take[Join[Reverse @ order, Min[order] - Range[qs["OutputQudits"] - qs["InputQudits"]]], UpTo @ qs["OutputQudits"]],
+            Reverse @ Take[Join[Reverse @ order, Min[order] - Range[qs["FullOutputQudits"] - qs["FullInputQudits"]]], UpTo @ qs["FullOutputQudits"]],
             order
         },
         opts
@@ -53,7 +53,7 @@ QuantumOperator[qs_ ? QuantumStateQ, {order_ ? orderQ, Automatic}, opts___] :=
         qs,
         {
             order,
-            Reverse @ Take[Join[Reverse @ order, Min[order] - Range[qs["InputQudits"] - qs["OutputQudits"]]], UpTo @ qs["InputQudits"]]
+            Reverse @ Take[Join[Reverse @ order, Min[order] - Range[qs["FullInputQudits"] - qs["FullOutputQudits"]]], UpTo @ qs["FullInputQudits"]]
         },
         opts
     ]
@@ -121,10 +121,10 @@ QuantumOperator[matrix_ ? MatrixQ, order : _ ? autoOrderQ, args___, opts : Optio
         o : Except[{_ ? orderQ | Automatic, _ ? orderQ | Automatic}] :> {op["OutputOrder"], Replace[o, Automatic -> op["InputOrder"]]},
         Automatic -> op["Order"]
     }];
-    newInputOrder = Join[newInputOrder, Take[DeleteElements[op["FullInputOrder"], newInputOrder], UpTo[op["InputQudits"] - Length[newInputOrder]]]];
+    newInputOrder = Join[newInputOrder, Take[DeleteElements[op["FullInputOrder"], newInputOrder], UpTo[op["FullInputQudits"] - Length[newInputOrder]]]];
     newOutputOrder = newOutputOrder - Min[newOutputOrder] + Min[newInputOrder];
-    If[ op["InputQudits"] < Length[newInputOrder],
-        QuantumOperator[{op, Ceiling[Length[newInputOrder], op["InputQudits"]] / op["InputQudits"]}, {Automatic, newInputOrder}, opts],
+    If[ op["FullInputQudits"] < Length[newInputOrder],
+        QuantumOperator[{op, Ceiling[Length[newInputOrder], op["FullInputQudits"]] / op["FullInputQudits"]}, {Automatic, newInputOrder}, opts],
         QuantumOperator[op["State"], {newOutputOrder, newInputOrder}, opts]
     ]
 ]
@@ -173,7 +173,7 @@ QuantumOperator[matrix_ ? MatrixQ, args___, opts : OptionsPattern[]] := Module[{
             QuantumStateQ,
             Message[QuantumOperator::invalidState]
         ];
-        QuantumOperator[state, {Range[basis["OutputQudits"]], Range[basis["InputQudits"]]}, opts]
+        QuantumOperator[state, {Range[basis["FullOutputQudits"]], Range[basis["FullInputQudits"]]}, opts]
     ];
     result /; !FailureQ[Unevaluated @ result]
 ]
@@ -195,8 +195,8 @@ QuantumOperator[qo_ ? QuantumOperatorQ, outputOrder : (_ ? orderQ | Automatic), 
 QuantumOperator[qo_ ? QuantumOperatorQ, order : {order1 : _ ? orderQ | Automatic, order2 : _ ? orderQ | Automatic}, opts___] := Block[{
     outputOrder = Replace[order1, Automatic -> qo["OutputOrder"]],
     inputOrder = Replace[order2, Automatic -> qo["InputOrder"]],
-    outputQudits = qo["OutputQudits"],
-    inputQudits = qo["InputQudits"]
+    outputQudits = qo["FullOutputQudits"],
+    inputQudits = qo["FullInputQudits"]
 },
     QuantumOperator[
         {qo, LCM[Quotient[Length[outputOrder], outputQudits], Quotient[Length[inputOrder], inputQudits]]},

@@ -23,7 +23,9 @@ $QuantumBasisProperties = {
     "InputTensor", "InputMatrix",
     "OutputTensor", "OutputMatrix",
     "TensorRepresentation", "Tensor", "MatrixRepresentation", "Matrix",
-    "Qudits", "InputQudits", "OutputQudits", "InputBasis", "OutputBasis",
+    "Qudits", "InputQudits", "OutputQudits",
+    "FullQudits", "FullInputQudits", "FullOutputQudits",
+    "InputBasis", "OutputBasis",
     "Dual", "Transpose", "ConjugateTranspose",
     "Label", "LabelHead",
     "Picture",
@@ -134,6 +136,12 @@ QuantumBasisProp[qb_, "InputQudits"] := qb["Input"]["Qudits"]
 QuantumBasisProp[qb_, "OutputQudits"] := qb["Output"]["Qudits"]
 
 QuantumBasisProp[qb_, "Qudits"] := qb["InputQudits"] + qb["OutputQudits"]
+
+QuantumBasisProp[qb_, "FullInputQudits"] := Length[qb["Input"]["Dimensions"]]
+
+QuantumBasisProp[qb_, "FullOutputQudits"] := Length[qb["Output"]["Dimensions"]]
+
+QuantumBasisProp[qb_, "FullQudits"] := qb["FullInputQudits"] + qb["FullOutputQudits"]
 
 
 QuantumBasisProp[qb_, "InputNameDimensions" | "InputDimensions"] := qb["Input"]["Dimensions"]

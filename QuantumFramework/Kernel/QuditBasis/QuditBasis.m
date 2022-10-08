@@ -41,7 +41,8 @@ qb_QuditBasis /; System`Private`HoldNotValidQ[qb] && quditBasisQ[Unevaluated @ q
 
 QuditBasis[] := QuditBasis[{QuditName[]}, {1}]
 
-QuditBasis[{1...}] := QuditBasis[]
+QuditBasis[{}] := QuditBasis[0]
+QuditBasis[{1..}] := QuditBasis[]
 
 QuditBasis[qb_QuditBasis] := qb
 

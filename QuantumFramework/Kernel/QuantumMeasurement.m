@@ -53,7 +53,7 @@ QuantumMeasurement[
                 First[states]["Basis"]
             ]
         ],
-        {Prepend[Range[First[states]["OutputQudits"]], 0], Range[First[states]["InputQudits"]]}
+        {Prepend[Range[First[states]["FullOutputQudits"]], 0], Range[First[states]["FullInputQudits"]]}
     ],
     Range[First[states]["Qudits"]]
 ]
