@@ -18,7 +18,8 @@ $QuantumOperatorNames = {
     "C", "Controlled", "C0", "Controlled0", "CX", "CY", "CZ", "CH", "CT", "CS", "CPHASE", "CNOT",
     "XX", "YY", "ZZ",
     "S", "T", "V",
-    "Toffoli", "Deutsch", "RandomUnitary",
+    "Toffoli", "Deutsch",
+    "RandomUnitary", "RandomHermitian",
     "Spider", "ZSpider", "XSpider",
     "Switch",
     "Discard",
@@ -449,7 +450,7 @@ QuantumOperator["RandomUnitary", order : (_ ? orderQ) : {1}, opts___] := Quantum
 
 QuantumOperator[{"RandomUnitary", qb_ ? QuantumBasisQ}, order : (_ ? orderQ) : {1}] :=
 With[{
-    padOrder = Join[order, Complement[Min[order] - 1 + Range[Length[qb["Dimensions"]]], order]]
+    padOrder = Join[order, Complement[Min[order] - 1 + Range[qb["Qudits"]], order]]
 },
     QuantumOperator[
            RandomVariate @ CircularUnitaryMatrixDistribution[qb["Dimension"]], order, qb, "Label" -> None
@@ -457,6 +458,16 @@ With[{
 ]
 
 QuantumOperator[{"RandomUnitary", args___}, order : (_ ? orderQ) : {1}] := QuantumOperator[{"RandomUnitary", QuantumBasis[args]}, order]
+
+
+QuantumOperator["RandomHermitian", order : (_ ? orderQ) : {1}, opts___] := QuantumOperator[{"RandomHermitian", QuantumBasis[2, Length[order], opts]}, order]
+
+QuantumOperator[{"RandomHermitian", qb_ ? QuantumBasisQ}, order : (_ ? orderQ) : {1}] :=
+With[{
+    padOrder = Join[order, Complement[Min[order] - 1 + Range[qb["Qudits"]], order]]
+},
+    QuantumState["RandomMixed", qb]["Operator"]
+]
 
 
 QuantumOperator[{"Permutation", perm_Cycles}, opts___] := QuantumOperator[{"Permutation", 2, perm}, opts]
