@@ -93,6 +93,9 @@
             "U",
             "Phase",
             "P",
+            "RX",
+            "RY",
+            "RZ",
             "Diagonal",
             "GlobalPhase",
             "PhaseShift",
@@ -110,7 +113,9 @@
             "RootSWAP",
             "CSWAP",
             "Fredkin",
+            "C",
             "Controlled",
+            "C0",
             "Controlled0",
             "CX",
             "CY",
@@ -129,6 +134,7 @@
             "Toffoli",
             "Deutsch",
             "RandomUnitary",
+            "RandomHermitian",
             "Spider",
             "ZSpider",
             "XSpider",
@@ -236,7 +242,8 @@
             "Fourier",
             "InverseFourier",
             "PhaseEstimation",
-            "Controlled"
+            "Controlled",
+            "Trotterization"
         }
     },
     "QuantumEntanglementMonotone" -> {
