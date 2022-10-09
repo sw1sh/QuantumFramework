@@ -73,11 +73,13 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 		_ /; gateShapeFunction =!= None -> gateShapeFunction[center, label, hGapSize hpos, - vGapSize vpos],
 		"C"[subLabel_, control1_, control0_] :> With[{target = Complement[vpos, control1, control0]},
 			{
-				Replace[subLabel, gateBoundaryStyle],
-				Line[{
-					{center[[1]], - vGapSize #[[1]] - size If[MemberQ[target, #[[1]]], Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2], 1 / 8]},
-					{center[[1]], - vGapSize #[[2]] + size If[MemberQ[target, #[[2]]], Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2], 1 / 8]}
-				}] & /@ Select[Partition[Sort[vpos], 2, 1], MatchQ[IntervalIntersection[Interval[#], Interval[MinMax[target]]], Interval[{x_, x_}]] &],
+				{
+					Replace[subLabel, gateBoundaryStyle],
+					Line[{
+						{center[[1]], - vGapSize #[[1]] - size If[MemberQ[target, #[[1]]], Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2], 1 / 8]},
+						{center[[1]], - vGapSize #[[2]] + size If[MemberQ[target, #[[2]]], Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2], 1 / 8]}
+					}]
+				} & /@ Select[Partition[Sort[vpos], 2, 1], MatchQ[IntervalIntersection[Interval[#], Interval[MinMax[target]]], Interval[{x_, x_}]] &],
 				Opacity[1.0],
 				If[ Length[target] > 1,
 					If[	MatchQ[subLabel, "NOT"],
@@ -88,7 +90,7 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 				],
 				drawGate[{{#}, hpos}, "1",
 					"GateBoundaryStyle" -> {"1" -> Replace[subLabel, gateBoundaryStyle]},
-					"GateBackgroundStyle" -> {"1" -> Replace[subLabel, gateBoundaryStyle]},
+					"GateBackgroundStyle" -> {"1" -> Replace[subLabel, gateBackgroundStyle]},
 					opts
 				] & /@ control1,
 				drawGate[{{#}, hpos}, "0",
@@ -376,7 +378,7 @@ Options[circuitDraw] := DeleteDuplicatesBy[First] @
 		"ShowMeasurementWire" -> True, "ShowEmptyWires" -> True,
 		"ShowOutline" -> False,
 		"SubcircuitLevel" -> 1,
-		"GatePacking" -> None,
+		"GateOverlap" -> False,
 		"MeasurementWirePosition" -> Top,
 		"HorizontalGapSize" -> 1,
 		"ShowGateLabels" -> True,
@@ -404,15 +406,15 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	gateLabelsQ = TrueQ[OptionValue["ShowGateLabels"]]
 },
 	labelCounter = ReplaceAll[None :> (labelCount++; Subscript["U", labelCount])];
-	span = If[showMeasurementWireQ, width, #2 - #1 + 1 & @@ MinMax @ order];
+	span = If[showMeasurementWireQ, width, Max[0, #2 - #1 + 1] & @@ MinMax @ order];
 	pad = width - span;
-	positions = circuitPositions[circuit, level, MatchQ[OptionValue["GatePacking"], Automatic | True]];
+	positions = circuitPositions[circuit, level, MatchQ[OptionValue["GateOverlap"], Automatic | True]];
 	wires = circuitWires[circuit];
 	If[ !emptyWiresQ,
 		wires = DeleteCases[wires, _[_, _, i_ /; ! MemberQ[order, i]]]
 	];
 	gatePositions = MapThread[With[{gateOrder = circuitElementOrder[#1, width]}, {gateOrder, #2[[gateOrder]]}] &, {circuit["Elements"], positions[[All, 2]]}];
-	height = Max[positions] + 1;
+	height = Max[0, positions] + 1;
 	wires = Replace[wires, _[from_, to_, i_] :> {{If[from == 0, 0, positions[[from, 2, i]]], i}, {If[to == -1, height, positions[[to, 1, i]] + 1], i}}, {1}];
 	{
 		If[TrueQ[OptionValue["ShowOutline"]], drawOutline[If[emptyWiresQ, width, span], height, pad, FilterRules[{opts}, Options[drawOutline]]], Nothing],
@@ -452,14 +454,14 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	}
 ]
 
-circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, pack_ : False] := With[{width = circuit["Width"]},
+circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, overlapQ : True | False : False] := With[{width = circuit["Width"]},
 	Rest @ FoldList[
 		Block[{
 			order = circuitElementOrder[#2, width],
 			gatePos = #1[[2]],
 			ranges = #1[[3]],
 			shift,
-			packShift = Function[x, If[! TrueQ[pack] && ContainsAny[Lookup[ranges, x, {}], order], 1, 0]]
+			overlapShift = Function[x, If[! overlapQ && ContainsAny[Lookup[ranges, x, {}], order], 1, 0]]
 		},
 			shift = Which[
 				BarrierQ[#2],
@@ -467,20 +469,18 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, pack_ : Fals
 				QuantumMeasurementOperatorQ[#2],
 				ReplacePart[ConstantArray[0, width], Thread[Range[Max[order]] -> 1]],
 				level > 0 && QuantumCircuitOperatorQ[#2],
-				ReplacePart[ConstantArray[0, width], Thread[Range @@ MinMax[order] -> Max[circuitPositions[#2, level - 1, pack][[-1, 2]]]]],
+				ReplacePart[ConstantArray[0, width], Thread[Range @@ MinMax[order] -> Max[circuitPositions[#2, level - 1, overlapQ][[-1, 2]]]]],
 				True,
 				ReplacePart[ConstantArray[0, width], Thread[order -> 1]]
 			];
 			{
 				gatePos = Which[
 					BarrierQ[#2],
-					SubsetMap[With[{x = Max[#]}, packShift[x] + ConstantArray[x, Length[order]]] &, gatePos, List /@ order],
+					SubsetMap[With[{x = Max[#]}, overlapShift[x] + ConstantArray[x, Length[order]]] &, gatePos, List /@ order],
 					QuantumMeasurementOperatorQ[#2],
 					SubsetMap[ConstantArray[Max[#], Length[#]] &, gatePos, List /@ Range[Max[order]]],
-					level > 0 && QuantumCircuitOperatorQ[#2],
-					SubsetMap[With[{x = Max[gatePos[[Span @@ MinMax[order]]]]}, packShift[x] + ConstantArray[x, Length[order]]] &, gatePos, List /@ order],
 					True,
-					SubsetMap[With[{x = Max[#]}, packShift[x]  + ConstantArray[x, Length[order]]] &, gatePos, List /@ order]
+					SubsetMap[With[{x = Max[gatePos[[Span @@ MinMax[order]]]]}, overlapShift[x] + ConstantArray[x, Length[order]]] &, gatePos, List /@ order]
 				],
 				gatePos + shift,
 				Merge[{ranges, Max[gatePos[[order]]] -> Range @@ MinMax[order]}, Apply[Union]]

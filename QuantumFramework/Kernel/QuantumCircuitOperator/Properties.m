@@ -100,11 +100,11 @@ QuantumCircuitOperatorProp[qco_, "Orders"] := Thread[{qco["OutputOrders"], qco["
 
 QuantumCircuitOperatorProp[qco_, "Order"] := {qco["OutputOrder"], qco["InputOrder"]}
 
-QuantumCircuitOperatorProp[qco_, "Depth"] := Max @ Counts[Catenate[Union @@@ qco["Orders"]]]
+QuantumCircuitOperatorProp[qco_, "Depth"] := Max[1, Counts[Catenate[Union @@@ qco["Orders"]]]]
 
 QuantumCircuitOperatorProp[qco_, "Arity"] := Length @ qco["InputOrder"]
 
-QuantumCircuitOperatorProp[qco_, "Width"] := #2 - Min[Max[#1, 1], 1] + 1 & @@ MinMax[{qco["InputOrder"], qco["OutputOrder"]}]
+QuantumCircuitOperatorProp[qco_, "Width"] := Max[1, #2 - Min[Max[#1, 1], 1] + 1] & @@ MinMax[{qco["InputOrder"], qco["OutputOrder"]}]
 
 QuantumCircuitOperatorProp[qco_, "InputDimensions"] :=
     (q |-> #["InputDimensions"][[ q /. #["InputOrderQuditMapping"] ]] & @
