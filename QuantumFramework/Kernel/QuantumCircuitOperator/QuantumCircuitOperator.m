@@ -7,7 +7,13 @@ PackageScope["QuantumCircuitOperatorQ"]
 
 
 QuantumCircuitOperatorQ[QuantumCircuitOperator[KeyValuePattern[{"Operators" -> operators_, "Label" -> _}]]] :=
-    VectorQ[Unevaluated @ operators, QuantumFrameworkOperatorQ]
+    VectorQ[Unevaluated @ operators, QuantumFrameworkOperatorQ] &&
+    AllTrue[operators,
+        QuantumOperatorQ[#] && AllTrue[Join @@ #["Order"], GreaterEqualThan[1]] ||
+        QuantumMeasurementOperatorQ[#] && AllTrue[#["InputOrder"], GreaterEqualThan[1]] ||
+        QuantumChannelQ[#] && AllTrue[#["InputOrder"], GreaterEqualThan[1]] ||
+        QuantumCircuitOperatorQ[#] &
+    ]
 
 QuantumCircuitOperatorQ[___] := False
 

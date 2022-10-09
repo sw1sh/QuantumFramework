@@ -425,7 +425,8 @@ QuantumOperator /: Equal[qo : _QuantumOperator ... ] :=
 
 (* conversion *)
 
-QuantumOperator[obj : _QuantumMeasurementOperator | _QuantumMeasurement | _QuantumChannel | _QuantumCircuitOperator] := obj["QuantumOperator"]
+QuantumOperator[obj : _QuantumMeasurementOperator | _QuantumMeasurement | _QuantumChannel | _QuantumCircuitOperator, opts___] :=
+    QuantumOperator[obj["QuantumOperator"], opts]
 
 
 (* parameterization *)

@@ -102,6 +102,19 @@ QuantumOperator[{"ZRotation" | "RZ", angle_, dimension_Integer : 2}, opts___] :=
     opts
 ]
 
+QuantumOperator[{"R", angle_, args__}, opts___] := Block[{ops = QuantumOperator /@ {args}, op, orders},
+    op = QuantumTensorProduct[ops];
+    orders = TakeList[op["FullInputOrder"], #["Arity"] & /@ ops];
+    QuantumOperator[
+        Exp[- I angle / 2 op],
+        opts,
+        "Label" -> Subscript["R", Sequence @@ MapThread[
+            Subscript[#1["Label"], Sequence @@ #2] &,
+            {ops, orders}
+        ]][angle]
+    ]
+]
+
 QuantumOperator[{"U" | "U3", theta_, phi_ : Pi, lambda_ : Pi}, opts___] := QuantumOperator[
     QuantumOperator[
         {{Cos[theta / 2], - Exp[I lambda] Sin[theta / 2]}, {Exp[I phi] Sin[theta / 2], Exp[I * (phi + lambda)] Cos[theta / 2]}},
@@ -607,8 +620,8 @@ QuantumOperator["Discard", order : _ ? orderQ : {1}, args___] := With[{basis = Q
 ]
 
 
-QuantumOperator[pauliString_String] := With[{chars = Characters[pauliString]},
-    QuantumTensorProduct[MapIndexed[QuantumOperator, chars]] /; ContainsOnly[chars, {"I", "X", "Y", "Z"}]
+QuantumOperator[pauliString_String, opts___] := With[{chars = Characters[pauliString]},
+    QuantumOperator[QuantumTensorProduct[MapIndexed[QuantumOperator, chars]], opts] /; ContainsOnly[chars, {"I", "X", "Y", "Z"}]
 ]
 
 
@@ -620,6 +633,8 @@ QuantumOperator[name_String, opts___] /; ToUpperCase[name] =!= name && KeyExists
 QuantumOperator[{name_String, params___}, opts___] /; ToUpperCase[name] =!= name && KeyExistsQ[$upperCasesOperatorNames, name] :=
     QuantumOperator[{$upperCasesOperatorNames[name], params}, opts]
 
-QuantumOperator[ops_List] /; AllTrue[ops, MatchQ[_Rule | (({name_, args___} | name_) /; MemberQ[$QuantumOperatorNames, name])]] :=
+QuantumOperator[rule : _Rule] := FromOperatorShorthand[rule]
+
+QuantumOperator[ops_List] /; AllTrue[ops, MatchQ[_Rule | _Integer | _ ? orderQ | (({name_, args___} | name_) /; MemberQ[$QuantumOperatorNames, name])]] :=
     QuantumTensorProduct[Flatten[FromOperatorShorthand /@ ops]]
 

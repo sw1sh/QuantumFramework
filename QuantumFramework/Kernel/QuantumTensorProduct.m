@@ -99,6 +99,11 @@ QuantumTensorProduct[qmo1_QuantumMeasurementOperator, qmo2_QuantumMeasurementOpe
 QuantumTensorProduct[qm1_QuantumMeasurement, qm2_QuantumMeasurement] := QuantumMeasurement @ QuantumTensorProduct[qm1["State"], qm2["State"]]
 
 
+QuantumTensorProduct[qo_QuantumOperator, qmo_QuantumMeasurementOperator] := QuantumTensorProduct[QuantumMeasurementOperator[qo], qmo]
+
+QuantumTensorProduct[qmo_QuantumMeasurementOperator, qo_QuantumOperator] := QuantumTensorProduct[qmo, QuantumMeasurementOperator[qo]]
+
+
 (* circuit x circuit *)
 
 QuantumTensorProduct[qc1_QuantumCircuitOperator, qc2_QuantumCircuitOperator] :=

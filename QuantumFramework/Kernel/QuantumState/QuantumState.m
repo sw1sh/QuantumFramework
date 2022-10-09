@@ -62,7 +62,8 @@ QuantumState["Eigenvalues" -> eigenvalues_ ? VectorQ, basisArgs___] := With[{
 
 (* conversion *)
 
-QuantumState[obj : _QuantumOperator | _QuantumMeasurementOperator | _QuantumMeasurement | _QuantumChannel | _QuantumCircuitOperator] := obj["State"]
+QuantumState[obj : _QuantumOperator | _QuantumMeasurementOperator | _QuantumMeasurement | _QuantumChannel | _QuantumCircuitOperator, opts___] :=
+    QuantumState[obj["State"], opts]
 
 
 (* number *)
@@ -108,7 +109,7 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; ! newBasis["Sort
 
 QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Basis"] == newBasis := QuantumState[qs["State"], newBasis]
 
-QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] := Switch[
+QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Dimensions"] == newBasis["Dimensions"] := Switch[
     qs["StateType"],
     "Vector",
     QuantumState[

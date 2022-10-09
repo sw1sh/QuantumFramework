@@ -34,6 +34,8 @@ simpleLabel[label_] := Replace[label,
 	}
 ]
 
+selectNonOverlappingIntervals[l_List] := Fold[If[Length[#1] == 0 || #1[[-1, 2]] < #2[[1]], Append[#1, #2], #1] &, {}, l]
+
 Options[drawGate] := DeleteDuplicatesBy[First] @ Join[{
 	"RotateGateLabel" -> Automatic,
 	"ShowGateLabels" -> True,
@@ -75,7 +77,7 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 				Line[{
 					{center[[1]], - vGapSize #[[1]] - size If[MemberQ[target, #[[1]]], Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2], 1 / 8]},
 					{center[[1]], - vGapSize #[[2]] + size If[MemberQ[target, #[[2]]], Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2], 1 / 8]}
-				}] & /@ Select[Partition[Sort[vpos], 2, 1], Not @* ContainsExactly[target]],
+				}] & /@ Select[Partition[Sort[vpos], 2, 1], MatchQ[IntervalIntersection[Interval[#], Interval[MinMax[target]]], Interval[{x_, x_}]] &],
 				Opacity[1.0],
 				If[ Length[target] > 1,
 					If[	MatchQ[subLabel, "NOT"],
@@ -96,6 +98,14 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 				] & /@ control0
 			}
 		],
+		Subscript["R", subLabels : Subscript[_, __Integer]..][angle_] :> {
+			Replace[subLabel, gateBoundaryStyle],
+			Line[{
+				{center[[1]], - vGapSize #[[1, 2]] - size Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2]},
+				{center[[1]], - vGapSize #[[2, 1]] + size Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2]}
+			}] & /@ Partition[selectNonOverlappingIntervals[Sort @ Replace[{subLabels}, Subscript[subLabel_, order__Integer] :> MinMax[{order}], {1}]], 2, 1],
+			Replace[{subLabels}, Subscript[subLabel_, order__Integer] :> drawGate[{{order}, hpos}, Subscript["R", subLabel][angle], opts], {1}]
+		},
 		"1" -> {
 			$DefaultGray, Opacity[.3],
 			Line[{center - {size / 2, 0}, center - {size / 8, 0}}],
