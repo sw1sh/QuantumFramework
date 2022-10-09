@@ -635,6 +635,6 @@ QuantumOperator[{name_String, params___}, opts___] /; ToUpperCase[name] =!= name
 
 QuantumOperator[rule : _Rule] := FromOperatorShorthand[rule]
 
-QuantumOperator[ops_List] /; AllTrue[ops, MatchQ[_Rule | _Integer | _ ? orderQ | (({name_, args___} | name_) /; MemberQ[$QuantumOperatorNames, name])]] :=
+QuantumOperator[ops_List] /; AllTrue[ops, MatchQ[_Rule | _Integer | (({name_, args___} | name_) /; MemberQ[$QuantumOperatorNames, name])]] :=
     QuantumTensorProduct[Flatten[FromOperatorShorthand /@ ops]]
 
