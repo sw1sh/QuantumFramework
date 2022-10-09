@@ -462,10 +462,10 @@ QuantumOperatorProp[qo_, "PauliDecompose"] /; qo["InputDimensions"] == qo["Outpu
 },
 	Association @ Map[
 		With[{
-			op = QuantumTensorProduct[MapIndexed[QuantumOperator, Thread[{#, dims}]]],
+			ops = MapIndexed[QuantumOperator, Thread[{#, dims}]],
             c = Times @@ MapThread[If[#1 === "I", 1 / #2, 1 / 2 / Binomial[#2 + 1, 3]] &, {#, dims}]
 		},
-			If[# =!= 0, op -> Simplify[c #], Nothing] & @ QuantumPartialTrace[op[cqo], Range[n]]["Number"]
+			If[# =!= 0, ops -> Simplify[c #], Nothing] & @ QuantumPartialTrace[QuantumTensorProduct[ops][cqo], Range[n]]["Number"]
 		] &,
 		Tuples[{"I", "X", "Y", "Z"}, n]
 	]
