@@ -6,7 +6,12 @@ QuantumState /: MakeBoxes[qs_QuantumState, TraditionalForm] /; QuantumStateQ[qs]
     With[{formula = TooltipBox[
             ToBoxes[qs["Formula"], StandardForm],
             ToBoxes[
-                Row[{"QuantumState: ", qs["InputDimensions"] -> qs["OutputDimensions"]}]
+                Column[{
+                    qs["Label"],
+                    Row[{"QuantumState: ", qs["InputDimensions"] -> qs["OutputDimensions"]}]
+                },
+                    Alignment -> Center
+                ]
             ]
         ]
     },

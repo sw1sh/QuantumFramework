@@ -6,8 +6,13 @@ QuantumOperator /: MakeBoxes[qo_QuantumOperator, TraditionalForm] /; QuantumOper
     With[{formula = TooltipBox[
             ToBoxes[qo["Formula"], StandardForm],
             ToBoxes[
-                Row[{"QuantumOperator: ", Thread[Subscript[qo["InputDimensions"], qo["InputOrder"]]] ->
-                    Thread[Subscript[qo["OutputDimensions"], qo["OutputOrder"]]]}]
+                Column[{
+                    qo["Label"],
+                    Row[{"QuantumOperator: ", Thread[Subscript[qo["InputDimensions"], qo["InputOrder"]]] ->
+                        Thread[Subscript[qo["OutputDimensions"], qo["OutputOrder"]]]}]
+                },
+                    Alignment -> Center
+                ]
             ]
         ]
     },
