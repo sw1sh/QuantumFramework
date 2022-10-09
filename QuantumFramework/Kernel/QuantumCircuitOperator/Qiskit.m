@@ -30,10 +30,15 @@ labelToGate = Replace[{
 QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
     operators = Map[
         With[{
-            label = If[QuantumMeasurementOperatorQ[#], "m", labelToGate @ #["Label"]]
+            label = Which[BarrierQ[#], {"barrier", #}, QuantumMeasurementOperatorQ[#], "m", True, labelToGate @ #["Label"]]
         },
             Replace[
                 label, {
+                {"barrier", barrier_} :> With[{order = circuitElementOrder[barrier, qco["Width"]]}, {
+                    "barrier",
+                    {Length[order]},
+                    order - 1
+                }],
                 "m" :>
                     Splice[With[{target = #["Target"]}, MapIndexed[{label, None, {#1 - 1, Length[target] - #2[[1]]}} &, target]]],
                 (name : "cx" | "cy" | "cz" | "ch" | "cswap") | {name : "crx" | "cry" | "crz" | "cp" | "cu2" | "cu", params___} :>
@@ -68,7 +73,7 @@ QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
             }
             ]
         ] &,
-        qco["Flatten"]["Operators"]
+        qco["Flatten"]["Elements"]
     ],
     arity = {qco["Width"], Replace[Quiet[qco["TargetArity"]], Except[_Integer] -> Nothing]}
 },
@@ -282,7 +287,7 @@ for gate, qubits, clbits in qc:
     elif gate.name == 'measure':
         ops.append(wl.Wolfram.QuantumFramework.QuantumMeasurementOperator(order))
     elif gate.name == 'barrier':
-        pass
+        ops.append('Barrier')
     else:
         print('Unknonwn gate: ', gate.name, gate.params, [q.index for q in qubits])
 wl.Wolfram.QuantumFramework.QuantumCircuitOperator(ops)

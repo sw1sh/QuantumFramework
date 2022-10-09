@@ -3,8 +3,8 @@ Package["Wolfram`QuantumFramework`"]
 
 
 $QuantumCircuitOperatorProperties = {
-     "Operators", "Diagram", "Gates", "Orders", "CircuitOperator", "QiskitCircuit", "Label",
-     "Depth", "Arity", "Width", "TensorNetwork"
+    "Operators", "Diagram", "Gates", "Orders", "CircuitOperator", "QiskitCircuit", "Label",
+    "Depth", "Arity", "Width", "TensorNetwork"
 };
 
 
@@ -24,7 +24,7 @@ QuantumCircuitOperator::undefprop = "property `` is undefined for this circuit";
 (qds_QuantumCircuitOperator[prop_ ? propQ, args___]) /; QuantumCircuitOperatorQ[qds] := With[{
     result = QuantumCircuitOperatorProp[qds, prop, args]
 },
-    If[ TrueQ[$QuantumFrameworkPropCache] && ! MemberQ[{"Operators", "Diagram", "Qiskit", "QiskitCircuit"}, propName[prop]],
+    If[ TrueQ[$QuantumFrameworkPropCache] && ! MemberQ[{"Elements", "Diagram", "Qiskit", "QiskitCircuit"}, propName[prop]],
         QuantumCircuitOperatorProp[qds, prop, args] = result,
         result
     ] /;
@@ -32,6 +32,8 @@ QuantumCircuitOperator::undefprop = "property `` is undefined for this circuit";
 ]
 
 QuantumCircuitOperatorProp[QuantumCircuitOperator[data_Association], key_String] /; KeyExistsQ[data, key] := data[key]
+
+QuantumCircuitOperatorProp[qco_, "Operators"] := DeleteCases[qco["Elements"], _ ? BarrierQ]
 
 QuantumCircuitOperatorProp[qco_, "OldDiagram", opts : OptionsPattern[Join[Options[drawGateGraphics], Options[Graphics]]]] := Module[{
     labels, indices, graphics,
@@ -156,9 +158,10 @@ QuantumCircuitOperatorProp[qco_, "Stats" | "Statistics"] := Counts[#["Arity"] & 
 QuantumCircuitOperatorProp[qco_, "Flatten", n : _Integer ? NonNegative | Infinity : Infinity] :=
     QuantumCircuitOperator[
         If[ n === Infinity,
-            FixedPoint[Flatten[Map[Replace[c_ ? QuantumCircuitOperatorQ :> c["Operators"]], #], 1] &, qco["Operators"]],
-            Nest[Flatten[Map[Replace[c_ ? QuantumCircuitOperatorQ :> c["Operators"]], #], 1] &, qco["Operators"], n]
-        ]
+            FixedPoint[Flatten[Replace[#, c_ ? QuantumCircuitOperatorQ :> c["Elements"], {1}], 1] &, qco["Elements"]],
+            Nest[Flatten[Replace[#, c_ ? QuantumCircuitOperatorQ :> c["Elements"], {1}], 1] &, qco["Elements"], n]
+        ],
+        qco["Label"]
     ]
 
 QuantumCircuitOperatorProp[qco_, "Sort"] := QuantumCircuitOperator[#["Sort"] & /@ qco["Operators"]]
