@@ -17,6 +17,7 @@ existingGateNames = {
 
 labelToGate = Replace[{
     "C"[x_String, ___] :> "c" <> Replace[ToLowerCase[x], "not" -> "x"],
+    "C"[x_String[args__], ___] :> {"c" <> ToLowerCase[x], Sequence @@ N[{args}]},
     Superscript[x_String, CircleTimes[_]] :> x,
     SuperDagger[x_String] :> ToLowerCase[x] <> "dg",
     Subscript["R", axis_String][angle_] :> {"r" <> ToLowerCase[axis], N @ angle},
@@ -35,7 +36,7 @@ QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
                 label, {
                 "m" :>
                     Splice[With[{target = #["Target"]}, MapIndexed[{label, None, {#1 - 1, Length[target] - #2[[1]]}} &, target]]],
-                (name : "cx" | "cy" | "cz" | "ch") | {name : "crx" | "cry" | "crz", params___} :>
+                (name : "cx" | "cy" | "cz" | "ch" | "cswap") | {name : "crx" | "cry" | "crz" | "cp" | "cu2" | "cu", params___} :>
                     Module[{c1 = #["Label"][[2]], c0 = #["Label"][[3]], t = #["TargetOrder"], range},
                         range = Join[c1, c0];
                         {
@@ -77,7 +78,7 @@ from wolframclient.language import wl
 from qiskit import QuantumCircuit
 from qiskit.extensions import UnitaryGate
 from qiskit.circuit.gate import Gate
-from qiskit.circuit.library.standard_gates import XGate, YGate, ZGate, HGate, RXGate, RYGate, RZGate, U1Gate, U2Gate, U3Gate
+from qiskit.circuit.library.standard_gates import XGate, YGate, ZGate, HGate, RXGate, RYGate, RZGate, PhaseGate, U2Gate, U3Gate, SwapGate
 
 import pickle
 
@@ -106,11 +107,13 @@ for name, data, order in <* Wolfram`QuantumFramework`Qiskit`PackagePrivate`opera
         elif base_name == 'rz':
             base_gate = RZGate(*data[3])
         elif base_name == 'p':
-            base_gate = U1Gate(*data[3])
+            base_gate = PhaseGate(*data[3])
         elif base_name == 'u2':
             base_gate = U2Gate(*data[3])
         elif base_name == 'u':
             base_gate = U3Gate(*data[3])
+        elif base_name == 'swap':
+            base_gate = SwapGate(*data[3])
         else:
             base_gate = Gate(base_name, n_qubits=data[0])
         circuit.append(base_gate.control(len(data[2]), ctrl_state=data[2]), tuple(order))
