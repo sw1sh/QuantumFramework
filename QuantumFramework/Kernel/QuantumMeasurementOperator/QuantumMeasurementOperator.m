@@ -28,16 +28,15 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
 },
     basis = If[ target === Automatic,
         qb,
-        QuantumBasis[qb, Ceiling[Length[target] / qb["OutputQudits"]]]
+        QuantumBasis[qb, Ceiling[Length[target] / Max[1, qb["Qudits"]]]]
     ];
     basis = QuantumBasis[basis, Ceiling[Length[eigenvalues] / basis["Dimension"]]];
 
     op = ConfirmBy[
         QuantumOperator[
             QuantumOperator[
-                (* DiagonalMatrix[PadRight[SparseArray @ eigenvalues, basis["Dimension"]]], *)
                 PadRight[SparseArray @ eigenvalues, basis["Dimension"]] . basis["Projectors"],
-                # - Min[#, 1] + 1 &[Max[Replace[target, Automatic -> 0]] - Reverse @ Range[basis["OutputQudits"]] + 1],
+                # - Min[#, 1] + 1 &[Max[Replace[target, Automatic -> 0]] - Reverse @ Range[Max[1, basis["Qudits"]]] + 1],
                 QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
             ],
             basis
@@ -45,7 +44,7 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
         QuantumOperatorQ
     ];
     newTarget = Replace[target, Automatic -> op["FullInputOrder"]];
-    order = PadRight[newTarget, op["InputQudits"], DeleteCases[op["FullInputOrder"], Alternatives @@ newTarget]];
+    order = PadRight[newTarget, Max[1, op["InputQudits"]], DeleteCases[op["FullInputOrder"], Alternatives @@ newTarget]];
     qmo = QuantumMeasurementOperator[
         QuantumOperator[op["State"], {Automatic, Sort @ order}],
         order[[;; Length @ newTarget]],
@@ -116,9 +115,9 @@ Enclose @ Module[{
     basis = ConfirmBy[QuantumBasis[qb, args], QuantumBasisQ]
 },
     If[ basis["Qudits"] < Length[target],
-        basis = QuantumBasis[basis, Ceiling[Length[target] / basis["Qudits"]]]
+        basis = QuantumBasis[basis, Ceiling[Length[target] / Max[1, basis["Qudits"]]]]
     ];
-    QuantumMeasurementOperator[basis -> Range[0, basis["Dimension"] - 1], target]
+    QuantumMeasurementOperator[basis -> If[basis["Dimension"] == 1, {1}, Range[0, basis["Dimension"] - 1]], target]
 ]
 
 

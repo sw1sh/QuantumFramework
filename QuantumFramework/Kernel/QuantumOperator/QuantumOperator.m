@@ -42,7 +42,7 @@ QuantumOperator[qs_ ? QuantumStateQ, {Automatic, order_ ? orderQ}, opts___] :=
     QuantumOperator[
         qs,
         {
-            Reverse @ Take[Join[Reverse @ order, Min[order] - Range[qs["OutputQudits"] - qs["InputQudits"]]], UpTo @ qs["OutputQudits"]],
+            Reverse @ Take[Join[Reverse @ order, Min[order] - Range[Max[1, qs["OutputQudits"] - qs["InputQudits"]]]], UpTo @ Max[1, qs["OutputQudits"]]],
             order
         },
         opts
@@ -53,7 +53,7 @@ QuantumOperator[qs_ ? QuantumStateQ, {order_ ? orderQ, Automatic}, opts___] :=
         qs,
         {
             order,
-            Reverse @ Take[Join[Reverse @ order, Min[order] - Range[qs["InputQudits"] - qs["OutputQudits"]]], UpTo @ qs["InputQudits"]]
+            Reverse @ Take[Join[Reverse @ order, Min[order] - Range[Max[1, qs["InputQudits"] - qs["OutputQudits"]]]], UpTo @ Max[1, qs["InputQudits"]]]
         },
         opts
     ]
@@ -297,16 +297,18 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 (qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] /; qo["Picture"] === qo["Picture"] && (
     qs["Picture"] =!= "Heisenberg" || Message[QuantumOperator::incompatiblePictures, qo["Picture"], qs["Picture"]]) :=
 Enclose @ With[{
-    order = Range[qs["OutputQudits"]] + Max[Max[qo["FullInputOrder"]] - qs["OutputQudits"], 0]
+    order = Range[Max[1, qs["OutputQudits"]]] + Max[0, Max[qo["FullInputOrder"]] - qs["OutputQudits"]]
 },
     With[{
         op = ConfirmBy[qo[QuantumOperator[qs, order, Automatic]], QuantumOperatorQ]["Sort"]
     },
         Which[
-            op["OutputQudits"] < Length[op["OutputOrder"]],
+            Max[1, op["OutputQudits"]] < Length[op["OutputOrder"]],
             QuantumTensorProduct[op["State"], QuantumState[{"UniformSuperposition", Length[op["OutputOrder"]] - op["OutputQudits"]}]],
             op["OutputQudits"] > Length[op["OutputOrder"]],
-            QuantumOperator["Discard", Range[op["OutputQudits"] - Length[op["OutputOrder"]]]][op["State"]],
+            With[{order = Complement[Range[op["OutputQudits"]], op["OutputOrder"]]},
+                QuantumOperator["Discard", order, op["OutputDimensions"][[order]]] @ op["State"]
+            ],
             True,
             op["State"]
         ]

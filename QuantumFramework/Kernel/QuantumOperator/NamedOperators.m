@@ -611,7 +611,7 @@ QuantumOperator["Discard", order : _ ? orderQ : {1}, args___] := With[{basis = Q
     QuantumOperator[
         QuantumState["UniformSuperposition",
             If[ basis["Qudits"] < Length[order],
-                QuantumBasis[basis, Ceiling[Length[order] / basis["Qudits"]]],
+                QuantumBasis[basis, Ceiling[Length[order] / Max[1, basis["Qudits"]]]],
                 basis
             ]
         ]["Dagger"],

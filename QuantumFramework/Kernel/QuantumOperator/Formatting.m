@@ -8,8 +8,8 @@ QuantumOperator /: MakeBoxes[qo_QuantumOperator, TraditionalForm] /; QuantumOper
             ToBoxes[
                 Column[{
                     qo["Label"],
-                    Row[{"QuantumOperator: ", Thread[Subscript[qo["InputDimensions"], qo["InputOrder"]]] ->
-                        Thread[Subscript[qo["OutputDimensions"], qo["OutputOrder"]]]}]
+                    Row[{"QuantumOperator: ", If[qo["InputOrder"] === {}, {}, Thread[Subscript[qo["InputDimensions"], qo["InputOrder"]]]] ->
+                        If[qo["OutputOrder"] === {}, {}, Thread[Subscript[qo["OutputDimensions"], qo["OutputOrder"]]]]}]
                 },
                     Alignment -> Center
                 ]
