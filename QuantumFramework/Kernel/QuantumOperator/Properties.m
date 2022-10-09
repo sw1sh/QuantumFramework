@@ -348,6 +348,7 @@ simplifyLabel[op_QuantumOperator] := QuantumOperator[op, "Label" -> simplifyLabe
 simplifyLabel[l_] := Replace[l, {
     SuperDagger[label : "X" | "Y" | "Z" | "NOT" | "H" | "SWAP"] :> label,
     SuperDagger["C"[x_, rest__]] :> "C"[simplifyLabel[x], rest],
+    SuperDagger[Subscript["R", args__][a_]] :> Subscript["R", args][- a],
     SuperDagger[(r : Subscript["R", _] | "P")[angle_]] :> r[- angle],
     SuperDagger["PhaseShift"[n_] | n_Integer] :> "PhaseShift"[-n],
     SuperDagger["U2"[a_, b_]] :> "U2"[Pi - a, Pi - b],

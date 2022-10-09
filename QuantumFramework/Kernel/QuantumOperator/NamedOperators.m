@@ -10,7 +10,7 @@ PackageScope["FromOperatorShorthand"]
 $QuantumOperatorNames = {
     "Identity", "I", "Permutation", "Curry", "Uncurry",
     "Fourier", "InverseFourier",
-    "XRotation", "YRotation", "ZRotation", "U", "Phase", "P", "RX", "RY", "RZ",
+    "XRotation", "YRotation", "ZRotation", "U", "Phase", "P", "RX", "RY", "RZ", "R",
     "Diagonal", "GlobalPhase",
     "PhaseShift",
     "SUM", "RootNOT",

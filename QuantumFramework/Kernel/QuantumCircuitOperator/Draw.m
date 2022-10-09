@@ -447,7 +447,7 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, pack_ : Fals
 				ReplacePart[ConstantArray[0, width], Thread[Range[Max[order]] -> 1]],
 				level > 0 && QuantumCircuitOperatorQ[#2],
 				ReplacePart[ConstantArray[0, width], Thread[Range @@ MinMax[order] -> Max[circuitPositions[#2, level - 1, pack][[-1, 2]]]]],
-				! TrueQ[pack] || (MatchQ[#2["Label"], "C"[__] | "SWAP"] || QuantumCircuitOperatorQ[#2]),
+				! TrueQ[pack] || (MatchQ[#2["Label"], "C"[__] | Subscript["R", __][_] | "SWAP"] || QuantumCircuitOperatorQ[#2]),
 				ReplacePart[ConstantArray[0, width], Thread[Range @@ MinMax[order] -> 1]],
 				True,
 				ReplacePart[ConstantArray[0, width], Thread[order -> 1]]
@@ -458,7 +458,7 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, pack_ : Fals
 					SubsetMap[ConstantArray[Max[#], Length[#]] &, gatePos, List /@ Range[Max[order]]],
 					level > 0 && QuantumCircuitOperatorQ[#2],
 					SubsetMap[ConstantArray[Max[gatePos[[Span @@ MinMax[order]]]], Length[order]] &, gatePos, List /@ order],
-					! TrueQ[pack] || (MatchQ[#2["Label"], "C"[__] | "SWAP"] || QuantumCircuitOperatorQ[#2]),
+					! TrueQ[pack] || (MatchQ[#2["Label"], "C"[__] | Subscript["R", __][_] | "SWAP"] || QuantumCircuitOperatorQ[#2]),
 					SubsetMap[ConstantArray[Max[#], Length[#]] &, gatePos, List /@ Range @@ MinMax[order]],
 					True,
 					SubsetMap[ConstantArray[Max[#], Length[order]] &, gatePos, List /@ order]
