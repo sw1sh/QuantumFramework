@@ -65,6 +65,6 @@ QuantumChannel[{"Depolarizing", p_}, args___] :=
         Sqrt[p] (1 / 2) PauliMatrix[3]
     },
         args,
-        "Label" -> "Depolarizing"[p]
+        "Label" -> "\[CapitalDelta]"[p]
     ]
 
