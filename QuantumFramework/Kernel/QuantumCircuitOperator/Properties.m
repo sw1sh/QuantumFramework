@@ -35,28 +35,6 @@ QuantumCircuitOperatorProp[QuantumCircuitOperator[data_Association], key_String]
 
 QuantumCircuitOperatorProp[qco_, "Operators"] := DeleteCases[qco["Elements"], _ ? BarrierQ]
 
-QuantumCircuitOperatorProp[qco_, "OldDiagram", opts : OptionsPattern[Join[Options[drawGateGraphics], Options[Graphics]]]] := Module[{
-    labels, indices, graphics,
-    width, height,
-    sizes,
-    imageWidth, imageHeight,
-    scale = 0.001
-    (* scale = Dynamic[0.26 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]] *)
-},
-    {labels, indices, graphics} = drawGateGraphics[qco["Operators"],
-        FilterRules[{opts}, Options[drawGateGraphics]]
-    ];
-    (* graphics = graphics /. {Thickness[t_] :> Thickness[100 scale t], Arrowheads[s_] :> Arrowheads[0.5 scale s]}; *)
-    width = Max[indices];
-    height = qco["Arity"];
-    sizes = Most @ Rasterize[#, "BoundingBox"] & /@ labels;
-    imageWidth = Min[width Max[sizes[[All, 1]] + 1, 128], 512];
-    imageHeight = Min[height Max[sizes[[All, 2]] + 1, 128], 512];
-    Show[graphics,
-        FilterRules[{opts}, Options[Graphics]],
-        ImageSize -> If[width > height, {imageWidth, Automatic}, {Automatic, imageHeight}]
-    ]
-]
 
 QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[Options[CircuitDraw]]] :=
     CircuitDraw[qco, opts, ImageSize -> Medium]
