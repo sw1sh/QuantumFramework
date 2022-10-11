@@ -17,7 +17,6 @@ $QuantumOperatorNames = {
     "X", "Y", "Z", "PauliX", "PauliY", "PauliZ", "H", "Hadamard",
     "SWAP", "RootSWAP", "CSWAP", "Fredkin",
     "C", "Controlled", "C0", "Controlled0", "CX", "CY", "CZ", "CH", "CT", "CS", "CPHASE", "CNOT",
-    "XX", "YY", "ZZ",
     "S", "T", "V",
     "Toffoli", "Deutsch",
     "RandomUnitary", "RandomHermitian",
@@ -433,46 +432,6 @@ QuantumOperator["Toffoli", order : (_ ? orderQ) : {1, 2, 3}] :=
 QuantumOperator["CSWAP" | "Fredkin", opts___] := QuantumOperator[{"Controlled", "SWAP"}, opts]
 
 
-QuantumOperator[name : "XX" | "YY" | "ZZ", opts___] := QuantumOperator[{name, 0}, opts]
-
-QuantumOperator[{"XX", angle_}, opts___] := QuantumOperator[
-    QuantumOperator[
-        SparseArray[{
-            {1, 1} -> Cos[angle / 2], {2, 2} -> Cos[angle / 2], {3, 3} -> Cos[angle / 2], {4, 4} -> Cos[angle / 2],
-            {4, 1} -> -I Sin[angle / 2], {3, 2} -> -I Sin[angle / 2], {2, 3} -> -I Sin[angle / 2], {1, 4} -> -I Sin[angle / 2]
-        },
-            {4, 4}
-        ],
-        "Label" -> Subscript["R", "XX"][angle]
-    ],
-    opts
-]
-
-QuantumOperator[{"YY", angle_}, opts___] := QuantumOperator[
-    QuantumOperator[
-        SparseArray[{
-            {1, 1} -> Cos[angle / 2], {2, 2} -> Cos[angle / 2], {3, 3} -> Cos[angle / 2], {4, 4} -> Cos[angle / 2],
-            {4, 1} -> I Sin[angle / 2], {3, 2} -> -I Sin[angle / 2], {2, 3} -> -I Sin[angle / 2], {1, 4} -> I Sin[angle / 2]
-        },
-            {4, 4}
-        ],
-        "Label" -> Subscript["R", "YY"][angle]
-    ],
-    opts
-]
-
-QuantumOperator[{"ZZ", angle_}, opts___] := QuantumOperator[
-    QuantumOperator[
-        SparseArray[{
-            {1, 1} -> Exp[- I angle / 2], {2, 2} -> Exp[I angle / 2],
-            {3, 3} -> Exp[I angle / 2], {4, 4} ->  Exp[- I angle / 2]
-        },
-            {4, 4}
-        ],
-        "Label" -> Subscript["R", "ZZ"][angle]
-    ],
-    opts
-]
 
 QuantumOperator["RandomUnitary", order : (_ ? orderQ) : {1}, opts___] := QuantumOperator[{"RandomUnitary", QuantumBasis[2, Length[order], opts]}, order]
 
