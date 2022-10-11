@@ -17,7 +17,9 @@ BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
     qco,
     qco["Diagram", "ShowGateLabels" -> False, "ShowMeasurementWire" -> False, "WireLabels" -> None, "SubcircuitOptions" -> {"ShowLabel" -> False}, ImageSize -> Tiny],
     {
-        {}
+        {
+            BoxForm`SummaryItem[{qco["Label"]}]
+        }
     },
     {
         {
