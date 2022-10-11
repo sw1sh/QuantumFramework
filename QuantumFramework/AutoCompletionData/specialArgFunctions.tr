@@ -97,6 +97,7 @@
             "RX",
             "RY",
             "RZ",
+            "R",
             "Diagonal",
             "GlobalPhase",
             "PhaseShift",
