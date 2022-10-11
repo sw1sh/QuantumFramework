@@ -217,6 +217,11 @@ QuantumMeasurementOperatorProp[qmo_, "Shift", n : _Integer ? NonNegative : 1] :=
 QuantumMeasurementOperatorProp[qmo_, prop : "Conjugate" | "Dual"] :=
     QuantumMeasurementOperator[qmo["SuperOperator"][prop], qmo["Target"]]
 
+
+QuantumMeasurementOperatorProp[qmo_, "CircuitDiagram", opts___] :=
+    QuantumCircuitOperator[qmo]["Diagram", opts]
+
+
 (* operator properties *)
 
 QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | "Sort" | "SortOutput" | "SortInput" | "Computational" | "Simplify", args___] :=

@@ -59,6 +59,10 @@ QuantumChannelProp[qc_, "NEvolutionChannel"] := QuantumChannel[
 QuantumChannelProp[qc_, name : "Dagger"] := QuantumChannel[qc["Operator"][name]]
 
 
+QuantumChannelProp[qc_, "CircuitDiagram", opts___] :=
+    QuantumCircuitOperator[qc]["Diagram", opts]
+
+
 (* operator properties *)
 
 QuantumChannelProp[qc_, args : PatternSequence[prop_String, ___]] /;

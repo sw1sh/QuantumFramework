@@ -135,7 +135,8 @@ QuantumOperator["Phase" | "P" | "U1", opts___] := QuantumOperator[{"Phase", Pi},
 
 QuantumOperator[{"Phase" | "P" | "U1", angle_, dimension_Integer : 2}, opts___] := QuantumOperator[
     QuantumOperator[
-        SparseArray[{{1, 1} -> 1, {dimension, dimension} -> Exp[I angle]}],
+        SparseArray[{{i_, i_} /; i < dimension -> 1, {dimension, dimension} -> Exp[I angle]}],
+        dimension,
         "Label" -> "P"[angle]
     ],
     opts
@@ -166,7 +167,7 @@ QuantumOperator["S", opts___] := QuantumOperator[QuantumOperator[{"Phase", Pi / 
 
 QuantumOperator["T", opts___] := QuantumOperator[QuantumOperator[{"Phase", Pi / 4}, "Label" -> "T"], opts]
 
-QuantumOperator["V" | "SX", opts___] := QuantumOperator[QuantumOperator[Sqrt[QuantumOperator["X"]], "Label" -> "V"], opts]
+QuantumOperator[name : "V" | "SX", opts___] := QuantumOperator[QuantumOperator[Sqrt[QuantumOperator["X"]], "Label" -> name], opts]
 
 
 QuantumOperator["CNOT", opts___] := QuantumOperator[{"CNOT", 2}, opts]
@@ -174,9 +175,9 @@ QuantumOperator["CNOT", opts___] := QuantumOperator[{"CNOT", 2}, opts]
 QuantumOperator[{"CNOT", dimension_Integer}, opts___] := QuantumOperator[{"Controlled", {"NOT", dimension}}, opts]
 
 
-QuantumOperator["CPHASE", opts___] := QuantumOperator[{"CPHASE", Pi}, opts]
+QuantumOperator["CPHASE" | "CP", opts___] := QuantumOperator[{"CPHASE", Pi}, opts]
 
-QuantumOperator[{"CPHASE", angle_, dimension_Integer : 2}, opts___] := QuantumOperator[{"Controlled", {"Phase", angle, dimension}}, opts]
+QuantumOperator[{"CPHASE" | "CP", angle_, dimension_Integer : 2}, opts___] := QuantumOperator[{"Controlled", {"Phase", angle, dimension}}, opts]
 
 
 controlledMatrix[matrix_ ? MatrixQ, dimension_Integer] := ReplacePart[

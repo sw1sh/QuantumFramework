@@ -27,7 +27,8 @@ $QuantumOperatorProperties = {
     "Computational",
     "Dagger", "Dual",
     "TraceNorm",
-    "PauliDecompose"
+    "PauliDecompose",
+    "CircuitDiagram"
 };
 
 QuantumOperator["Properties"] := Union @ Join[$QuantumOperatorProperties, Complement[QuantumState["Properties"], {
@@ -546,6 +547,8 @@ QuantumOperatorProp[qo_, "QASM"] /; qo["ControlOrder"] =!= {} && MatchQ[qo["Targ
 QuantumOperatorProp[qo_, "QASM"] /; MatchQ[qo["Dimensions"], {2 ..}] :=
     qo["SimpleQASM"] <> " " <> StringRiffle[Map[StringTemplate["q[``]"], qo["InputOrder"] - 1], " "] <> ";"
 
+
+QuantumOperatorProp[qo_, "CircuitDiagram", opts___] := QuantumCircuitOperator[qo]["Diagram", opts]
 
 
 (* state properties *)
