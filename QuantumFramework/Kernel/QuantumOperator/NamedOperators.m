@@ -102,7 +102,7 @@ QuantumOperator[{"ZRotation" | "RZ", angle_, dimension_Integer : 2}, opts___] :=
     opts
 ]
 
-QuantumOperator[{"R", angle_, args__}, opts___] := Block[{ops = QuantumOperator /@ {args}, op, orders},
+QuantumOperator[{"R", angle_, args__}, opts___] := Enclose @ Block[{ops = ConfirmBy[QuantumOperator[#], QuantumOperatorQ] & /@ {args}, op, orders},
     op = QuantumTensorProduct[ops];
     orders = TakeList[op["FullInputOrder"], #["Arity"] & /@ ops];
     QuantumOperator[

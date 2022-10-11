@@ -35,12 +35,12 @@ FromCircuitOperatorShorthand[barrier_ ? BarrierQ] := barrier
 FromCircuitOperatorShorthand[arg_] := Replace[FromOperatorShorthand[arg], ops_List :> QuantumCircuitOperator[ops]]
 
 
-QuantumCircuitOperator[operators_ ? ListQ] := With[{ops = FromCircuitOperatorShorthand /@ operators},
+QuantumCircuitOperator[operators_ ? ListQ] := Enclose @ With[{ops = Confirm @* FromCircuitOperatorShorthand /@ operators},
     QuantumCircuitOperator[<|"Elements" -> ops, "Label" -> RightComposition @@ (#["Label"] & /@ DeleteCases[ops, _ ? BarrierQ])|>]
 ]
 
 QuantumCircuitOperator[operators_ ? ListQ, label_, ___] :=
-    QuantumCircuitOperator[<|"Elements" -> FromCircuitOperatorShorthand /@ operators, "Label" -> label|>]
+    Enclose @ QuantumCircuitOperator[<|"Elements" -> Confirm @* FromCircuitOperatorShorthand /@ operators, "Label" -> label|>]
 
 QuantumCircuitOperator[op : Except[_ ? QuantumCircuitOperatorQ, _ ? QuantumFrameworkOperatorQ], args___] := QuantumCircuitOperator[{op}, args]
 
