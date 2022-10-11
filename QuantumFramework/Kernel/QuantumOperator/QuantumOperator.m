@@ -220,10 +220,9 @@ QuantumOperator[qo_ ? QuantumOperatorQ, order : {_ ? orderQ | Automatic, _ ? ord
 },
     QuantumOperator[
         QuantumOperator[qo,
-            "Label" -> Replace[qo["Label"], {
-                "C"[name_, c1_, c0_] :> "C"[name, c1 /. inputRepl, c0 /. inputRepl],
-                Subscript["R", ops__][angle_] :> Subscript["R", Sequence @@ Replace[{ops}, Subscript[op_, o__] :> Subscript[op, Sequence @@ {o} /. inputRepl], {1}]][angle]
-            }]
+            "Label" -> Replace[qo["Label"],
+                Subscript["C", name_][c1_, c0_] :> Subscript["C", name][c1 /. inputRepl, c0 /. inputRepl]
+            ]
         ]["State"],
         {qo["OutputOrder"] /. outputRepl, qo["InputOrder"] /. inputRepl}
     ]

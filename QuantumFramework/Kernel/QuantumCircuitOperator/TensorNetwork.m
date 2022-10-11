@@ -200,7 +200,7 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
             VertexLabels ->
                 Thread[vertices -> (Replace[#["Label"], {
                     "C"[label_, ___] :> Row[{"C", label}],
-                    Subscript["R", rops__][angle_] :> Subscript["R", Sequence @@ Replace[{rops}, Subscript[op_, __] :> op, {1}]][angle]
+                    Subscript["R", rops__][angle_] :> Subscript["R", rops][angle]
                 }] & /@ ops)],
             GraphLayout -> "SpringElectricalEmbedding"
         ],

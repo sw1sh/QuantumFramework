@@ -9,7 +9,7 @@ $DefaultGray = RGBColor[0.537254, 0.537254, 0.537254];
 $GateDefaultBoundaryStyle = {
 	"H" -> RGBColor[0.368417, 0.506779, 0.709798],
 	"T" | "S" -> RGBColor[0.922526, 0.385626, 0.209179],
-	"X" | "Y" | "Z" -> RGBColor[0.880722, 0.611041, 0.142051],
+	"X" | "Y" | "Z" | "NOT" -> RGBColor[0.880722, 0.611041, 0.142051],
 	"P"[_] | (Superscript | Power)["P"[_], _] | "PhaseShift"[_] | _Integer -> RGBColor[0.560181, 0.691569, 0.194885],
 	Subscript["R", _][_] -> RGBColor[0.528488, 0.470624, 0.701351],
 	"Measurement" -> RGBColor[0.7367, 0.358, 0.5030],
@@ -66,49 +66,92 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 	center,
 	vposIndex = PositionIndex[Developer`ToList[vpos]],
 	gateLabelsQ = TrueQ[OptionValue["ShowGateLabels"]],
-	connectorsQ = TrueQ[OptionValue["ShowConnectors"]]
+	connectorsQ = TrueQ[OptionValue["ShowConnectors"]],
+	backgroundStyle,
+	boundaryStyle,
+	drawControlWires
 },
 	corners = positionCorners[pos, size, vGapSize, hGapSize];
 	center = Mean[corners];
+	backgroundStyle = Replace[label, gateBackgroundStyle];
+	boundaryStyle = Replace[label, gateBoundaryStyle];
+	drawControlWires = Function[{
+		boundaryStyle,
+		Line[{
+			{center[[1]], - vGapSize #1[[1]] - size Switch[#2[[1]], "NOT", 1 / 5, "SWAP", 0, "1" | "0", 1 / 8, _, 1 / 2]},
+			{center[[1]], - vGapSize #1[[2]] + size Switch[#2[[2]], "NOT", 1 / 5, "SWAP", 0, "1" | "0", 1 / 8, _, 1 / 2]}
+		}]
+	}];
 	Replace[label, {
 		_ /; gateShapeFunction =!= None -> gateShapeFunction[center, label, hGapSize hpos, - vGapSize vpos],
-		"C"[subLabel_, control1_, control0_] :> With[{target = Complement[vpos, control1, control0]},
+		Subscript["C", subLabel_][control1_, control0_] :> Block[{
+			target = DeleteCases[vpos, Alternatives @@ Join[control1, control0]],
+			index
+		},
+			index = First /@ PositionIndex[target];
 			{
-				{
-					Replace[subLabel, gateBoundaryStyle],
-					Line[{
-						{center[[1]], - vGapSize #[[1]] - size If[MemberQ[target, #[[1]]], Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2], 1 / 8]},
-						{center[[1]], - vGapSize #[[2]] + size If[MemberQ[target, #[[2]]], Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2], 1 / 8]}
-					}]
-				} & /@ Select[Partition[Sort[vpos], 2, 1], MatchQ[IntervalIntersection[Interval[#], Interval[MinMax[target]]], Interval[] | Interval[{x_, x_}]] &],
-				Opacity[1.0],
-				If[ Length[target] > 1,
-					If[	MatchQ[subLabel, "NOT"],
-						MapIndexed[drawGate[{{#1}, hpos}, Labeled[subLabel, First[#2]], opts] &, target],
-						drawGate[{target, hpos}, subLabel, opts]
-					],
-					Map[drawGate[{{#}, hpos}, subLabel, opts] &, target]
-				],
+				Replace[subLabel, {
+					subSubLabels_CircleTimes /; Length[subSubLabels] == Length[target] :>
+						{
+							With[{backgroundStyles = Replace[subSubLabels, gateBoundaryStyle, {1}]},
+								If[	Equal @@ backgroundStyles,
+									backgroundStyle = First[backgroundStyles];
+									boundaryStyle = Replace[First[subSubLabels], gateBoundaryStyle];
+								]
+							];
+							MapIndexed[drawGate[{{#1}, hpos}, subSubLabels[[First[#2]]], opts] &, target],
+							drawControlWires[#, {If[MemberQ[target, #[[1]]], subSubLabels[[index[#[[1]]]]], "1"], If[MemberQ[target, #[[2]]], subSubLabels[[index[#[[2]]]]], "1"]}] & /@ Partition[Sort[vpos], 2, 1]
+						},
+					Superscript[subSubLabel_, CircleTimes[n_Integer]] /; n == Length[target] :>
+						{
+							backgroundStyle = Replace[subSubLabel, gateBackgroundStyle];
+							boundaryStyle = Replace[subSubLabel, gateBoundaryStyle];
+							MapIndexed[drawGate[{{#1}, hpos}, subSubLabel, opts] &, target],
+							drawControlWires[#, {If[MemberQ[target, #[[1]]], subSubLabel, "1"], If[MemberQ[target, #[[2]]], subSubLabel, "1"]}] & /@ Partition[Sort[vpos], 2, 1]
+						},
+					_ :> {
+						backgroundStyle = Replace[subLabel, gateBackgroundStyle];
+						boundaryStyle = Replace[subLabel, gateBoundaryStyle];
+						drawGate[{target, hpos}, subLabel, opts],
+						drawControlWires[#, {If[MemberQ[target, #[[1]]], subLabel, "1"], If[MemberQ[target, #[[2]]], subLabel, "1"]}] & /@ Partition[Sort[vpos], 2, 1]
+					}
+				}],
 				drawGate[{{#}, hpos}, "1",
-					"GateBoundaryStyle" -> {"1" -> Replace[subLabel, gateBoundaryStyle]},
-					"GateBackgroundStyle" -> {"1" -> Replace[subLabel, gateBackgroundStyle]},
+					"GateBoundaryStyle" -> {"1" -> boundaryStyle},
+					"GateBackgroundStyle" -> {"1" -> Directive[backgroundStyle, Opacity[.8]]},
 					opts
 				] & /@ control1,
 				drawGate[{{#}, hpos}, "0",
-					"GateBoundaryStyle" -> {"0" -> Replace[subLabel, gateBoundaryStyle]},
-					"GateBackgroundStyle" -> {"0" -> Replace[subLabel, gateBackgroundStyle]},
+					"GateBoundaryStyle" -> {"0" -> boundaryStyle},
+					"GateBackgroundStyle" -> {"0" -> backgroundStyle},
 					opts
 				] & /@ control0
 			}
 		],
-		Subscript["R", subLabels : Subscript[_, __Integer]..][angle_] :> {
-			Replace[subLabel, gateBoundaryStyle],
-			Line[{
-				{center[[1]], - vGapSize #[[1, 2]] - size Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2]},
-				{center[[1]], - vGapSize #[[2, 1]] + size Switch[subLabel, "NOT", 1 / 5, "SWAP", 0, _, 1 / 2]}
-			}] & /@ Partition[selectNonOverlappingIntervals[Sort @ Replace[{subLabels}, Subscript[subLabel_, order__Integer] :> MinMax[{order}], {1}]], 2, 1],
-			Replace[{subLabels}, Subscript[subLabel_, order__Integer] :> drawGate[{{order}, hpos}, Subscript["R", subLabel][angle], opts], {1}]
-		},
+		Subscript["R", subLabel_][angle_] :> Replace[subLabel, {
+			subSubLabels_CircleTimes /; Length[subSubLabels] == Length[vpos] :>
+				{
+					With[{backgroundStyles = Replace[subSubLabels, gateBoundaryStyle, {1}]},
+						If[	Equal @@ backgroundStyles,
+							backgroundStyle = First[backgroundStyles];
+							boundaryStyle = Replace[First[subSubLabels], gateBoundaryStyle];
+						]
+					];
+					MapIndexed[drawGate[{{#1}, hpos}, Subscript["R", subSubLabels[[First[#2]]]][angle], opts] &, vpos],
+					drawControlWires[#, {subSubLabels[[index[#[[1]]]]], subSubLabels[[index[#[[2]]]]]}] & /@ Partition[Sort[vpos], 2, 1]
+				},
+			Superscript[subSubLabel_, CircleTimes[n_Integer]] /; n == Length[vpos] :>
+				{
+					backgroundStyle = Replace[subSubLabel, gateBackgroundStyle];
+					boundaryStyle = Replace[subSubLabel, gateBoundaryStyle];
+					MapIndexed[drawGate[{{#1}, hpos}, Subscript["R", subSubLabel][angle], opts] &, vpos],
+					drawControlWires[#, {subSubLabel, subSubLabel}] & /@ Partition[Sort[vpos], 2, 1]
+				},
+			_ :> {
+				drawGate[{target, hpos}, label, opts],
+				drawControlWires[#, {subLabel, subLabel}] & /@ Partition[Sort[vpos], 2, 1]
+			}
+		}],
 		"1" -> {
 			$DefaultGray, Opacity[.3],
 			Line[{center - {size / 2, 0}, center - {size / 8, 0}}],
@@ -128,9 +171,10 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			$DefaultGray, Opacity[.3],
 			Line[{center - {size / 2, 0}, center - {size / 5, 0}}],
 			Line[{center + {size / 5, 0}, center + {size / 2, 0}}],
-			EdgeForm[$DefaultGray], FaceForm[White],
+			EdgeForm[Replace["NOT", gateBoundaryStyle]],
+			FaceForm[Replace["NOT", gateBackgroundStyle]],
 			Disk[center, size / 5],
-			RGBColor[0.650980, 0.650980, 0.650980], Opacity[1],
+			Replace["NOT", gateBackgroundStyle], Opacity[1],
 			Line[{center + size / 5 {-1, 0}, center + size / 5 {1, 0}}], Line[{center + size / 5 {0, -1}, center + size / 5 {0, 1}}]
 		},
 		"SWAP" -> With[{bottom = {center[[1]], -vpos[[1]] vGapSize}, top = {center[[1]], -vpos[[-1]] vGapSize}}, {

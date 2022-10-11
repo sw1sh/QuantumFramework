@@ -108,9 +108,9 @@ QuantumOperator[{"R", angle_, args__}, opts___] := Enclose @ Block[{ops = Confir
     QuantumOperator[
         Exp[- I angle / 2 op],
         opts,
-        "Label" -> Subscript["R", Sequence @@ MapThread[
-            Subscript[#1["Label"], Sequence @@ #2] &,
-            {ops, orders}
+        "Label" -> Subscript["R", Sequence @@ Map[
+            #1["Label"] &,
+            ops
         ]][angle]
     ]
 ]
@@ -285,7 +285,7 @@ QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orde
             qo["Basis"]
         ],
         opts,
-        "Label" -> "C"[qo["Label"], control1, control0]
+        "Label" -> Subscript["C", qo["Label"]][control1, control0]
     ]["Sort"]
 ]
 
