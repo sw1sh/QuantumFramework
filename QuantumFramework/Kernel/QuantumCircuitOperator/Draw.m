@@ -13,6 +13,7 @@ $GateDefaultBoundaryStyle = {
 	"P"[_] | (Superscript | Power)["P"[_], _] | "PhaseShift"[_] | _Integer -> RGBColor[0.560181, 0.691569, 0.194885],
 	Subscript["R", _][_] -> RGBColor[0.528488, 0.470624, 0.701351],
 	"Measurement" -> RGBColor[0.7367, 0.358, 0.5030],
+	"Channel" -> $DefaultGray,
 	_ -> $DefaultGray
 };
 
@@ -229,6 +230,42 @@ drawMeasurement[pos : {vpos_, hpos_}, width_, opts : OptionsPattern[]] := Block[
 		]
 	}
 ]
+
+Options[drawChannel] = Join[{
+	"Size" -> .75,
+	"VerticalGapSize" -> 1,
+	"HorizontalGapSize" -> 1,
+	"ChannelBackgroundStyle" -> Replace["Channel", $GateDefaultBackgroundStyle],
+	"ChannelBoundaryStyle" -> Directive[Dotted, Replace["Channel", $GateDefaultBoundaryStyle]],
+	"ShowConnectors" -> False,
+	"ShowGateLabels" -> True,
+	"GateLabels" -> {},
+	"RotateGateLabel" -> Automatic
+},
+	Options[Style],
+	Options[Rectangle]
+];
+drawChannel[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
+	size = OptionValue["Size"],
+	vGapSize = OptionValue["VerticalGapSize"],
+	hGapSize = OptionValue["HorizontalGapSize"],
+	connectorsQ = TrueQ[OptionValue["ShowConnectors"]],
+	gateLabelsQ = TrueQ[OptionValue["ShowGateLabels"]],
+	rotateLabel = Replace[OptionValue["RotateGateLabel"], {True | Automatic -> If[Length[vpos] > 1, Pi / 2, 0], False | None -> 0}],
+	labelStyleOpts = {Background -> Transparent, FilterRules[{opts}, Options[Style]], $DefaultFontStyleOptions},
+	corners,
+	center
+},
+	corners = positionCorners[pos, size, vGapSize, hGapSize];
+	center = Mean[corners];
+	{
+		EdgeForm[OptionValue["ChannelBoundaryStyle"]], FaceForm[OptionValue["ChannelBackgroundStyle"]],
+		Rectangle[Sequence @@ corners, FilterRules[{opts}, Options[Rectangle]]],
+		If[connectorsQ, {FaceForm[Directive[$DefaultGray, Opacity[1]]], Disk[#, size / 32] & /@ {{center[[1]] - size / 2, - vGapSize #}, {center[[1]] + size / 2, - vGapSize #}} & /@ vpos}, Nothing],
+		If[gateLabelsQ, Rotate[Text[Style[Replace[label, OptionValue["GateLabels"]], labelStyleOpts], center], rotateLabel], Nothing]
+	}
+]
+
 Options[drawWires] = {"Size" -> .75, "VerticalGapSize" -> 1, "HorizontalGapSize" -> 1, "ShortOuterWires" -> True, "ShowWireEndpoints" -> False};
 drawWires[wires_List, OptionsPattern[]] := With[{
 	size = OptionValue["Size"],
@@ -372,8 +409,8 @@ drawBarrier[{vpos_, hpos_}, OptionsPattern[]] := Block[{
 	}
 ]
 
-Options[circuitDraw] := DeleteDuplicatesBy[First] @
-	Join[{
+Options[circuitDraw] := DeleteDuplicatesBy[First] @ Join[
+	{
 		"WireLabels" -> Automatic, "MeasurementWireLabel" -> "c", "ShowWires" -> True, "ShowLabel" -> False,
 		"ShowMeasurementWire" -> True, "ShowEmptyWires" -> True,
 		"ShowOutline" -> False,
@@ -384,7 +421,11 @@ Options[circuitDraw] := DeleteDuplicatesBy[First] @
 		"ShowGateLabels" -> True,
 		"SubcircuitOptions" -> {}
 	},
-	Options[drawGate], Options[drawMeasurement], Options[drawWires], Options[drawWireLabels], Options[drawOutline], Options[drawBarrier], Options[Style]];
+	Options[drawGate], Options[drawMeasurement], Options[drawChannel],
+	Options[drawWires], Options[drawWireLabels],
+	Options[drawOutline], Options[drawBarrier],
+	Options[Style]
+];
 circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	numGates = circuit["Gates"],
 	width = circuit["Width"],
@@ -440,6 +481,8 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 				],
 				QuantumMeasurementOperatorQ[#1],
 				drawMeasurement[#2, width, FilterRules[{opts}, Options[drawMeasurement]]],
+				QuantumChannelQ[#1],
+				drawChannel[#2, labelCounter @ #1["Label"], FilterRules[{opts}, Options[drawChannel]]],
 				True,
 				drawGate[#2, labelCounter @ #1["Label"], FilterRules[{opts}, Options[drawGate]]]
 			] &,
