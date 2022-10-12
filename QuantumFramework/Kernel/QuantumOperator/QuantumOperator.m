@@ -370,10 +370,10 @@ matrixFunction[f_, mat_] := Enclose[ConfirmBy[MatrixFunction[f, mat, Method -> "
 QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator] ...] /; MemberQ[Attributes[f], NumericFunction] :=
     Enclose @ QuantumOperator[
         ConfirmBy[
-            If[MemberQ[{Minus, Times}, f], f[left, #, right] &, matrixFunction[f[left, #, right] &, #] &] @ qo["Sort"]["Matrix"],
+            If[MemberQ[{Minus, Times}, f], f[left, #, right] &, matrixFunction[f[left, #, right] &, #] &] @ qo["Matrix"],
             MatrixQ
         ],
-        Sort /@ qo["Order"], qo["Basis"], "Label" -> f[left, qo["Label"], right]
+        qo["Order"], qo["Basis"], "Label" -> f[left, qo["Label"], right]
     ]
 
 
@@ -404,7 +404,8 @@ addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator 
             QuantumBasis[ordered1["OutputDimensions"], ordered2["InputDimensions"]]
         ],
         ordered1["Order"],
-        ordered1["Basis"]
+        ordered1["Basis"],
+        "Label" -> ordered1["Label"] + ordered2["Label"]
     ]
 ]
 

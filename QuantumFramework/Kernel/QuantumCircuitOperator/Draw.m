@@ -93,10 +93,10 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 				Replace[subLabel, {
 					subSubLabels_CircleTimes /; Length[subSubLabels] == Length[target] :>
 						{
-							With[{backgroundStyles = Replace[subSubLabels, gateBoundaryStyle, {1}]},
-								If[	Equal @@ backgroundStyles,
-									backgroundStyle = First[backgroundStyles];
-									boundaryStyle = Replace[First[subSubLabels], gateBoundaryStyle];
+							With[{boundaryStyles = Replace[subSubLabels, gateBoundaryStyle, {1}]},
+								If[	Equal @@ boundaryStyles,
+									backgroundStyle = Replace[First[subSubLabels], gateBackgroundStyle];
+									boundaryStyle = First[boundaryStyles];
 								]
 							];
 							MapIndexed[drawGate[{{#1}, hpos}, subSubLabels[[First[#2]]], opts] &, target],
@@ -128,27 +128,18 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 				] & /@ control0
 			}
 		],
-		Subscript["R", subLabel_][angle_] :> Replace[subLabel, {
-			subSubLabels_CircleTimes /; Length[subSubLabels] == Length[vpos] :>
-				{
-					With[{backgroundStyles = Replace[subSubLabels, gateBoundaryStyle, {1}]},
-						If[	Equal @@ backgroundStyles,
-							backgroundStyle = First[backgroundStyles];
-							boundaryStyle = Replace[First[subSubLabels], gateBoundaryStyle];
-						]
-					];
-					MapIndexed[drawGate[{{#1}, hpos}, Subscript["R", subSubLabels[[First[#2]]]][angle], opts] &, vpos],
-					drawControlWires[#, {subSubLabels[[index[#[[1]]]]], subSubLabels[[index[#[[2]]]]]}] & /@ Partition[Sort[vpos], 2, 1]
-				},
+		Subscript["R", subLabel_CircleTimes][angle_] :> Replace[subLabel, {
+			subSubLabels_CircleTimes /; Length[subSubLabels] == Length[vpos] :> With[{index = First /@ PositionIndex[vpos]}, {
+				Map[drawGate[{{#1}, hpos}, Subscript["R", subSubLabels[[index[#1]]]][angle], opts] &, vpos],
+				drawControlWires[#, {subSubLabels[[index[#[[1]]]]], subSubLabels[[index[#[[2]]]]]}] & /@ Partition[Sort[vpos], 2, 1]
+			}],
 			Superscript[subSubLabel_, CircleTimes[n_Integer]] /; n == Length[vpos] :>
 				{
-					backgroundStyle = Replace[subSubLabel, gateBackgroundStyle];
-					boundaryStyle = Replace[subSubLabel, gateBoundaryStyle];
 					MapIndexed[drawGate[{{#1}, hpos}, Subscript["R", subSubLabel][angle], opts] &, vpos],
 					drawControlWires[#, {subSubLabel, subSubLabel}] & /@ Partition[Sort[vpos], 2, 1]
 				},
 			_ :> {
-				drawGate[{target, hpos}, label, opts],
+				MapIndexed[drawGate[{{#1}, hpos}, Subscript["R", Indexed[subLabel, #2]][angle], opts] &, vpos],
 				drawControlWires[#, {subLabel, subLabel}] & /@ Partition[Sort[vpos], 2, 1]
 			}
 		}],

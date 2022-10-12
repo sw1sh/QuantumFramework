@@ -107,10 +107,7 @@ QuantumOperator[{"R", angle_, args__}, opts___] := Enclose @ Block[{ops = Confir
     QuantumOperator[
         Exp[- I angle / 2 op],
         opts,
-        "Label" -> Subscript["R", Sequence @@ Map[
-            #1["Label"] &,
-            ops
-        ]][angle]
+        "Label" -> Subscript["R", op["Label"]][angle]
     ]
 ]
 
@@ -263,7 +260,7 @@ QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orde
     QuantumOperator[
         blockDiagonalMatrix[{
             identityMatrix[(2 ^ controls1 - 1) qo["OutputDimension"]],
-            qo["Matrix"],
+            qo["Sort"]["Matrix"],
             identityMatrix[(2 ^ controls0 - 1) 2 ^ controls1 qo["OutputDimension"]]
         }],
         With[{order = Join[
@@ -273,7 +270,7 @@ QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orde
                 With[{order = Take[Complement[Range @@ MinMax[Join[control, qo["FullInputOrder"]]], control], UpTo[qo["InputQudits"]]]},
                     Join[order, Max[qo["FullInputOrder"], control] + Range[qo["Arity"] - Length[order]]]
                 ],
-                qo["InputOrder"]
+                Sort[qo["InputOrder"]]
             ]
         ]},
             {order, order}
@@ -285,7 +282,7 @@ QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orde
         ],
         opts,
         "Label" -> Subscript["C", qo["Label"]][control1, control0]
-    ]["Sort"]
+    ]
 ]
 
 

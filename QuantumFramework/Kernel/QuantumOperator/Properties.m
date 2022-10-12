@@ -112,13 +112,13 @@ QuantumOperatorProp[qo_, "SetFullOrder"] := QuantumOperator[qo, {qo["FullOutputO
 
 
 QuantumOperatorProp[qo_, "ControlOrder1"] :=
-    FirstCase[qo["Label"], "C"[_, control1_, ___] :> control1, {}, {0}]
+    FirstCase[qo["Label"], Subscript["C", _][control1_, ___] :> control1, {}, {0}]
 
 QuantumOperatorProp[qo_, "ControlOrder0"] :=
-    FirstCase[qo["Label"], "C"[_, _, control0] :> control0, {}, {0}]
+    FirstCase[qo["Label"], Subscript["C", _][_, control0] :> control0, {}, {0}]
 
 QuantumOperatorProp[qo_, "ControlOrder"] :=
-    FirstCase[qo["Label"], "C"[_, control1_, control0_ : {}] :> Join[control1, control0], {}, {0}]
+    FirstCase[qo["Label"], Subscript["C", _][control1_, control0_ : {}] :> Join[control1, control0], {}, {0}]
 
 QuantumOperatorProp[qo_, "TargetOrder"] := Enclose[DeleteCases[qo["InputOrder"], Alternatives @@ Confirm @ qo["ControlOrder"]], qo["InputOrder"] &]
 
@@ -211,10 +211,11 @@ QuantumOperatorProp[qo_, "OrderOutputExtra", outputSource_ ? orderQ, outputTarge
 QuantumOperatorProp[qo_, "SortInput"] := If[
     OrderedQ[qo["InputOrder"]],
     qo,
-    QuantumOperator[qo[
-        "PermuteInput",
-        InversePermutation @ FindPermutation[Ordering @ Ordering @ qo["FullInputOrder"]]
-    ]["State"],
+    QuantumOperator[
+        qo[
+            "PermuteInput",
+            InversePermutation @ FindPermutation[Ordering @ Ordering @ qo["FullInputOrder"]]
+        ]["State"],
         {qo["OutputOrder"], Sort @ qo["InputOrder"]}
     ]
 ]
@@ -222,15 +223,23 @@ QuantumOperatorProp[qo_, "SortInput"] := If[
 QuantumOperatorProp[qo_, "SortOutput"] := If[
     OrderedQ[qo["OutputOrder"]],
     qo,
-    QuantumOperator[qo[
-        "PermuteOutput",
-        InversePermutation @ FindPermutation[Ordering @ Ordering @ qo["FullOutputOrder"]]
-    ]["State"],
+    QuantumOperator[
+        qo[
+            "PermuteOutput",
+            InversePermutation @ FindPermutation[Ordering @ Ordering @ qo["FullOutputOrder"]]
+        ]["State"],
         {Sort @ qo["OutputOrder"], qo["InputOrder"]}
     ]
 ]
 
-QuantumOperatorProp[qo_, "Sort"] := qo["SortOutput"]["SortInput"]
+QuantumOperatorProp[qo_, "Sort"] := QuantumOperator[
+    qo["SortOutput"]["SortInput"],
+    "Label" -> Replace[qo["Label"], {
+        subLabel_CircleTimes /; Length[subLabel] == qo["Arity"] :> subLabel[[ Ordering[qo["InputOrder"]] ]],
+        Subscript["R", subLabel_CircleTimes][angle_] /; Length[subLabel] == qo["Arity"] :>
+            Subscript["R", subLabel[[ Ordering[qo["InputOrder"]] ]]][angle]
+    }]
+]
 
 
 QuantumOperatorProp[qo_, "ReverseOutput"] := QuantumOperator[qo["State"], {Reverse @ qo["OutputOrder"], qo["InputOrder"]}]
@@ -348,7 +357,7 @@ simplifyLabel[op_QuantumOperator] := QuantumOperator[op, "Label" -> simplifyLabe
 
 simplifyLabel[l_] := Replace[l, {
     SuperDagger[label : "X" | "Y" | "Z" | "NOT" | "H" | "SWAP"] :> label,
-    SuperDagger["C"[x_, rest__]] :> "C"[simplifyLabel[x], rest],
+    SuperDagger[Subscript["C", x_][rest__]] :> Subscript["C", simplifyLabel[x]][rest],
     SuperDagger[Subscript["R", args__][a_]] :> Subscript["R", args][- a],
     SuperDagger[(r : Subscript["R", _] | "P")[angle_]] :> r[- angle],
     SuperDagger["PhaseShift"[n_] | n_Integer] :> "PhaseShift"[-n],
@@ -520,13 +529,13 @@ QuantumOperatorProp[qo_, "TargetOperator"] := Module[{control1, control0, n, m},
             QuantumOperator[QuantumState[{"Register", n, 2 ^ n - 1}], {control1, {}}],
             QuantumOperator[QuantumState[{"Register", m, 0}], {control0, {}}]
         ],
-        "Label" -> Replace[qo["Label"], "C"[label_, ___] :> label]
+        "Label" -> Replace[qo["Label"], Subscript["C", label_][__] :> label]
     ]
 ]
 
 QuantumOperatorProp[qo_, "QASM"] /; qo["ControlOrder"] =!= {} && MatchQ[qo["TargetOrder"], {_}] :=
     Replace[qo["Label"], {
-        "C"[_, control1_, control0_] :>
+        Subscript["C", _][control1_, control0_] :>
             With[{n = Length[control1], m = Length[control0]},
                 StringTemplate["ctrl(``) @ negctrl(``) @ "][n, m] <>
                 (
