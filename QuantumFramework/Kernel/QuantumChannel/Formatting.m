@@ -20,7 +20,7 @@ QuantumChannel /: MakeBoxes[qc_QuantumChannel /; QuantumChannelQ[qc], format_] :
     ]
 },
     BoxForm`ArrangeSummaryBox["QuantumChannel", qc,
-        icon, {
+        Tooltip[icon, qc["Label"]], {
             {
                 BoxForm`SummaryItem[{"Picture: ", qc["Picture"]}],
                 BoxForm`SummaryItem[{"Arity: ", qc["Arity"]}]

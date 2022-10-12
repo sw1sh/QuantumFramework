@@ -21,7 +21,7 @@ QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; Quantu
     ]
 },
     BoxForm`ArrangeSummaryBox["QuantumMeasurementOperator", qmo,
-        icon, {
+        Tooltip[icon, qmo["Label"]], {
             {
                 BoxForm`SummaryItem[{"Measurement Type: ", qmo["Type"]}],
                 BoxForm`SummaryItem[{"Target: ", qmo["Target"]}]

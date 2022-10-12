@@ -32,7 +32,7 @@ QuantumOperator /: MakeBoxes[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated 
     ]
 },
     BoxForm`ArrangeSummaryBox["QuantumOperator", qo,
-        icon, {
+        Tooltip[icon, qo["Label"]], {
             {
                 BoxForm`SummaryItem[{"Picture: ", qo["Picture"]}],
                 BoxForm`SummaryItem[{"Arity: ", qo["Arity"]}]

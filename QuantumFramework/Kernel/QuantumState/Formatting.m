@@ -30,7 +30,7 @@ QuantumState /: MakeBoxes[qs_QuantumState /; QuantumStateQ[Unevaluated @ qs], fo
         RawBoxes @ $SparseArrayBox
     ]
 },
-    BoxForm`ArrangeSummaryBox["QuantumState", qs, icon,
+    BoxForm`ArrangeSummaryBox["QuantumState", qs, Tooltip[icon, qs["Label"]],
     {
         {
             BoxForm`SummaryItem[{Row @ {qs["Type"], " ", ToLowerCase @ qs["Kind"]}}],

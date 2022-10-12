@@ -246,7 +246,7 @@ QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement ? QuantumMeasurementQ, for
         ]
     ];
     BoxForm`ArrangeSummaryBox["QuantumMeasurement", qm,
-        icon,
+        Tooltip[icon, qm["Label"]],
         {
             {
                 BoxForm`SummaryItem[{"Target: ", qm["Target"]}]

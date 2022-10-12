@@ -15,12 +15,11 @@ QuantumCircuitOperator /: MakeBoxes[qco_QuantumCircuitOperator, TraditionalForm]
 QuantumCircuitOperator /: MakeBoxes[qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ, format_] := Enclose[
 BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
     qco,
-    qco["Diagram", "ShowGateLabels" -> False, "ShowMeasurementWire" -> False, "WireLabels" -> None, "SubcircuitOptions" -> {"ShowLabel" -> False}, ImageSize -> Tiny],
-    {
-        {
-            BoxForm`SummaryItem[{qco["Label"]}]
-        }
-    },
+    Tooltip[
+        qco["Diagram", "ShowGateLabels" -> False, "ShowMeasurementWire" -> False, "WireLabels" -> None, "SubcircuitOptions" -> {"ShowLabel" -> False}, ImageSize -> Tiny],
+        qco["Label"]
+    ],
+    {{}},
     {
         {
             BoxForm`SummaryItem[{"Gates: ", qco["Gates"]}]
