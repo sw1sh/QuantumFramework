@@ -219,12 +219,11 @@ QuantumOperator[qo_ ? QuantumOperatorQ, order : {_ ? orderQ | Automatic, _ ? ord
         Thread[Take[qo["OutputOrder"], UpTo[Length[order[[1]]]]] -> Take[Replace[order[[1]], Automatic -> qo["OutputOrder"]], UpTo[Length[qo["OutputOrder"]]]]]
 },
     QuantumOperator[
-        QuantumOperator[qo,
-            "Label" -> Replace[qo["Label"],
-                Subscript["C", name_][c1_, c0_] :> Subscript["C", name][c1 /. inputRepl, c0 /. inputRepl]
-            ]
-        ]["State"],
-        {qo["OutputOrder"] /. outputRepl, qo["InputOrder"] /. inputRepl}
+        qo["State"],
+        {qo["OutputOrder"] /. outputRepl, qo["InputOrder"] /. inputRepl},
+        "Label" -> Replace[qo["Label"],
+            Subscript["C", name_][c1_, c0_] :> Subscript["C", name][c1 /. inputRepl, c0 /. inputRepl]
+        ]
     ]
 ]
 
@@ -367,14 +366,15 @@ expandQuditBasis[qb_QuditBasis, order1_ ? orderQ, order2_ ? orderQ, defaultDim_I
 
 matrixFunction[f_, mat_] := Enclose[ConfirmBy[MatrixFunction[f, mat, Method -> "Jordan"], MatrixQ], MatrixFunction[f, mat] &]
 
-QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator] ...] /; MemberQ[Attributes[f], NumericFunction] :=
+QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator] ...] /; MemberQ[Attributes[f], NumericFunction] := With[{op = qo["Sort"]},
     Enclose @ QuantumOperator[
         ConfirmBy[
-            If[MemberQ[{Minus, Times}, f], f[left, #, right] &, matrixFunction[f[left, #, right] &, #] &] @ qo["Matrix"],
+            If[MemberQ[{Minus, Times}, f], f[left, #, right] &, matrixFunction[f[left, #, right] &, #] &] @ op["Matrix"],
             MatrixQ
         ],
-        qo["Order"], qo["Basis"], "Label" -> f[left, qo["Label"], right]
+        op["Order"], op["Basis"], "Label" -> f[left, op["Label"], right]
     ]
+]
 
 
 QuantumOperator /: Plus[ops : _QuantumOperator...] := Fold[addQuantumOperators, {ops}]

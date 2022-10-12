@@ -102,7 +102,7 @@ QuantumOperator[{"ZRotation" | "RZ", angle_, dimension_Integer : 2}, opts___] :=
 ]
 
 QuantumOperator[{"R", angle_, args__}, opts___] := Enclose @ Block[{ops = ConfirmBy[QuantumOperator[#], QuantumOperatorQ] & /@ {args}, op, orders},
-    op = QuantumTensorProduct[ops];
+    op = QuantumTensorProduct[ops]["Sort"];
     orders = TakeList[op["FullInputOrder"], #["Arity"] & /@ ops];
     QuantumOperator[
         Exp[- I angle / 2 op],
@@ -260,7 +260,7 @@ QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orde
     QuantumOperator[
         blockDiagonalMatrix[{
             identityMatrix[(2 ^ controls1 - 1) qo["OutputDimension"]],
-            qo["Sort"]["Matrix"],
+            qo["Matrix"],
             identityMatrix[(2 ^ controls0 - 1) 2 ^ controls1 qo["OutputDimension"]]
         }],
         With[{order = Join[
@@ -270,7 +270,7 @@ QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orde
                 With[{order = Take[Complement[Range @@ MinMax[Join[control, qo["FullInputOrder"]]], control], UpTo[qo["InputQudits"]]]},
                     Join[order, Max[qo["FullInputOrder"], control] + Range[qo["Arity"] - Length[order]]]
                 ],
-                Sort[qo["InputOrder"]]
+                qo["InputOrder"]
             ]
         ]},
             {order, order}

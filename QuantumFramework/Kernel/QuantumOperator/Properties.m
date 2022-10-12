@@ -236,6 +236,8 @@ QuantumOperatorProp[qo_, "Sort"] := QuantumOperator[
     qo["SortOutput"]["SortInput"],
     "Label" -> Replace[qo["Label"], {
         subLabel_CircleTimes /; Length[subLabel] == qo["Arity"] :> subLabel[[ Ordering[qo["InputOrder"]] ]],
+        Subscript["C", subLabel_CircleTimes][controls__] /; Length[subLabel] == qo["TargetArity"] :>
+            Subscript["C", subLabel[[ Ordering[qo["TargetOrder"]] ]]][controls],
         Subscript["R", subLabel_CircleTimes][angle_] /; Length[subLabel] == qo["Arity"] :>
             Subscript["R", subLabel[[ Ordering[qo["InputOrder"]] ]]][angle]
     }]
