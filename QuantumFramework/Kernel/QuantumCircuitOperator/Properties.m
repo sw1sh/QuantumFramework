@@ -39,6 +39,15 @@ QuantumCircuitOperatorProp[qco_, "Operators"] := DeleteCases[qco["Elements"], _ 
 QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[Options[CircuitDraw]]] :=
     CircuitDraw[qco, opts, ImageSize -> Medium]
 
+QuantumCircuitOperatorProp[qco_, "Icon", opts : OptionsPattern[Options[CircuitDraw]]] :=
+    CircuitDraw[
+        qco, opts,
+        "ShowGateLabels" -> False, "ShowMeasurementWire" -> False, "WireLabels" -> None,
+        "SubcircuitOptions" -> {"ShowLabel" -> False},
+        ImageSize -> Tiny
+    ]
+
+
 Options[quantumCircuitCompile] = {Method -> Automatic}
 
 quantumCircuitCompile[qco_QuantumCircuitOperator, OptionsPattern[]] :=

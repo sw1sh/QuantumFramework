@@ -12,11 +12,11 @@ QuantumCircuitOperator /: MakeBoxes[qco_QuantumCircuitOperator, TraditionalForm]
         InterpretationBox[diagram, qco]
     ]
 
-QuantumCircuitOperator /: MakeBoxes[qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ, format_] := Enclose[
+QuantumCircuitOperator /: MakeBoxes[qco_QuantumCircuitOperator /; QuantumCircuitOperatorQ[Unevaluated[qco]], format_] := Enclose[
 BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
     qco,
     Tooltip[
-        qco["Diagram", "ShowGateLabels" -> False, "ShowMeasurementWire" -> False, "WireLabels" -> None, "SubcircuitOptions" -> {"ShowLabel" -> False}, ImageSize -> Tiny],
+        qco["Icon"],
         qco["Label"]
     ],
     {{}},
