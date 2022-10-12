@@ -580,8 +580,9 @@ QuantumOperator["Discard", order : _ ? orderQ : {1}, args___] := With[{basis = Q
 ]
 
 
-QuantumOperator[pauliString_String, opts___] := With[{chars = Characters[pauliString]},
-    QuantumOperator[QuantumTensorProduct[MapIndexed[QuantumOperator, chars]], opts] /; ContainsOnly[chars, {"I", "X", "Y", "Z"}]
+QuantumOperator[chain_String, opts___] := With[{chars = Characters[chain]},
+    QuantumOperator[QuantumTensorProduct[MapIndexed[QuantumOperator, chars]], opts] /;
+        ContainsOnly[chars, {"I", "X", "Y", "Z", "H", "S", "T", "V", "P"}]
 ]
 
 
@@ -595,6 +596,6 @@ QuantumOperator[{name_String, params___}, opts___] /; ToUpperCase[name] =!= name
 
 QuantumOperator[rule : _Rule] := FromOperatorShorthand[rule]
 
-QuantumOperator[ops_List] /; AllTrue[ops, MatchQ[_Rule | _Integer | (({name_, args___} | name_) /; MemberQ[$QuantumOperatorNames, name])]] :=
-    QuantumTensorProduct[Flatten[FromOperatorShorthand /@ ops]]
+QuantumOperator[ops_List] /; AllTrue[ops, MatchQ[_Rule | _Integer | _String | ({name_, ___} /; MemberQ[$QuantumOperatorNames, name])]] :=
+    Enclose @ QuantumTensorProduct[Flatten[ConfirmBy[FromOperatorShorthand[#], QuantumOperatorQ] &/@ ops]]
 
