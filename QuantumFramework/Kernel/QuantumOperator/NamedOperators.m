@@ -221,15 +221,15 @@ QuantumOperator[{"C0" | "Controlled0", params : PatternSequence[___, Except[_ ? 
     ]
 
 QuantumOperator[{name : "C" | "Controlled", params : Shortest @ PatternSequence[Except[_QuantumOperator], ___], defaultControl : _ ? orderQ | Automatic : Automatic, control0 : _ ? orderQ | {} : {}}, opts___] :=
-    Enclose @ Module[{op = ConfirmBy[QuantumOperator[params], QuantumOperatorQ], control},
-        control = Replace[defaultControl, Automatic -> {Max[{1, Min[op["InputOrder"]] - 1}]}];
-        QuantumOperator[{name, op, control, control0}, opts]
+    Enclose @ Block[{op = ConfirmBy[QuantumOperator[params], QuantumOperatorQ], control},
+        control = Replace[defaultControl, Automatic -> {First[Complement[Range[Max[op["InputOrder"]] + 1], op["InputOrder"]]]}];
+        QuantumOperator[{"C", op, control, control0}, opts]
     ]
 
 QuantumOperator[{"C0" | "Controlled0", params : Shortest @ PatternSequence[Except[_QuantumOperator], ___], defaultControl0 : _ ? orderQ | Automatic : Automatic}, opts___] :=
-    Module[{op = QuantumOperator[params], control0},
-        control0 = Replace[defaultControl0, Automatic -> {Max[{1, Min[op["InputOrder"]] - 1}]}];
-        QuantumOperator[{"Controlled", op, {}, control0}, opts]
+    Enclose @ Block[{op = ConfirmBy[QuantumOperator[params], QuantumOperatorQ], control0},
+        control0 = Replace[defaultControl0, Automatic -> {First[Complement[Range[Max[op["InputOrder"]] + 1], op["InputOrder"]]]}];
+        QuantumOperator[{"C", op, {}, control0}, opts]
     ]
 
 QuantumOperator[{name : "C" | "Controlled", params : Shortest @ PatternSequence[Except[_QuantumOperator], ___], control : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}}, target_ ? orderQ, opts___] :=
@@ -240,7 +240,7 @@ QuantumOperator[{name : "C0" | "Controlled0", params : Shortest @ PatternSequenc
 
 
 QuantumOperator[{name : "C" | "Controlled" | "Controlled0", qo_ ? QuantumOperatorQ}, opts___] :=
-    QuantumOperator[{name, qo, {qo["LastInputQudit"] + 1}}, opts]
+    QuantumOperator[{name, qo, {First[Complement[Range[Max[qo["InputOrder"]] + 1], qo["InputOrder"]]]}}, opts]
 
 QuantumOperator[{name : "C" | "Controlled" | "Controlled0", qo_ ? QuantumOperatorQ, control___}, target_ ? orderQ, opts___] :=
     QuantumOperator[{name, QuantumOperator[qo, target], control}, opts]
