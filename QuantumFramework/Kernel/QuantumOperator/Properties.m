@@ -469,18 +469,16 @@ QuantumOperatorProp[qo_, "EigenvaluePlot", args___] /; qo["ParameterArity"] == 1
     ]
 
 
-QuantumOperatorProp[qo_, "PauliDecompose"] /; qo["InputDimensions"] == qo["OutputDimensions"] := With[{
-    dims = qo["InputDimensions"], dim = qo["InputDimension"], n = Length[qo["InputDimensions"]], cqo = qo["Computational"]
+QuantumOperatorProp[qo_, "PauliDecompose"] /; qo["InputDimensions"] == qo["OutputDimensions"] := Enclose @ Block[{
+    dims = qo["InputDimensions"],
+    targetValues = Flatten[qo["MatrixRepresentation"]],
+    paulis, ops, params, values
 },
-	Association @ Map[
-		With[{
-			ops = MapIndexed[QuantumOperator, Thread[{#, dims}]],
-            c = Times @@ MapThread[If[#1 === "I", 1 / #2, 1 / 2 / Binomial[#2 + 1, 3]] &, {#, dims}]
-		},
-			If[# =!= 0, ops -> Simplify[c #], Nothing] & @ QuantumPartialTrace[QuantumTensorProduct[ops][cqo], Range[n]]["Number"]
-		] &,
-		Tuples[{"I", "X", "Y", "Z"}, n]
-	]
+	paulis = Tuples[{"I", "X", "Y", "Z"}, Length[dims]];
+	ops = Map[MapIndexed[QuantumOperator, Thread[{#, dims}]] &, paulis];
+	params = \[FormalT] @@@ paulis;
+	values = Flatten @ Total @ MapThread[#1 KroneckerProduct @@ (#["Matrix"] & /@ #2) &, {params, ops}];
+	DeleteCases[AssociationThread[ops, First @ ConfirmMatch[SolveValues[Thread[values == targetValues], params], {__}]], 0]
 ]
 
 
