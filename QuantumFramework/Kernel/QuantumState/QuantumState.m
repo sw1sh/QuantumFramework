@@ -171,7 +171,8 @@ addQuantumStates[qs1_QuantumState ? QuantumStateQ, qs2_QuantumState ? QuantumSta
             ],
             QuantumBasis[qs1["OutputDimensions"], qs1["InputDimensions"]]
         ],
-        qs1["Basis"]
+        qs1["Basis"],
+        "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
     ]
 
 QuantumState /: HoldPattern[Plus[states : _QuantumState ...]] :=
@@ -191,7 +192,8 @@ multiplyQuantumStates[qs1_QuantumState, qs2_QuantumState] /; qs1["Dimension"] ==
             ],
             QuantumBasis[qs1["Dimensions"]]
         ],
-        qs1["Basis"]
+        qs1["Basis"],
+        "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
     ]
 
 QuantumState /: HoldPattern[Times[states : _QuantumState ? QuantumStateQ ...]] :=
@@ -215,7 +217,8 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
         blockDiagonalMatrix[#["DensityMatrix"] & /@ {qs}]
     ],
     Plus @@ (#["Basis"] & /@ {qs}),
-    "Label" -> CirclePlus @@ (#["Label"] & /@ {qs})
+    "Label" -> CirclePlus @@ (#["Label"] & /@ {qs}),
+    "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
 ]
 
 
@@ -238,7 +241,7 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
         state,
         "Output" -> qs1["Output"], "Input" -> qs2["Input"],
         "Label" -> qs1["Label"] @* qs2["Label"],
-        "ParameterSpec" -> Join[qs2["ParameterSpec"], qs1["ParameterSpec"]]
+        "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
     ]
 ]
 
@@ -261,7 +264,7 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
         b = QuantumBasis[
             "Output" -> qs1["Output"], "Input" -> qs2["Input"],
             "Label" -> qs1["Label"] @* qs2["Label"],
-            "ParameterSpec" -> Join[qs2["ParameterSpec"], qs1["ParameterSpec"]]
+            "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
     ]},
         QuantumState[s, b]
     ]
@@ -270,8 +273,9 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
 
 (* parameterization *)
 
-(qs_QuantumState ? QuantumStateQ)[ps___] /; Length[{ps}] <= qs["ParameterArity"] :=
+(qs_QuantumState ? QuantumStateQ)[ps___] /; Length[{ps}] <= qs["ParameterArity"] := With[{rules = Thread[Take[qs["Parameters"], Length[{ps}]] -> {ps}]},
     QuantumState[
-        Map[ReplaceAll[Thread[Take[qs["Parameters"], Length[{ps}]] -> {ps}]], qs["State"], {-1}],
-        QuantumBasis[qs["Basis"], "ParameterSpec" -> Drop[qs["ParameterSpec"], Length[{ps}]]]
+        Map[ReplaceAll[rules], qs["State"], {If[qs["VectorQ"], 1, 2]}],
+        QuantumBasis[qs["Basis"], "Label" -> qs["Label"] /. rules, "ParameterSpec" -> Drop[qs["ParameterSpec"], Length[{ps}]]]
     ]
+]

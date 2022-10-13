@@ -261,13 +261,14 @@ Enclose @ Module[{
 },
     newBasis = If[
         qb["InputDimension"] == 1 && qo["InputDimension"] > 1,
-        QuantumBasis[qb, "Input" -> qb["Output"]["Dual"], opts],
-        QuantumBasis[qb, opts]
+        QuantumBasis[qb, "Input" -> qb["Output"]["Dual"]],
+        QuantumBasis[qb]
     ];
 
     newBasis = QuantumBasis[qb,
         "Output" -> QuditBasis[qo["Output"]["Reverse"], newBasis["Output"]["Reverse"]]["Reverse"],
-        "Input" -> QuditBasis[qo["Input"]["Reverse"], newBasis["Input"]["Reverse"]]["Reverse"]
+        "Input" -> QuditBasis[qo["Input"]["Reverse"], newBasis["Input"]["Reverse"]]["Reverse"],
+        opts
     ];
 
     ConfirmAssert[qo["Dimension"] == newBasis["Dimension"], "Basis dimensions are inconsistent"];
@@ -404,8 +405,11 @@ addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator 
             QuantumBasis[ordered1["OutputDimensions"], ordered2["InputDimensions"]]
         ],
         ordered1["Order"],
-        ordered1["Basis"],
-        "Label" -> ordered1["Label"] + ordered2["Label"]
+        QuantumBasis[
+            ordered1["Basis"],
+            "Label" -> ordered1["Label"] + ordered2["Label"],
+            "ParameterSpec" -> MergeParameterSpecs[ordered1, ordered2]
+        ]
     ]
 ]
 

@@ -6,6 +6,7 @@ PackageScope["quantumBasisQ"]
 PackageScope["QuantumBasisQ"]
 PackageScope["$QuantumBasisDataKeys"]
 PackageScope["$QuantumBasisPictures"]
+PackageScope["MergeParameterSpecs"]
 
 
 
@@ -44,6 +45,8 @@ $QuantumBasisDefaults = {
 }
 
 
+ParameterSpecQ[spec_] := MatchQ[spec, subSpecs : {{_, _ ? NumericQ, _ ? NumericQ}...} /; DuplicateFreeQ[subSpecs[[All, 1]]]]
+
 quantumBasisQ[QuantumBasis[data_Association]] := Enclose[
     ConfirmAssert[ContainsAll[Keys[data], $QuantumBasisDataKeys], Message[QuantumBasis::wrongData]];
 
@@ -53,7 +56,7 @@ quantumBasisQ[QuantumBasis[data_Association]] := Enclose[
     ConfirmAssert[MemberQ[$QuantumBasisPictures, data["Picture"]], Message[QuantumBasis::picture]];
     (*ConfirmAssert[Length[inputElements] + Length[outputElements] > 0, Message[QuantumBasis::zeroDimension]];*)
 
-    ConfirmAssert[MatchQ[data["ParameterSpec"], {{_, _ ? NumericQ, _ ? NumericQ}...}]];
+    ConfirmAssert[ParameterSpecQ[data["ParameterSpec"]]];
     True,
 
     False &
@@ -186,4 +189,8 @@ QuantumBasis /: Plus[qb__QuantumBasis ? QuantumBasisQ] :=
         "Input" -> Plus @@ (#["Input"] & /@ {qb}),
         "Label" -> Plus @@ (#["Label"] & /@ {qb})
     ]
+
+MergeParameterSpecs[objs___] := Enclose @ Block[{specs = Catenate[ConfirmBy[#["ParameterSpec"], ParameterSpecQ] & /@ {objs}]},
+    KeyValueMap[Prepend[#2, #1] &, GroupBy[specs, First, {Min[#[[All, 2]]], Max[#[[All, 3]]]} & ]]
+]
 
