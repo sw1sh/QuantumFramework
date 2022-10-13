@@ -127,9 +127,6 @@
             "CS",
             "CPHASE",
             "CNOT",
-            "XX",
-            "YY",
-            "ZZ",
             "S",
             "T",
             "V",
@@ -245,7 +242,8 @@
             "InverseFourier",
             "PhaseEstimation",
             "Controlled",
-            "Trotterization"
+            "Trotterization",
+            "Magic"
         }
     },
     "QuantumEntanglementMonotone" -> {

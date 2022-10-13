@@ -17,7 +17,8 @@ $QuantumCircuitOperatorNames = {
     "Fourier", "InverseFourier",
     "PhaseEstimation",
     "Controlled",
-    "Trotterization"
+    "Trotterization",
+    "Magic"
 }
 
 
@@ -440,4 +441,6 @@ QuantumCircuitOperator[{"Trotterization", opArgs_, args___}] := Block[{
         "Trotterization"
     ]
 ]
+
+QuantumCircuitOperator["Magic"] := QuantumCircuitOperator[{"S" -> {1, 2}, "H" -> {2}, "CNOT" -> {2, 1}}]
 
