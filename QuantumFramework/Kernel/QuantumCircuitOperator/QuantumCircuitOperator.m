@@ -121,6 +121,8 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
                 state
             ]
         ],
+        "QuEST",
+        QuESTApply[qco, qs],
         _,
         $Failed
     ]

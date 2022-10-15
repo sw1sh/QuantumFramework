@@ -67,6 +67,8 @@ quantumCircuitCompile[qco_QuantumCircuitOperator, OptionsPattern[]] :=
             With[{tn = VertexDelete[qco["TensorNetwork"], 0]},
                 Transpose[ContractTensorNetwork[tn], Ordering @ OrderingBy[TensorNetworkFreeIndices[tn], Replace[{Superscript[_, x_] :> {0, x}, Subscript[_, x_] :> {1, x}}]]]
             ],
+        "QuEST",
+        QuESTCompile[qco],
         _,
         $Failed
     ]
