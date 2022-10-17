@@ -16,13 +16,13 @@ existingGateNames = {
 };
 
 labelToGate = Replace[{
-    "C"[x_String, ___] :> "c" <> Replace[ToLowerCase[x], "not" -> "x"],
-    "C"[x_String[args__], ___] :> {"c" <> ToLowerCase[x], Sequence @@ N[{args}]},
+    Subscript["C", x_String][__] :> "c" <> Replace[ToLowerCase[x], "not" -> "x"],
+    Subscript["C", x_String[args__]][__] :> {"c" <> ToLowerCase[x], Sequence @@ N[{args}]},
     Superscript[x_String, CircleTimes[_]] :> x,
     SuperDagger[x_String] :> ToLowerCase[x] <> "dg",
     Subscript["R", axis_String][angle_] :> {"r" <> ToLowerCase[axis], N @ angle},
-    "C"[Subscript["R", axis_String][angle_], ___] :> {"cr" <> ToLowerCase[axis], N @ angle},
-    "C"[Superscript[Subscript["R", axis_String][angle_], CircleTimes[range_]], ___] :> {"cr" <> ToLowerCase[axis], N @ angle, range},
+    Subscript["C", Subscript["R", axis_String][angle_]][__] :> {"cr" <> ToLowerCase[axis], N @ angle},
+    Subscript["C", Superscript[Subscript["R", axis_String][angle_], CircleTimes[range_]]][__] :> {"cr" <> ToLowerCase[axis], N @ angle, range},
     x_String :> ToLowerCase[x],
     x_String[params___] :> {ToLowerCase[x], params}
 }]
