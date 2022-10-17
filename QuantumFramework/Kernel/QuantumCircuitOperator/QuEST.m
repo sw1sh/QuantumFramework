@@ -56,7 +56,7 @@ FromQuESTLink[ops_List] := Enclose @ With[{width = Max[Cases[ops, Subscript[_, o
 ToQuESTLink[args___] /; ! QuESTLinkQ[] := Enclose[Confirm @ ImportQuEST[]; ToQuESTLink[args]]
 
 ToQuESTLink[qo_QuantumOperator] /; MatchQ[qo["Dimensions"], {2 ..}] := With[{order = qo["TargetOrder"] - 1},
-	Enclose[Confirm @ ToQuESTLink[qo["Label"], order], Subscript[QuEST`Gate`U, Sequence @@ order][qo["MatrixRepresentation"]] &]
+	Enclose[Confirm @ ToQuESTLink[qo["Label"], order], Subscript[QuEST`Gate`U, Sequence @@ order][qo["Reverse"]["MatrixRepresentation"]] &]
 ]
 ToQuESTLink[qco_QuantumCircuitOperator] := Enclose @ Flatten[Confirm @* ToQuESTLink /@ qco["Operators"]]
 
