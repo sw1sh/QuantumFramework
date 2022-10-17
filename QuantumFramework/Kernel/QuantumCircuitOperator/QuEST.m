@@ -1,13 +1,38 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageExport[QuEST]
 PackageExport[FromQuESTLink]
 PackageExport[ToQuESTLink]
 
 PackageScope[QuESTCompile]
 PackageScope[QuESTApply]
 
-PackageImport["QuEST`"]
 
+
+$QuESTPackageURL = "https://qtechtheory.org/questlink.m"
+
+QuEST::pkg = "Can't import QuESTLink package from `1`. Please Import or Get it manually and try again."
+QuEST::link = "Can't install QuEST library. Please download or compilie it manually following instructions on https://github.com/QuEST-Kit/QuEST and load the library with Install['quest_link']"
+
+
+QuESTLinkQ[] := ! FailureQ[Quiet[Needs["QuEST`"]]]
+
+ImportQuEST[] := If[! QuESTLinkQ[],
+	Get[$QuESTPackageURL];
+	If[! QuESTLinkQ[], Message[QuEST::pkg, $QuESTPackageURL]; $Failed]
+]
+
+InitializeQuEST[] := (
+	ImportQuEST[];
+	If[	Links["*quest_link*"] === {},
+		CreateDownloadedQuESTEnv[];
+		If[ Links["*quest_link*"] === {},
+			Message[QuEST::link]; $Failed,
+			True
+		],
+		True
+	]
+)
 
 
 FromQuESTLink[name_Symbol] /; Context[name] == "QuEST`Gate`" := ToUpperCase @ SymbolName[name]
@@ -28,9 +53,10 @@ FromQuESTLink[expr_] := Missing["NotImplemented", expr]
 FromQuESTLink[ops_List] := Enclose @ With[{width = Max[Cases[ops, Subscript[_, order__Integer] :> {order}, All]] + 1}, QuantumCircuitOperator[Confirm @ FromQuESTLink[#] & /@ ops]]
 
 
+ToQuESTLink[args___] /; ! QuESTLinkQ[] := Enclose[Confirm @ ImportQuEST[]; ToQuESTLink[args]]
 
 ToQuESTLink[qo_QuantumOperator] /; MatchQ[qo["Dimensions"], {2 ..}] := With[{order = qo["TargetOrder"] - 1},
-	Enclose[Confirm @ ToQuESTLink[qo["Label"], order], Subscript[U, Sequence @@ order][qo["MatrixRepresentation"]] &]
+	Enclose[Confirm @ ToQuESTLink[qo["Label"], order], Subscript[QuEST`Gate`U, Sequence @@ order][qo["MatrixRepresentation"]] &]
 ]
 ToQuESTLink[qco_QuantumCircuitOperator] := Enclose @ Flatten[Confirm @* ToQuESTLink /@ qco["Operators"]]
 
@@ -52,11 +78,14 @@ ToQuESTLink[label_, order_List] := Replace[label, {
 ToQuESTLink[arg_] :=  Failure["Unknown", <|"MessageTemplate" -> "Unknown QuEST operator: ``", "MessageParameters" -> arg|>]
 
 
-QuESTCompile[qco_QuantumCircuitOperator] := Enclose @ QuantumOperator[CalcCircuitMatrix[Confirm @ ToQuESTLink[qco]]]["Reverse"]
+QuESTCompile[qco_QuantumCircuitOperator] /; InitializeQuEST[] :=
+	Enclose @ QuantumOperator[QuEST`CalcCircuitMatrix[Confirm @ ToQuESTLink[qco]]]["Reverse"]
 
-QuESTApply[qco_QuantumCircuitOperator, qs_QuantumState] := Enclose @ Block[{s = CreateQureg[qs["OutputQudits"]], c = Confirm @ ToQuESTLink[qco]},
-    InitStateFromAmps[s, Sequence @@ Transpose[ReIm @ qs["Reverse"]["StateVector"]]];
-    ApplyCircuit[s, c];
-    QuantumState[Flatten[GetQuregMatrix[s]]]["Reverse"]
+QuESTApply[qco_QuantumCircuitOperator, qs_QuantumState] /; InitializeQuEST[] := Enclose[
+	Block[{s = CreateQureg[qs["OutputQudits"]], c = Confirm @ ToQuESTLink[qco]},
+		InitStateFromAmps[s, Sequence @@ Transpose[ReIm @ qs["Reverse"]["StateVector"]]];
+		ApplyCircuit[s, c];
+		QuantumState[Flatten[GetQuregMatrix[s]]]["Reverse"]
+	]
 ]
 
