@@ -44,12 +44,12 @@ FromOperatorShorthand[name_] /; MemberQ[$QuantumOperatorNames, name] := QuantumO
 FromOperatorShorthand[{name_, args___}] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}]
 FromOperatorShorthand[{name_, args___} -> order_ ? orderQ] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, order]
 FromOperatorShorthand[{name_, args___} -> rest_List] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, Sequence @@ rest]
-FromOperatorShorthand[lhs_ -> order_ ? orderQ] := QuantumOperator[FromOperatorShorthand[lhs], order]
-FromOperatorShorthand[lhs_ -> n_Integer] := FromOperatorShorthand[lhs -> {n}]
-FromOperatorShorthand[lhs_ -> rest_List] := QuantumOperator[lhs, Sequence @@ rest]
+FromOperatorShorthand[lhs_ -> order_ ? orderQ] := QuantumOperator[Unevaluated[lhs], order]
+FromOperatorShorthand[lhs_ -> n_Integer] := FromOperatorShorthand[Unevaluated[lhs -> {n}]]
+FromOperatorShorthand[lhs_ -> rest_List] := QuantumOperator[Unevaluated[lhs], Sequence @@ rest]
 FromOperatorShorthand[args_List] := FromOperatorShorthand /@ args
 FromOperatorShorthand[f_Symbol[left___, op : _Rule | _String | ({name_String, ___} /; MemberQ[$QuantumOperatorNames, name]), right___]] /; MemberQ[Attributes[f], NumericFunction] :=
-    QuantumOperator[f[left, QuantumOperator[op], right]]
+    QuantumOperator[f[left, QuantumOperator[Unevaluated[op]], right]]
 FromOperatorShorthand[arg_] := QuantumOperator[arg]
 
 
@@ -170,12 +170,12 @@ QuantumOperator[name : "V" | "SX", opts___] := QuantumOperator[QuantumOperator[S
 
 QuantumOperator["CNOT", opts___] := QuantumOperator[{"CNOT", 2}, opts]
 
-QuantumOperator[{"CNOT", dimension_Integer}, opts___] := QuantumOperator[{"Controlled", {"NOT", dimension}}, opts]
+QuantumOperator[{"CNOT", dimension_Integer}, opts___] := QuantumOperator[{"Controlled", {"NOT", dimension} -> 2}, opts]
 
 
 QuantumOperator["CPHASE" | "CP", opts___] := QuantumOperator[{"CPHASE", Pi}, opts]
 
-QuantumOperator[{"CPHASE" | "CP", angle_, dimension_Integer : 2}, opts___] := QuantumOperator[{"Controlled", {"Phase", angle, dimension}}, opts]
+QuantumOperator[{"CPHASE" | "CP", angle_, dimension_Integer : 2}, opts___] := QuantumOperator[{"Controlled", {"Phase", angle, dimension} -> 2}, opts]
 
 
 controlledMatrix[matrix_ ? MatrixQ, dimension_Integer] := ReplacePart[
@@ -194,19 +194,19 @@ controlledMatrix[matrix_ ? MatrixQ, dimension_Integer] := ReplacePart[
 QuantumOperator[name : "CX" | "CY" | "CZ", opts___] := QuantumOperator[{name, 2}, opts]
 
 QuantumOperator[{"CX", dimension_Integer}, opts___] :=
-    QuantumOperator[{"Controlled", {"PauliX", dimension}}, opts]
+    QuantumOperator[{"Controlled", {"PauliX", dimension} -> {2}}, opts]
 
 QuantumOperator[{"CY", dimension_Integer}, opts___] :=
-    QuantumOperator[{"Controlled", {"PauliY", dimension}}, opts]
+    QuantumOperator[{"Controlled", {"PauliY", dimension} -> {2}}, opts]
 
 QuantumOperator[{"CZ", dimension_Integer}, opts___] :=
-    QuantumOperator[{"Controlled", {"PauliZ", dimension}}, opts]
+    QuantumOperator[{"Controlled", {"PauliZ", dimension} -> {2}}, opts]
 
-QuantumOperator["CH", opts___] := QuantumOperator[{"Controlled", "Hadamard"}, opts]
+QuantumOperator["CH", opts___] := QuantumOperator[{"Controlled", "H" ->{2}}, opts]
 
-QuantumOperator["CT", opts___] := QuantumOperator[{"Controlled", "T"}, opts]
+QuantumOperator["CT", opts___] := QuantumOperator[{"Controlled", "T" -> {2}}, opts]
 
-QuantumOperator["CS", opts___] := QuantumOperator[{"Controlled", "S"}, opts]
+QuantumOperator["CS", opts___] := QuantumOperator[{"Controlled", "S" -> {2}}, opts]
 
 
 QuantumOperator[{"C" | "Controlled", qo : Except[_QuantumOperator], control1 : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}}, opts___] :=
@@ -428,7 +428,7 @@ QuantumOperator["Toffoli", order : (_ ? orderQ) : {1, 2, 3}] :=
     QuantumOperator[{"Controlled", "NOT", Most[order]}, {Last[order]}]
 
 
-QuantumOperator["CSWAP" | "Fredkin", opts___] := QuantumOperator[{"Controlled", "SWAP"}, opts]
+QuantumOperator["CSWAP" | "Fredkin", opts___] := QuantumOperator[{"Controlled", "SWAP" -> {2, 3}}, opts]
 
 
 
@@ -593,10 +593,13 @@ QuantumOperator[name_String, opts___] /; ToUpperCase[name] =!= name && KeyExists
 QuantumOperator[{name_String, params___}, opts___] /; ToUpperCase[name] =!= name && KeyExistsQ[$upperCasesOperatorNames, name] :=
     QuantumOperator[{$upperCasesOperatorNames[name], params}, opts]
 
-QuantumOperator[rule : _Rule] := FromOperatorShorthand[rule]
+QuantumOperator[rule : _Rule, opts___] := QuantumOperator[FromOperatorShorthand[Unevaluated[rule]], opts]
 
-QuantumOperator[f_Symbol[args___]] /; MemberQ[Attributes[f], NumericFunction] := FromOperatorShorthand[f[args]]
+QuantumOperator[f_Symbol[args___], opts___] /; MemberQ[Attributes[f], NumericFunction] := QuantumOperator[FromOperatorShorthand[Unevaluated[f[args]]], opts]
 
-QuantumOperator[ops_List] /; AllTrue[ops, MatchQ[_Rule | _Integer | _String | ({name_, ___} /; MemberQ[$QuantumOperatorNames, name])]] :=
-    Enclose @ QuantumCircuitOperator[Flatten[ConfirmBy[FromOperatorShorthand[#], QuantumOperatorQ] & /@ ops]]["QuantumOperator", Method -> "Schrodinger"]
+QuantumOperator[ops_List, opts___] /; AllTrue[ops, MatchQ[_Rule | _Integer | _String | ({name_, ___} /; MemberQ[$QuantumOperatorNames, name]) | _QuantumOperator]] :=
+    Enclose @ QuantumOperator[
+        QuantumCircuitOperator[Flatten[ConfirmBy[FromOperatorShorthand[#], QuantumOperatorQ] & /@ ops]]["QuantumOperator", Method -> "Schrodinger"],
+        opts
+    ]
 
