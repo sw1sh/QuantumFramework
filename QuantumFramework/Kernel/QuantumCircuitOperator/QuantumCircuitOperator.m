@@ -59,7 +59,7 @@ QuantumCircuitOperator[params: Except[{Alternatives @@ $QuantumCircuitOperatorNa
 
 Options[quantumCircuitApply] = {Method -> Automatic}
 
-quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[]] /; qco["Arity"] == qs["OutputQudits"] :=
+quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[]] /; qco["InputDimensions"] == qs["OutputDimensions"] :=
     Switch[
         OptionValue[Method],
         "Schrodinger" | "Schroedinger" | "Schrödinger",
@@ -127,7 +127,15 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
         $Failed
     ]
 
-(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qs_ ? QuantumStateQ, opts : OptionsPattern[quantumCircuitApply]] := quantumCircuitApply[qco, qs, opts]
+QuantumCircuitOperator::dim = "Circuit expecting dimensions `1`, but the state has dimensions `2`."
+
+quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[]] :=
+    (Message[QuantumCircuitOperator::dim, qco["InputDimensions"], qs["OutputDimensions"]]; $Failed)
+
+(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qs_ ? QuantumStateQ, opts : OptionsPattern[quantumCircuitApply]] :=
+    With[{result = quantumCircuitApply[qco, qs, opts]},
+        result /; ! FailureQ[result]
+    ]
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[quantumCircuitApply]] := qco[QuantumState[{"Register", qco["InputDimensions"]}], opts]
 
