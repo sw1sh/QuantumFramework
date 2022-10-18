@@ -9,7 +9,7 @@ QuantumOperator /: MakeBoxes[qo_QuantumOperator, TraditionalForm] /; QuantumOper
                 Column[{
                     qo["Label"],
                     Row[{"QuantumOperator: ", If[qo["InputOrder"] === {}, {}, Thread[Subscript[qo["InputDimensions"], qo["InputOrder"]]]] ->
-                        If[qo["OutputOrder"] === {}, {}, Thread[Subscript[qo["OutputDimensions"], qo["OutputOrder"]]]]}]
+                        If[qo["OutputOrder"] === {}, {}, Thread[Subscript[DeleteCases[qo["OutputDimensions"], 1], qo["FullOutputOrder"]]]]}]
                 },
                     Alignment -> Center
                 ]

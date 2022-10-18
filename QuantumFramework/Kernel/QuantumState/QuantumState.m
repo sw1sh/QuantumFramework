@@ -129,6 +129,9 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Dimension"] 
     ]
 ]
 
+QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ, opts : OptionsPattern[]] :=
+    QuantumState[qs, QuantumBasis[newBasis, opts]]
+
 
 (* equality *)
 

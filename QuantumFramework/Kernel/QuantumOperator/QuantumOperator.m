@@ -156,9 +156,9 @@ QuantumOperator[matrix_ ? MatrixQ, args___, opts : OptionsPattern[]] := Module[{
 
             newMatrix = kroneckerProduct[
                 newMatrix,
-                Replace[{} -> {{1}}] @ identityMatrix[Max[Ceiling[newOutputQuditBasis["Dimension"] / outputs], Ceiling[newInputQuditBasis["Dimension"] / inputs] 0]][[
-                    ;; Max[Ceiling[newOutputQuditBasis["Dimension"] / outputs], 0], ;; Max[Ceiling[newInputQuditBasis["Dimension"] / inputs], 0]
-                ]]
+                With[{outs = Ceiling[newOutputQuditBasis["Dimension"] / outputs], ins = Ceiling[newInputQuditBasis["Dimension"] / inputs]},
+                    Replace[{} -> {{1}}] @ identityMatrix[Max[outs, ins]][[;; outs, ;; ins]]
+                ]
             ];
             basis = QuantumBasis[basis,
                 "Output" -> newOutputQuditBasis,

@@ -539,14 +539,26 @@ QuantumOperatorProp[qo_, "QASM"] /; qo["ControlOrder"] =!= {} && MatchQ[qo["Targ
             With[{n = Length[control1], m = Length[control0]},
                 StringTemplate["ctrl(``) @ negctrl(``) @ "][n, m] <>
                 (
-                QuantumTensorProduct[
-                    QuantumOperator[QuantumState[{"Register", n, 2 ^ n - 1}]["Dagger"], {{}, control1}],
-                    QuantumOperator[QuantumState[{"Register", m, 0}]["Dagger"], {{}, control0}]
-                ] @ qo @
-                QuantumTensorProduct[
-                    QuantumOperator[QuantumState[{"Register", n, 2 ^ n - 1}], {control1, {}}],
-                    QuantumOperator[QuantumState[{"Register", m, 0}], {control0, {}}]
-                ]
+                QuantumTensorProduct[{
+                    If[ n > 0,
+                        QuantumOperator[QuantumState[{"Register", n, 2 ^ n - 1}]["Dagger"], {{}, control1}],
+                        Nothing
+                    ],
+                    If[ m > 0,
+                        QuantumOperator[QuantumState[{"Register", m, 0}]["Dagger"], {{}, control0}],
+                        Nothing
+                    ]
+                }] @ qo @
+                QuantumTensorProduct[{
+                    If[ n > 0,
+                        QuantumOperator[QuantumState[{"Register", n, 2 ^ n - 1}], {control1, {}}],
+                        Nothing
+                    ],
+                    If[ m > 0,
+                        QuantumOperator[QuantumState[{"Register", m, 0}], {control0, {}}],
+                        Nothing
+                    ]
+                }]
                 )["SimpleQASM"] <> " " <> StringRiffle[Map[StringTemplate["q[``]"], Join[control1, control0, qo["TargetOrder"]] - 1], " "] <> ";"
             ],
         _ :> $Failed

@@ -80,13 +80,13 @@ QuantumTensorProduct[qo1_QuantumOperator, qo2_QuantumOperator] :=
     QuantumOperator[
         QuantumTensorProduct[qo1["State"], qo2["State"]],
         {
-            If[ IntersectingQ[qo1["OutputOrder"], qo2["OutputOrder"]],
+            If[ IntersectingQ[qo1["OutputOrder"], qo2["OutputOrder"]] && qo1["OutputQudits"] > 0 && qo2["OutputQudits"] > 0,
                 Join[qo1["OutputOrder"], qo1["LastOutputQudit"] - qo2["FirstOutputQudit"] + qo2["OutputOrder"] + 1],
-                Join[qo1["OutputOrder"], qo2["OutputOrder"]]
+                DeleteDuplicates[Join[qo1["OutputOrder"], qo2["OutputOrder"]]]
             ],
-            If[ IntersectingQ[qo1["InputOrder"], qo2["InputOrder"]],
+            If[ IntersectingQ[qo1["InputOrder"], qo2["InputOrder"]] && qo1["InputQudits"] > 0 && qo2["InputQudits"] > 0,
                 Join[qo1["InputOrder"], qo1["LastInputQudit"] - qo2["FirstInputQudit"] + qo2["InputOrder"] + 1],
-                Join[qo1["InputOrder"], qo2["InputOrder"]]
+                DeleteDuplicates[Join[qo1["InputOrder"], qo2["InputOrder"]]]
             ]
         }
     ]
