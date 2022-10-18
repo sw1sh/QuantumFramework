@@ -142,10 +142,14 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 				] & /@ control0
 			}
 		],
-		Subscript["R", subSubLabels_CircleTimes][angle_] /; Length[subSubLabels] == Length[vpos] :> With[{index = First /@ PositionIndex[vpos]}, {
-			Map[drawGate[{{#1}, hpos}, Subscript["R", subSubLabels[[index[#1]]]][angle], opts] &, vpos],
-			drawControlWires[#, {Subscript["R", subSubLabels[[index[#[[1]]]]]][angle], Subscript["R", subSubLabels[[index[#[[2]]]]]][angle]}] & /@ Partition[Sort[vpos], 2, 1]
-		}],
+		Subscript["R", subSubLabels_CircleTimes][angle_] :> With[{
+			labels = Catenate @ Replace[List @@ subSubLabels, {Superscript[subSubLabel_, CircleTimes[n_Integer]] :> Table[subSubLabel, n], subSubLabel_ :> {subSubLabel}}, {1}]
+		},
+			With[{index = First /@ PositionIndex[vpos]}, {
+				Map[drawGate[{{#1}, hpos}, Subscript["R", labels[[index[#1]]]][angle], opts] &, vpos],
+				drawControlWires[#, {Subscript["R", labels[[index[#[[1]]]]]][angle], Subscript["R", labels[[index[#[[2]]]]]][angle]}] & /@ Partition[Sort[vpos], 2, 1]
+			}] /; Length[labels] == Length[vpos]
+		],
 		Subscript["R", Superscript[subSubLabel_, CircleTimes[n_Integer]]][angle_] /; n == Length[vpos] :> {
 			MapIndexed[drawGate[{{#1}, hpos}, Subscript["R", subSubLabel][angle], opts] &, vpos],
 			drawControlWires[#, {Subscript["R", subSubLabel][angle], Subscript["R", subSubLabel][angle]}] & /@ Partition[Sort[vpos], 2, 1]
