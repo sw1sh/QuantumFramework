@@ -44,10 +44,12 @@ FromOperatorShorthand[name_] /; MemberQ[$QuantumOperatorNames, name] := QuantumO
 FromOperatorShorthand[{name_, args___}] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}]
 FromOperatorShorthand[{name_, args___} -> order_ ? orderQ] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, order]
 FromOperatorShorthand[{name_, args___} -> rest_List] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, Sequence @@ rest]
-FromOperatorShorthand[lhs_ -> order_ ? orderQ] := QuantumOperator[lhs, order]
-FromOperatorShorthand[lhs_ -> n_Integer] := QuantumOperator[lhs, {n}]
+FromOperatorShorthand[lhs_ -> order_ ? orderQ] := QuantumOperator[FromOperatorShorthand[lhs], order]
+FromOperatorShorthand[lhs_ -> n_Integer] := FromOperatorShorthand[lhs -> {n}]
 FromOperatorShorthand[lhs_ -> rest_List] := QuantumOperator[lhs, Sequence @@ rest]
 FromOperatorShorthand[args_List] := FromOperatorShorthand /@ args
+FromOperatorShorthand[f_Symbol[left___, op : _Rule | _String | ({name_String, ___} /; MemberQ[$QuantumOperatorNames, name]), right___]] /; MemberQ[Attributes[f], NumericFunction] :=
+    QuantumOperator[f[left, QuantumOperator[op], right]]
 FromOperatorShorthand[arg_] := QuantumOperator[arg]
 
 
@@ -592,6 +594,8 @@ QuantumOperator[{name_String, params___}, opts___] /; ToUpperCase[name] =!= name
     QuantumOperator[{$upperCasesOperatorNames[name], params}, opts]
 
 QuantumOperator[rule : _Rule] := FromOperatorShorthand[rule]
+
+QuantumOperator[f_Symbol[args___]] /; MemberQ[Attributes[f], NumericFunction] := FromOperatorShorthand[f[args]]
 
 QuantumOperator[ops_List] /; AllTrue[ops, MatchQ[_Rule | _Integer | _String | ({name_, ___} /; MemberQ[$QuantumOperatorNames, name])]] :=
     Enclose @ QuantumTensorProduct[Flatten[ConfirmBy[FromOperatorShorthand[#], QuantumOperatorQ] &/@ ops]]
