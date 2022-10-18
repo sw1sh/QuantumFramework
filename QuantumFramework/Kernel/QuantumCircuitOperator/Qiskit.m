@@ -30,7 +30,9 @@ labelToGate = Replace[{
 QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
     operators = Map[
         With[{
-            label = Which[BarrierQ[#], {"barrier", #}, QuantumMeasurementOperatorQ[#], "m", True, labelToGate @ #["Label"]]
+            label = Which[BarrierQ[#], {"barrier", #}, QuantumMeasurementOperatorQ[#], "m", True, labelToGate @ #["Label"]],
+            measurements = qco["Measurements"],
+            targetIndex = First /@ PositionIndex[qco["Target"]]
         },
             Replace[
                 label, {
@@ -40,9 +42,10 @@ QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
                     order - 1
                 }],
                 "m" :>
-                    Splice[With[{target = #["Target"]}, MapIndexed[{label, None, {#1 - 1, Length[target] - #2[[1]]}} &, target]]],
+                    Splice[With[{target = #["Target"]}, Map[{label, None, {# - 1, measurements - targetIndex[#]}} &, target]]],
                 (name : "cx" | "cy" | "cz" | "ch" | "cswap") | {name : "crx" | "cry" | "crz" | "cp" | "cu2" | "cu", params___} :>
-                    Module[{c1 = #["Label"][[2]], c0 = #["Label"][[3]], t = #["TargetOrder"], range},
+                    Block[{c1, c0, t = #["TargetOrder"], range},
+                        {c1, c0} = Replace[#["Label"], Subscript["C", _][c1_, c0_] :> {c1, c0}];
                         range = Join[c1, c0];
                         {
                             "control",

@@ -69,6 +69,8 @@ quantumCircuitCompile[qco_QuantumCircuitOperator, OptionsPattern[]] :=
             ],
         "QuEST",
         QuESTCompile[qco],
+        "Qiskit",
+        qco["Qiskit"]["QuantumOperator"],
         _,
         $Failed
     ]
