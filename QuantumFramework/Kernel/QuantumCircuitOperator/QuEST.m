@@ -66,7 +66,13 @@ ToQuESTLink[label_, order_List] := Replace[label, {
 	"I" :> Subscript[QuEST`Gate`Id, Sequence @@ order],
 	"NOT" :> Subscript[QuEST`Gate`X, Sequence @@ order],
 	Subscript["C", subLabel_][control1_, control0_] :> Join[{Subscript[C, Sequence @@ (control1 - 1)][ToQuESTLink[subLabel, order]]}, Subscript[X, # - 1] & /@ control0],
-	Subscript["R", subLabel_CircleTimes][angle_] /; Length[subLabel] == Length[order] :> QuEST`Gate`R[angle, Times @@ MapThread[ToQuESTLink[#1, {#2}] &, {List @@ subLabel, order}]],
+	Subscript["R", subLabels_CircleTimes][angle_] :> With[{
+		labels = Catenate @ Replace[List @@ subLabels, {Superscript[subLabel_, CircleTimes[n_Integer]] :> Table[subLabel, n], subLabel_ :> {subLabel}}, {1}]
+	},
+		QuEST`Gate`R[angle, Times @@ MapThread[ToQuESTLink[#1, {#2}] &, {labels, order}]] /; Length[labels] == Length[order]
+	],
+	Subscript["R", Superscript[subLabel_, CircleTimes[n_Integer]]][angle_] /; n == Length[order] :>
+		QuEST`Gate`R[angle, Times @@ Map[ToQuESTLink[subLabel, {#}] &, order]],
 	Subscript["R", subLabel_][angle_] :> QuEST`Gate`R[angle, ToQuESTLink[subLabel, order]],
 	"P"[phase_] :> Subscript[QuEST`Gate`Ph, Sequence @@ order][phase],
 	"PhaseShift"[shift_] :> Subscript[QuEST`Gate`Ph, Sequence @@ order][2 Pi / 2 ^ shift],
