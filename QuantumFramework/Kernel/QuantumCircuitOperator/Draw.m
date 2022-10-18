@@ -550,7 +550,7 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, overlapQ : T
 			gatePos = #1[[2]],
 			ranges = #1[[3]],
 			shift,
-			overlapShift = Function[x, If[! overlapQ && ContainsAny[Lookup[ranges, x, {}], order], 1, 0]]
+			overlapShift = Function[x, If[! overlapQ, NestWhile[# + 1 &, 0, ContainsAny[Lookup[ranges, x + #, {}], order] &], 0]]
 		},
 			shift = Which[
 				BarrierQ[#2],
