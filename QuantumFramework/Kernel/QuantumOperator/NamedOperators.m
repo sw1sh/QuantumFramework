@@ -104,8 +104,8 @@ QuantumOperator[{"ZRotation" | "RZ", angle_, dimension_Integer : 2}, opts___] :=
 ]
 
 QuantumOperator[{"R", angle_, args__}, opts___] := Enclose @ Block[{ops = ConfirmBy[QuantumOperator[#], QuantumOperatorQ] & /@ {args}, op, orders},
-    op = QuantumTensorProduct[ops]["Sort"];
-    orders = TakeList[op["FullInputOrder"], #["Arity"] & /@ ops];
+    op = QuantumCircuitOperator[ops]["QuantumOperator", Method -> "Schrodinger"]["Sort"];
+    orders = #["FullInputOrder"] & /@ ops;
     QuantumOperator[
         Exp[- I angle / 2 op],
         opts,
@@ -598,5 +598,5 @@ QuantumOperator[rule : _Rule] := FromOperatorShorthand[rule]
 QuantumOperator[f_Symbol[args___]] /; MemberQ[Attributes[f], NumericFunction] := FromOperatorShorthand[f[args]]
 
 QuantumOperator[ops_List] /; AllTrue[ops, MatchQ[_Rule | _Integer | _String | ({name_, ___} /; MemberQ[$QuantumOperatorNames, name])]] :=
-    Enclose @ QuantumTensorProduct[Flatten[ConfirmBy[FromOperatorShorthand[#], QuantumOperatorQ] &/@ ops]]
+    Enclose @ QuantumCircuitOperator[Flatten[ConfirmBy[FromOperatorShorthand[#], QuantumOperatorQ] & /@ ops]]["QuantumOperator", Method -> "Schrodinger"]
 
