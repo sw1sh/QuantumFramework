@@ -82,10 +82,10 @@ QuESTCompile[qco_QuantumCircuitOperator] /; InitializeQuEST[] :=
 	Enclose @ QuantumOperator[QuEST`CalcCircuitMatrix[Confirm @ ToQuESTLink[qco]]]["Reverse"]
 
 QuESTApply[qco_QuantumCircuitOperator, qs_QuantumState] /; InitializeQuEST[] := Enclose[
-	Block[{s = CreateQureg[qs["OutputQudits"]], c = Confirm @ ToQuESTLink[qco]},
-		InitStateFromAmps[s, Sequence @@ Transpose[ReIm @ qs["Reverse"]["StateVector"]]];
-		ApplyCircuit[s, c];
-		QuantumState[Flatten[GetQuregMatrix[s]]]["Reverse"]
+	Block[{s = QuEST`CreateQureg[qs["OutputQudits"]], c = Confirm @ ToQuESTLink[qco]},
+		QuEST`InitStateFromAmps[s, Sequence @@ Transpose[ReIm @ qs["Reverse"]["StateVector"]]];
+		QuEST`ApplyCircuit[s, c];
+		QuantumState[Flatten[QuEST`GetQuregMatrix[s]]]["Reverse"]
 	]
 ]
 
