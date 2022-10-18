@@ -210,6 +210,10 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			Rectangle[center - size / 5, center + size / 5, FilterRules[{opts}, Options[Rectangle]]],
 			If[gateLabelsQ, Rotate[Text[Style["1 / 2", labelStyleOpts], center], rotateLabel], Nothing]
 		}],
+		"\[Pi]"[perm__] :> {
+			$DefaultGray, Opacity[.3],
+			MapThread[Line[{{center[[1]] - size / 2, - #1 vGapSize}, {center[[1]] + size / 2, - #2 vGapSize}}] &, {vpos, {perm}}]
+		},
 		"PhaseShift"[n_] | n_Integer :> {
 			EdgeForm[Replace[label, gateBoundaryStyle]],
 			FaceForm[Replace[label, gateBackgroundStyle]],
