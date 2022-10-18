@@ -299,15 +299,18 @@ QuantumOperatorProp[qo_, "OrderedInput", order_ ? orderQ, qb_ ? QuditBasisQ] := 
 },
     ConfirmAssert[ContainsAll[order, qo["FullInputOrder"]], "Given order should contain all operator order qudits"];
     ConfirmAssert[arity <= qb["Qudits"], "Order size should be less than or equal to number of qudits"];
-    If[ arity > qo["InputQudits"],
-        QuantumTensorProduct[
-            QuantumOperator[qo, {qo["OutputOrder"], qo["FullInputOrder"]}, "Input" -> qb["Extract", pos]],
-            With[{iqb = qb["Delete", pos]},
-                QuantumOperator[{"Identity", iqb}, Max[qo["LastOutputQudit"], qo["LastInputQudit"]] + Range @ iqb["Qudits"]]
-            ]
-        ],
-        QuantumOperator[qo, "Input" -> qb["Extract", pos]]
-    ]["OrderInputExtra", qo["FullInputOrder"], order]
+    QuantumOperator[
+        If[ arity > qo["InputQudits"],
+            QuantumTensorProduct[
+                QuantumOperator[qo, {qo["OutputOrder"], qo["FullInputOrder"]}, "Input" -> qb["Extract", pos]],
+                With[{iqb = qb["Delete", pos]},
+                    QuantumOperator[{"Identity", iqb}, Max[qo["LastOutputQudit"], qo["LastInputQudit"]] + Range @ iqb["Qudits"]]
+                ]
+            ],
+            QuantumOperator[qo, "Input" -> qb["Extract", pos]]
+        ]["OrderInputExtra", qo["FullInputOrder"], order],
+        "Label" -> qo["Label"]
+    ]
 ]
 
 QuantumOperatorProp[qo_, "OrderedOutput", qb_ ? QuditBasisQ] := qo["OrderedOutput", qo["FullOutputOrder"], qb]
@@ -317,15 +320,18 @@ QuantumOperatorProp[qo_, "OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ] :=
 },
     ConfirmAssert[ContainsAll[order, qo["FullOutputOrder"]], "Given order should contain all operator order qudits"];
     ConfirmAssert[arity <= qb["Qudits"], "Order size should be less than or equal to number of qudits"];
-    If[ arity > qo["OutputQudits"],
-        QuantumTensorProduct[
-            QuantumOperator[qo, {qo["FullOutputOrder"], qo["InputOrder"]}, "Output" -> qb["Extract", pos]],
-            With[{iqb = qb["Delete", pos]},
-                QuantumOperator[{"Identity", iqb}, Max[qo["LastOutputQudit"], qo["LastInputQudit"]] + Range @ iqb["Qudits"]]
-            ]
-        ],
-        QuantumOperator[qo, "Output" -> qb["Extract", pos]]
-    ]["OrderOutputExtra", qo["FullOutputOrder"], order]
+    QuantumOperator[
+        If[ arity > qo["OutputQudits"],
+            QuantumTensorProduct[
+                QuantumOperator[qo, {qo["FullOutputOrder"], qo["InputOrder"]}, "Output" -> qb["Extract", pos]],
+                With[{iqb = qb["Delete", pos]},
+                    QuantumOperator[{"Identity", iqb}, Max[qo["LastOutputQudit"], qo["LastInputQudit"]] + Range @ iqb["Qudits"]]
+                ]
+            ],
+            QuantumOperator[qo, "Output" -> qb["Extract", pos]]
+        ]["OrderOutputExtra", qo["FullOutputOrder"], order],
+        "Label" -> qo["Label"]
+    ]
 ]
 
 
