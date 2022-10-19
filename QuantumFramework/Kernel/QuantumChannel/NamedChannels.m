@@ -24,7 +24,7 @@ quantumChannel[ops_List, order_ ? orderQ, basisArgs___] := With[{
         QuantumBasis[QuantumBasis[QuantumBasis[basisArgs]["Output"], QuantumBasis[basisArgs]["Output"]], Length[order]]
     ]
 },
-    quantumChannel[QuantumOperator[QuantumState[Flatten[kroneckerProduct @@@ Tuples[arg, Length[order]]], qb], order]]
+    quantumChannel[QuantumOperator[QuantumState[Flatten[kroneckerProduct @@@ Tuples[ops, Length[order]]], qb], order]]
 ]
 
 quantumChannel[args___] := quantumChannel[QuantumOperator[args]]
