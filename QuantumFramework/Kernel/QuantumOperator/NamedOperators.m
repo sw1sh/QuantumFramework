@@ -38,20 +38,19 @@ controlledZGate = ReplacePart[
 ];
 
 
+FromOperatorShorthand[f_Symbol[left___, op : _Rule | _String | _SuperDagger | ({name_String, ___} /; MemberQ[$QuantumOperatorNames, name]), right___]] /; MemberQ[Attributes[f], NumericFunction] :=
+    With[{qo = QuantumOperator[Unevaluated[op]]}, FromOperatorShorthand[Unevaluated[f[left, qo, right]]]]
 FromOperatorShorthand[op_ ? QuantumFrameworkOperatorQ] := op
 FromOperatorShorthand[order_ ? orderQ] := QuantumMeasurementOperator[order]
 FromOperatorShorthand[name_] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[name]
 FromOperatorShorthand[{name_, args___}] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}]
 FromOperatorShorthand[{name_, args___} -> order_ ? orderQ] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, order]
-FromOperatorShorthand[{name_, args___} -> rest_List] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, Sequence @@ rest]
-FromOperatorShorthand[lhs_ -> order_ ? orderQ] := QuantumOperator[Unevaluated[lhs], order]
+FromOperatorShorthand[{name_, args___} -> rest_] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, Sequence @@ Developer`ToList[rest]]
+FromOperatorShorthand[lhs_ -> order_ ? orderQ] := QuantumOperator[QuantumOperator[Unevaluated[lhs]], order]
 FromOperatorShorthand[lhs_ -> n_Integer] := FromOperatorShorthand[Unevaluated[lhs -> {n}]]
-FromOperatorShorthand[lhs_ -> rest_List] := QuantumOperator[Unevaluated[lhs], Sequence @@ rest]
+FromOperatorShorthand[lhs_ -> rest_] := QuantumOperator[Unevaluated[lhs], Sequence @@ Developer`ToList[rest]]
 FromOperatorShorthand[args_List] := FromOperatorShorthand /@ args
-FromOperatorShorthand[f_Symbol[left___, op : _Rule | _String | ({name_String, ___} /; MemberQ[$QuantumOperatorNames, name]), right___]] /; MemberQ[Attributes[f], NumericFunction] :=
-    QuantumOperator[f[left, QuantumOperator[Unevaluated[op]], right]]
 FromOperatorShorthand[arg_] := QuantumOperator[arg]
-
 
 QuantumOperator[name_ ? nameQ, basisName : Except[Alternatives @@ $QuantumBasisPictures, _ ? nameQ]] :=
     QuantumOperator[QuantumOperator[name], QuantumBasis[basisName]]
@@ -602,4 +601,6 @@ QuantumOperator[ops : {Except[_QuantumOperator], ___}, opts___] /; AllTrue[ops, 
         QuantumCircuitOperator[Flatten[ConfirmBy[FromOperatorShorthand[#], QuantumOperatorQ] & /@ ops]]["QuantumOperator", Method -> "Schrodinger"],
         opts
     ]
+
+QuantumOperator[SuperDagger[arg_], opts___] := QuantumOperator[arg, opts]["Dagger"]
 
