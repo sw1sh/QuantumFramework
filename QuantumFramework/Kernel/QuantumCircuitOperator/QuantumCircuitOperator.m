@@ -10,6 +10,9 @@ PackageScope["circuitElementOrder"]
 
 BarrierQ[barrier_] := MatchQ[barrier, "Barrier" | "Barrier"[_ ? orderQ] | "Barrier"[_Span]]
 
+QuantumCircuitOperatorQ[QuantumCircuitOperator[data_Association]] /; ! AtomQ[Unevaluated[data]] :=
+    QuantumCircuitOperatorQ[QuantumCircuitOperator[data]]
+
 QuantumCircuitOperatorQ[QuantumCircuitOperator[KeyValuePattern[{"Elements" -> elements_, "Label" -> _}]]] :=
     AllTrue[elements,
         BarrierQ[#] ||
