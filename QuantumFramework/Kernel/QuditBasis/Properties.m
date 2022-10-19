@@ -166,17 +166,23 @@ QuditBasisProp[qb_, "Split", n_Integer ? NonNegative] /; n <= qb["Qudits"] := Mo
     }
 ]
 
-QuditBasisProp[qb_, "TakeDimension", dim_Integer] := With[{pos = FirstPosition[FoldList[Times, qb["Dimensions"]], dim]},
-    If[ MissingQ[pos],
-        Failure[<|"Message" -> "Can't take given number dimensions"|>],
-        First @ qb["Split", First[pos]]
+QuditBasisProp[qb_, "TakeDimension", dim_Integer ? NonNegative] := If[dim <= 1,
+    QuditBasis[dim],
+    With[{pos = FirstPosition[FoldList[Times, qb["Dimensions"]], dim]},
+        If[ MissingQ[pos],
+            Failure[<|"Message" -> "Can't take given number dimensions"|>],
+            First @ qb["Split", First[pos]]
+        ]
     ]
 ]
 
-QuditBasisProp[qb_, "DropDimension", dim_Integer] := With[{pos = FirstPosition[FoldList[Times, qb["Dimensions"]], dim]},
-    If[ MissingQ[pos],
-        Failure[<|"Message" -> "Can't drop given number dimensions"|>],
-        Last @ qb["Split", First[pos]]
+QuditBasisProp[qb_, "DropDimension", dim_Integer ? NonNegative] := If[dim <= 1,
+    qb,
+    With[{pos = FirstPosition[FoldList[Times, qb["Dimensions"]], dim]},
+        If[ MissingQ[pos],
+            Failure[<|"Message" -> "Can't drop given number dimensions"|>],
+            Last @ qb["Split", First[pos]]
+        ]
     ]
 ]
 
