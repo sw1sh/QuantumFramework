@@ -56,17 +56,7 @@ quantumCircuitCompile[qco_QuantumCircuitOperator, OptionsPattern[]] :=
         "Schrodinger" | "Schroedinger" | "Schrödinger",
         Fold[ReverseApplied[Construct], qco["Flatten"]["Operators"]],
         Automatic | "TensorNetwork",
-        Which[
-            qco["Eigenqudits"] > 0,
-            QuantumMeasurementOperator[QuantumOperator[#, {Join[Range[- qco["Eigenqudits"] + 1, 0], qco["OutputOrder"]], qco["InputOrder"]}], qco["Target"]] &,
-            qco["TraceQudits"] > 0,
-            QuantumChannel[QuantumOperator[#, qco["Order"]]] &,
-            True,
-            QuantumOperator[#, qco["Order"]] &
-        ] @ QuantumState[SparseArrayFlatten[#], QuantumBasis @@ Reverse @ TakeDrop[TensorDimensions[#], - qco["Arity"]], "Label" -> qco["Label"]] & @
-            With[{tn = VertexDelete[qco["TensorNetwork"], 0]},
-                Transpose[ContractTensorNetwork[tn], Ordering @ OrderingBy[TensorNetworkFreeIndices[tn], Replace[{Superscript[_, x_] :> {0, x}, Subscript[_, x_] :> {1, x}}]]]
-            ],
+        TensorNetworkCompile[qco],
         "QuEST",
         QuESTCompile[qco],
         "Qiskit",

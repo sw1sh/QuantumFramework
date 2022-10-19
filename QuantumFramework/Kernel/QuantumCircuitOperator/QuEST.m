@@ -4,8 +4,8 @@ PackageExport[QuEST]
 PackageExport[FromQuESTLink]
 PackageExport[ToQuESTLink]
 
-PackageScope[QuESTCompile]
-PackageScope[QuESTApply]
+PackageExport[QuESTCompile]
+PackageExport[QuESTApply]
 
 
 

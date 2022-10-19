@@ -65,62 +65,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
         "Schrodinger" | "Schroedinger" | "Schrödinger",
         Fold[ReverseApplied[Construct], qs, qco["Operators"]],
         Automatic | "TensorNetwork",
-        Block[{
-            state = If[
-                qs["PureStateQ"],
-                QuantumState[SparseArrayFlatten[#], TensorDimensions[#], "Label" -> qs["Label"] /* qco["Label"]] & @
-                    ContractTensorNetwork @ InitializeTensorNetwork[
-                        qco["TensorNetwork"],
-                        qs["Computational"]["Tensor"],
-                        Join[Superscript[0, #] & /@ qco["InputOrder"], Subscript[0, #] & /@ (Range[qs["InputQudits"]])]
-                    ],
-                QuantumState[
-                    quantumCircuitApply[QuantumTensorProduct[qco, qco["Conjugate"]], qs["Bend"]]["State"]["PermuteOutput",
-                        With[{a = qco["Eigenqudits"] + qco["TraceQudits"], b = qs["Qudits"]},
-                           FindPermutation[
-                                Join[Array[0, a], Array[1, a], Array[2, b], Array[3, b]],
-                                Join[Array[0, a], Array[2, b], Array[1, a], Array[3, b]]
-                            ]
-                        ]]["Unbend"],
-                    "Label" -> qs["Label"] /* qco["Label"]
-                ]
-            ]
-        },
-            If[ qco["Channels"] > 0,
-                state = QuantumPartialTrace[state,
-                    First @ Fold[
-                        {
-                            Join[#1[[1]], If[QuantumChannelQ[#2], #1[[2]] + Range[#2["TraceQudits"]], {}]],
-                             #1[[2]] + Which[QuantumChannelQ[#2], #2["TraceQudits"], QuantumMeasurementOperatorQ[#2], #2["Eigenqudits"], True, 0]
-                        } &,
-                        {{}, 0},
-                        qco["Operators"]
-                    ]
-                ]
-            ];
-            If[ qco["Measurements"] > 0,
-                QuantumMeasurement[
-                    QuantumMeasurementOperator[
-                        QuantumOperator[
-                            state,
-                            {
-                                Join[Range[- qco["Eigenqudits"] + 1, 0], DeleteCases[qco["OutputOrder"], _ ? NonPositive]],
-                                qco["InputOrder"]
-                            }
-                        ],
-                        qco["Target"]
-                    ],
-                    Fold[
-                        ReverseApplied[Construct],
-                        Prepend[
-                            Select[qco["Operators"] , QuantumMeasurementOperatorQ],
-                            If[Length[#] > 0, QuantumOperator["I", #], Nothing] & @ Complement[Range[qco["Arity"]], qco["Target"]]
-                        ]
-                    ]["POVM"]["Sort"]["OutputBasis"]
-                ],
-                state
-            ]
-        ],
+        TensorNetworkApply[qco, qs],
         "QuEST",
         QuESTApply[qco, qs],
         "Qiskit",
