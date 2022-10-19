@@ -31,7 +31,7 @@ QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
     operators = Map[
         With[{
             label = Which[BarrierQ[#], {"barrier", #}, QuantumMeasurementOperatorQ[#], "m", True, labelToGate @ #["Label"]],
-            measurements = qco["Measurements"],
+            nTargets = qco["Targets"],
             targetIndex = First /@ PositionIndex[qco["Target"]]
         },
             Replace[
@@ -42,7 +42,7 @@ QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
                     order - 1
                 }],
                 "m" :>
-                    Splice[With[{target = #["Target"]}, Map[{label, None, {# - 1, measurements - targetIndex[#]}} &, target]]],
+                    Splice[With[{target = #["Target"]}, Map[{label, None, {# - 1, nTargets - targetIndex[#]}} &, target]]],
                 (name : "cx" | "cy" | "cz" | "ch" | "cswap") | {name : "crx" | "cry" | "crz" | "cp" | "cu2" | "cu", params___} :>
                     Block[{c1, c0, t = #["TargetOrder"], range},
                         {c1, c0} = Replace[#["Label"], Subscript["C", _][c1_, c0_] :> {c1, c0}];
