@@ -221,7 +221,7 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
                 Join[Superscript[0, #] & /@ qco["InputOrder"], Subscript[0, #] & /@ (Range[qs["InputQudits"]])]
             ],
         QuantumState[
-            quantumCircuitApply[QuantumTensorProduct[qco, qco["Conjugate"]], qs["Bend"]]["State"]["PermuteOutput",
+            QuantumTensorProduct[qco, qco["Conjugate"]][qs["Bend"]]["State"]["PermuteOutput",
                 With[{a = qco["Eigenqudits"] + qco["TraceQudits"], b = qs["Qudits"]},
                     FindPermutation[
                         Join[Array[0, a], Array[1, a], Array[2, b], Array[3, b]],
