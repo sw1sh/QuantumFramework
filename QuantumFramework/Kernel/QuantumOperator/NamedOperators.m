@@ -457,19 +457,21 @@ With[{
 QuantumOperator[{"RandomHermitian", args___}, order : (_ ? orderQ) : {1}] := QuantumOperator[{"RandomHermitian", QuantumBasis[args]}, order]
 
 
+QuantumOperator["Permutation", opts___] := QuantumOperator[{"Permutation", Cycles[{{1, 2}}]}, opts]
+
 QuantumOperator[{"Permutation", perm_Cycles}, opts___] := QuantumOperator[{"Permutation", 2, perm}, opts]
+
+QuantumOperator[{"Permutation", perm_List}, opts___] := QuantumOperator[{"Permutation", PermutationCycles[perm]}, opts]
 
 QuantumOperator[{"Permutation", dim_Integer, perm_Cycles}, opts___] := QuantumOperator[{"Permutation", Table[dim, PermutationMax[perm]], perm}, opts]
 
-QuantumOperator[{"Permutation", dims_List, perm_Cycles}] := QuantumOperator[{"Permutation", dims, perm}, Range[Length[dims]]]
-
-QuantumOperator[{"Permutation", dims_List, perm_Cycles}, args__] :=
+QuantumOperator[{"Permutation", dims_List, perm_Cycles}, opts___] :=
     QuantumOperator[
         QuantumState[
             SparseArrayFlatten @ TensorTranspose[ArrayReshape[identityMatrix[Times @@ dims], Join[dims, dims]], perm],
             QuantumBasis[QuditBasis[Permute[dims, perm]], QuditBasis[dims], "Label" -> "\[Pi]" @@ PermutationList[perm]]
         ],
-        args
+        opts
     ]
 
 QuantumOperator["Uncurry", opts___] := QuantumOperator[{"Uncurry", {2, 2}}, opts]
