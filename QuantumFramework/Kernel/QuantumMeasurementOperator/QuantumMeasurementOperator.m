@@ -52,12 +52,12 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
     ];
 
     (* cache eigensystem *)
-    With[{eigenvectors = ArrayReshape[basis["Elements"], {basis["Dimension"], basis["ElementDimension"]}]},
+    (* With[{eigenvectors = ArrayReshape[basis["Elements"], {basis["Dimension"], basis["ElementDimension"]}]},
         CacheProperty[QuantumMeasurementOperator][qmo, "Eigenvalues", ___, eigenvalues];
         CacheProperty[QuantumMeasurementOperator][qmo, "Eigenvectors", ___, eigenvectors];
         CacheProperty[QuantumMeasurementOperator][qmo, "Eigensystem", ___, {eigenvalues, eigenvectors}];
         CacheProperty[QuantumMeasurementOperator][qmo, "Projectors", ___, basis["Projectors"]];
-    ];
+    ]; *)
     qmo
 ]
 
