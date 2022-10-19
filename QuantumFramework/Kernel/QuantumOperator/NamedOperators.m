@@ -597,7 +597,7 @@ QuantumOperator[rule : _Rule, opts___] := QuantumOperator[FromOperatorShorthand[
 
 QuantumOperator[f_Symbol[args___], opts___] /; MemberQ[Attributes[f], NumericFunction] := QuantumOperator[FromOperatorShorthand[Unevaluated[f[args]]], opts]
 
-QuantumOperator[ops_List, opts___] /; AllTrue[ops, MatchQ[_Rule | _Integer | _String | ({name_, ___} /; MemberQ[$QuantumOperatorNames, name]) | _QuantumOperator]] :=
+QuantumOperator[ops : {Except[_QuantumOperator], ___}, opts___] /; AllTrue[ops, MatchQ[_Rule | _Integer | _String | ({name_, ___} /; MemberQ[$QuantumOperatorNames, name]) | _QuantumOperator]] :=
     Enclose @ QuantumOperator[
         QuantumCircuitOperator[Flatten[ConfirmBy[FromOperatorShorthand[#], QuantumOperatorQ] & /@ ops]]["QuantumOperator", Method -> "Schrodinger"],
         opts
