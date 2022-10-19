@@ -83,6 +83,7 @@ QuantumBasis[QuantumBasis[data_Association], rules : OptionsPattern[$QuantumBasi
 QuantumBasis[data_Association, args__] := Fold[QuantumBasis, QuantumBasis[data], Reverse @ {args}]
 
 
+
 (* construction *)
 
 QuantumBasis[elements_Association ? (Not @* KeyExistsQ["Output"]), args___] := QuantumBasis[<|"Output" -> QuditBasis[elements]|>, args]
@@ -125,9 +126,6 @@ QuantumBasis[data_Association] /; !MatchQ[data["ParameterSpec"], {{_, _, _}...}]
     QuantumBasis[<|data, "ParameterSpec" -> defaultParameterSpec[data["ParameterSpec"]]|>]
 
 
-QuantumBasis[qb_ ? QuantumBasisQ] := qb
-
-
 (* multiplicity *)
 
 QuantumBasis[qb_ ? QuantumBasisQ, 1, args___] := QuantumBasis[qb, args]
@@ -161,8 +159,7 @@ QuantumBasis[param : _ ? nameQ | _Integer, args___] :=
 
 QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) | OptionsPattern[]) ...] := QuantumBasis["Computational", args]
 
-QuantumBasis[_QuantumBasis, args__] := QuantumBasis[args]
-
+QuantumBasis[qb_QuantumBasis, args__] := QuantumBasis[QuantumBasis[args], qb["Meta"]]
 
 qb_QuantumBasis /; System`Private`HoldNotValidQ[qb] && quantumBasisQ[Unevaluated @ qb] := System`Private`HoldSetValid[qb]
 

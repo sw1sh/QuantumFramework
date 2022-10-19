@@ -52,8 +52,8 @@ FromOperatorShorthand[lhs_ -> rest_] := QuantumOperator[Unevaluated[lhs], Sequen
 FromOperatorShorthand[args_List] := FromOperatorShorthand /@ args
 FromOperatorShorthand[arg_] := QuantumOperator[arg]
 
-QuantumOperator[name_ ? nameQ, basisName : Except[Alternatives @@ $QuantumBasisPictures, _ ? nameQ]] :=
-    QuantumOperator[QuantumOperator[name], QuantumBasis[basisName]]
+(* QuantumOperator[name_ ? nameQ, basisName : Except[Alternatives @@ $QuantumBasisPictures, _ ? nameQ]] :=
+    QuantumOperator[QuantumOperator[name], QuantumBasis[basisName]] *)
 
 
 QuantumOperator[] := QuantumOperator["Identity"]
@@ -343,12 +343,12 @@ swapMatrix[dimension_] := SparseArray[# -> 1 & /@
 QuantumOperator["SWAP", opts___] := QuantumOperator[{"SWAP", 2}, opts]
 
 QuantumOperator[{"SWAP", dimension_Integer}, opts___] :=
-    QuantumOperator[QuantumOperator[swapMatrix[dimension], dimension, 2, "Label" -> "SWAP"], opts]
+    QuantumOperator[QuantumOperator[{"Permutation", {dimension, dimension}, Cycles[{{1, 2}}]}, opts], "Label" -> "SWAP"]
 
 QuantumOperator["RootSWAP", opts___] := QuantumOperator[{"RootSWAP", 2}, opts]
 
 QuantumOperator[{"RootSWAP", dimension_Integer}, opts___] :=
-    QuantumOperator[QuantumOperator[MatrixPower[swapMatrix[dimension], 1 / 2], dimension, 2, "Label" -> "RootSWAP"], opts]
+    QuantumOperator[Sqrt[QuantumOperator[{"SWAP", dimension}, opts]], "Label" -> "RootSWAP"]
 
 
 QuantumOperator["SUM", opts___] := QuantumOperator[{"SUM", 2}, opts]
@@ -457,7 +457,7 @@ With[{
 QuantumOperator[{"RandomHermitian", args___}, order : (_ ? orderQ) : {1}] := QuantumOperator[{"RandomHermitian", QuantumBasis[args]}, order]
 
 
-QuantumOperator["Permutation", opts___] := QuantumOperator[{"Permutation", Cycles[{{1, 2}}]}, opts]
+QuantumOperator["Permutation", opts___] := QuantumOperator[{"Permutation", 2, Cycles[{{1, 2}}]}, opts]
 
 QuantumOperator[{"Permutation", perm_Cycles}, opts___] := QuantumOperator[{"Permutation", 2, perm}, opts]
 
