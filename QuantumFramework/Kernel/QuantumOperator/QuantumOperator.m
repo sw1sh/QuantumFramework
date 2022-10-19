@@ -58,7 +58,10 @@ QuantumOperator[qs_ ? QuantumStateQ, {order_ ? orderQ, Automatic}, opts___] :=
         opts
     ]
 
-QuantumOperator[qs_ ? QuantumStateQ, qb_ ? QuantumBasisQ, opts___] := QuantumOperator[QuantumState[qs, qb], opts]
+QuantumOperator[qs_ ? QuantumStateQ, opts : PatternSequence[Except[{_ ? orderQ, _ ? orderQ}], ___]] := QuantumOperator[
+    QuantumOperator[qs],
+    QuantumBasis[qs["Basis"], opts]
+]
 
 
 QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, order : (_ ? autoOrderQ) : {1}, args___, opts : OptionsPattern[]] := Module[{
