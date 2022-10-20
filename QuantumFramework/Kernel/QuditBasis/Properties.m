@@ -80,7 +80,7 @@ QuditBasisProp[qb_, "Elements"] := If[qb["Length"] > 0,
         Transpose[
             Outer[Times,
                 Sequence @@ Values @ KeySort @ ResourceFunction["KeyGroupBy"][
-                    qb["RemoveIdentities"]["Representations"], Last, SparseArray @* Values @* normalRepresentations
+                    SparseArrayFlatten /@ qb["RemoveIdentities"]["Representations"], Last, SparseArray @* Values @* normalRepresentations
                 ]
             ],
             FindPermutation[Join[Range[1, 2 qb["Qudits"], 2], Range[2, 2 qb["Qudits"], 2]]]
@@ -122,9 +122,9 @@ QuditBasisProp[qb_, "Dual"] := QuditBasis @ KeyMap[MapAt[#["Dual"] &, 1], qb["Re
 QuditBasisProp[qb_, "DualQ"] := AllTrue[Keys[qb["RemoveIdentities"]["Representations"]][[All, 1]], #["DualQ"] &]
 
 
-QuditBasisProp[qb_, "SortedQ"] := OrderedQ[Reverse /@ Keys @ qb["Representations"]]
+QuditBasisProp[qb_, "SortedQ"] := OrderedQ[Last /@ Keys @ qb["Representations"]]
 
-QuditBasisProp[qb_, "Sort"] := QuditBasis[KeySortBy[qb["Representations"], Reverse]]
+QuditBasisProp[qb_, "Sort"] := QuditBasis[KeySortBy[qb["Representations"], {Last}]]
 
 QuditBasisProp[qb_, "Permute", perm_Cycles] := Enclose @ If[
     perm === Cycles[{}],
@@ -158,7 +158,7 @@ QuditBasisProp[qb_, "Split", _Integer ? NonNegative] /; qb["Dimension"] == 1 := 
 QuditBasisProp[qb_, "Split", n_Integer ? NonNegative] /; n <= qb["Qudits"] := Module[{
     repr, idx
 },
-    repr = KeySortBy[qb["RemoveIdentities"]["Representations"], Last];
+    repr = KeySortBy[qb["RemoveIdentities"]["Representations"], {Last}];
     idx = AssociationThread[Union @ Keys[repr][[All, -1]], Range[qb["Qudits"]]];
     {
         If[n > 0, QuditBasis[KeySelect[idx[Last[#]] <= n &] @ repr], QuditBasis[]],
