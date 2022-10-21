@@ -129,7 +129,15 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Dimension"] 
     ]
 ]
 
-QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ, opts : OptionsPattern[]] :=
+QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] := Switch[
+    qs["StateType"],
+    "Vector",
+    QuantumState[PadRight[qs["State"], newBasis["Dimension"]], newBasis],
+    "Matrix",
+    QuantumState[PadRight[qs["State"], {newBasis["Dimension"], newBasis["Dimension"]}], newBasis]
+]
+
+QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ, opts__] :=
     QuantumState[qs, QuantumBasis[newBasis, opts]]
 
 
