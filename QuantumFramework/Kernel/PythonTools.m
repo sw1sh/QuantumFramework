@@ -5,7 +5,8 @@ PackageScope["$PythonSession"]
 
 
 
-confirmPython[session_] := ResourceFunction["PythonPackageInstalledQ"][session, "qiskit"] || ExternalEvaluate[session, "import qiskit"] === Null
+confirmPython[session_] := ResourceFunction["PythonPackageInstalledQ"][session, "qiskit"] &&
+    ExternalEvaluate[session, "import qiskit\nfrom qiskit import QuantumCircuit"] === Null
 
 $PythonSession := With[{session = SelectFirst[ExternalSessions[], confirmPython, StartExternalSession["Python"]]},
 Enclose[
@@ -14,7 +15,11 @@ Enclose[
         confirmPython,
         "No qiskit package found. Installing it first instead."
     ],
-    (PrintTemporary["Installing Qiskit ..."]; ResourceFunction["PythonPackageInstall"][session, "qiskit"]; session) &
+    Enclose[
+        PrintTemporary["Installing Qiskit ..."];
+        Confirm[ResourceFunction["PythonPackageInstall"][session, "qiskit"]];
+        ConfirmBy[session, confirmPython, "Failed to install qiskit."]
+    ] &
 ]
 ]
 
