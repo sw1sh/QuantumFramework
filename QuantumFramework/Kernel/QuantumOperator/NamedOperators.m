@@ -302,7 +302,7 @@ QuantumOperator[{"Multiplexer", qos__}, opts___] := Block[{sorted = QuantumOpera
 
 QuantumOperator["Fourier", opts___] := QuantumOperator[{"Fourier", 2}, opts]
 
-QuantumOperator[{"Fourier", dimension_Integer}, opts___, order : (_ ? orderQ) : {1}] := QuantumOperator[
+QuantumOperator[{"Fourier", dimension_Integer}, order : (_ ? orderQ) : {1}, opts___] := QuantumOperator[
     QuantumOperator[
         SparseArray[
             ({i_, j_} :>  Exp[2 Pi I (i - 1) (j - 1) / (dimension ^ Length[order])] / Sqrt[dimension ^ Length[order]]),
@@ -318,7 +318,7 @@ QuantumOperator[{"Fourier", dimension_Integer}, opts___, order : (_ ? orderQ) : 
 
 QuantumOperator["InverseFourier", opts___] := QuantumOperator[{"InverseFourier", 2}, opts]
 
-QuantumOperator[{"InverseFourier", dimension_Integer}, opts___, order : (_ ? orderQ) : {1}] := QuantumOperator[
+QuantumOperator[{"InverseFourier", dimension_Integer}, order : (_ ? orderQ) : {1}, opts___] := QuantumOperator[
     QuantumOperator[
         SparseArray[
             ({i_, j_} :> Exp[-2 Pi I (i - 1) (j - 1) / (dimension ^ Length[order])] / Sqrt[dimension ^ Length[order]]),
@@ -577,6 +577,22 @@ QuantumOperator["Discard", order : _ ? orderQ : {1}, args___] := With[{basis = Q
         ]["Dagger"],
     {}, order
     ]
+]
+
+
+QuantumOperator["HeisenbergWeyl", opts___] := QuantumOperartor[{"HeisenbergWeyl", 2}, opts]
+
+QuantumOperator[{"HeisenbergWeyl", p_Integer ? Positive, i_Integer : 0, a_ : \[FormalA]}, order : _ ? orderQ : {1}, opts___] := QuantumOperator[
+    QuantumOperator[
+        With[{d = p ^ Length[order]},
+            Total @ Table[Exp[I 2 Pi a l / d] KroneckerProduct[UnitVector[d, Mod[i + l, d] + 1], UnitVector[d, l + 1]] , {l, 0, d - 1}]
+        ],
+        p,
+        Length[order]
+    ],
+    {order, order},
+    opts,
+    "Label" -> "HeisenbergWeyl"
 ]
 
 
