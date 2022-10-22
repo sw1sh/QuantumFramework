@@ -109,23 +109,30 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; ! newBasis["Sort
 
 QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Basis"] == newBasis := QuantumState[qs["State"], newBasis]
 
-QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Dimension"] == newBasis["Dimension"] := Switch[
-    qs["StateType"],
-    "Vector",
-    QuantumState[
-        SparseArrayFlatten[
-            Dot[
-                SparsePseudoInverse @ PadRight[newBasis["OutputMatrix"], {qs["OutputElementDimension"], Automatic}],
-                qs["OutputMatrix"] . qs["StateMatrix"] . SparsePseudoInverse[qs["InputMatrix"]],
-                PadRight[newBasis["InputMatrix"], {Automatic, qs["InputElementDimension"]}]
-            ]
+QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Dimension"] == newBasis["Dimension"] := With[{
+    outDim = Max[qs["OutputElementDimension"], newBasis["OutputElementDimension"]],
+    inDim = Max[qs["InputElementDimension"], newBasis["InputElementDimension"]]
+},
+    Switch[
+        qs["StateType"],
+        "Vector",
+        QuantumState[
+            SparseArrayFlatten @ Dot[
+                SparsePseudoInverse[PadRight[ newBasis["OutputMatrix"], {outDim, Automatic}]],
+                PadRight[qs["OutputMatrix"], {outDim, Automatic}] . qs["StateMatrix"] . SparsePseudoInverse[PadRight[qs["InputMatrix"], {inDim, Automatic}]],
+                PadRight[newBasis["InputMatrix"], {inDim, Automatic}]
+            ],
+            newBasis
         ],
-        newBasis
-    ],
-    "Matrix",
-    QuantumState[
-        SparsePseudoInverse[newBasis["Matrix"]] . (qs["Basis"]["Matrix"] . qs["DensityMatrix"] . SparsePseudoInverse[qs["Basis"]["Matrix"]]) . newBasis["Matrix"],
-        newBasis
+        "Matrix",
+        QuantumState[
+            Dot[
+                SparsePseudoInverse[PadRight[newBasis["Matrix"], {outDim, Automatic}]],
+                PadRight[qs["Basis"]["Matrix"], {outDim, Automatic}] . qs["DensityMatrix"] . SparsePseudoInverse[PadRight[qs["Basis"]["Matrix"], {inDim, Automatic}]],
+                PadRight[newBasis["Matrix"], {inDim, Automatic}]
+            ],
+            newBasis
+        ]
     ]
 ]
 
