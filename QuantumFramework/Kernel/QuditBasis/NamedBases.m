@@ -62,19 +62,21 @@ QuditBasis[{name : "PauliX" | "PauliY" | "PauliZ", dim_Integer : 2}, args___] :=
 
 QuditBasis["Fourier"] := QuditBasis[{"Fourier", 2}]
 
-QuditBasis[{"Fourier", dimension_Integer ? Positive}, args___] := QuditBasis[
-    AssociationThread[
-        Subscript["F", #] & /@ Range[dimension],
-        ConjugateTranspose @ Partition[
-            (1 / Sqrt[dimension]) (
-                Exp[(2 Pi I (#[[2]] #[[1]])) / dimension] & /@
-                Partition[Flatten[Table[{i, j}, {i, 0, dimension - 1}, {j, 0, dimension - 1}]], 2]
-            ),
-            dimension
-        ]
-    ],
-    args
+QuditBasis[{"Fourier", qb_ ? QuditBasisQ}, args___] := With[{dimension = qb["Dimension"], elements = SparseArrayFlatten /@ qb["Elements"]},
+    QuditBasis[
+        AssociationThread[
+            Subscript["F", #] & /@ Range[dimension],
+            Map[i |->
+                1 / Sqrt[dimension] *
+                    Total @ MapIndexed[{p, idx} |-> With[{j = idx[[1]] - 1}, Exp[I 2 Pi i j / dimension] p], elements],
+                Range[0, dimension - 1]
+            ]
+        ],
+        args
+    ]
 ]
+
+QuditBasis[{"Fourier", basisArgs___}, args___] := QuditBasis[{"Fourier", QuditBasis[basisArgs]}, args]
 
 
 QuditBasis["Identity"] := QuditBasis[{"Identity", 2}]
@@ -140,72 +142,77 @@ QuditBasis["Dirac", args___] := Module[{
 ]
 
 
+Options[WignerBasis] = {"Exact" -> True}
+
+WignerBasis[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := Block[{
+    dimension = qb["Dimension"],
+    positionBasis, momentumBasis, eigensystem, kernelElement
+},
+    If[dimension == 1, Return[qb]];
+    positionBasis = SparseArrayFlatten /@ qb["Elements"];
+    momentumBasis = Map[dimension |->
+        1 / Sqrt[Length[positionBasis]] *
+        Total[Exp[I 2 Pi dimension # / Length[positionBasis]] positionBasis[[# + 1]] & /@
+            Range[0, Length[positionBasis] - 1]
+        ],
+        Range[0, dimension - 1]
+    ];
+    eigensystem = ReverseSort[
+        Rule @@@ ComplexExpand @ Thread @ Eigensystem @ Partition[
+            Map[
+                Replace[{q1_, p1_, q2_, p2_} :> Exp[(2 Pi I (q1 - q2) (p1 - p2)) / dimension]],
+                Tuples[Range[0, dimension - 1], 4]
+            ],
+            dimension ^ 2
+        ]
+    ];
+    kernelElement = With[{vectors = Transpose[Normalize /@ Values[eigensystem]]},
+        ComplexExpand @ Dot[
+            vectors,
+            DiagonalMatrix[Sqrt[Keys[eigensystem]]],
+            Inverse[vectors]
+        ]
+    ];
+    If[ ! TrueQ[OptionValue["Exact"]],
+        positionBasis = N @ positionBasis;
+        momentumBasis = N @ momentumBasis;
+        kernelElement = N @ kernelElement;
+    ];
+
+    QuditBasis @ AssociationThread[
+        Subscript["W", Row[#]] & /@ Tuples[Range[0, dimension - 1], 2],
+
+        Catenate[
+            Table[
+                With[{labels = Thread[Tuples[Range[0, dimension - 1], 2] -> Range[dimension ^ 2]]},
+                    Map[
+                        Simplify,
+                        Sqrt[dimension] * Total @ Map[Apply[{q1, p1} |->
+                            Extract[kernelElement, Replace[{{i, j}, {q1, p1}}, labels, {1}]] *
+                                Dot[Conjugate[momentumBasis[[p1 + 1]]], positionBasis[[q1 + 1]]] *
+                                    KroneckerProduct[
+                                        momentumBasis[[p1 + 1]],
+                                        Conjugate[positionBasis[[q1 + 1]]]
+                                    ]
+                            ],
+                            Tuples[Range[0, dimension - 1], 2]
+                        ],
+                        {2}
+                    ]
+                ],
+                {i, 0, dimension - 1}, {j, 0, dimension - 1}
+            ]
+        ]
+    ]
+]
+
 QuditBasis["Wigner", args___] := QuditBasis[{"Wigner", 2}, args]
 
-QuditBasis[{"Wigner", dimension_Integer}, args___] := QuditBasis[{"Wigner", QuditBasis[dimension]}, args]
+QuditBasis[{"Wigner", qb_QuditBasis /; QuditBasisQ[qb], opts : OptionsPattern[{"Exact" -> True}]}, args___] :=
+    QuditBasis[WignerBasis[qb, opts], args]
 
-QuditBasis[{"Wigner", qb_QuditBasis /; QuditBasisQ[qb]}, args___] := Module[{
-    dimension, positionBasis, momentumBasis, kernelElement
-},
-        dimension = First @ qb["Dimensions"];
-        positionBasis = {#} & /@ Normal[qb["Association"]];
-        momentumBasis = With[{dimension = #},
-            {(dimension + 1) ->
-                (1 / Sqrt[Length[positionBasis]]) *
-                Total[(Exp[(I 2 Pi dimension #) / Length[positionBasis]] (Values @@ positionBasis[[# + 1]])) & /@
-                    Range[0, Length[positionBasis] - 1]
-                ]
-            }
-        ] & /@ Range[0, dimension - 1];
-        kernelElement = ComplexExpand @ With[{eigensystem =
-              Reverse @ Sort[
-                  Apply[Rule, #] & /@ ComplexExpand @ Thread @ Eigensystem @ Partition[
-                    Map[
-                        With[{q1 = #[[1, 1]], p1 = #[[1, 2]], q2 = #[[2, 1]], p2 = #[[2, 2]]},
-                            Exp[(2 Pi I (q1 - q2) (p1 - p2)) / dimension]
-                        ] &,
-                        Tuples[Tuples[Range[0, dimension - 1], 2], 2],
-                        {1}
-                    ],
-                    dimension ^ 2
-                ]
-            ]
-        },
-            Dot[
-                Transpose[Normalize[#] & /@ Values[eigensystem]],
-                DiagonalMatrix[Sqrt[Keys[eigensystem]]],
-                Inverse[Transpose[Normalize[#] & /@ Values[eigensystem]]]
-            ]
-        ];
+QuditBasis[{"Wigner", basisArgs___, opts : OptionsPattern[]}, args___] := QuditBasis[{"Wigner", QuditBasis[basisArgs], opts}, args]
 
-        QuditBasis[AssociationThread[
-            Subscript["W", Row[#]] & /@ Tuples[Range[0, dimension - 1], 2],
-
-            Flatten[
-                Table[
-                    With[{labels = Thread[Tuples[Range[0, dimension - 1], 2] -> Range[dimension ^ 2]]},
-                        Sqrt[dimension] * Total @ Map[
-                            With[{q1 = #[[1]], p1 = #[[2]]},
-                                Extract[kernelElement, ({{i, j}, #} /. labels)] *
-                                    Flatten[Dot[Conjugate[Values[momentumBasis[[p1 + 1]]]],
-                                       Transpose[Values[positionBasis[[q1 + 1]]]]]][[1]] (
-                                    KroneckerProduct[
-                                        Values[momentumBasis[[p1 + 1]]][[1]],
-                                        Conjugate[Values[positionBasis[[q1 + 1]]][[1]]]
-                                    ])
-                            ] &,
-                            Tuples[Range[0, dimension - 1], 2],
-                            {1}
-                        ]
-                    ],
-                    {i, 0, dimension - 1}, {j, 0, dimension - 1}
-                ],
-                {1, 2}
-            ]
-        ],
-            args
-        ]
-]
 
 QuditBasis[nameArg_ ? nameQ, args___] /; ! FreeQ[nameArg, _String ? (StringContainsQ["Basis"])] :=
     QuditBasis[nameArg /. name_String :> StringDelete[name, "Basis"], args]
