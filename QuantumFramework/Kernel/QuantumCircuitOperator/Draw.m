@@ -47,7 +47,8 @@ Options[drawGate] := DeleteDuplicatesBy[First] @ Join[{
 	"GateBackgroundStyle" -> Automatic,
 	"GateBoundaryStyle" -> Automatic,
 	"GateShapeFunction" -> Automatic,
-	"ShowConnectors" -> False
+	"ShowConnectors" -> False,
+	"WireStyle" -> Automatic
 },
 	Options[Style], Options[Rectangle]
 ];
@@ -69,7 +70,8 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 	connectorsQ = TrueQ[OptionValue["ShowConnectors"]],
 	backgroundStyle,
 	boundaryStyle,
-	drawControlWires
+	drawControlWires,
+	wireStyle = Replace[OptionValue["WireStyle"], Automatic -> Directive[$DefaultGray, Opacity[.3]]]
 },
 	corners = positionCorners[pos, size, vGapSize, hGapSize];
 	center = Mean[corners];
@@ -159,7 +161,7 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			drawControlWires[#, {Subscript["R", Subscript[subLabel, #[[1]]]][angle], Subscript["R", Subscript[subLabel, #[[2]]]][angle]}] & /@ Partition[Sort[vpos], 2, 1]
 		},
 		"1" -> {
-			$DefaultGray, Opacity[.3],
+			wireStyle,
 			Line[{center - {size / 2, 0}, center - {size / 8, 0}}],
 			Line[{center + {size / 8, 0}, center + {size / 2, 0}}],
 			EdgeForm[Replace["1", gateBoundaryStyle]],
@@ -167,14 +169,14 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			Disk[center, size / 8]
 		},
 		"0" -> {
-			$DefaultGray, Opacity[.3],
+			wireStyle,
 			Line[{center - {size / 2, 0}, center - {size / 8, 0}}],
 			Line[{center + {size / 8, 0}, center + {size / 2, 0}}],
 			EdgeForm[Replace["0", gateBoundaryStyle]],
 			FaceForm[Transparent],
 			Disk[center, size / 8]},
 		"NOT" -> {
-			$DefaultGray, Opacity[.3],
+			wireStyle,
 			Line[{center - {size / 2, 0}, center - {size / 5, 0}}],
 			Line[{center + {size / 5, 0}, center + {size / 2, 0}}],
 			EdgeForm[Replace["NOT", gateBoundaryStyle]],
@@ -184,7 +186,7 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			Line[{center + size / 5 {-1, 0}, center + size / 5 {1, 0}}], Line[{center + size / 5 {0, -1}, center + size / 5 {0, 1}}]
 		},
 		"SWAP" -> With[{bottom = {center[[1]], -vpos[[1]] vGapSize}, top = {center[[1]], -vpos[[-1]] vGapSize}}, {
-			$DefaultGray, Opacity[.3],
+			wireStyle,
 		    Line[{bottom - {size / 2, 0}, bottom + {size / 2, 0}}],
 		    Line[{top - {size / 2, 0}, top + {size / 2, 0}}],
 		    Line[{bottom, top}],
@@ -195,7 +197,7 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 		    Line[{top + size / 5 {1, -1} / Sqrt[2], top + size / 5 {-1, 1} / Sqrt[2]}]
 		}],
 		"RootSWAP" -> With[{bottom = {center[[1]], -vpos[[1]] vGapSize}, top = {center[[1]], -vpos[[-1]] vGapSize}}, {
-			$DefaultGray, Opacity[.3],
+			wireStyle,
 		    Line[{bottom - {size / 2, 0}, bottom + {size / 2, 0}}],
 		    Line[{top - {size / 2, 0}, top + {size / 2, 0}}],
 		    Line[{bottom, center + {0, size / 5}}],
@@ -211,7 +213,7 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			If[gateLabelsQ, Rotate[Text[Style["1 / 2", labelStyleOpts], center], rotateLabel], Nothing]
 		}],
 		"\[Pi]"[perm__] :> {
-			$DefaultGray, Opacity[.3],
+			wireStyle,
 			MapThread[Line[{{center[[1]] - size / 2, - #1 vGapSize}, {center[[1]] + size / 2, - #2 vGapSize}}] &, {vpos, {perm}}]
 		},
 		"PhaseShift"[n_] | n_Integer :> {
@@ -220,6 +222,22 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			Disk[center, size / 2],
 			If[connectorsQ, {FaceForm[Directive[$DefaultGray, Opacity[1]]], Disk[#, size / 32] & /@ {{center[[1]] - size / 2, - vGapSize #}, {center[[1]] + size / 2, - vGapSize #}} & /@ vpos}, Nothing],
 			If[gateLabelsQ, Rotate[Text[Style[Superscript[If[TrueQ[Negative[n]], -Pi, Pi], InputForm[2 ^ (1 - Abs[n])]], labelStyleOpts], center], rotateLabel], Nothing]
+		},
+		subLabels_CircleTimes :> With[{
+			labels = Catenate @ Replace[List @@ subLabels, {Superscript[subSubLabel_, CircleTimes[n_Integer]] :> Table[subSubLabel, n], subSubLabel_ :> {subSubLabel}}, {1}]
+		},
+			With[{index = First /@ PositionIndex[vpos]}, {
+				Map[drawGate[{{#1}, hpos}, labels[[index[#1]]], opts] &, vpos],
+				drawControlWires[#, {labels[[index[#[[1]]]]], labels[[index[#[[1]]]]]}] & /@ Partition[Sort[vpos], 2, 1]
+			}] /; Length[labels] == Length[vpos]
+		],
+		Superscript[subLabel_, CircleTimes[n_Integer]] /; n == Length[vpos] :> {
+			MapIndexed[drawGate[{{#1}, hpos}, subLabel, opts] &, vpos],
+			drawControlWires[#, {subLabel, subLabel}] & /@ Partition[Sort[vpos], 2, 1]
+		},
+		subLabel : Except[_Subscript] /; Length[vpos] > 1 :> {
+			Map[drawGate[{{#}, hpos}, Subscript[subLabel, #], opts] &, vpos],
+			drawControlWires[#, {Subscript[subLabel, #[[1]]], Subscript[subLabel, #[[2]]]}] & /@ Partition[Sort[vpos], 2, 1]
 		},
 		SuperDagger[subLabel_] | subLabel_ :> {
 			EdgeForm[Replace[subLabel, gateBoundaryStyle]],
@@ -320,7 +338,11 @@ drawChannel[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 	}
 ]
 
-Options[drawWires] = {"Size" -> .75, "VerticalGapSize" -> 1, "HorizontalGapSize" -> 1, "ShortOuterWires" -> True, "ShowWireEndpoints" -> False};
+Options[drawWires] = {"Size" -> .75,
+	"VerticalGapSize" -> 1, "HorizontalGapSize" -> 1,
+	"ShortOuterWires" -> True, "ShowWireEndpoints" -> False,
+	"WireStyle" -> Automatic
+};
 drawWires[wires_List, OptionsPattern[]] := With[{
 	size = OptionValue["Size"],
 	vGapSize = OptionValue["VerticalGapSize"],
@@ -329,7 +351,7 @@ drawWires[wires_List, OptionsPattern[]] := With[{
 	endpointsQ = TrueQ[OptionValue["ShowWireEndpoints"]]
 },
 	{
-		$DefaultGray, Opacity[.3],
+		Replace[OptionValue["WireStyle"], Automatic -> Directive[$DefaultGray, Opacity[.3]]],
 		Map[ Apply[With[{
 			points = If[TrueQ[OptionValue["ShortOuterWires"]],
 					{{hGapSize #1[[1]] + size / 2, - vGapSize #1[[2]]}, {hGapSize #2[[1]] - size / 2, - vGapSize #2[[2]]}},
@@ -358,7 +380,8 @@ Options[drawMeasurementWire] = Join[{
 	"HorizontalGapSize" -> 1,
 	"MeasurementWirePosition" -> Top,
 	"MeasurementWireLabel" -> "c",
-	"ShowGateLabels" -> True
+	"ShowGateLabels" -> True,
+	"WireStyle" -> Automatic
 }, Options[Style]];
 drawMeasurementWire[x_, width_, opts : OptionsPattern[]] := With[{
 	size = OptionValue["Size"],
@@ -371,7 +394,7 @@ drawMeasurementWire[x_, width_, opts : OptionsPattern[]] := With[{
 },
 	{
 		{
-			$DefaultGray, Opacity[.3],
+			Replace[OptionValue["WireStyle"], Automatic -> Directive[$DefaultGray, Opacity[.3]]],
 			Line[{{size / 2, y - size / 32}, {hGapSize x - size / 2, y - size / 32}}],
 			Line[{{size / 2, y + size / 32}, {hGapSize x - size / 2, y + size / 32}}]
 		},
@@ -448,17 +471,17 @@ drawLabel[label_, height_, pad_, opts : OptionsPattern[]] := With[{vGapSize = Op
 	Text[Style[label, Background -> Transparent, FilterRules[{opts}, Options[Style]], FontFamily -> "Times"], {hGapSize height / 2, - vGapSize (pad + 1 / 2)}]
 ]
 
-Options[drawBarrier] = {"Size" -> .75, "VerticalGapSize" -> 1, "HorizontalGapSize" -> 1}
+Options[drawBarrier] = {"Size" -> .75, "VerticalGapSize" -> 1, "HorizontalGapSize" -> 1, "BarrierStyle" -> Automatic, "WireStyle" -> Automatic}
 drawBarrier[{vpos_, hpos_}, OptionsPattern[]] := Block[{
 	size = OptionValue["Size"], vGapSize = OptionValue["VerticalGapSize"], hGapSize = OptionValue["HorizontalGapSize"],
-	x, ys
+	x
 },
 	x = hGapSize First[hpos];
 	{
-		$DefaultGray, Opacity[.3],
+		Replace[OptionValue["WireStyle"], Automatic -> Directive[$DefaultGray, Opacity[.3]]],
 		Line[{{x - size / 2, - vGapSize #}, {x + size / 2, - vGapSize #}}] & /@ vpos,
 
-		$DefaultGray, Dashed, Opacity[.8], Thickness[Large],
+		Replace[OptionValue["BarrierStyle"], Automatic -> Directive[$DefaultGray, Dashed, Opacity[.8], Thickness[Large]]],
 		Line[Map[{x, #} &, List @@ Interval @@ (vGapSize {- # + 1 / 2, - # - 1 / 2} & /@ vpos), {2}]]
 	}
 ]
