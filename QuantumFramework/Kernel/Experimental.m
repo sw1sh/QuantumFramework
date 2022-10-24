@@ -3,6 +3,8 @@ Package["Wolfram`QuantumFramework`"]
 PackageScope["DecomposedQuantumStateProbabilities"]
 PackageScope["QuantumBeamSearch"]
 
+PackageExport["CircuitMultiwayGraph"]
+
 
 
 DecomposedQuantumStateProbabilities[states : {{__QuantumState}..}] :=
@@ -40,6 +42,48 @@ QuantumBeamSearch[states_List, ops_List, OptionsPattern[]] := Module[{
 			N @ ops
 		],
 		shots
+	]
+]
+
+
+operatorApply[op_ ? QuantumOperatorQ, states : {_ ? QuantumStateQ ..}] := Enclose @ With[{
+	inputOrder = op["FullInputOrder"],
+	outputOrder = op["FullOutputOrder"]
+},
+	ConfirmAssert[1 <= Min[inputOrder] <= Max[inputOrder] <= Length[states]];
+	ConfirmAssert[1 <= Min[outputOrder] <= Max[outputOrder] <= Length[states]];
+	Map[
+		ReplacePart[states, Thread[outputOrder -> #]] &,
+		op[QuantumTensorProduct @@ states[[inputOrder]]]["Decompose"]
+	]
+]
+
+CircuitMultiwayGraph[circuit_, initStates : Except[OptionsPattern[]] : Automatic, opts : OptionsPattern[]] := Enclose @ Block[{
+	index = 0
+},
+	VertexReplace[
+		ResourceFunction["FoldGraph"][
+			List /* Replace[{{pos_, states_}, op_} :> (
+				index++;
+				MapIndexed[
+					With[{newPos = Join[pos, #2]},
+						Labeled[{newPos, #1}, <|
+							"Destroyed" -> op["FullInputOrder"],
+							"Created" -> op["FullOutputOrder"],
+							"Step" -> Length[newPos],
+							"TreePosition" -> newPos,
+							"Index" -> index
+						|>]
+					] &,
+					Confirm @ operatorApply[op, states]
+				]
+			)],
+			{{{}, Replace[initStates, Automatic -> Table[QuantumState["0"], circuit["Arity"]]]}},
+			#["Sort"] & /@ circuit["Operators"],
+			opts,
+			GraphLayout -> {"LayeredDigraphEmbedding", "Orientation" -> Left}
+		],
+		{_, states_} :> states
 	]
 ]
 
