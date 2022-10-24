@@ -214,7 +214,7 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 		}],
 		"\[Pi]"[perm__] :> {
 			wireStyle,
-			MapThread[Line[{{center[[1]] - size / 2, - #1 vGapSize}, {center[[1]] + size / 2, - #2 vGapSize}}] &, {vpos, {perm}}]
+			MapThread[Line[{{center[[1]] - size / 2, - #1 vGapSize}, {center[[1]] + size / 2, - #2 vGapSize}}] &, {vpos, vpos[[{perm}]]}]
 		},
 		"PhaseShift"[n_] | n_Integer :> {
 			EdgeForm[Replace[label, gateBoundaryStyle]],
