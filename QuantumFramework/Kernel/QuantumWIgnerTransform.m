@@ -24,3 +24,13 @@ QuantumWignerTransform[qo_ ? QuantumOperatorQ, opts : OptionsPattern[]] /; qo["P
 QuantumWignerTransform[qmo_ ? QuantumMeasurementOperatorQ, opts : OptionsPattern[]] /; qmo["Picture"] =!= "PhaseSpace" :=
     QuantumMeasurementOperator[QuantumWignerTransform[qmo["Operator"], opts], qmo["Target"]]
 
+
+QuantumWignerTransformOperator[qo_ ? QuantumOperatorQ] :=
+	QuantumOperator[
+		#,
+		QuantumBasis[
+			#["Output"]["DimensionSplit", qo["OutputDimensions"]],
+			#["Input"]["DimensionSplit", qo["InputDimensions"]]
+		]
+	] & @ QuantumWignerTransform[qo["Unbend"]]
+

@@ -213,3 +213,21 @@ QuditBasisProp[qb1_, "Replace", pos : {_Integer ..}, qb2_ ? QuditBasisQ] := Quan
 
 QuditBasisProp[qb_, "Identity"] := qb
 
+
+QuditBasisProp[qb_, "DimensionSplit", __] /; qb["Dimension"] <= 1 := qb
+
+QuditBasisProp[qb_, "DimensionSplit", q_Integer ? Positive, n_Integer ? Positive] /; q <= qb["Qudits"] && n <= qb["Dimensions"][[q]] :=
+    QuantumTensorProduct @ MapAt[
+        QuditBasis[
+            Join @@ MapAt[KeyMap[Replace[{name_, i_} :> {name["Dual"], i + 1}]], TakeDrop[#["Representations"], n], 2]
+        ] &,
+        qb["Decompose"],
+        q
+    ]
+
+QuditBasisProp[qb_, "DimensionSplit", _[q_Integer ? Positive, n_Integer ? Positive]] := qb["DimensionSplit", q, n]
+
+QuditBasisProp[qb_, "DimensionSplit", splits : {_[Repeated[_Integer ? Positive, {2}]] ..}] := Fold[#1["DimensionSplit", #2] &, qb, splits]
+
+QuditBasisProp[qb_, "DimensionSplit", splits : {_Integer ? Positive ..}] := qb["DimensionSplit", Thread[{Range[Length[splits]], splits}]]
+
