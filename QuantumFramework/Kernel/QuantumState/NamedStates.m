@@ -176,3 +176,6 @@ QuantumState[{"Graph", graph_ ? GraphQ}, args___] := Module[{
 QuantumState[{"BlochVector", r_ /; VectorQ[r] && Length[r] == 3}] :=
     QuantumState[1 / 2 (identityMatrix[2] + r . Table[PauliMatrix[i], {i, 3}])]
 
+
+QuantumState[SuperDagger[arg_], opts___] := QuantumState[arg, opts]["Dagger"]
+

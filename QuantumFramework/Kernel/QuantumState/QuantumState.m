@@ -225,6 +225,11 @@ QuantumState /: HoldPattern[Times[states : _QuantumState ? QuantumStateQ ...]] :
 QuantumState /: D[qs : _QuantumState, args___] := QuantumState[D[qs["State"], args], qs["Basis"]]
 
 
+(* dagger *)
+
+SuperDagger[qs_QuantumState] ^:= qs["Dagger"]
+
+
 (* join *)
 
 QuantumState[qs_QuantumState ? QuantumStateQ] := qs
