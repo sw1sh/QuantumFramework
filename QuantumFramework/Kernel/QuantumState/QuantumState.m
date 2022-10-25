@@ -125,13 +125,15 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Dimension"] 
             newBasis
         ],
         "Matrix",
-        QuantumState[
-            Dot[
-                SparsePseudoInverse[PadRight[newBasis["Matrix"], {outDim, Automatic}]],
-                PadRight[qs["Basis"]["Matrix"], {outDim, Automatic}] . qs["DensityMatrix"] . SparsePseudoInverse[PadRight[qs["Basis"]["Matrix"], {inDim, Automatic}]],
-                PadRight[newBasis["Matrix"], {inDim, Automatic}]
-            ],
-            newBasis
+        With[{dim = outDim * inDim},
+            QuantumState[
+                Dot[
+                    SparsePseudoInverse[PadRight[newBasis["Matrix"], {dim, Automatic}]],
+                    PadRight[qs["Basis"]["Matrix"], {dim, Automatic}] . qs["DensityMatrix"] . SparsePseudoInverse[PadRight[qs["Basis"]["Matrix"], {dim, Automatic}]],
+                    PadRight[newBasis["Matrix"], {dim, Automatic}]
+                ],
+                newBasis
+            ]
         ]
     ]
 ]
