@@ -167,7 +167,7 @@ QuantumStateProp[qs_, "CanonicalStateVector"] := qs["StateVector"] / First[Spars
 
 QuantumStateProp[qs_, "NormalizedDensityMatrix"] := Quiet @ Enclose @ Confirm[normalizeMatrix @ qs["DensityMatrix"]]
 
-QuantumStateProp[qs_, "Operator"] := QuantumOperator[qs["Projector"]]
+QuantumStateProp[qs_, "Operator", args___] := QuantumOperator[qs["Projector"], args]
 
 QuantumStateProp[qs_, "NormalizedOperator"] := qs["NormalizedProjector"]["Amplitudes"]
 
