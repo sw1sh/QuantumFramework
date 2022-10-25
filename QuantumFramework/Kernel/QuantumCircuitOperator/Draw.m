@@ -210,7 +210,7 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			EdgeForm[Replace[subLabel, gateBoundaryStyle]],
 			FaceForm[Replace[subLabel, gateBackgroundStyle]],
 			Rectangle[center - size / 5, center + size / 5, FilterRules[{opts}, Options[Rectangle]]],
-			If[gateLabelsQ, Rotate[Text[Style["1 / 2", labelStyleOpts], center], rotateLabel], Nothing]
+			If[gateLabelsQ, Text[Style["1 / 2", labelStyleOpts], center], Nothing]
 		}],
 		"\[Pi]"[perm__] :> {
 			wireStyle,
