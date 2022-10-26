@@ -483,7 +483,7 @@ QuantumOperatorProp[qo_, "PauliDecompose"] /; qo["InputDimensions"] == qo["Outpu
 	paulis = Tuples[{"I", "X", "Y", "Z"}, Length[dims]];
 	ops = Map[MapIndexed[QuantumOperator, Thread[{#, dims}]] &, paulis];
 	params = \[FormalT] @@@ paulis;
-	values = Flatten @ Total @ MapThread[#1 KroneckerProduct @@ (#["Matrix"] & /@ #2) &, {params, ops}];
+	values = Flatten @ Total @ MapThread[#1 kroneckerProduct @@ (#["Matrix"] & /@ #2) &, {params, ops}];
 	DeleteCases[AssociationThread[ops, First @ ConfirmMatch[SolveValues[Thread[values == targetValues], params], {__}]], 0]
 ]
 
