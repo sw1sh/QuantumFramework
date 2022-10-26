@@ -108,15 +108,26 @@ QuantumTensorProduct[qbn1_QuditName, qbn2_QuditName] := Which[
 
 
 QuditName /: MakeBoxes[qbn : QuditName[name_, OptionsPattern[]], format_] := With[{
-    boxes = Switch[name, $QuditZero, "\[EmptySet]", $QuditIdentity, "\[ScriptOne]", _,
-            If[ FreeQ[qbn["Name"], _QuditName],
-                TemplateBox[{RowBox[Riffle[ToBoxes[#, format] & /@ {##}, "\[InvisibleSpace]"]]}, If[qbn["DualQ"], "Bra", "Ket"]],
-                RowBox[ToBoxes[#, format] & /@ {##}]
-            ] & @@ If[qbn["Qudits"] > 1, name, {name}]]
+    boxes = Block[{BoxForm`UseTextFormattingQ = False},
+        StyleBox[
+            Switch[name, $QuditZero, "\[EmptySet]", $QuditIdentity, "\[ScriptOne]", _,
+                If[ FreeQ[qbn["Name"], _QuditName],
+                    TemplateBox[{RowBox[Riffle[ToBoxes[#, format] & /@ {##}, "\[InvisibleSpace]"]]}, If[qbn["DualQ"], "Bra", "Ket"]],
+                    RowBox[ToBoxes[#, format] & /@ {##}]
+                ] & @@ If[qbn["Qudits"] > 1, name, {name}]
+            ],
+            FontWeight -> "Plain"
+        ]
+    ]
 },
     InterpretationBox[boxes, qbn]
 ]
 
-QuditName /: MakeBoxes[qbn : QuditName[names__, OptionsPattern[]], format_] :=
-    ToBoxes[Interpretation[Row @ If[qbn["DualQ"], Map[#["Dual"] &], Identity] @ {names}, qbn], format]
+QuditName /: MakeBoxes[qbn : QuditName[names__QuditName, OptionsPattern[]], format_] := With[{
+    boxes = RowBox @ If[qbn["DualQ"], Map[ToBoxes[#["Dual"], format] &], Map[ToBoxes[#, format] &]] @ {names}
+},
+    InterpretationBox[boxes, qbn]
+]
+
+
 

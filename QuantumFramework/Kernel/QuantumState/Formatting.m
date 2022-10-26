@@ -2,7 +2,7 @@ Package["Wolfram`QuantumFramework`"]
 
 
 
-QuantumState /: MakeBoxes[qs_QuantumState, TraditionalForm] /; QuantumStateQ[qs] :=
+QuantumState /: MakeBoxes[qs_QuantumState, TraditionalForm] /; QuantumStateQ[Unevaluated[qs]] :=
     With[{formula = TooltipBox[
             StyleBox[ToBoxes[qs["Formula"], StandardForm], "ShowStringCharacters" -> False],
             ToBoxes[

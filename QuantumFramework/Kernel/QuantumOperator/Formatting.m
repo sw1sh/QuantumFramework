@@ -2,7 +2,7 @@ Package["Wolfram`QuantumFramework`"]
 
 
 
-QuantumOperator /: MakeBoxes[qo_QuantumOperator, TraditionalForm] /; QuantumOperatorQ[qo] :=
+QuantumOperator /: MakeBoxes[qo_QuantumOperator, TraditionalForm] /; QuantumOperatorQ[Unevaluated[qo]] :=
     With[{formula = TooltipBox[
             StyleBox[ToBoxes[qo["Formula"], StandardForm], "ShowStringCharacters" -> False],
             ToBoxes[
