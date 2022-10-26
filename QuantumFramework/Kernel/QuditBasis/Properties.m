@@ -153,9 +153,9 @@ QuditBasisProp[qb_, "RemoveIdentities"] := QuditBasis @ If[ qb["Dimension"] > 1,
 
 QuditBasisProp[qb_, "Split", __] /; qb["Size"] == 0 := {QuditBasis[0], QuditBasis[0]}
 
-QuditBasisProp[qb_, "Split", _Integer ? NonNegative] /; qb["Dimension"] == 1 := {QuditBasis[], QuditBasis[]}
+QuditBasisProp[qb_, "Split", _Integer] /; qb["Dimension"] == 1 := {QuditBasis[], QuditBasis[]}
 
-QuditBasisProp[qb_, "Split", n_Integer ? NonNegative] /; n <= qb["Qudits"] := Module[{
+QuditBasisProp[qb_, "Split", n_Integer] /; 0 <= n <= qb["Qudits"] := Module[{
     repr, idx
 },
     repr = KeySortBy[qb["RemoveIdentities"]["Representations"], {Last}];
@@ -165,6 +165,11 @@ QuditBasisProp[qb_, "Split", n_Integer ? NonNegative] /; n <= qb["Qudits"] := Mo
         If[n < qb["Qudits"], QuditBasis[KeyMap[MapAt[idx[#] - n &, 2]] @ KeySelect[idx[Last[#]] > n &] @ repr], QuditBasis[]]
     }
 ]
+
+QuditBasisProp[qb_, "Split", n_Integer ? Negative] := qb["Split", Mod[n, qb["Qudits"]]]
+
+QuditBasisProp[qb_, "Split", _] := qb["Split", qb["Qudits"]]
+
 
 QuditBasisProp[qb_, "TakeDimension", dim_Integer ? NonNegative] := If[dim <= 1,
     QuditBasis[dim],

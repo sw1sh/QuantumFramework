@@ -4,7 +4,7 @@ Package["Wolfram`QuantumFramework`"]
 
 $QuantumStateProperties = {
     "StateType", "State", "Basis",
-    "Amplitudes", "Weights", "Probabilities", "StateVector", "DensityMatrix",
+    "Amplitudes", "Weights", "Probabilities", "Probability", "StateVector", "DensityMatrix",
     "NormalizedState", "NormalizedAmplitudes", "NormalizedStateVector", "NormalizedDensityMatrix",
     "Entropy", "VonNeumannEntropy",
     "Purity", "Type", "PureStateQ", "MixedStateQ",
@@ -125,7 +125,10 @@ QuantumStateProp[qs_, "Weights"] := If[qs["PureStateQ"],
 QuantumStateProp[qs_, "Probabilities"] := Re @ (qs["Weights"] / Total[qs["Weights"]])
 
 QuantumStateProp[qs_, "ProbabilityAssociation" | "Probability"] := With[{proba = Chop @ SparseArray @ qs["Probabilities"]},
-    AssociationThread[qs["Names", Catenate @ proba["ExplicitPositions"]], proba["ExplicitValues"]]
+    AssociationThread[
+        qs["Names", QuotientRemainder[Catenate @ proba["ExplicitPositions"] - 1, qs["InputDimension"]] + 1],
+        proba["ExplicitValues"]
+    ]
 ]
 
 QuantumStateProp[qs_, "Distribution"] := CategoricalDistribution[qs["Names"], qs["Probabilities"]]

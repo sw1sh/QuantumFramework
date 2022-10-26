@@ -232,7 +232,7 @@ QuantumBasisProp[qb_, "Reverse"] := QuantumBasis[qb,
 QuantumBasisProp[qb_, "Split", n_Integer] :=
     QuantumBasis["Output" -> #1, "Input" -> #2, qb["Meta"]] & @@ QuantumTensorProduct[qb["Output"], qb["Input"]]["Split", n]
 
-QuantumBasisProp[qb_, "SplitDual", n_Integer] :=
+QuantumBasisProp[qb_, "SplitDual", n_Integer] /; 0 <= n <= qb["Qudits"] :=
     Which[
         qb["OutputQudits"] < n,
         QuantumBasis["Output" -> (QuantumTensorProduct[#1, #2["Dual"]] & @@ #1["Split", qb["OutputQudits"]]), "Input" -> #2, qb["Meta"]],
@@ -241,6 +241,10 @@ QuantumBasisProp[qb_, "SplitDual", n_Integer] :=
         True,
         QuantumBasis["Output" -> #1, "Input" -> #2, qb["Meta"]]
     ] & @@ QuantumTensorProduct[qb["Output"], qb["Input"]]["Split", n]
+
+QuantumBasisProp[qb_, "SplitDual", n_Integer ? Negative] := qb["SplitDual", Mod[n, qb["Qudits"]]]
+
+QuantumBasisProp[qb_, "SplitDual", _] := qb["SplitDual", qb["Qudits"]]
 
 
 QuantumBasisProp[qb_, "Dagger" | "ConjugateTranspose"] := QuantumBasis[qb,
