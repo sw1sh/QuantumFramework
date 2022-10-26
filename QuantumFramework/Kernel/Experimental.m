@@ -54,7 +54,7 @@ operatorApply[op_ ? QuantumOperatorQ, states : {_ ? QuantumStateQ ..}] := Enclos
 	ConfirmAssert[1 <= Min[outputOrder] <= Max[outputOrder] <= Length[states]];
 	Map[
 		ReplacePart[states, Thread[outputOrder -> #]] &,
-		op[QuantumTensorProduct @@ states[[inputOrder]]]["Decompose"]
+		op["State"][QuantumTensorProduct @@ states[[inputOrder]]]["Decompose"]
 	]
 ]
 
@@ -78,7 +78,7 @@ CircuitMultiwayGraph[circuit_, initStates : Except[OptionsPattern[]] : Automatic
 					Confirm @ operatorApply[op, states]
 				]
 			)],
-			{{{}, Replace[initStates, Automatic -> Table[QuantumState["0"], circuit["Arity"]]]}},
+			{{{}, Replace[initStates, Automatic -> Table[QuantumState["0"], circuit["Width"]]]}},
 			#["Sort"] & /@ circuit["Operators"],
 			opts,
 			GraphLayout -> {"LayeredDigraphEmbedding", "Orientation" -> Left}
