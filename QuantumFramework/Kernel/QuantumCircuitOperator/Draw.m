@@ -235,10 +235,6 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			MapIndexed[drawGate[{{#1}, hpos}, subLabel, opts] &, vpos],
 			drawControlWires[#, {subLabel, subLabel}] & /@ Partition[Sort[vpos], 2, 1]
 		},
-		subLabel : Except[_Subscript] /; Length[vpos] > 1 :> {
-			Map[drawGate[{{#}, hpos}, Subscript[subLabel, #], opts] &, vpos],
-			drawControlWires[#, {Subscript[subLabel, #[[1]]], Subscript[subLabel, #[[2]]]}] & /@ Partition[Sort[vpos], 2, 1]
-		},
 		SuperDagger[subLabel_] | subLabel_ :> {
 			EdgeForm[Replace[subLabel, gateBoundaryStyle]],
 			FaceForm[Replace[subLabel, gateBackgroundStyle]],
