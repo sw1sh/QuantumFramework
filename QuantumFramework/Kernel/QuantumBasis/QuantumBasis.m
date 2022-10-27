@@ -80,22 +80,23 @@ QuantumBasis[QuantumBasis[data_Association], picture : Alternatives @@ $QuantumB
 
 QuantumBasis[QuantumBasis[data_Association], rules : OptionsPattern[$QuantumBasisDefaults]] := QuantumBasis[<|data, Reverse @ {rules}|>]
 
-QuantumBasis[data_Association, args__] := Fold[QuantumBasis, QuantumBasis[data], Reverse @ {args}]
+QuantumBasis[data_Association, args__] := Enclose @ Fold[QuantumBasis, ConfirmBy[QuantumBasis[data], QuantumBasisQ], Reverse @ {args}]
 
 
 
 (* construction *)
 
-QuantumBasis[elements_Association ? (Not @* KeyExistsQ["Output"]), args___] := QuantumBasis[<|"Output" -> QuditBasis[elements]|>, args]
+QuantumBasis[elements_Association ? (Not @* KeyExistsQ["Output"]), args___] :=
+    Enclose @ QuantumBasis[<|"Output" -> ConfirmBy[QuditBasis[elements], QuditBasisQ]|>, args]
 
 QuantumBasis[output : _QuditBasis | _List, input : _QuditBasis | _List, args___] :=
-    QuantumBasis["Output" -> QuditBasis[output], "Input" -> QuditBasis[input]["Dual"], args]
+    Enclose @ QuantumBasis["Output" -> ConfirmBy[QuditBasis[output], QuditBasisQ], "Input" -> ConfirmBy[QuditBasis[input], QuditBasisQ]["Dual"], args]
 
-QuantumBasis[output : _QuditBasis, args___] := QuantumBasis["Output" -> output, args]
+QuantumBasis[output_QuditBasis ? QuditBasisQ, args___] := QuantumBasis["Output" -> output, args]
 
-QuantumBasis[arg : {(_QuditName | _Integer | _ ? propQ) ..}, args___] := QuantumBasis["Output" -> QuditBasis[arg], args]
+QuantumBasis[arg : {(_QuditName | _Integer | _ ? propQ) ..}, args___] := Enclose @ QuantumBasis["Output" -> ConfirmBy[QuditBasis[arg], QuditBasisQ], args]
 
-QuantumBasis[params_List, args___] := QuantumTensorProduct[QuantumBasis[#, args] & /@ params]
+QuantumBasis[params_List, args___] := Enclose @ QuantumTensorProduct[ConfirmBy[QuantumBasis[#, args], QuantumBasisQ] & /@ params]
 
 QuantumBasis[{}, args___] := QuantumBasis[QuditBasis[{}], args]
 
@@ -136,8 +137,8 @@ QuantumBasis[qb_ ? QuantumBasisQ, multiplicity_Integer, args___] := QuantumBasis
     args
 ]
 
-QuantumBasis[arg_, multiplicity_Integer ? Positive, args___] := With[{
-    bases = Table[QuantumBasis[arg, args], multiplicity]
+QuantumBasis[arg_, multiplicity_Integer ? Positive, args___] := Enclose @ With[{
+    bases = Table[ConfirmBy[QuantumBasis[arg, args], QuantumBasisQ], multiplicity]
 },
     If[ multiplicity > 0,
         If[ Equal @@ bases,
@@ -152,10 +153,10 @@ QuantumBasis[arg_, multiplicity_Integer ? Positive, args___] := With[{
 ]
 
 QuantumBasis[param : name_String | {name_String, ___}, args___] :=
-    QuantumBasis[<|"Output" -> QuditBasis[param], "Label" -> StringDelete[name, "Basis"]|>, args]
+    Enclose @ QuantumBasis[<|"Output" -> ConfirmBy[QuditBasis[param], QuditBasisQ], "Label" -> StringDelete[name, "Basis"]|>, args]
 
 QuantumBasis[param : _ ? nameQ | _Integer, args___] :=
-    QuantumBasis[<|"Output" -> QuditBasis[param]|>, args]
+    Enclose @ QuantumBasis[<|"Output" -> ConfirmBy[QuditBasis[param], QuditBasisQ]|>, args]
 
 QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) | OptionsPattern[]) ...] := QuantumBasis["Computational", args]
 

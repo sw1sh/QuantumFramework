@@ -66,9 +66,9 @@ QuditBasis[elements_Association] /; Not @ AllTrue[elements, NumericQ[#] || Spars
 
 (* tensor product of multiple parameter basis *)
 
-QuditBasis[{name_String, params_List}, args___] := QuantumTensorProduct @@ (QuditBasis[{name, #}, args] & /@ params)
+QuditBasis[{name_String, params_List}, args___] := Enclose[QuantumTensorProduct @@ (ConfirmBy[QuditBasis[{name, #}, args], QuditBasisQ] & /@ params)]
 
-QuditBasis[params_List] := QuantumTensorProduct @@ (QuditBasis /@ params)
+QuditBasis[params_List] := Enclose[QuantumTensorProduct @@ (ConfirmBy[QuditBasis[#], QuditBasisQ] & /@ params)]
 
 
 (* multiplicity *)
