@@ -101,6 +101,8 @@
             "Diagonal",
             "GlobalPhase",
             "PhaseShift",
+            "Shift",
+            "ShiftPhase",
             "SUM",
             "RootNOT",
             "X",

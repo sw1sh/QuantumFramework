@@ -13,6 +13,7 @@ $QuantumOperatorNames = {
     "XRotation", "YRotation", "ZRotation", "U", "Phase", "P", "RX", "RY", "RZ", "R",
     "Diagonal", "GlobalPhase",
     "PhaseShift",
+    "Shift", "ShiftPhase",
     "SUM", "RootNOT",
     "X", "Y", "Z", "PauliX", "PauliY", "PauliZ", "H", "Hadamard",
     "SWAP", "RootSWAP", "CSWAP", "Fredkin",
@@ -149,6 +150,17 @@ QuantumOperator[{"Phase" | "P" | "U1", angle_, dimension_Integer : 2}, opts___] 
     opts
 ]
 
+QuantumOperator["ShiftPhase", opts___] := QuantumOperator[{"ShiftPhase", 2}, opts]
+
+QuantumOperator[{"ShiftPhase", dimension_Integer : 2}, opts___] := QuantumOperator[
+    QuantumOperator[
+        SparseArray[{{i_, i_} -> Exp[2 Pi I (i - 1) / dimension]}, {dimension, dimension}],
+        dimension,
+        "Label" -> "ShiftPhase"
+    ],
+    opts
+]
+
 QuantumOperator["PhaseShift", opts___] := QuantumOperator[{"PhaseShift", 1}, opts]
 
 QuantumOperator[{"PhaseShift", k : _Integer | _Symbol : 1}, opts___] := QuantumOperator[
@@ -163,11 +175,23 @@ QuantumOperator[{"GlobalPhase", angle_, dimension_Integer : 2}, opts___] := Quan
 QuantumOperator[{"Diagonal", x_, dimension_Integer : 2}, opts___] := QuantumOperator[
     QuantumOperator[
         identityMatrix[dimension] x,
-        "Label" -> HoldForm[x]
+        dimension,
+        "Label" -> OverHat[x]
     ],
     opts
 ]
 
+
+QuantumOperator["Shift", opts___] := QuantumOperator[{"Shift", 1, 2}, opts]
+
+QuantumOperator[{"Shift", shift_Integer : 1, dimension_Integer : 2}, opts___] := QuantumOperator[
+    QuantumOperator[
+        SparseArray[{{i_, j_} /; Mod[i - j - shift, dimension] == 0 -> 1}, {dimension, dimension}],
+        dimension,
+        "Label" -> "Shift"[shift]
+    ],
+    opts
+]
 
 
 QuantumOperator["S", opts___] := QuantumOperator[QuantumOperator[{"Phase", Pi / 2}, "Label" -> "S"], opts]
