@@ -74,7 +74,7 @@ QuantumState[{"Register", subsystemCount_Integer, state : _Integer ? NonNegative
     QuantumState[SparseArray[{{state + 1} -> 1}, {dimension ^ subsystemCount}], Table[dimension, subsystemCount], args]
 
 QuantumState[{"Register", subsystemCount_Integer, state : _Integer ? NonNegative : 0}, args___] :=
-    QuantumState[SparseArray[{{state + 1} -> 1}, {dimension ^ subsystemCount}], args]
+    QuantumState[SparseArray[{{state + 1} -> 1}, {2 ^ subsystemCount}], args]
 
 QuantumState[{"Register", dims : {__Integer ? Positive}, state : _Integer ? NonNegative : 0}, args___] :=
     QuantumState[SparseArray[{{state + 1} -> 1}, {Times @@ dims}], dims, args]

@@ -218,6 +218,9 @@ QuantumBasisProp[qb_, "Dual", out : {_Integer...}, in : {_Integer...}] :=
 QuantumBasisProp[qb_, "Dual", qudits : {_Integer...}] :=
     qb["Dual", Sequence @@ MapAt[# - qb["OutputQudits"] &, 2] @ GatherBy[qudits, LessEqualThan[qb["OutputQudits"]]]]
 
+QuantumBasisProp[qb_, "Dual"] := qb["Dual", Range[qb["Qudits"]]]
+
+
 QuantumBasisProp[qb_, "Transpose"] := QuantumBasis[qb,
     "Input" -> qb["Output"], "Output" -> qb["Input"],
     "Label" -> Superscript[qb["Label"], "T"]

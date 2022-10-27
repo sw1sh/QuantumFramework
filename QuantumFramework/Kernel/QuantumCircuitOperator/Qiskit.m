@@ -18,7 +18,6 @@ existingGateNames = {
 labelToGate = Replace[{
     Subscript["C", x_String][__] :> "c" <> Replace[ToLowerCase[x], "not" -> "x"],
     Subscript["C", x_String[args__]][__] :> {"c" <> ToLowerCase[x], Sequence @@ N[{args}]},
-    Superscript[x_String, CircleTimes[_]] :> x,
     SuperDagger[x_String] :> ToLowerCase[x] <> "dg",
     Subscript["R", axis_String][angle_] :> {"r" <> ToLowerCase[axis], N @ angle},
     Subscript["C", Subscript["R", axis_String][angle_]][__] :> {"cr" <> ToLowerCase[axis], N @ angle},
