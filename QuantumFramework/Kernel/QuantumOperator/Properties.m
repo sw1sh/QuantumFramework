@@ -357,8 +357,23 @@ QuantumOperatorProp[qo_, "Eigensystem", opts___] /; qo["SquareQ"] := eigensystem
 
 QuantumOperatorProp[qo_, "Projectors", opts___] := projector /@ SparseArray @ Chop @ qo["Eigenvectors", opts]
 
-QuantumOperatorProp[qo_, "Transpose"] := QuantumOperator[
-    qo["State"]["Transpose"], {qo["InputOrder"], qo["OutputOrder"]}]
+QuantumOperatorProp[qo_, "Transpose"] := With[{qudits = Min[qo["OutputQudits"], qo["InputQudits"]]},
+    qo["Transpose", Thread[{Take[qo["OutputOrder"], qudits], Take[qo["InputOrder"], qudits]}]]
+]
+
+QuantumOperatorProp[qo_, "Transpose", order : {(List | Rule)[_Integer, _Integer]...}] /;
+    ContainsAll[qo["OutputOrder"], order[[All, 1]]] && ContainsAll[qo["InputOrder"], order[[All, 2]]] :=
+With[{
+    qudits = {
+        order[[All, 1]] /. qo["OutputOrderQuditMapping"],
+        (order[[All, 2]] /. qo["InputOrderQuditMapping"]) + qo["OutputQudits"]
+    }
+},
+    QuantumOperator[
+        QuantumState[#, #["Basis"]["Dual", Catenate[qudits]]] & @ qo["State"]["Permute", Cycles @ Thread[qudits]],
+        {qo["InputOrder"] /. Rule @@@ Reverse /@ order, qo["OutputOrder"] /. Rule @@@ order}
+    ]
+]
 
 
 simplifyLabel[op_QuantumOperator] := QuantumOperator[op, "Label" -> simplifyLabel[op["Label"]]]

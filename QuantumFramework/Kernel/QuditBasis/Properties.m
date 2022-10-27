@@ -117,7 +117,12 @@ QuditBasisProp[qb_, "Tensor"] := If[qb["Rank"] > 0,
 
 QuditBasisProp[qb_, "Matrix"] := ArrayReshape[qb["Tensor"], qb["MatrixDimensions"]]
 
+
 QuditBasisProp[qb_, "Dual"] := QuditBasis @ KeyMap[MapAt[#["Dual"] &, 1], qb["Representations"]]
+
+QuditBasisProp[qb_, "Dual", qudits : {_Integer...}] := With[{index = Lookup[MapIndexed[First[#2] -> #1 &, qb["Index"]], qudits, Nothing]},
+    QuditBasis @ KeyMap[If[MemberQ[index, #[[2]]], MapAt[#["Dual"] &, #, 1], #] &, qb["Representations"]]
+]
 
 QuditBasisProp[qb_, "DualQ"] := AllTrue[Keys[qb["RemoveIdentities"]["Representations"]][[All, 1]], #["DualQ"] &]
 

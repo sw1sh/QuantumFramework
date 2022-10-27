@@ -458,7 +458,7 @@ QuantumStateProp[qs_, "Trace"] := QuantumPartialTrace[qs]
 
 QuantumStateProp[qs_, "Trace", qudits : {_Integer...}] := QuantumPartialTrace[qs, qudits]
 
-QuantumStateProp[qs_, "Dual"] := QuantumState[Conjugate[qs["State"]], qs["Basis"]["Dual"]]
+QuantumStateProp[qs_, "Dual", args___] := QuantumState[Conjugate[qs["State"]], qs["Basis"]["Dual", args]]
 
 QuantumStateProp[qs_, "Conjugate"] := QuantumState[Conjugate[qs["State"]], qs["Basis"]]
 

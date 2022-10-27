@@ -212,7 +212,11 @@ QuantumBasisProp[qb_, "PureMaps" | "PureOperators"] :=
         {i, qb["OutputDimension"]}, {j, qb["InputDimension"]}
     ]
 
-QuantumBasisProp[qb_, "Dual"] := QuantumBasis[qb, "Input" -> qb["Input"]["Dual"], "Output" -> qb["Output"]["Dual"]]
+QuantumBasisProp[qb_, "Dual", out : {_Integer...}, in : {_Integer...}] :=
+    QuantumBasis[qb, "Output" -> qb["Output"]["Dual", out], "Input" -> qb["Input"]["Dual", in]]
+
+QuantumBasisProp[qb_, "Dual", qudits : {_Integer...}] :=
+    qb["Dual", Sequence @@ MapAt[# - qb["OutputQudits"] &, 2] @ GatherBy[qudits, LessEqualThan[qb["OutputQudits"]]]]
 
 QuantumBasisProp[qb_, "Transpose"] := QuantumBasis[qb,
     "Input" -> qb["Output"], "Output" -> qb["Input"],
@@ -220,9 +224,9 @@ QuantumBasisProp[qb_, "Transpose"] := QuantumBasis[qb,
 ]
 
 QuantumBasisProp[qb_, "Permute", perm_Cycles] :=
-    QuantumBasis @@ QuantumTensorProduct[qb["Output"], qb["Input"]]["Permute", perm][
+    QuantumBasis @@ Thread[{"Output", "Input"} -> QuantumTensorProduct[qb["Output"], qb["Input"]]["Permute", perm][
         "Split", toggleShift[PermutationList[perm, qb["Qudits"]], qb["OutputQudits"]]
-    ]
+    ]]
 
 QuantumBasisProp[qb_, "Reverse"] := QuantumBasis[qb,
     "Output" -> qb["Output"]["Reverse"], "Input" -> qb["Input"]["Reverse"],
