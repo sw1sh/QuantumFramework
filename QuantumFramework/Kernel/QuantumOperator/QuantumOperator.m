@@ -219,13 +219,13 @@ QuantumOperator[qo_ ? QuantumOperatorQ, order : {order1 : _ ? orderQ | Automatic
 
 QuantumOperator[qo_ ? QuantumOperatorQ, order : {_ ? orderQ | Automatic, _ ? orderQ | Automatic}] := With[{
     inputRepl =
-        Thread[Take[Join[qo["ControlOrder"], qo["TargetOrder"]], UpTo[Length[order[[2]]]]] -> Take[Replace[order[[2]], Automatic -> qo["InputOrder"]], UpTo[Length[qo["InputOrder"]]]]],
+        Thread[Take[Join[qo["ControlOrder"], qo["TargetOrder"]], UpTo[Length[order[[2]]]]] -> Take[Replace[order[[2]], Automatic -> qo["FullInputOrder"]], UpTo[Length[qo["FullInputOrder"]]]]],
     outputRepl =
-        Thread[Take[qo["OutputOrder"], UpTo[Length[order[[1]]]]] -> Take[Replace[order[[1]], Automatic -> qo["OutputOrder"]], UpTo[Length[qo["OutputOrder"]]]]]
+        Thread[Take[qo["FullOutputOrder"], UpTo[Length[order[[1]]]]] -> Take[Replace[order[[1]], Automatic -> qo["FullOutputOrder"]], UpTo[Length[qo["FullOutputOrder"]]]]]
 },
     QuantumOperator[
         qo["State"],
-        {qo["OutputOrder"] /. outputRepl, qo["InputOrder"] /. inputRepl},
+        {qo["FullOutputOrder"] /. outputRepl, qo["FullInputOrder"] /. inputRepl},
         "Label" -> Replace[qo["Label"],
             Subscript["C", name_][c1_, c0_] :> Subscript["C", name][c1 /. inputRepl, c0 /. inputRepl]
         ]
@@ -308,7 +308,10 @@ Enclose @ With[{
     },
         Which[
             Max[1, op["OutputQudits"]] < Length[op["OutputOrder"]],
-            QuantumTensorProduct[op["State"], QuantumState[{"UniformSuperposition", Length[op["OutputOrder"]] - op["OutputQudits"]}]],
+            QuantumTensorProduct[
+                QuantumOperator[op, op["FullOrder"]],
+                QuantumOperator[QuantumState[{"UniformSuperposition", Length[op["OutputOrder"]] - op["OutputQudits"]}], Complement[op["OutputOrder"], order]]
+            ]["Sort"]["State"],
             op["OutputQudits"] > Length[op["OutputOrder"]],
             With[{order = Complement[Range[op["OutputQudits"]], op["OutputOrder"]]},
                 QuantumOperator["Discard", order, op["OutputDimensions"][[order]]] @ op["State"]
