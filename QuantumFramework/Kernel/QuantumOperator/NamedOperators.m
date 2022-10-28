@@ -13,7 +13,7 @@ $QuantumOperatorNames = {
     "XRotation", "YRotation", "ZRotation", "U", "Phase", "P", "RX", "RY", "RZ", "R",
     "Diagonal", "GlobalPhase",
     "PhaseShift",
-    "Shift", "ShiftPhase",
+    "Shift", "ShiftPhase", "PhaseSpaceDisplacement", "PhasePoint", "Fano",
     "SUM", "RootNOT",
     "X", "Y", "Z", "PauliX", "PauliY", "PauliZ", "H", "Hadamard",
     "SWAP", "RootSWAP", "CSWAP", "Fredkin",
@@ -193,6 +193,12 @@ QuantumOperator[{"Shift", shift_Integer, dimension : _Integer ? Positive : 2}, o
     ],
     opts
 ]
+
+QuantumOperator[{"PhaseSpaceDisplacement", i_Integer, j_Integer, dimension : _Integer ? Positive : 2}, opts___] :=
+    Exp[- 2 Pi I i j / dimension] QuantumOperator[{"Shift", 1, dimension}] ^ i @ QuantumOperator[{"ShiftPhase", dimension}] ^ j
+
+QuantumOperator[{"PhasePoint" | "Fano", i_Integer, j_Integer, dimension : _Integer ? Positive : 2}, opts___] :=
+    Sum[Exp[- 2 Pi I (j k - i l)] QuantumOperator[{"PhaseSpaceDisplacement", k, l, dimension}, opts], {k, 0, dimension - 1}, {l, 0, dimension - 1}]
 
 
 QuantumOperator["S", opts___] := QuantumOperator[QuantumOperator[{"Phase", Pi / 2}, "Label" -> "S"], opts]
