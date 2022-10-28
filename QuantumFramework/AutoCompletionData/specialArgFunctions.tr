@@ -248,7 +248,8 @@
             "PhaseEstimation",
             "Controlled",
             "Trotterization",
-            "Magic"
+            "Magic",
+            "Multiplexer"
         }
     },
     "QuantumEntanglementMonotone" -> {
