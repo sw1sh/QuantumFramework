@@ -334,6 +334,12 @@ QuantumOperator[{"Multiplexer", qos__}, opts___] := Block[{sorted = QuantumOpera
     ]["SetFullOrder"]
 ]
 
+QuantumOperator[{"Multiplexer", qos__}, order : _ ? orderQ, opts___] := With[{
+    op = QuantumOperator[{"Multiplexer", qos}, opts]
+},
+    QuantumOperator[op, order, QuantumBasis[Join[Table @@@ FactorInteger[op["OutputDimension"]]], Sequence @@ op["Basis"]["Meta"]]] /; op["OutputDimension"] == op["InputDimension"]
+]
+
 
 QuantumOperator["Fourier", opts___] := QuantumOperator[{"Fourier", 2}, opts]
 
