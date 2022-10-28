@@ -44,6 +44,8 @@ QuditName[] := QuditName[$QuditIdentity]
 
 QuditName[{}] := QuditName[$QuditZero]
 
+QuditName[_[name_] ? nameHeadQ, opts___] := QuditName[name, opts]
+
 QuditName[name_] := QuditName[Replace[name /. (Ket | Bra)[x_] :> x, x_ ? nameHeadQ :> List @@ x], Sequence @@ Options[QuditName]]
 
 _QuditName["Properties"] := QuditName["Properties"]

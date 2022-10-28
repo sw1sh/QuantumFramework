@@ -28,7 +28,8 @@ $QuantumOperatorProperties = {
     "Dagger", "Dual",
     "TraceNorm",
     "PauliDecompose",
-    "CircuitDiagram"
+    "CircuitDiagram",
+    "OrderedFormula"
 };
 
 QuantumOperator["Properties"] := Union @ Join[$QuantumOperatorProperties, Complement[QuantumState["Properties"], {
@@ -334,6 +335,30 @@ QuantumOperatorProp[qo_, "OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ] :=
     ]
 ]
 
+QuantumOperatorProp[qo_, "OrderedFormula", OptionsPattern[]] /; qo["State"]["DegenerateStateQ"] := 0
+
+QuantumOperatorProp[qo_, "OrderedFormula", OptionsPattern["Normalize" -> False]] := With[{s = qo["State"]["Pure"]},
+    With[{
+        v = SparseArray @ s[If[TrueQ[OptionValue["Normalize"]], "NormalizedStateVector", "StateVector"]],
+        d = s["InputDimension"],
+        order = Join @@ qo["Order"]
+    },
+        Dot[
+            Map[
+                Replace[qn_QuditName :> With[{names = qn["Name"]},
+                    With[{qudits = #["Qudits"] & /@ names},
+                        QuditName @@ MapThread[
+                            QuditName[Thread[Subscript[Flatten[{#1["Name"]}], OverHat /@ #2]], "Dual" -> #1["DualQ"]] &,
+                            {names, TakeList[order, qudits]}
+                        ] /; Total[qudits] == Length[order]
+                    ] /; MatchQ[names, {__QuditName}]
+                ]],
+                With[{pos = Catenate @ v["ExplicitPositions"]}, s["Names", Thread[{Quotient[pos - 1, d] + 1, Mod[pos - 1, d] + 1}]]]
+            ],
+            v["ExplicitValues"]
+        ]
+    ]
+]
 
 QuantumOperatorProp[qo_, "Shift", n : _Integer ? NonNegative : 1] := QuantumOperator[qo, qo["Order"] /. k_Integer ? Positive :> k + n]
 
