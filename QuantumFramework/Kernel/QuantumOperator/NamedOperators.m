@@ -478,30 +478,34 @@ QuantumOperator["CSWAP" | "Fredkin", opts___] := QuantumOperator[{"Controlled", 
 
 
 
-QuantumOperator["RandomUnitary", order : (_ ? orderQ) : {1}, opts___] := QuantumOperator[{"RandomUnitary", QuantumBasis[2, Length[order], opts]}, order]
+QuantumOperator["RandomUnitary", order : (_ ? orderQ) : {1}, opts___] := Enclose @
+    QuantumOperator[{"RandomUnitary", ConfirmBy[QuantumBasis[2, Length[order], opts, "Label" -> None], QuantumBasisQ]}, order]
 
-QuantumOperator[{"RandomUnitary", qb_ ? QuantumBasisQ}, order : (_ ? orderQ) : {1}] :=
+QuantumOperator[{"RandomUnitary", qb_ ? QuantumBasisQ}, order : (_ ? orderQ) : {1}, opts___] :=
 With[{
     padOrder = Join[order, Complement[Min[order] - 1 + Range[qb["FullQudits"]], order]]
 },
     QuantumOperator[
-           RandomVariate @ CircularUnitaryMatrixDistribution[qb["Dimension"]], order, qb, "Label" -> None
+           RandomVariate @ CircularUnitaryMatrixDistribution[qb["Dimension"]], order, qb, opts
     ]
 ]
 
-QuantumOperator[{"RandomUnitary", args___}, order : (_ ? orderQ) : {1}] := QuantumOperator[{"RandomUnitary", QuantumBasis[args]}, order]
+QuantumOperator[{"RandomUnitary", args___}, order : (_ ? orderQ) : {1}, opts___] := Enclose @
+    QuantumOperator[{"RandomUnitary", ConfirmBy[QuantumBasis[args], QuantumBasisQ]}, order, opts]
 
 
-QuantumOperator["RandomHermitian", order : (_ ? orderQ) : {1}, opts___] := QuantumOperator[{"RandomHermitian", QuantumBasis[2, Length[order], opts]}, order]
+QuantumOperator["RandomHermitian", order : (_ ? orderQ) : {1}, opts___] := Enclose @
+    QuantumOperator[{"RandomHermitian", ConfirmBy[QuantumBasis[2, Length[order], opts], QuantumBasisQ]}, order]
 
-QuantumOperator[{"RandomHermitian", qb_ ? QuantumBasisQ}, order : (_ ? orderQ) : {1}] :=
+QuantumOperator[{"RandomHermitian", qb_ ? QuantumBasisQ}, order : (_ ? orderQ) : {1}, opts___] :=
 With[{
     padOrder = Join[order, Complement[Min[order] - 1 + Range[qb["FullQudits"]], order]]
 },
-    QuantumState["RandomMixed", qb]["Operator"]
+    QuantumState["RandomMixed", qb]["Operator", opts]
 ]
 
-QuantumOperator[{"RandomHermitian", args___}, order : (_ ? orderQ) : {1}] := QuantumOperator[{"RandomHermitian", QuantumBasis[args]}, order]
+QuantumOperator[{"RandomHermitian", args___}, order : (_ ? orderQ) : {1}] := Enclose @
+    QuantumOperator[{"RandomHermitian", ConfirmBy[QuantumBasis[args], QuantumBasisQ]}, order]
 
 
 QuantumOperator["Permutation", opts___] := QuantumOperator[{"Permutation", 2, Cycles[{{1, 2}}]}, opts]
@@ -512,7 +516,7 @@ QuantumOperator[{"Permutation", perm_List}, opts___] := QuantumOperator[{"Permut
 
 QuantumOperator[{"Permutation", dim : _Integer ? Positive, perm_Cycles}, opts___] := QuantumOperator[{"Permutation", Table[dim, PermutationMax[perm]], perm}, opts]
 
-QuantumOperator[{"Permutation", dims_List, perm_Cycles}, opts___] :=
+QuantumOperator[{"Permutation", dims : {_Integer ? Positive..}, perm_Cycles}, opts___] :=
     QuantumOperator[
         QuantumState[
             SparseArrayFlatten @ TensorTranspose[ArrayReshape[identityMatrix[Times @@ dims], Join[dims, dims]], perm],

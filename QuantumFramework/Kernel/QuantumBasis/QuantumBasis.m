@@ -78,9 +78,10 @@ QuantumBasis[picture : Alternatives @@ $QuantumBasisPictures] := QuantumBasis["C
 
 QuantumBasis[QuantumBasis[data_Association], picture : Alternatives @@ $QuantumBasisPictures] := QuantumBasis[<|data, "Picture" -> picture|>]
 
-QuantumBasis[QuantumBasis[data_Association], rules : OptionsPattern[$QuantumBasisDefaults]] := QuantumBasis[<|data, Reverse @ {rules}|>]
+QuantumBasis[QuantumBasis[data_Association], rules : OptionsPattern[]] :=
+    QuantumBasis[<|data, Reverse @ Select[Flatten[{rules}], MemberQ[$QuantumBasisDataKeys, First[#]] &]|>]
 
-QuantumBasis[data_Association, args__] := Enclose @ Fold[QuantumBasis, ConfirmBy[QuantumBasis[data], QuantumBasisQ], Reverse @ {args}]
+QuantumBasis[data_Association, args__] := Enclose @ Fold[ConfirmBy[QuantumBasis[##], QuantumBasisQ] &, ConfirmBy[QuantumBasis[data], QuantumBasisQ], Reverse @ {args}]
 
 
 
@@ -158,9 +159,10 @@ QuantumBasis[param : name_String | {name_String, ___}, args___] :=
 QuantumBasis[param : _ ? nameQ | _Integer, args___] :=
     Enclose @ QuantumBasis[<|"Output" -> ConfirmBy[QuditBasis[param], QuditBasisQ]|>, args]
 
-QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) | OptionsPattern[]) ...] := QuantumBasis["Computational", args]
+QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) | OptionsPattern[]) ...] :=
+    QuantumBasis["Computational", args, "Label" -> None]
 
-QuantumBasis[qb_QuantumBasis, args__] := QuantumBasis[QuantumBasis[args], qb["Meta"]]
+QuantumBasis[qb_QuantumBasis, args__] := Enclose @ QuantumBasis[ConfirmBy[QuantumBasis[args], QuantumBasisQ], qb["Meta"]]
 
 qb_QuantumBasis /; System`Private`HoldNotValidQ[qb] && quantumBasisQ[Unevaluated @ qb] := System`Private`HoldSetValid[qb]
 

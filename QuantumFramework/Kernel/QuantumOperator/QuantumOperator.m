@@ -23,7 +23,7 @@ QuantumOperatorQ[___] := False
 SetAttributes[QuantumOperator, NHoldRest]
 
 QuantumOperator[arg : _ ? QuantumStateQ, order : {_ ? orderQ, _ ? orderQ}, opts__] :=
-    QuantumOperator[QuantumState[arg, opts], order]
+    Enclose @ QuantumOperator[ConfirmBy[QuantumState[arg, opts], QuantumStateQ], order]
 
 QuantumOperator[qs_ ? QuantumStateQ] :=
     QuantumOperator[
@@ -34,8 +34,8 @@ QuantumOperator[qs_ ? QuantumStateQ] :=
 QuantumOperator[arg : _ ? QuantumStateQ, outputOrder : _ ? orderQ | Automatic, inputOrder : _ ? orderQ | Automatic, opts___] :=
     QuantumOperator[QuantumState[arg, opts], {outputOrder, inputOrder}]
 
-QuantumOperator[arg : _ ? QuantumStateQ, order : _ ? orderQ | Automatic] :=
-    QuantumOperator[arg, {order, Automatic}]
+QuantumOperator[arg : _ ? QuantumStateQ, order : _ ? orderQ | Automatic, opts___] :=
+    QuantumOperator[arg, {order, Automatic}, opts]
 
 
 QuantumOperator[qs_ ? QuantumStateQ, {Automatic, order_ ? orderQ}, opts___] :=
