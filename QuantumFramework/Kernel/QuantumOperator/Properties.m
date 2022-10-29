@@ -262,6 +262,27 @@ QuantumOperatorProp[qo_, "OrderedOutput", from_Integer, to_Integer] /; qo["Outpu
 QuantumOperatorProp[qo_, "Ordered" | "OrderedInput", from_Integer, to_Integer] /; qo["InputQudits"] == 1 :=
     qo["OrderedInput", Range[from, to], QuditBasis[qo["Input"], to - from + 1]]
 
+QuantumOperatorProp[qo_, prop : "Ordered" | "OrderedInput" | "OrderedOutput", from_Integer, to_Integer] :=
+    qo[prop, Range[from, to]]
+
+QuantumOperatorProp[qo_, "Ordered" | "OrderedInput", order_ ? orderQ] :=
+    qo["OrderedInput", order, QuantumTensorProduct[
+        order /. Join[
+            Thread[qo["FullInputOrder"] -> qo["Input"]["Decompose"]],
+            Thread[qo["FullOutputOrder"] -> qo["Output"]["Decompose"]],
+            # -> QuditBasis[2] & /@ Complement[order, Join @@ qo["FullOrder"]]
+        ]
+    ]]
+
+QuantumOperatorProp[qo_, "OrderedOutput", order_ ? orderQ] :=
+    qo["OrderedOutput", order, QuantumTensorProduct[
+            order /. Join[
+            Thread[qo["FullOutputOrder"] -> qo["Output"]["Decompose"]],
+            Thread[qo["FullInputOrder"] -> qo["Input"]["Decompose"]],
+            # -> QuditBasis[2] & /@ Complement[order, Join @@ qo["FullOrder"]]
+        ]
+    ]]
+
 QuantumOperatorProp[qo_, "Ordered", from_Integer, to_Integer, qb_ ? QuditBasisQ] := qo["Ordered", Range[from, to], qb]
 
 QuantumOperatorProp[qo_, "Ordered", order_ ? orderQ, qb_ ? QuditBasisQ] :=
@@ -269,36 +290,14 @@ QuantumOperatorProp[qo_, "Ordered", order_ ? orderQ, qb_ ? QuditBasisQ] :=
 
 QuantumOperatorProp[qo_, "Ordered" | "OrderedInput" | "OrderedOutput", {}, ___] := qo
 
-QuantumOperatorProp[qo_, "OrderedInput", order_ ? orderQ] := Enclose @ With[{
-    dimensions = qo["InputDimensions"]
-},
-    ConfirmAssert[Length[order] <= Length[dimensions], "Not enough input dimensions to order"];
-    qo["OrderedInput", order,
-        QuditBasis @ Extract[
-            dimensions,
-            List /@ (order /. qo["InputOrderQuditMapping"])
-        ]
-    ]
-]
-
-QuantumOperatorProp[qo_, "OrderedOutput", order_ ? orderQ] := Enclose @ With[{
-    dimensions = qo["OutputDimensions"]
-},
-    ConfirmAssert[Length[order] <= Length[dimensions], "Not enough output dimensions to order"];
-    qo["OrderedOutput", order,
-        QuditBasis @ Extract[
-            dimensions,
-            List /@ (order /. qo["OutputOrderQuditMapping"])
-        ]
-    ]
-]
-
 QuantumOperatorProp[qo_, "OrderedInput", qb_ ? QuditBasisQ] := qo["OrderedInput", qo["FullInputOrder"], qb]
 
-QuantumOperatorProp[qo_, "OrderedInput", order_ ? orderQ, qb_ ? QuditBasisQ] := Enclose @ With[{
-    arity = Length[order], pos = Catenate @ Position[order, Alternatives @@ qo["FullInputOrder"]]
+QuantumOperatorProp[qo_, "OrderedInput", order_ ? orderQ, qb_ ? QuditBasisQ] := Enclose @ Block[{
+    arity, pos
 },
     ConfirmAssert[ContainsAll[order, qo["FullInputOrder"]], "Given order should contain all operator order qudits"];
+    arity = Length[order];
+    pos = Catenate @ Lookup[PositionIndex[order], qo["FullInputOrder"], Nothing];
     ConfirmAssert[arity <= qb["Qudits"], "Order size should be less than or equal to number of qudits"];
     QuantumOperator[
         If[ arity > qo["InputQudits"],
@@ -316,10 +315,12 @@ QuantumOperatorProp[qo_, "OrderedInput", order_ ? orderQ, qb_ ? QuditBasisQ] := 
 
 QuantumOperatorProp[qo_, "OrderedOutput", qb_ ? QuditBasisQ] := qo["OrderedOutput", qo["FullOutputOrder"], qb]
 
-QuantumOperatorProp[qo_, "OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ] := Enclose @ With[{
-    arity = Length[order], pos = Catenate @ Position[order, Alternatives @@ qo["FullOutputOrder"]]
+QuantumOperatorProp[qo_, "OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ] := Enclose @ Block[{
+    arity, pos
 },
     ConfirmAssert[ContainsAll[order, qo["FullOutputOrder"]], "Given order should contain all operator order qudits"];
+    arity = Length[order];
+    pos = Catenate @ Lookup[PositionIndex[order], qo["FullOutputOrder"], Nothing];
     ConfirmAssert[arity <= qb["Qudits"], "Order size should be less than or equal to number of qudits"];
     QuantumOperator[
         If[ arity > qo["OutputQudits"],
