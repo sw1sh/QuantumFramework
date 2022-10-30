@@ -516,6 +516,19 @@ QuantumOperatorProp[qo_, "EigenvaluePlot", args___] /; qo["ParameterArity"] == 1
     ]
 
 
+QuantumOperatorProp[qo_, "PauliDecompose"] /; qo["InputQudits"] == qo["OutputQudits"] && MatchQ[qo["Dimensions"], {2 ..}] := With[{
+    n = qo["InputQudits"],
+    mat = {{0, 0, 1 / 2, 1 / 2}, {1 / 2, I / 2, 0, 0}, {1 / 2, - I / 2, 0, 0}, {0, 0, - 1 / 2, 1 / 2}}
+},
+    KeyMap[StringJoin @ Replace[#, {1 -> "X", 2 -> "Y", 3 -> "Z", 4 -> "I"}, {1}] &] @ Association @ Most @ ArrayRules[
+        Nest[
+            Transpose[# . mat, RotateRight[Range[n]]] &,
+            Flatten[ArrayReshape[qo["Matrix"], ConstantArray[2, 2 n]], Array[{#, # + n} &, n]],
+            n
+        ]
+    ]
+]
+
 QuantumOperatorProp[qo_, "PauliDecompose"] /; qo["InputDimensions"] == qo["OutputDimensions"] := Enclose @ Block[{
     dims = qo["InputDimensions"],
     targetValues = Flatten[qo["MatrixRepresentation"]],
