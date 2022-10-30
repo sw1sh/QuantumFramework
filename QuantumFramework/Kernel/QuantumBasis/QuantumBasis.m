@@ -65,7 +65,7 @@ quantumBasisQ[QuantumBasis[data_Association]] := Enclose[
 quantumBasisQ[___] := False
 
 
-QuantumBasisQ[qb : QuantumBasis[_Association]] := System`Private`ValidQ[qb]
+QuantumBasisQ[qb : QuantumBasis[_]] := System`Private`HoldValidQ[qb]
 
 QuantumBasisQ[___] := False
 

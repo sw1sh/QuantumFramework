@@ -13,6 +13,15 @@ $QuditBasisNames = {
     "Schwinger", "Pauli", "Dirac", "Wigner"
 }
 
+$QuditBasisCache = <||>
+$QuditBasisCaching = True
+
+QuditBasis[args___] /; $QuditBasisCaching := Lookup[
+    $QuditBasisCache, Key[{args}],
+    $QuditBasisCache[{args}] = Block[{$QuditBasisCaching = False}, QuditBasis[args]]
+]
+
+
 QuditBasis[1, args___] := QuditBasis[args]
 
 QuditBasis[dimension_Integer, args___] := QuditBasis[{"Computational", dimension}, args]

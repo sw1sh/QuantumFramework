@@ -32,7 +32,7 @@ False &
 quditBasisQ[___] := False
 
 
-QuditBasisQ[qb : QuditBasis[_]] := System`Private`ValidQ[qb]
+QuditBasisQ[qb : QuditBasis[_]] := System`Private`HoldValidQ[qb]
 
 QuditBasisQ[___] := False
 
@@ -42,7 +42,7 @@ qb_QuditBasis /; System`Private`HoldNotValidQ[qb] && quditBasisQ[Unevaluated @ q
 QuditBasis[] := QuditBasis[{QuditName[]}, {1}]
 
 QuditBasis[{}] := QuditBasis[0]
-QuditBasis[{1..}] := QuditBasis[]
+QuditBasis[{1 ..}] := QuditBasis[]
 
 QuditBasis[qb_QuditBasis] := qb
 
