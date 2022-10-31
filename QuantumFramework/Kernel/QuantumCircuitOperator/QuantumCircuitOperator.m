@@ -42,6 +42,10 @@ QuantumCircuitOperator[operators_ ? ListQ] := Enclose @ With[{ops = Confirm @* F
     QuantumCircuitOperator[<|"Elements" -> ops, "Label" -> RightComposition @@ (#["Label"] & /@ DeleteCases[ops, _ ? BarrierQ])|>]
 ]
 
+
+
+QuantumCircuitOperator[arg_, order_ ? orderQ, args___] := QuantumCircuitOperator[QuantumCircuitOperator[arg, args], order]
+
 QuantumCircuitOperator[operators_ ? ListQ, label_, ___] :=
     Enclose @ QuantumCircuitOperator[<|"Elements" -> Confirm @* FromCircuitOperatorShorthand /@ operators, "Label" -> label|>]
 
@@ -114,4 +118,20 @@ QuantumCircuitOperator /: Equal[left___, qco_QuantumCircuitOperator, right___] :
 (* part *)
 
 Part[qco_QuantumCircuitOperator, part_] ^:= QuantumCircuitOperator[qco["Elements"][[part]], qco["Label"]]
+
+
+(* reorder *)
+
+QuantumCircuitOperator[qc_ ? QuantumCircuitOperatorQ, order_ ? orderQ] := With[{
+    repl = Thread[qc["InputOrder"] -> Take[Join[order, Drop[qc["InputOrder"], UpTo[Length[order]]]], UpTo[Length[qc["InputOrder"]]]]]
+},
+    QuantumCircuitOperator[
+        Which[
+            BarrierQ[#], # /. repl,
+            QuantumCircuitOperatorQ[#], QuantumCircuitOperator[#, order],
+            True, Head[#][#, #["Order"] /. repl]
+        ] & /@ qc["Elements"],
+        qc["Label"]
+    ]
+]
 
