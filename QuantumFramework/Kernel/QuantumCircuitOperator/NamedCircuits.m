@@ -446,7 +446,7 @@ QuantumCircuitOperator[{"Trotterization", opArgs_, args___}] := Block[{
 QuantumCircuitOperator["Magic"] := QuantumCircuitOperator[{"S" -> {1, 2}, "H" -> {2}, "CNOT" -> {2, 1}}]
 
 
-QuantumCircuitOperator[{"Multiplexer", ops__}] := Block[{n = Length[{ops}], seq},
+QuantumCircuitOperator[{"Multiplexer"| "Multiplexor", ops__}] := Block[{n = Length[{ops}], seq},
     seq = Values[<|0 -> {}, 1 -> {}, PositionIndex[#]|>] & /@ Take[Tuples[{1, 0}, Ceiling[Log2[n]]], n];
     QuantumCircuitOperator[MapThread[{"C", #1, Splice[#2]} &, {{ops}, seq}]]
 ]
