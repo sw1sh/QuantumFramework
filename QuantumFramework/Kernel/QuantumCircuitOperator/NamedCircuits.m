@@ -283,8 +283,8 @@ QuantumCircuitOperator[{"PhaseOracle", formula_, vars : KeyValuePattern[_ -> _In
 
 
 
-QuantumCircuitOperator["Bell", order : _ ? orderQ : {1, 2}, opts___] /; Length[order] == 2 :=
-    QuantumCircuitOperator[{QuantumOperator["H", First[order]], QuantumOperator["CNOT", order]}, opts, "Bell"]
+QuantumCircuitOperator["Bell", opts___]  :=
+    QuantumCircuitOperator[{QuantumOperator["H"], QuantumOperator["CNOT"]}, opts, "Bell"]
 
 
 QuantumCircuitOperator["Toffoli", opts___] := QuantumCircuitOperator[{"Toffoli"}, opts]
