@@ -71,11 +71,11 @@ QuantumStateProp[qs_, "StateType"] := Which[
     "UnknownType"
 ]
 
-QuantumStateProp[qs_, "VectorQ"] := qs["StateType"] === "Vector"
+QuantumStateProp[qs_, "VectorQ" | "VectorStateQ"] := qs["StateType"] === "Vector"
 
-QuantumStateProp[qs_, "MatrixQ"] := qs["StateType"] === "Matrix"
+QuantumStateProp[qs_, "MatrixQ" | "MatrixStateQ"] := qs["StateType"] === "Matrix"
 
-QuantumStateProp[qs_, "UnknownQ"] := qs["StateType"] === "UnknownType"
+QuantumStateProp[qs_, "UnknownQ" | "UnknownStateQ"] := qs["StateType"] === "UnknownType"
 
 
 QuantumStateProp[qs_, "Kind"] := Which[
