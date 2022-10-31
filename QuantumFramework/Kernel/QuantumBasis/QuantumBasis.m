@@ -164,7 +164,10 @@ QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) |
 
 QuantumBasis[qb_QuantumBasis, args__] := Enclose @ QuantumBasis[ConfirmBy[QuantumBasis[args], QuantumBasisQ], qb["Meta"]]
 
-qb_QuantumBasis /; System`Private`HoldNotValidQ[qb] && quantumBasisQ[Unevaluated @ qb] := System`Private`HoldSetValid[qb]
+qb_QuantumBasis /; System`Private`HoldNotValidQ[qb] && quantumBasisQ[Unevaluated @ qb] := (
+    System`Private`HoldSetValid[qb];
+    System`Private`HoldSetNoEntry[qb]
+)
 
 
 (* equality *)
