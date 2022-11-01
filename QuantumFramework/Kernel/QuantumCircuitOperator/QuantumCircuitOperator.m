@@ -37,8 +37,9 @@ circuitElementOrder[op_, _] := op["InputOrder"]
 
 FromCircuitOperatorShorthand[barrier_ ? BarrierQ] := barrier
 FromCircuitOperatorShorthand[arg : name_String | {name_String, ___}] /; MemberQ[$QuantumCircuitOperatorNames, name] := QuantumCircuitOperator[arg]
+FromCircuitOperatorShorthand[arg : (name_String | {name_String, ___} /; MemberQ[$QuantumCircuitOperatorNames, name]) -> order_ ? orderQ] :=
+    QuantumCircuitOperator[FromCircuitOperatorShorthand[arg], order]
 FromCircuitOperatorShorthand[arg_] := Replace[FromOperatorShorthand[arg], ops_List :> QuantumCircuitOperator[ops]]
-FromCircuitOperatorShorthand[arg_ -> order_ ? orderQ] := QuantumCircuitOperator[FromCircuitOperatorShorthand[arg], order]
 
 
 QuantumCircuitOperator[operators_ ? ListQ] := Enclose @ With[{ops = Confirm @* FromCircuitOperatorShorthand /@ operators},
