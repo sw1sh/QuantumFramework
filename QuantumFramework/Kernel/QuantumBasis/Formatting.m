@@ -111,7 +111,7 @@ Module[{
         shape,
 
         If[ TrueQ[OptionValue["Points"]], {
-                PointSize[scale OptionValue["PointSize"]],
+                AbsolutePointSize[scale OptionValue["PointSize"]],
                 Point @ outputXY,
                 Point @ inputXY
             }
