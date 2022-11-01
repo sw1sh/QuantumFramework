@@ -5,6 +5,7 @@ PackageExport["QuantumCircuitOperator"]
 PackageScope["QuantumCircuitOperatorQ"]
 PackageScope["BarrierQ"]
 PackageScope["circuitElementOrder"]
+PackageScope["FromCircuitOperatorShorthand"]
 
 
 

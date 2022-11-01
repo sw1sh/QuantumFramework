@@ -405,6 +405,9 @@ QuantumCircuitOperator[{
 QuantumCircuitOperator[{"C" | "Controlled", qc_ ? QuantumCircuitOperatorQ, control1_, control0_ : {}}] :=
     QuantumCircuitOperator[If[QuantumOperatorQ[#], QuantumOperator[{"Controlled", #, control1, control0}], #] & /@ qc["Elements"], Subscript["C", qc["Label"]][control1, control0]]
 
+QuantumCircuitOperator[{"C" | "Controlled", qc_, control1_, control0_ : {}}] :=
+    QuantumCircuitOperator[{"C", FromCircuitOperatorShorthand[qc], control1, control0}]
+
 
 QuantumCircuitOperator[pauliString_String] := With[{chars = Characters[pauliString]},
     QuantumCircuitOperator[MapIndexed[QuantumOperator, chars]] /; ContainsOnly[chars, {"I", "X", "Y", "Z"}]
