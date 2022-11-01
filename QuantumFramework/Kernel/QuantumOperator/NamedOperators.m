@@ -291,7 +291,10 @@ QuantumOperator[{"C0" | "Controlled0", qo_ ? QuantumOperatorQ, control0 : _ ? or
 
 
 QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ /; qo["ControlOrder"] =!= {}, control1 : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}}, opts___] :=
-    QuantumOperator[{"Controlled", qo["TargetOperator"], Join[qo["ControlOrder1"], control1], Join[qo["ControlOrder0"], control0]}, opts]
+    QuantumOperator[{"Controlled", qo["TargetOperator"],
+        Complement[Union[qo["ControlOrder1"], control1], control0],
+        Complement[Union[qo["ControlOrder0"], control0], control1]
+    }, opts]
 
 QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}}, opts___] := Enclose @ With[{
     controls1 = Length[control1],
