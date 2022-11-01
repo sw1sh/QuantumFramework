@@ -70,11 +70,13 @@ QuantumState[{"BasisState", basisElement_List}, dimension : (_Integer ? Positive
 ]
 
 
-QuantumState[{"Register", subsystemCount_Integer, state : _Integer ? NonNegative : 0}, dimension : (_Integer ? Positive), args___] :=
-    QuantumState[SparseArray[{{state + 1} -> 1}, {dimension ^ subsystemCount}], Table[dimension, subsystemCount], args]
+QuantumState[{"Register", subsystemCount : _Integer ? Positive, state : _Integer ? NonNegative : 0}, dimension : (_Integer ? Positive), args___] :=
+    QuantumState[SparseArray[{{state + 1} -> 1}, {dimension ^ subsystemCount}], Table[dimension, Max[subsystemCount, 1]], args]
 
-QuantumState[{"Register", subsystemCount_Integer, state : _Integer ? NonNegative : 0}, args___] :=
+QuantumState[{"Register", subsystemCount: _Integer ? Positive, state : _Integer ? NonNegative : 0}, args___] :=
     QuantumState[SparseArray[{{state + 1} -> 1}, {2 ^ subsystemCount}], args]
+
+QuantumState[{"Register", 0, ___}, args___] := QuantumState[1, 1, args]
 
 QuantumState[{"Register", dims : {__Integer ? Positive}, state : _Integer ? NonNegative : 0}, args___] :=
     QuantumState[SparseArray[{{state + 1} -> 1}, {Times @@ dims}], dims, args]
