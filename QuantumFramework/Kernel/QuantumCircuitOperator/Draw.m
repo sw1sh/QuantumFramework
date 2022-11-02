@@ -93,17 +93,20 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			index = First /@ PositionIndex[target];
 			{
 				Replace[subLabel, {
-					subSubLabels_CircleTimes /; Length[subSubLabels] == Length[target] :>
+					subSubLabels_CircleTimes :> With[{
+						labels = Catenate @ Replace[List @@ subSubLabels, {Superscript[subSubLabel_, CircleTimes[n_Integer]] :> Table[subSubLabel, n], subSubLabel_ :> {subSubLabel}}, {1}]
+					},
 						{
-							With[{boundaryStyles = Replace[subSubLabels, gateBoundaryStyle, {1}]},
+							With[{boundaryStyles = Replace[labels, gateBoundaryStyle, {1}]},
 								If[	Equal @@ boundaryStyles,
 									backgroundStyle = Replace[First[subSubLabels], gateBackgroundStyle];
 									boundaryStyle = First[boundaryStyles];
 								]
 							];
-							MapIndexed[drawGate[{{#1}, hpos}, subSubLabels[[First[#2]]], opts] &, target],
-							drawControlWires[#, {If[MemberQ[target, #[[1]]], subSubLabels[[index[#[[1]]]]], "1"], If[MemberQ[target, #[[2]]], subSubLabels[[index[#[[2]]]]], "1"]}] & /@ Partition[Sort[vpos], 2, 1]
-						},
+							Map[drawGate[{{#}, hpos}, labels[[index[#]]], opts] &, target],
+							drawControlWires[#, {If[MemberQ[target, #[[1]]], labels[[index[#[[1]]]]], "1"], If[MemberQ[target, #[[2]]], labels[[index[#[[2]]]]], "1"]}] & /@ Partition[Sort[vpos], 2, 1]
+						} /; Length[labels] == Length[target]
+					],
 					Superscript[subSubLabel_, CircleTimes[n_Integer]] /; n == Length[target] :>
 						{
 							backgroundStyle = Replace[subSubLabel, gateBackgroundStyle];
@@ -114,7 +117,8 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 					_ :> {
 						backgroundStyle = Replace[subLabel, gateBackgroundStyle];
 						boundaryStyle = Replace[subLabel, gateBoundaryStyle];
-						If[	Length[target] == 1 || MatchQ[subLabel, "SWAP"],
+						Which[
+							Length[target] == 1,
 							{
 								drawGate[{target, hpos}, subLabel, opts],
 								drawControlWires[#, {
@@ -122,6 +126,15 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 									If[MemberQ[target, #[[2]]], subLabel, "1"]
 								}] & /@ Partition[Sort[vpos], 2, 1]
 							},
+							MatchQ[subLabel, "SWAP"],
+							{
+								Map[drawGate[{{#}, hpos}, "*", opts] &, target],
+								drawControlWires[#, {
+									If[MemberQ[target, #[[1]]], subLabel, "1"],
+									If[MemberQ[target, #[[2]]], subLabel, "1"]
+								}] & /@ Partition[Sort[vpos], 2, 1]
+							},
+							True,
 							{
 								Map[drawGate[{{#}, hpos}, Subscript[subLabel, #], opts] &, target],
 								drawControlWires[#, {
@@ -160,7 +173,7 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			Map[drawGate[{{#}, hpos}, Subscript["R", Subscript[subLabel, #]][angle], opts] &, vpos],
 			drawControlWires[#, {Subscript["R", Subscript[subLabel, #[[1]]]][angle], Subscript["R", Subscript[subLabel, #[[2]]]][angle]}] & /@ Partition[Sort[vpos], 2, 1]
 		},
-		"1" -> {
+		"1" :> {
 			wireStyle,
 			Line[{center - {size / 2, 0}, center - {size / 8, 0}}],
 			Line[{center + {size / 8, 0}, center + {size / 2, 0}}],
@@ -168,14 +181,14 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			FaceForm[Replace["1", gateBackgroundStyle]],
 			Disk[center, size / 8]
 		},
-		"0" -> {
+		"0" :> {
 			wireStyle,
 			Line[{center - {size / 2, 0}, center - {size / 8, 0}}],
 			Line[{center + {size / 8, 0}, center + {size / 2, 0}}],
 			EdgeForm[Replace["0", gateBoundaryStyle]],
 			FaceForm[Transparent],
 			Disk[center, size / 8]},
-		"NOT" -> {
+		"NOT" :> {
 			wireStyle,
 			Line[{center - {size / 2, 0}, center - {size / 5, 0}}],
 			Line[{center + {size / 5, 0}, center + {size / 2, 0}}],
@@ -185,18 +198,20 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			Replace["NOT", gateBackgroundStyle], Opacity[1],
 			Line[{center + size / 5 {-1, 0}, center + size / 5 {1, 0}}], Line[{center + size / 5 {0, -1}, center + size / 5 {0, 1}}]
 		},
-		"SWAP" -> With[{bottom = {center[[1]], -vpos[[1]] vGapSize}, top = {center[[1]], -vpos[[-1]] vGapSize}}, {
+		"SWAP" :> With[{bottom = {center[[1]], -vpos[[1]] vGapSize}, top = {center[[1]], -vpos[[-1]] vGapSize}}, {
 			wireStyle,
-		    Line[{bottom - {size / 2, 0}, bottom + {size / 2, 0}}],
-		    Line[{top - {size / 2, 0}, top + {size / 2, 0}}],
 		    Line[{bottom, top}],
 			$DefaultGray, Opacity[0.8], Thickness[Medium],
-		    Line[{bottom + size / 5 {-1, -1} / Sqrt[2], bottom + size / 5 {1, 1} / Sqrt[2]}],
-		    Line[{bottom + size / 5 {1, -1} / Sqrt[2], bottom + size / 5 {-1, 1} / Sqrt[2]}],
-			Line[{top + size / 5 {-1, -1} / Sqrt[2], top + size / 5 {1, 1} / Sqrt[2]}],
-		    Line[{top + size / 5 {1, -1} / Sqrt[2], top + size / 5 {-1, 1} / Sqrt[2]}]
+			MapThread[drawGate[{{#1}, {#2}}, "*", opts] &, {vpos, hpos}]
 		}],
-		"RootSWAP" -> With[{bottom = {center[[1]], -vpos[[1]] vGapSize}, top = {center[[1]], -vpos[[-1]] vGapSize}}, {
+		"*" :> {
+			wireStyle,
+		    Line[{center - {size / 2, 0}, center + {size / 2, 0}}],
+			$DefaultGray, Opacity[0.8], Thickness[Medium],
+		    Line[{center + size / 5 {-1, -1} / Sqrt[2], center + size / 5 {1, 1} / Sqrt[2]}],
+		    Line[{center + size / 5 {1, -1} / Sqrt[2], center + size / 5 {-1, 1} / Sqrt[2]}]
+		},
+		"RootSWAP" :> With[{bottom = {center[[1]], -vpos[[1]] vGapSize}, top = {center[[1]], -vpos[[-1]] vGapSize}}, {
 			wireStyle,
 		    Line[{bottom - {size / 2, 0}, bottom + {size / 2, 0}}],
 		    Line[{top - {size / 2, 0}, top + {size / 2, 0}}],
