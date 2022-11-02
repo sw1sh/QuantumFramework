@@ -37,6 +37,8 @@ circuitElementOrder[op_, _] := op["InputOrder"]
 (* constructors *)
 
 FromCircuitOperatorShorthand[barrier_ ? BarrierQ] := barrier
+FromCircuitOperatorShorthand[qc_ ? QuantumCircuitOperatorQ] := qc
+FromCircuitOperatorShorthand[qc_ ? QuantumCircuitOperatorQ -> order_ ? orderQ] := QuantumCircuitOperator[qc, order]
 FromCircuitOperatorShorthand[arg : name_String | {name_String, ___}] /; MemberQ[$QuantumCircuitOperatorNames, name] := QuantumCircuitOperator[arg]
 FromCircuitOperatorShorthand[arg : (name_String | {name_String, ___} /; MemberQ[$QuantumCircuitOperatorNames, name]) -> order_ ? orderQ] :=
     QuantumCircuitOperator[FromCircuitOperatorShorthand[arg], order]
