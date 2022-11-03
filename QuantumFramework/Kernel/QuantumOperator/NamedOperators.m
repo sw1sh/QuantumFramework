@@ -253,12 +253,12 @@ QuantumOperator[{"C" | "Controlled", qo : Except[_QuantumOperator], control1 : _
     QuantumOperator[{"Controlled", QuantumOperator[qo, opts], control1, control0}]
 
 QuantumOperator[{name : "C" | "Controlled", params : PatternSequence[___, Except[_ ? orderQ | {}]]}, order_ ? orderQ, opts___] :=
-    With[{op = QuantumOperator[params, Replace[Rest @ order, {} -> {First @ order + 1}]]},
+    Enclose @ With[{op = ConfirmBy[QuantumOperator[params, Replace[Rest @ order, {} -> {First @ order + 1}]], QuantumOperatorQ]},
         QuantumOperator[{name, op, {First @ order}}, opts]
     ]
 
 QuantumOperator[{"C0" | "Controlled0", params : PatternSequence[___, Except[_ ? orderQ | {}]]}, order : _ ? orderQ, opts___] :=
-    With[{op = QuantumOperator[params, Replace[Rest @ order, {} -> {First @ order + 1}]]},
+    Enclose @ With[{op = ConfirmBy[QuantumOperator[params, Replace[Rest @ order, {} -> {First @ order + 1}]], QuantumOperatorQ]},
         QuantumOperator[{"Controlled", op, {}, {First @ order}}, opts]
     ]
 
@@ -274,11 +274,17 @@ QuantumOperator[{"C0" | "Controlled0", params : Shortest @ PatternSequence[Excep
         QuantumOperator[{"C", op, {}, control0}, opts]
     ]
 
+QuantumOperator[{name : "C" | "Controlled" | "C0" | "Controlled0", qo_ ? QuantumOperatorQ, Automatic, control0 : _ ? orderQ : {}}, opts___] := With[{
+    control = {First[Complement[Range[Max[qo["InputOrder"]] + 1], qo["InputOrder"]]]}
+},
+    QuantumOperator[{name, qo, control, control0}, opts]
+]
+
 QuantumOperator[{name : "C" | "Controlled", params : Shortest @ PatternSequence[Except[_QuantumOperator], ___], control : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}}, target_ ? orderQ, opts___] :=
-    QuantumOperator[{name, QuantumOperator[params, target], control, control0}, opts]
+    Enclose @ QuantumOperator[{name, ConfirmBy[QuantumOperator[params, target], QuantumOperatorQ], control, control0}, opts]
 
 QuantumOperator[{name : "C0" | "Controlled0", params : Shortest @ PatternSequence[Except[_QuantumOperator], ___], control0 : _ ? orderQ | {} : {}}, target_ ? orderQ, opts___] :=
-    QuantumOperator[{name, QuantumOperator[params, target], control0}, opts]
+    Enclose @ QuantumOperator[{name, ConfirmBy[QuantumOperator[params, target], QuantumOperartorQ], control0}, opts]
 
 
 QuantumOperator[{name : "C" | "Controlled" | "Controlled0", qo_ ? QuantumOperatorQ}, opts___] :=
@@ -311,12 +317,16 @@ QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orde
         With[{order = Join[
             control0,
             control1,
-            If[ IntersectingQ[control, qo["FullInputOrder"]],
-                With[{order = Take[Complement[Range @@ MinMax[Join[control, qo["FullInputOrder"]]], control], UpTo[qo["InputQudits"]]]},
-                    Join[order, Max[qo["FullInputOrder"], control] + Range[qo["Arity"] - Length[order]]]
+            qo["InputOrder"] /. NestWhile[
+                Apply[
+                    Block[{lhs = Intersection[#1, #2], rhs},
+                        rhs = Take[DeleteCases[Range[Min[#1, #2], Max[#1, #2] + Length[lhs]], Alternatives @@ #2], UpTo[Length[lhs]]];
+                        {DeleteCases[#1, Alternatives @@ lhs], rhs, Join[#3, Thread[lhs -> rhs]]}
+                    ] &
                 ],
-                qo["InputOrder"]
-            ]
+                {qo["InputOrder"], control, {}},
+                Apply[IntersectingQ[#1, #2] &]
+            ][[3]]
         ]},
             {order, order}
         ],
