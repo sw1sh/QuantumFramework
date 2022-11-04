@@ -436,11 +436,15 @@ QuantumCircuitOperator[{"Trotterization", opArgs_, args___}] := Block[{
     ops = QuantumCircuitOperator[opArgs]["Flatten"]["Operators"],
     trotterization
 },
-    trotterization = Trotterization[ops, args];
+    trotterization = Map[
+        QuantumOperator[Exp[- I #], "Label" -> Replace[#["Label"], Times[c_ ? NumericQ, l_] :> Subscript["R", l][2 c]]] &,
+        Trotterization[ops, args],
+        {2}
+    ];
     QuantumCircuitOperator[
         If[ Length[trotterization] > 1,
-            MapIndexed[QuantumCircuitOperator[Exp[- I #1], First[#2]] &, trotterization],
-            Exp[- I Catenate[trotterization]]
+            MapIndexed[QuantumCircuitOperator[#1, First[#2]] &, trotterization],
+            Catenate[trotterization]
         ],
         "Trotterization"
     ]
