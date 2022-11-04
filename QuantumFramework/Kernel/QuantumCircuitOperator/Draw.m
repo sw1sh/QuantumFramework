@@ -88,6 +88,7 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 		_ /; gateShapeFunction =!= None -> gateShapeFunction[center, label, hGapSize hpos, - vGapSize vpos],
 		Subscript["C", subLabel_][control1_, control0_] :> Block[{
 			target = DeleteCases[vpos, Alternatives @@ Join[control1, control0]],
+			control = Join[control1, control0],
 			index
 		},
 			index = First /@ PositionIndex[target];
@@ -241,12 +242,20 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 		subLabels_CircleTimes :> With[{
 			labels = Catenate @ Replace[List @@ subLabels, {Superscript[subSubLabel_, CircleTimes[n_Integer]] :> Table[subSubLabel, n], subSubLabel_ :> {subSubLabel}}, {1}]
 		},
-			With[{index = First /@ PositionIndex[vpos]}, {
-				Map[drawGate[{{#1}, hpos}, labels[[index[#1]]], opts] &, vpos],
-				drawControlWires[#, {labels[[index[#[[1]]]]], labels[[index[#[[1]]]]]}] & /@ Partition[Sort[vpos], 2, 1]
-			}] /; Length[labels] == Length[vpos]
+			{
+				With[{boundaryStyles = Replace[labels, gateBoundaryStyle, {1}]},
+					If[	Equal @@ boundaryStyles,
+						boundaryStyle = First[boundaryStyles];
+					]
+				];
+				With[{index = First /@ PositionIndex[vpos]}, {
+					Map[drawGate[{{#1}, hpos}, labels[[index[#1]]], opts] &, vpos],
+					drawControlWires[#, {labels[[index[#[[1]]]]], labels[[index[#[[1]]]]]}] & /@ Partition[Sort[vpos], 2, 1]
+				}]
+			} /; Length[labels] == Length[vpos]
 		],
 		Superscript[subLabel_, CircleTimes[n_Integer]] /; n == Length[vpos] :> {
+			boundaryStyle = Replace[subLabel, gateBoundaryStyle];
 			MapIndexed[drawGate[{{#1}, hpos}, subLabel, opts] &, vpos],
 			drawControlWires[#, {subLabel, subLabel}] & /@ Partition[Sort[vpos], 2, 1]
 		},
