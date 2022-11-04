@@ -4,7 +4,7 @@ Package["Wolfram`QuantumFramework`"]
 
 $QuantumCircuitOperatorProperties = {
     "Operators", "Diagram", "Gates", "Orders", "CircuitOperator", "QiskitCircuit", "Label",
-    "Depth", "Arity", "Width", "TensorNetwork"
+    "Depth", "Arity", "Width", "TensorNetwork", "Topology"
 };
 
 
@@ -168,6 +168,33 @@ QuantumCircuitOperatorProp[qco_, "TensorNetwork", opts : OptionsPattern[QuantumT
 QuantumCircuitOperatorProp[qco_, "QASM"] :=
     Enclose[StringTemplate["OPENQASM 3.0;\nqubit[``] q;\nbit[``] c;\n"][qco["Width"], qco["Targets"]] <>
         StringRiffle[ConfirmBy[#["QASM"], StringQ] & /@ qco["Flatten"]["Operators"], "\n"]]
+
+
+Options[CircuitTopology] = Join[{PlotLegends -> None}, Options[Graph]]
+
+CircuitTopology[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{g, labels, colorMap},
+	g = Graph[
+		DeleteDuplicates @ Catenate @ MapThread[{label, order} |->
+			UndirectedEdge @@ Append[Sort[#], label] & /@ If[Length[order] > 1, Subsets, Tuples][order, {2}],
+			{#["Label"] & /@ circuit["Operators"], circuit["InputOrders"]}
+		],
+		VertexLabels -> Automatic,
+		GraphLayout -> "SpringElectricalEmbedding"
+	];
+	labels = DeleteDuplicates[EdgeTags[g]];
+	colorMap = Association @ MapIndexed[#1 -> ColorData[93][#2[[1]]] &, labels];
+	g = Graph[g,
+        FilterRules[{opts}, Options[Graph]],
+        EdgeStyle -> UndirectedEdge[_, _, label_] :> colorMap[label]
+    ];
+    If[ MatchQ[OptionValue[PlotLegends], Automatic | True],
+        Legended[g, SwatchLegend[Values[colorMap], Keys[colorMap]]],
+        g
+    ]
+]
+
+QuantumCircuitOperatorProp[qco_, "Topology", opts___] := CircuitTopology[qco, opts]
+
 
 (* operator properties *)
 
