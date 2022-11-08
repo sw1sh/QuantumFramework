@@ -437,7 +437,7 @@ QuantumCircuitOperator[{"Trotterization", opArgs_, args___}] := Block[{
     trotterization
 },
     trotterization = Map[
-        QuantumOperator[Exp[- I #], "Label" -> Replace[#["Label"], Times[c_ ? NumericQ, l_] :> Subscript["R", l][2 c]]] &,
+        QuantumOperator[Exp[- I #], "Label" -> Replace[#["Label"], Times[Longest[c__], l_] :> Subscript["R", l][2 c]]] &,
         Trotterization[ops, args],
         {2}
     ];
