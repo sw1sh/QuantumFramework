@@ -212,26 +212,35 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
 
 
 TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
-    state = If[
-        qs["PureStateQ"],
-        QuantumState[SparseArrayFlatten[#], TensorDimensions[#], "Label" -> qs["Label"] /* qco["Label"]] & @
-            ContractTensorNetwork @ InitializeTensorNetwork[
-                qco["TensorNetwork"],
-                qs["Computational"]["Tensor"],
-                Join[Superscript[0, #] & /@ qco["InputOrder"], Subscript[0, #] & /@ (Range[qs["InputQudits"]])]
-            ],
-        QuantumState[
-            QuantumTensorProduct[qco, qco["Conjugate"]][qs["Bend"]]["State"]["PermuteOutput",
-                With[{a = qco["Eigenqudits"] + qco["TraceQudits"], b = qs["Qudits"]},
-                    FindPermutation[
-                        Join[Array[0, a], Array[1, a], Array[2, b], Array[3, b]],
-                        Join[Array[0, a], Array[2, b], Array[1, a], Array[3, b]]
-                    ]
-                ]]["Unbend"],
-            "Label" -> qs["Label"] /* qco["Label"]
-        ]
-    ]
+    circuit, state
 },
+    If[ qs["MatrixQ"],
+        (* bend state and double a circuit *)
+        circuit = QuantumTensorProduct[qco, qco["Conjugate"]];
+        state = qs["Bend"],
+
+        circuit = qco;
+        state = qs
+    ];
+    (* contract tensor network and make a state *)
+    state = QuantumState[SparseArrayFlatten[#], TensorDimensions[#], "Label" -> qs["Label"] /* qco["Label"]] & @
+        ContractTensorNetwork @ InitializeTensorNetwork[
+            circuit["TensorNetwork"],
+            state["Computational"]["Tensor"],
+            Join[Superscript[0, #] & /@ circuit["InputOrder"], Subscript[0, #] & /@ (Range[state["InputQudits"]])]
+        ];
+    If[ qs["MatrixQ"],
+        state = QuantumState[
+                state["PermuteOutput",
+                    With[{a = qco["Eigenqudits"] + qco["TraceQudits"], b = qs["Qudits"]},
+                        FindPermutation[
+                            Join[Array[0, a], Array[1, a], Array[2, b], Array[3, b]],
+                            Join[Array[0, a], Array[2, b], Array[1, a], Array[3, b]]
+                        ]
+                    ]]["Unbend"],
+                "Label" -> qs["Label"] /* qco["Label"]
+            ]
+    ];
     If[ qco["Channels"] > 0,
         state = QuantumPartialTrace[state,
             First @ Fold[

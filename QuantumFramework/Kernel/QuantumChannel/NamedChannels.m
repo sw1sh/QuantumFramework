@@ -19,12 +19,19 @@ quantumChannel[qo_ ? QuantumOperatorQ] := QuantumChannel @
     ]
 
 quantumChannel[ops_List, order_ ? orderQ, basisArgs___] := With[{
-    qb = QuantumTensorProduct[
-        QuantumBasis[Length[order] ^ Length[ops]],
-        QuantumBasis[QuantumBasis[QuantumBasis[basisArgs]["Output"], QuantumBasis[basisArgs]["Output"]], Length[order]]
-    ]
+    basis = QuantumBasis[basisArgs]
 },
-    quantumChannel[QuantumOperator[QuantumState[Flatten[kroneckerProduct @@@ Tuples[ops, Length[order]]], qb], order]]
+    quantumChannel @ QuantumOperator[
+        QuantumState[
+            Flatten[kroneckerProduct @@@ Catenate @ Table[ops, Length[order]]],
+            QuantumTensorProduct[
+                QuantumBasis[Length[order] * Length[ops]],
+                QuantumBasis[QuantumBasis[basis["Output"], basis["Output"]], Length[order]]
+            ]
+        ],
+        {Automatic, order},
+        "Label" -> basis["Label"]
+    ]
 ]
 
 quantumChannel[args___] := quantumChannel[QuantumOperator[args]]

@@ -37,7 +37,7 @@ InitializeQuEST[] := (
 
 FromQuESTLink[name_Symbol] /; Context[name] == "QuEST`Gate`" := ToUpperCase @ SymbolName[name]
 
-FromQuESTLink[Subscript[Depol, order__][args___]] := QuantumChannel[{"Depol", args}, {order} + 1]
+FromQuESTLink[Subscript[Depol, order__][args___]] := QuantumChannel[{"Depolarizing", args}, {order} + 1]
 
 FromQuESTLink[Subscript[C, order__Integer][op_]] := QuantumOperator[{"C", FromQuESTLink[op], {order} + 1}]
 
@@ -58,6 +58,7 @@ ToQuESTLink[args___] /; ! QuESTLinkQ[] := Enclose[Confirm @ ImportQuEST[]; ToQuE
 ToQuESTLink[qo_QuantumOperator] /; MatchQ[qo["Dimensions"], {2 ..}] := With[{order = qo["TargetOrder"] - 1},
 	Enclose[Confirm @ ToQuESTLink[qo["Label"], order], Subscript[QuEST`Gate`U, Sequence @@ order][qo["Reverse"]["MatrixRepresentation"]] &]
 ]
+ToQuESTLink[qc_QuantumChannel] := ToQuESTLink[qc["Label"], qc["InputOrder"] - 1]
 ToQuESTLink[qco_QuantumCircuitOperator] := Enclose @ Flatten[Confirm @* ToQuESTLink /@ qco["Operators"]]
 
 ToQuESTLink[label_, order_List] := Replace[label, {
@@ -76,6 +77,7 @@ ToQuESTLink[label_, order_List] := Replace[label, {
 	Subscript["R", subLabel_][angle_] :> QuEST`Gate`R[angle, ToQuESTLink[subLabel, order]],
 	"P"[phase_] :> Subscript[QuEST`Gate`Ph, Sequence @@ order][phase],
 	"PhaseShift"[shift_] :> Subscript[QuEST`Gate`Ph, Sequence @@ order][2 Pi / 2 ^ shift],
+	"\[CapitalDelta]"[p_] :> Subscript[QuEST`Gate`Depol, Sequence @@ order][p],
 	HoldForm[phase_] :> Subscript[QuEST`Gate`G, Sequence @@ order][phase],
 	_ :> Missing["NotImplemented", label]
  }
@@ -87,11 +89,19 @@ ToQuESTLink[arg_] :=  Failure["Unknown", <|"MessageTemplate" -> "Unknown QuEST o
 QuESTCompile[qco_QuantumCircuitOperator] /; InitializeQuEST[] :=
 	Enclose @ QuantumOperator[QuEST`CalcCircuitMatrix[Confirm @ ToQuESTLink[qco]]]["Reverse"]
 
-QuESTApply[qco_QuantumCircuitOperator, qs_QuantumState] /; InitializeQuEST[] := Enclose[
+QuESTApply[qco_QuantumCircuitOperator, qs_QuantumState] /; InitializeQuEST[] && qs["VectorQ"] := Enclose[
 	Block[{s = QuEST`CreateQureg[qs["OutputQudits"]], c = Confirm @ ToQuESTLink[qco]},
 		QuEST`InitStateFromAmps[s, Sequence @@ Transpose[ReIm @ qs["Reverse"]["StateVector"]]];
 		QuEST`ApplyCircuit[s, c];
 		QuantumState[Flatten[QuEST`GetQuregMatrix[s]]]["Reverse"]
+	]
+]
+
+QuESTApply[qco_QuantumCircuitOperator, qs_QuantumState] /; InitializeQuEST[] && qs["MatrixQ"] := Enclose[
+	Block[{s = QuEST`CreateDensityQureg[qs["OutputQudits"]], c = Confirm @ ToQuESTLink[qco]},
+		QuEST`SetQuregMatrix[s, Normal @ qs["Reverse"]["DensityMatrix"]];
+		QuEST`ApplyCircuit[QuEST`InitZeroState[s], c];
+		QuantumState[QuEST`GetQuregMatrix[s]]["Reverse"]
 	]
 ]
 
