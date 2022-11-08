@@ -483,7 +483,7 @@ Options[drawOutline] = Join[{"Size" -> .75, "VerticalGapSize" -> 1, "HorizontalG
 	Options[Rectangle]
 ];
 drawOutline[width_, height_, pad_, opts : OptionsPattern[]] := With[{size = OptionValue["Size"], vGapSize = OptionValue["VerticalGapSize"], hGapSize = OptionValue["HorizontalGapSize"]},
-	{OptionValue["OutlineStyle"], Rectangle[{hGapSize - 3 size / 4, - pad - vGapSize / 2}, {hGapSize (height - 1) + 3 size / 4, - pad - vGapSize width - vGapSize / 2}, FilterRules[{opts}, Options[Rectangle]]]}
+	{OptionValue["OutlineStyle"], Rectangle[{hGapSize - 5 size / 8, - pad - vGapSize / 2}, {hGapSize (height - 1) + 5 size / 8, - pad - vGapSize width - vGapSize / 2}, FilterRules[{opts}, Options[Rectangle]]]}
 ]
 
 Options[drawLabel] = Join[{"VerticalGapSize" -> 1, "HorizontalGapSize" -> 1}, Options[Style]];
