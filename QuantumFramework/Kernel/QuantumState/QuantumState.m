@@ -109,34 +109,28 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; ! newBasis["Sort
 
 QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Basis"] == newBasis := QuantumState[qs["State"], newBasis]
 
-QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Dimension"] == newBasis["Dimension"] := With[{
-    outDim = Max[qs["OutputElementDimension"], newBasis["OutputElementDimension"]],
-    inDim = Max[qs["InputElementDimension"], newBasis["InputElementDimension"]]
-},
+QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Dimension"] == newBasis["Dimension"] :=
     Switch[
         qs["StateType"],
         "Vector",
         QuantumState[
             SparseArrayFlatten @ Dot[
-                SparsePseudoInverse[PadRight[ newBasis["OutputMatrix"], {outDim, Automatic}]],
-                PadRight[qs["OutputMatrix"], {outDim, Automatic}] . qs["StateMatrix"] . SparsePseudoInverse[PadRight[qs["InputMatrix"], {inDim, Automatic}]],
-                PadRight[newBasis["InputMatrix"], {inDim, Automatic}]
+                SparsePseudoInverse[newBasis["Output"]["ReducedMatrix"]],
+                qs["Output"]["ReducedMatrix"] . qs["StateMatrix"] . SparsePseudoInverse[qs["Input"]["ReducedMatrix"]],
+                newBasis["Input"]["ReducedMatrix"]
             ],
             newBasis
         ],
         "Matrix",
-        With[{dim = outDim * inDim},
-            QuantumState[
-                Dot[
-                    SparsePseudoInverse[PadRight[newBasis["Matrix"], {dim, Automatic}]],
-                    PadRight[qs["Basis"]["Matrix"], {dim, Automatic}] . qs["DensityMatrix"] . SparsePseudoInverse[PadRight[qs["Basis"]["Matrix"], {dim, Automatic}]],
-                    PadRight[newBasis["Matrix"], {dim, Automatic}]
-                ],
-                newBasis
-            ]
+        QuantumState[
+            Dot[
+                SparsePseudoInverse[newBasis["ReducedMatrix"]],
+                qs["Basis"]["ReducedMatrix"] . qs["DensityMatrix"] . SparsePseudoInverse[qs["Basis"]["ReducedMatrix"]],
+                newBasis["ReducedMatrix"]
+            ],
+            newBasis
         ]
     ]
-]
 
 QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] := Switch[
     qs["StateType"],

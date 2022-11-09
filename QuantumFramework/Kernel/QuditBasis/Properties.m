@@ -90,6 +90,21 @@ QuditBasisProp[qb_, "Elements"] := If[qb["Length"] > 0,
     {}
 ]
 
+QuditBasisProp[qb_, "ReducedElements"] := If[qb["Length"] > 0,
+    ArrayReshape[
+        Transpose[
+            Outer[Times,
+                Sequence @@ Map[If[MatrixQ[#] && ! SquareMatrixQ[#], SparseArray[# . PseudoInverse[RowReduce[#]]], #] &] @ Values @ KeySort @ ResourceFunction["KeyGroupBy"][
+                    SparseArrayFlatten /@ qb["RemoveIdentities"]["Representations"], Last, SparseArray @* Values @* normalRepresentations
+                ]
+            ],
+            FindPermutation[Join[Range[1, 2 qb["Qudits"], 2], Range[2, 2 qb["Qudits"], 2]]]
+        ],
+        Prepend[qb["Dimensions"], qb["Dimension"]]
+    ],
+    {}
+]
+
 QuditBasisProp[qb_, "Association"] := Association @ Thread[qb["Names"] -> qb["Elements"]]
 
 QuditBasisProp[qb_, "Size" | "Dimension"] := If[qb["Length"] > 0, Times @@ qb["Dimensions"], 0]
@@ -115,7 +130,14 @@ QuditBasisProp[qb_, "Tensor"] := If[qb["Rank"] > 0,
     qb["Elements"]
 ]
 
+QuditBasisProp[qb_, "ReducedTensor"] := If[qb["Rank"] > 0,
+    ArrayReshape[Transpose[ArrayReshape[qb["ReducedElements"], Prepend[qb["Dimensions"], qb["Dimension"]]], Cycles[{RotateRight @ Range[qb["Rank"] + 1, 1 , -1]}]], Join[qb["Dimensions"], qb["Dimensions"]]],
+    qb["ReducedElements"]
+]
+
 QuditBasisProp[qb_, "Matrix"] := ArrayReshape[qb["Tensor"], qb["MatrixDimensions"]]
+
+QuditBasisProp[qb_, "ReducedMatrix"] := ArrayReshape[qb["ReducedTensor"], {qb["Dimension"], qb["Dimension"]}]
 
 
 QuditBasisProp[qb_, "Dual"] := QuditBasis @ KeyMap[MapAt[#["Dual"] &, 1], qb["Representations"]]
@@ -152,7 +174,7 @@ QuditBasisProp[qb_, "Ordered", qudits_Integer, order_ ? orderQ] := If[qb["Dimens
 ]
 
 QuditBasisProp[qb_, "RemoveIdentities"] := QuditBasis @ If[ qb["Dimension"] > 1,
-    Select[qb["Representations"], TensorRank[#] > 0 &],
+    Select[qb["Representations"], Times @@ Dimensions[#] > 1 &],
     qb["Representations"][[;; UpTo[1]]]
 ]
 
@@ -224,20 +246,20 @@ QuditBasisProp[qb1_, "Replace", pos : {_Integer ..}, qb2_ ? QuditBasisQ] := Quan
 QuditBasisProp[qb_, "Identity"] := qb
 
 
-QuditBasisProp[qb_, "DimensionSplit", __] /; qb["Dimension"] <= 1 := qb
+QuditBasisProp[qb_, "DimensionSplit" | "DimensionSplitDual", __] /; qb["Dimension"] <= 1 := qb
 
-QuditBasisProp[qb_, "DimensionSplit", q_Integer ? Positive, n_Integer ? Positive] /; q <= qb["Qudits"] && n <= qb["Dimensions"][[q]] :=
+QuditBasisProp[qb_, prop : "DimensionSplit" | "DimensionSplitDual", q_Integer ? Positive, n_Integer ? Positive] /; q <= qb["Qudits"] && n <= qb["Dimensions"][[q]] :=
     QuantumTensorProduct @ MapAt[
         QuditBasis[
-            Join @@ MapAt[KeyMap[Replace[{name_, i_} :> {name["Dual"], i + 1}]], TakeDrop[#["Representations"], n], 2]
+            Join @@ MapAt[KeyMap[Replace[{name_, i_} :> {If[StringEndsQ[prop, "Dual"], name["Dual"], name], i + 1}]], TakeDrop[#["Representations"], n], 2]
         ] &,
         qb["Decompose"],
         q
     ]
 
-QuditBasisProp[qb_, "DimensionSplit", _[q_Integer ? Positive, n_Integer ? Positive]] := qb["DimensionSplit", q, n]
+QuditBasisProp[qb_, prop : "DimensionSplit" | "DimensionSplitDual", _[q_Integer ? Positive, n_Integer ? Positive]] := qb[prop, q, n]
 
-QuditBasisProp[qb_, "DimensionSplit", splits : {_[Repeated[_Integer ? Positive, {2}]] ..}] := Fold[#1["DimensionSplit", #2] &, qb, splits]
+QuditBasisProp[qb_, prop : "DimensionSplit" | "DimensionSplitDual", splits : {_[Repeated[_Integer ? Positive, {2}]] ..}] := Fold[#1[prop, #2] &, qb, splits]
 
-QuditBasisProp[qb_, "DimensionSplit", splits : {_Integer ? Positive ..}] := qb["DimensionSplit", Thread[{Range[Length[splits]], splits}]]
+QuditBasisProp[qb_, prop : "DimensionSplit" | "DimensionSplitDual", splits : {_Integer ? Positive ..}] := qb[prop, Thread[{Range[Length[splits]], splits}]]
 
