@@ -131,7 +131,7 @@ QuditBasisProp[qb_, "Tensor"] := If[qb["Rank"] > 0,
 ]
 
 QuditBasisProp[qb_, "ReducedTensor"] := If[qb["Rank"] > 0,
-    ArrayReshape[Transpose[ArrayReshape[qb["ReducedElements"], Prepend[qb["Dimensions"], qb["Dimension"]]], Cycles[{RotateRight @ Range[qb["Rank"] + 1, 1 , -1]}]], Join[qb["Dimensions"], qb["Dimensions"]]],
+    ArrayReshape[Transpose[ArrayReshape[qb["ReducedElements"], Prepend[qb["Dimensions"], qb["Dimension"]]], Cycles[{RotateRight @ Range[qb["NameRank"] + 1, 1 , -1]}]], Join[qb["Dimensions"], qb["Dimensions"]]],
     qb["ReducedElements"]
 ]
 
