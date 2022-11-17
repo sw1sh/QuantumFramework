@@ -124,7 +124,7 @@ QuantumState["RandomMixed", args : PatternSequence[Except[_ ? QuantumBasisQ], __
 
 QuantumState["RandomMixed", qb_ ? QuantumBasisQ] :=
     With[{m = RandomComplex[{-1 - I, 1 + I}, Table[qb["Dimension"], 2]]},
-        QuantumState[m . ConjugateTranspose[m], qb]
+        QuantumState[m . ConjugateTranspose[m], qb]["Normalized"]
     ]
 
 QuantumState["RandomMixed"] := QuantumState["RandomMixed", QuantumBasis[]]
