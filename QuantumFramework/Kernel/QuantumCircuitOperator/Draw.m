@@ -100,7 +100,7 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 						{
 							With[{boundaryStyles = Replace[labels, gateBoundaryStyle, {1}]},
 								If[	Equal @@ boundaryStyles,
-									backgroundStyle = Replace[First[subSubLabels], gateBackgroundStyle];
+									backgroundStyle = Replace[First[labels], gateBackgroundStyle];
 									boundaryStyle = First[boundaryStyles];
 								]
 							];
