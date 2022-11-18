@@ -56,13 +56,13 @@ QuantumChannel[{"PhaseDamping", lambda_}, args___] :=
 
 
 QuantumChannel[{"BitFlip", p_}, args___] :=
-    quantumChannel[{Sqrt[p] IdentityMatrix[2], Sqrt[1 - p] {{0, 1}, {1, 0}}}, args, "Label" -> "BitFlip"[p]]
+    quantumChannel[{Sqrt[1 - p] IdentityMatrix[2], Sqrt[p] {{0, 1}, {1, 0}}}, args, "Label" -> "BitFlip"[p]]
 
 QuantumChannel[{"PhaseFlip", p_}, args___] :=
-    quantumChannel[{Sqrt[p]*IdentityMatrix[2], Sqrt[1 - p]*{{1, 0}, {0, -1}}}, args, "Label" -> "PhaseFlip"[p]]
+    quantumChannel[{Sqrt[1 - p] IdentityMatrix[2], Sqrt[p] {{1, 0}, {0, -1}}}, args, "Label" -> "PhaseFlip"[p]]
 
 QuantumChannel[{"BitPhaseFlip", p_}, args___] :=
-    quantumChannel[{Sqrt[p] IdentityMatrix[2], Sqrt[1 - p] {{0, -I}, {I ,0}}}, args, "Label" -> "BitPhaseFlip"[p]]
+    quantumChannel[{Sqrt[1 - p] IdentityMatrix[2], Sqrt[p] {{0, -I}, {I ,0}}}, args, "Label" -> "BitPhaseFlip"[p]]
 
 QuantumChannel[{"Depolarizing", p_}, args___] :=
     quantumChannel[{
