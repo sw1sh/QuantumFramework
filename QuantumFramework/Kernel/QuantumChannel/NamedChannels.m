@@ -25,7 +25,7 @@ quantumChannel[ops_List, order_ ? orderQ, basisArgs___] := With[{
         QuantumState[
             Flatten[kroneckerProduct @@@ Tuples[ops, Length[order]]],
             QuantumTensorProduct[
-                QuantumBasis[Length[order] * Length[ops]],
+                QuantumBasis[Length[order] ^ Length[ops]],
                 QuantumBasis[QuantumBasis[basis["Output"], basis["Output"]], Length[order]]
             ]
         ],
