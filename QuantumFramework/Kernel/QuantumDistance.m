@@ -16,15 +16,11 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Fidelity"] := With[
     Re[Tr[MatrixPower[rootDensityMatrix . qs2["Computational"]["DensityMatrix"] . rootDensityMatrix, 1 / 2]] ^ 2]
 ]
 
-QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativeEntropy"] := Enclose @ Module[{
-    e1 = qs1["Eigenvalues"] // Chop,
-    e2 = qs2["Eigenvalues"] // Chop,
-    positiveEigenvaluePositions
+QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativeEntropy"] := With[{
+    s = qs1["Computational"]["DensityMatrix"],
+    t = qs2["Computational"]["DensityMatrix"]
 },
-    positiveEigenvaluePositions = ConfirmBy[Position[e1, _ ? Positive], Length[#] > 0 &];
-    e1 = Extract[e1, positiveEigenvaluePositions];
-    e2 = ConfirmBy[Extract[e2, positiveEigenvaluePositions], AllTrue @ Positive];
-    Quantity[Re[e1 . (Log[2, e1] - Log[2, e2])], "Bits"]
+    Quantity[Chop[Tr[s . (MatrixLog[s, Method -> "Jordan"] - MatrixLog[t, Method -> "Jordan"])]] / Log[2], "Bits"]
 ]
 
 
