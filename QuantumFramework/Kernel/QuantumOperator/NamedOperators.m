@@ -175,7 +175,7 @@ QuantumOperator[{"GlobalPhase", angle_, dimension : _Integer ? Positiver : 2}, o
 
 QuantumOperator[{"Diagonal", x_, dimension : _Integer ? Positive : 2}, opts___] := QuantumOperator[
     QuantumOperator[
-        identityMatrix[dimension] x,
+        ReplacePart[identityMatrix[dimension], {i_, i_} -> x],
         dimension,
         "Label" -> OverHat[x]
     ],
@@ -587,6 +587,8 @@ QuantumOperator[{"XSpider", params___}, opts___] := With[{
     ]
 ]
 
+
+QuantumOperator["Spider", opts___] := QuantumOperator[{"Spider", QuantumBasis[QuditBasis[2], QuditBasis[2]]}, opts]
 
 QuantumOperator[{"Spider", basis_ ? QuantumBasisQ, phase_ : 0}, opts___] /;
     Equal @@ basis["Dimensions"] || basis["OutputDimension"] == basis["InputDimension"] == 1 :=

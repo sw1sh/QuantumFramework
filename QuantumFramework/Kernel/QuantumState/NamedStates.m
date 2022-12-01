@@ -59,9 +59,9 @@ QuantumState[{name : "Plus" | "Minus" | "Left" | "Right" | "PsiPlus" | "PsiMinus
 
 
 
-QuantumState[{"BasisState", basisElement_List}, args___] := QuantumState[{"BasisState", basisElement}, 2, args]
+QuantumState[{"BasisState", basisElement_List : {1}}, args___] := QuantumState[{"BasisState", basisElement}, 2, args]
 
-QuantumState[{"BasisState", basisElement_List}, dimension : (_Integer ? Positive) : 2, args___] := QuantumState[
+QuantumState[{"BasisState", basisElement_List : {1}}, dimension : (_Integer ? Positive) : 2, args___] := QuantumState[
     With[{elementPosition = FromDigits[basisElement, dimension] + 1, basisSize = Length[basisElement]},
         SparseArray[{elementPosition} -> 1, {dimension ^ basisSize}]
     ],
@@ -164,7 +164,9 @@ QuantumState[{"Werner", p_, qb_ ? QuditBasisQ}, args___] := With[{
 ]
 
 
-QuantumState[{"Graph", graph_ ? GraphQ}, args___] := Module[{
+QuantumState["Graph", args___] := QuantumState[{"Graph", RandomGraph[{4, 4}]}, args]
+
+QuantumState[{"Graph", graph : _ ? GraphQ}, args___] := Module[{
     indexGraph, quditCount, entanglements
 },
     indexGraph = IndexGraph[graph];
@@ -181,9 +183,10 @@ QuantumState[{"Graph", graph_ ? GraphQ}, args___] := Module[{
     ]
 ]
 
+QuantumState["BlochVector", args___] := QuantumState[{"BlochVector", {0, 0, 1}}, args]
 
-QuantumState[{"BlochVector", r_ /; VectorQ[r] && Length[r] == 3}] :=
-    QuantumState[1 / 2 (identityMatrix[2] + r . Table[PauliMatrix[i], {i, 3}])]
+QuantumState[{"BlochVector", r_ /; VectorQ[r] && Length[r] == 3}, args___] :=
+    QuantumState[1 / 2 (identityMatrix[2] + r . Table[PauliMatrix[i], {i, 3}]), args]
 
 
 QuantumState[SuperDagger[arg_], opts___] := QuantumState[arg, opts]["Dagger"]

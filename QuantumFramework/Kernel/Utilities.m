@@ -53,7 +53,7 @@ propQ[prop_] := MatchQ[prop, _String | {_String, ___} | (_String -> _)]
 
 propName[prop_] := Replace[prop, name_String | {name_String, ___} | (name_String -> _) :> name]
 
-stateQ[state_] := !nameQ[state] && VectorQ[state] && Length[state] >= 0 || SquareMatrixQ[state]
+stateQ[state_] := ! MatchQ[state, name_String | {_nameString, ___} /; MemberQ[$QuantumStateNames, name]] && VectorQ[state] && Length[state] >= 0 || SquareMatrixQ[state]
 
 orderQ[order_] := VectorQ[order, IntegerQ] && DuplicateFreeQ[order]
 

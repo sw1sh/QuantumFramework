@@ -37,10 +37,10 @@ quantumChannel[ops_List, order_ ? orderQ, basisArgs___] := With[{
 quantumChannel[args___] := quantumChannel[QuantumOperator[args]]
 
 
-QuantumChannel[{"AmplitudeDamping", gamma_}, args___] :=
+QuantumChannel[{"AmplitudeDamping", gamma_ : .5}, args___] :=
     quantumChannel[{{{1, 0}, {0, Sqrt[1 - gamma]}}, {{0, Sqrt[gamma]}, {0, 0}}}, args, "Label" -> "AmplitudeDamping"[gamma]]
 
-QuantumChannel[{"GeneralizedAmplitudeDamping", gamma_, p_}, args___] :=
+QuantumChannel[{"GeneralizedAmplitudeDamping", gamma_ : .5, p_ : .5}, args___] :=
 	quantumChannel[{
         Sqrt[p] {{1, 0}, {0, Sqrt[1 - gamma]}},
         Sqrt[p] {{0, Sqrt[gamma]}, {0, 0}},
@@ -51,20 +51,20 @@ QuantumChannel[{"GeneralizedAmplitudeDamping", gamma_, p_}, args___] :=
         "Label" -> "GeneralizedAmplitudeDamping"[gamma, p]
     ]
 
-QuantumChannel[{"PhaseDamping", lambda_}, args___] :=
+QuantumChannel[{"PhaseDamping", lambda_ : .5}, args___] :=
     quantumChannel[{{{1, 0}, {0, Sqrt[1 - lambda]}}, {{0, 0}, {0, Sqrt[lambda]}}}, args, "Label" -> "PhaseDamping"[lambda]]
 
 
-QuantumChannel[{"BitFlip", p_}, args___] :=
+QuantumChannel[{"BitFlip", p_ : .5}, args___] :=
     quantumChannel[{Sqrt[1 - p] IdentityMatrix[2], Sqrt[p] {{0, 1}, {1, 0}}}, args, "Label" -> "BitFlip"[p]]
 
-QuantumChannel[{"PhaseFlip", p_}, args___] :=
+QuantumChannel[{"PhaseFlip", p_ : .5}, args___] :=
     quantumChannel[{Sqrt[1 - p] IdentityMatrix[2], Sqrt[p] {{1, 0}, {0, -1}}}, args, "Label" -> "PhaseFlip"[p]]
 
-QuantumChannel[{"BitPhaseFlip", p_}, args___] :=
+QuantumChannel[{"BitPhaseFlip", p_ : .5}, args___] :=
     quantumChannel[{Sqrt[1 - p] IdentityMatrix[2], Sqrt[p] {{0, -I}, {I ,0}}}, args, "Label" -> "BitPhaseFlip"[p]]
 
-QuantumChannel[{"Depolarizing", p_}, args___] :=
+QuantumChannel[{"Depolarizing", p_ : .5}, args___] :=
     quantumChannel[{
         Sqrt[1 - 3 p / 4] PauliMatrix[0],
         Sqrt[p] (1 / 2) PauliMatrix[1],
@@ -74,4 +74,7 @@ QuantumChannel[{"Depolarizing", p_}, args___] :=
         args,
         "Label" -> "\[CapitalDelta]"[p]
     ]
+
+QuantumChannel[name_String, args___] := QuantumChannel[{name}, args]
+
 

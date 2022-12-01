@@ -253,6 +253,9 @@ QuantumOperator[{qo : _ ? QuantumOperatorQ, multiplicity_Integer ? Positive}] :=
 QuantumOperator[{qo : _ ? QuantumOperatorQ, multiplicity_Integer ? Positive}, opts__] :=
     QuantumOperator[QuantumTensorProduct @ Table[qo, multiplicity], opts]
 
+QuantumOperator[x : Except[_ ? QuantumStateQ | _ ? QuantumOperatorQ], args___] := Enclose @
+    ConfirmBy[QuantumOperator[{"Diagonal", If[AtomQ[x], x, HoldForm[x]]}, args], QuantumOperatorQ]
+
 
 (* change of basis *)
 
