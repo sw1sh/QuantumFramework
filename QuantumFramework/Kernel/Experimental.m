@@ -4,6 +4,7 @@ PackageScope["DecomposedQuantumStateProbabilities"]
 PackageScope["QuantumBeamSearch"]
 
 PackageExport["CircuitMultiwayGraph"]
+PackageExport["QuantumDiagramProcess"]
 
 
 
@@ -85,5 +86,34 @@ CircuitMultiwayGraph[circuit_, initStates : Except[OptionsPattern[]] : Automatic
 		],
 		{_, states_} :> states
 	]
+]
+
+
+
+DiagramProcess := DiagramProcess = ResourceFunction["https://www.wolframcloud.com/obj/murzin.nikolay/DeployedResources/Function/DiagramProcess"]
+
+QuantumDiagramProcess[qco_QuantumCircuitOperator] := With[{
+    ops = qco["Operators"], net = qco["TensorNetwork", "PrependInitial" -> False], n = qco["Gates"]
+},
+    With[{
+        map = GroupBy[EdgeTags[net], #[[2]] &, #[[1, 1]] &],
+        freeIndices = TensorNetworkFreeIndices[net]
+    },
+        DiagramProcess[
+            Subsuperscript[
+                With[{mat = ops[[#]]["Computational"]["Tensor"]}, Labeled[Part[mat, ##] &, ops[[#]]["Label"]]],
+                Sequence @@ Reverse @ Replace[
+                    MapAt[ReplaceAll[map], TakeDrop[HoldForm /@ AnnotationValue[{net, # - 1}, "Index"], ops[[#]]["OutputQudits"]], 2],
+                    With[{
+                        outs = Alternatives @@ Cases[freeIndices, _Superscript],
+                        ins = Alternatives @@ Cases[freeIndices, _Subscript]
+                    },
+                        {in : HoldForm[ins] :> Overscript[in, ˘], out : HoldForm[outs] :> Overscript[out, \[DownBreve]]}
+                    ],
+                    {2}
+                ]
+            ] & /@ Range[n]
+        ]
+    ]
 ]
 

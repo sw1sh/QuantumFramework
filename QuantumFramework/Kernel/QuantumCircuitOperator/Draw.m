@@ -646,12 +646,16 @@ circuitWires[qc_QuantumCircuitOperator] := Block[{
 ]
 
 Options[CircuitDraw] := Join[Options[circuitDraw], Options[Graphics]];
-CircuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Graphics[
-	circuitDraw[
-		circuit,
-		FilterRules[{opts}, Options[circuitDraw]],
-		RoundingRadius -> 0.1
+CircuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := If[
+	And @@ Equal @@@ circuit["Orders"],
+	Graphics[
+		circuitDraw[
+			circuit,
+			FilterRules[{opts}, Options[circuitDraw]],
+			RoundingRadius -> 0.1
+		],
+		FilterRules[{opts}, Options[Graphics]]
 	],
-	FilterRules[{opts}, Options[Graphics]]
+	Show[QuantumCircuitOperator["Magic"]["Icon"] /. {_RGBColor -> Gray, rect_Rectangle :> {EdgeForm[Dotted], rect}}, ImageSize -> 64]
 ]
 

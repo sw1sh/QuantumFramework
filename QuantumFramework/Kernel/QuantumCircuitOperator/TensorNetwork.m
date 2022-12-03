@@ -33,7 +33,7 @@ TensorNetworkQ[net_Graph, verbose : _ ? BooleanQ : False] := Module[{
     With[{ranks = TensorRank /@ Values[tensors]},
         (And @@ Thread[ranks == Length /@ Values[indices]] && Total[ranks] == CountDistinct[Catenate[Values[indices]]]) ||
         (If[verbose, Message[TensorNetworkQ::msg3]]; False)
-    ] &&
+    ] (* &&
     (
         AllTrue[
             EdgeList[net],
@@ -43,7 +43,7 @@ TensorNetworkQ[net_Graph, verbose : _ ? BooleanQ : False] := Module[{
             ]
         ] ||
         (If[verbose, Message[TensorNetworkQ::msg4]]; False)
-    )
+    ) *)
 ]
 
 TensorNetworkQ[verbose : _ ? BooleanQ : False][net_Graph] := TensorNetworkQ[net, verbose]
@@ -142,13 +142,13 @@ TensorNetworkIndexGraph[net_Graph ? (TensorNetworkQ[True]), opts : OptionsPatter
     VertexLabels -> Automatic
 ]
 
-Options[QuantumTensorNetwork] = Options[Graph]
+Options[QuantumTensorNetwork] = Join[{"PrependInitial" -> True}, Options[Graph]]
 
 QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Module[{width, targets, ops, size, orders, vertices, edges, tensors},
 	ConfirmAssert[AllTrue[qc["Operators"], #["Order"] === #["FullOrder"] &]];
     targets = qc["Targets"];
     width = qc["Width"];
-    ops = Prepend[QuantumOperator[QuantumState[{1}, PadLeft[qc["InputDimensions"], qc["Width"], 2], "Label" -> "Initial"], Range @ qc["Width"]]] @
+    ops =
         Module[{m = - qc["Eigenqudits"] - qc["TraceQudits"] + 1},
             Map[
                 Which[
@@ -173,6 +173,9 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
                 qc["Operators"]
             ]
         ];
+    If[ TrueQ[OptionValue["PrependInitial"]],
+        PrependTo[ops, QuantumOperator[QuantumState[{1}, PadLeft[qc["InputDimensions"], qc["Width"], 2], "Label" -> "Initial"], Range @ qc["Width"]]]
+    ];
 	size = Length[ops];
 	orders = #["Order"] & /@ ops;
     vertices = Range[Length[ops]] - 1;
@@ -191,7 +194,7 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
         Graph[
             vertices,
             edges,
-            opts,
+            FilterRules[{opts}, Options[Graph]],
             AnnotationRules ->
                 MapThread[#1 -> {
                         "Tensor" -> #2,
