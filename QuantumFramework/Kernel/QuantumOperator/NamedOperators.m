@@ -314,20 +314,18 @@ QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orde
             qo["Matrix"],
             identityMatrix[(2 ^ controls0 - 1) 2 ^ controls1 qo["OutputDimension"]]
         }],
-        With[{order = Join[
-            control0,
-            control1,
-            qo["InputOrder"] /. NestWhile[
+        With[{order = Join @@ NestWhile[
                 Apply[
-                    Block[{lhs = Intersection[#1, #2], rhs},
-                        rhs = Take[DeleteCases[Range[Min[#1, #2], Max[#1, #2] + Length[lhs]], Alternatives @@ #2], UpTo[Length[lhs]]];
-                        {DeleteCases[#1, Alternatives @@ lhs], rhs, Join[#3, Thread[lhs -> rhs]]}
+                    Block[{
+                        lhs = Intersection[#1, #2], rhs},
+                        rhs = Take[DeleteElements[Range[Min[#1, #2], Max[#1, #2] + Length[lhs]], #1], UpTo[Length[lhs]]];
+                        {Join[#1, rhs], DeleteElements[#2, lhs]}
                     ] &
                 ],
-                {qo["InputOrder"], control, {}},
-                Apply[IntersectingQ[#1, #2] &]
-            ][[3]]
-        ]},
+                {control, qo["InputOrder"]},
+                Apply[IntersectingQ]
+            ]
+        },
             {order, order}
         ],
         QuantumTensorProduct[
