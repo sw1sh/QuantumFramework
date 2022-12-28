@@ -92,11 +92,12 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
     (Message[QuantumCircuitOperator::dim, qco["InputDimensions"], qs["OutputDimensions"]]; $Failed)
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qs_ ? QuantumStateQ, opts : OptionsPattern[quantumCircuitApply]] :=
-    With[{result = quantumCircuitApply[qco, qs, opts]},
+    With[{result = quantumCircuitApply[qco /* QuantumCircuitOperator["I" -> # & /@ Complement[Range[Max[qco["Width"], qs["OutputQudits"]]], qco["InputOrder"]]], qs, opts]},
         result /; ! FailureQ[result]
     ]
 
-(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[quantumCircuitApply]] := qco[QuantumState[{"Register", qco["InputDimensions"]}], opts]
+(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[quantumCircuitApply]] :=
+    qco[QuantumState[{"Register", ReplacePart[ConstantArray[2, qco["Width"]], Thread[qco["InputOrder"] -> qco["InputDimensions"]]]}], opts]
 
 
 op_QuantumMeasurementOperator[qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ] :=
