@@ -647,7 +647,7 @@ circuitWires[qc_QuantumCircuitOperator] := Block[{
 
 Options[CircuitDraw] := Join[Options[circuitDraw], Options[Graphics]];
 CircuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := If[
-	And @@ Equal @@@ circuit["Orders"],
+	And @@ Equal @@@ Map[Select[GreaterThan[0]], circuit["Orders"], {2}],
 	Graphics[
 		circuitDraw[
 			circuit,

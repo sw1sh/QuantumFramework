@@ -305,7 +305,7 @@ QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ /; qo["ControlOrder"
 QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}}, opts___] := Enclose @ With[{
     controls1 = Length[control1],
     controls0 = Length[control0],
-    control = Join[control1, control0]
+    control = Join[control0, control1]
 },
     (*ConfirmAssert[! IntersectingQ[qo["Order"], control], "Target and control qudits shouldn't intersect"];*)
     QuantumOperator[
@@ -329,8 +329,8 @@ QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orde
             {order, order}
         ],
         QuantumTensorProduct[
-            QuantumBasis[QuditBasis[2, controls0], QuditBasis[2, controls0]],
             QuantumBasis[QuditBasis[2, controls1], QuditBasis[2, controls1]],
+            QuantumBasis[QuditBasis[2, controls0], QuditBasis[2, controls0]],
             qo["Basis"]
         ],
         opts,

@@ -105,7 +105,7 @@ QuantumState[{"UniformMixture", subsystemCount_Integer}, dimension : (_Integer ?
 
 
 QuantumState[{"RandomPure", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
-    QuantumState[RandomComplex[{-1 - I, 1 + I}, dimension ^ subsystemCount], dimension, args]
+    QuantumState["RandomPure", dimension, subsystemCount, args]
 
 QuantumState["RandomPure", args : PatternSequence[Except[_ ? QuantumBasisQ], ___]] :=  QuantumState["RandomPure", QuantumBasis[args]]
 

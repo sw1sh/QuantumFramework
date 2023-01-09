@@ -163,14 +163,18 @@ WignerBasis[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := Block[{
         1 / Sqrt[Length[positionBasis]] *
         Total[Exp[I 2 Pi dimension # / Length[positionBasis]] positionBasis[[# + 1]] & /@
             Range[0, Length[positionBasis] - 1]
-        ],
+        ] // Simplify,
         Range[0, dimension - 1]
+    ];
+    If[ ! TrueQ[OptionValue["Exact"]],
+        positionBasis = N @ positionBasis;
+        momentumBasis = N @ momentumBasis;
     ];
     eigensystem = ReverseSort[
         Rule @@@ ComplexExpand @ Thread @ Eigensystem @ Partition[
             Map[
                 Replace[{q1_, p1_, q2_, p2_} :> Exp[(2 Pi I (q1 - q2) (p1 - p2)) / dimension]],
-                Tuples[Range[0, dimension - 1], 4]
+                If[ ! TrueQ[OptionValue["Exact"]], N, Identity] @ Tuples[Range[0, dimension - 1], 4]
             ],
             dimension ^ 2
         ]
@@ -182,12 +186,6 @@ WignerBasis[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := Block[{
             Inverse[vectors]
         ]
     ];
-    If[ ! TrueQ[OptionValue["Exact"]],
-        positionBasis = N @ positionBasis;
-        momentumBasis = N @ momentumBasis;
-        kernelElement = N @ kernelElement;
-    ];
-
     QuditBasis @ AssociationThread[
         Subscript["W", Row[#]] & /@ Tuples[Range[0, dimension - 1], 2],
 
@@ -221,6 +219,76 @@ QuditBasis[{"Wigner", qb_QuditBasis /; QuditBasisQ[qb], opts : OptionsPattern[{"
     QuditBasis[WignerBasis[qb, opts], args]
 
 QuditBasis[{"Wigner", basisArgs___, opts : OptionsPattern[]}, args___] := QuditBasis[{"Wigner", QuditBasis[basisArgs], opts}, args]
+
+
+Options[WeylBasis] = {"Exact" -> True}
+
+WeylBasis[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := Block[{
+    dimension = qb["Dimension"],
+    positionBasis, momentumBasis, eigensystem, kernelElement
+},
+    If[dimension == 1, Return[qb]];
+    positionBasis = SparseArrayFlatten /@ qb["Elements"];
+    momentumBasis = Map[dimension |->
+        1 / Sqrt[Length[positionBasis]] *
+        Total[Exp[- I 2 Pi dimension # / Length[positionBasis]] positionBasis[[# + 1]] & /@
+            Range[0, Length[positionBasis] - 1]
+        ] // Simplify,
+        Range[0, dimension - 1]
+    ];
+    If[ ! TrueQ[OptionValue["Exact"]],
+        positionBasis = N @ positionBasis;
+        momentumBasis = N @ momentumBasis;
+    ];
+    eigensystem = ReverseSort[
+        Rule @@@ ComplexExpand @ Thread @ Eigensystem @ Partition[
+            Map[
+                Replace[{q1_, p1_, q2_, p2_} :> Exp[- (2 Pi I (q1 - q2) (p1 - p2)) / dimension]],
+                If[ ! TrueQ[OptionValue["Exact"]], N, Identity] @ Tuples[Range[0, dimension - 1], 4]
+            ],
+            dimension ^ 2
+        ]
+    ];
+    kernelElement = With[{vectors = Transpose[Normalize /@ Values[eigensystem]]},
+        ComplexExpand @ Dot[
+            vectors,
+            DiagonalMatrix[Sqrt[Keys[eigensystem]]],
+            Inverse[vectors]
+        ]
+    ];
+    QuditBasis @ AssociationThread[
+        Subscript["W", Row[#]] & /@ Tuples[Range[0, dimension - 1], 2],
+
+        Catenate[
+            Table[
+                With[{labels = Thread[Tuples[Range[0, dimension - 1], 2] -> Range[dimension ^ 2]]},
+                    Map[
+                        Simplify,
+                        Sqrt[dimension] * Total @ Map[Apply[{q1, p1} |->
+                            Extract[kernelElement, Replace[{{i, j}, {q1, p1}}, labels, {1}]] *
+                                Dot[Conjugate[momentumBasis[[p1 + 1]]], positionBasis[[q1 + 1]]] *
+                                    KroneckerProduct[
+                                        momentumBasis[[p1 + 1]],
+                                        Conjugate[positionBasis[[q1 + 1]]]
+                                    ]
+                            ],
+                            Tuples[Range[0, dimension - 1], 2]
+                        ],
+                        {2}
+                    ]
+                ],
+                {i, 0, dimension - 1}, {j, 0, dimension - 1}
+            ]
+        ]
+    ]
+]
+
+QuditBasis["Weyl", args___] := QuditBasis[{"Weyl", 2}, args]
+
+QuditBasis[{"Weyl", qb_QuditBasis /; QuditBasisQ[qb], opts : OptionsPattern[{"Exact" -> True}]}, args___] :=
+    QuditBasis[WeylBasis[qb, opts], args]
+
+QuditBasis[{"Weyl", basisArgs___, opts : OptionsPattern[]}, args___] := QuditBasis[{"Weyl", QuditBasis[basisArgs], opts}, args]
 
 
 QuditBasis[nameArg_ ? nameQ, args___] /; ! FreeQ[nameArg, _String ? (StringContainsQ["Basis"])] :=
