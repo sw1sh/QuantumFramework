@@ -119,16 +119,16 @@ QuantumMeasurementOperatorProp[qmo_, "ProjectionQ"] := qmo["Type"] === "Projecti
 
 QuantumMeasurementOperatorProp[qmo_, "POVMQ"] := qmo["Type"] === "POVM"
 
-QuantumMeasurementOperatorProp[qmo_, "POVMElements"] := If[qmo["POVMQ"], qmo["Tensor"], qmo["Projectors"]]
+QuantumMeasurementOperatorProp[qmo_, "POVMElements"] := If[qmo["POVMQ"], # . ConjugateTranspose[#] & /@ qmo["Tensor"], qmo["Projectors"]]
 
 QuantumMeasurementOperatorProp[qmo_, "OrderedPOVMElements"] := If[qmo["POVMQ"],
-    qmo["OrderedTensor"],
+    # . ConjugateTranspose[#] & /@ qmo["OrderedTensor"],
     projector /@ qmo["OrderedMatrix"]
 ]
 
 QuantumMeasurementOperatorProp[qmo_, "Operators"] := If[qmo["POVMQ"],
-    AssociationThread[Range[0, Length[qmo["Tensor"]] - 1], QuantumOperator[#, QuantumBasis["Output" -> qmo["Basis"]["Input"]], qmo["Order"]] & /@ qmo["Tensor"]],
-    AssociationThread[Eigenvalues[qmo["Matrix"]], QuantumOperator[projector @ #, qmo["Basis"], qmo["Order"]] & /@ Eigenvectors[qmo["OrderedMatrix"]]]
+    AssociationThread[Range[0, Length[qmo["Tensor"]] - 1], QuantumOperator[#, {Automatic, qmo["InputOrder"]}, QuantumBasis["Output" -> qmo["Basis"]["Input"]]] & /@ qmo["Tensor"]],
+    AssociationThread[Eigenvalues[qmo["Matrix"]], QuantumOperator[projector @ #, {Automatic, qmo["InputOrder"]}, qmo["Basis"]] & /@ Eigenvectors[qmo["OrderedMatrix"]]]
 ]
 
 QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
