@@ -71,18 +71,18 @@ QuantumState[{"BasisState", basisElement_List : {1}}, dimension : (_Integer ? Po
 
 
 QuantumState[{"Register", subsystemCount : _Integer ? Positive, state : _Integer ? NonNegative : 0}, dimension : (_Integer ? Positive), args___] :=
-    QuantumState[SparseArray[{{state + 1} -> 1}, {dimension ^ subsystemCount}], Table[dimension, Max[subsystemCount, 1]], args]
+    QuantumState[SparseArray[{{state + 1} -> 1}, {dimension ^ subsystemCount}], Table[dimension, Max[subsystemCount, 1]], "Label" -> state, args]
 
 QuantumState[{"Register", subsystemCount: _Integer ? Positive, state : _Integer ? NonNegative : 0}, args___] :=
-    QuantumState[SparseArray[{{state + 1} -> 1}, {2 ^ subsystemCount}], args]
+    QuantumState[SparseArray[{{state + 1} -> 1}, {2 ^ subsystemCount}], "Label" -> state, args]
 
 QuantumState[{"Register", 0, ___}, args___] := QuantumState[1, 1, args]
 
 QuantumState[{"Register", dims : {__Integer ? Positive}, state : _Integer ? NonNegative : 0}, args___] :=
-    QuantumState[SparseArray[{{state + 1} -> 1}, {Times @@ dims}], dims, args]
+    QuantumState[SparseArray[{{state + 1} -> 1}, {Times @@ dims}], dims, "Label" -> state, args]
 
 QuantumState[{"Register", basisArgs_, state : _Integer ? NonNegative : 0}, args___] := With[{qb = QuantumBasis[basisArgs]},
-    QuantumState[SparseArray[{{state + 1} -> 1}, qb["Dimension"]], qb, args]
+    QuantumState[SparseArray[{{state + 1} -> 1}, qb["Dimension"]], qb, "Label" -> state, args]
 ]
 
 
