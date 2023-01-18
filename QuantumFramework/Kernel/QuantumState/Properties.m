@@ -23,6 +23,7 @@ $QuantumStateProperties = {
     "Bend", "BendDual", "Unbend", "Double",
     "Pure", "Mixed",
     "Trace", "Transpose", "Conjugate", "ConjugateTranspose",
+    "Physical",
     "ReverseOutput", "ReverseInput", "Reverse",
     "TensorReverseOutput", "TensorReverseInput",
     "Bipartition",
@@ -250,6 +251,8 @@ QuantumStateProp[qs_, "PureStateQ"] := qs["Type"] === "Pure"
 QuantumStateProp[qs_, "MixedStateQ"] := qs["Type"] === "Mixed"
 
 QuantumStateProp[qs_, "DegenerateStateQ"] := qs["Type"] === "Degenerate"
+
+QuantumStateProp[qs_, "UnknownQ"] := qs["Type"] === "Unknown"
 
 
 (* transforms *)
@@ -489,6 +492,15 @@ QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := With[{qb = qs["Basis"]
         qb
     ]
 ]
+
+QuantumStateProp[qs_, "Physical"] := If[! qs["UnknownQ"], qs,
+	Block[{d, u},
+		{d, u} = eigensystem[qs["DensityMatrix"], Chop -> True, "Normalize" -> True];
+		d = Normalize[Max[#, 0] & /@ d, Total];
+		QuantumState[Transpose[u] . DiagonalMatrix[d] . Conjugate[u] // Chop, qs["Basis"]]
+    ]
+]
+
 
 QuantumStateProp[qs_, "TensorReverseOutput", qudits : {_Integer...}] := QuantumState[
     If[qs["VectorQ"], SparseArrayFlatten, ArrayReshape[#, qs["MatrixDimensions"]] &] @
