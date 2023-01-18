@@ -68,7 +68,8 @@ $QuantumMeasurementProperties = {
     "Mean", "States", "StateAssociation",
     "Entropy",
     "PostMeasurementState",
-    "Eigenvalues", "EigenvalueVectors"
+    "Eigenvalues", "EigenvalueVectors",
+    "Eigenvectors", "Projectors"
 };
 
 
@@ -147,6 +148,10 @@ QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
 QuantumMeasurementProp[qm_, "Eigenvalues"] := qm["Eigenstate"]["Names"]
 
 QuantumMeasurementProp[qm_, "EigenvalueVectors"] := Replace[Flatten[{#["Name"]}] & /@ qm["Eigenvalues"], {Interpretation[_, {v_, _}] :> v, v_ :> Ket[v]}, {2}]
+
+QuantumMeasurementProp[qm_, "Eigenvectors"] := qm["Eigenstate"]["Eigenvectors"]
+
+QuantumMeasurementProp[qm_, "Projectors"] := qm["Eigenstate"]["Projectors"]
 
 QuantumMeasurementProp[qm_, "Outcomes"] := Which[
     MatchQ[qm["LabelHead"], "Computational" | Automatic],
