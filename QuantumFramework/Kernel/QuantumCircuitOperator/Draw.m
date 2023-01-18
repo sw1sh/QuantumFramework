@@ -590,7 +590,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 			If[emptyWiresQ, width, span], height, If[emptyWiresQ, 0, pad],
 			FilterRules[{opts}, Options[drawWireLabels]]
 		],
-		If[TrueQ[OptionValue["ShowLabel"]], drawLabel[circuit["Label"], height, pad, FilterRules[{opts}, Options[drawLabel]]], Nothing]
+		If[TrueQ[OptionValue["ShowLabel"]], drawLabel[Replace[circuit["Label"], None -> ""], height, pad, FilterRules[{opts}, Options[drawLabel]]], Nothing]
 	}
 ]
 

@@ -92,7 +92,11 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
     (Message[QuantumCircuitOperator::dim, qco["InputDimensions"], qs["OutputDimensions"]]; $Failed)
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qs_ ? QuantumStateQ, opts : OptionsPattern[quantumCircuitApply]] :=
-    With[{result = quantumCircuitApply[qco /* QuantumCircuitOperator["I" -> # & /@ Complement[Range[Max[qco["Width"], qs["OutputQudits"]]], qco["InputOrder"]]], qs, opts]},
+    With[{result = quantumCircuitApply[
+        qco /* QuantumCircuitOperator["I" -> # & /@ Complement[Range[Max[qco["Width"], qs["OutputQudits"]]], qco["InputOrder"]]],
+        If[# === {}, qs, QuantumTensorProduct[qs, QuantumState[{"Register", #}]]] & @ ConstantArray[2, qco["Width"] - qs["OutputQudits"]],
+        opts
+    ]},
         result /; ! FailureQ[result]
     ]
 
