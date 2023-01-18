@@ -5,7 +5,7 @@ PackageScope["$QuantumDistances"]
 
 
 
-$QuantumDistances = {"Fidelity", "RelativeEntropy", "Trace", "BuresAngle", "HilbertSchmidt", "Bloch"}
+$QuantumDistances = {"Fidelity", "RelativeEntropy", "Trace", "Bures", "BuresAngle", "HilbertSchmidt", "Bloch"}
 
 
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ] := QuantumDistance[qs1, qs2, "Fidelity"]
@@ -29,6 +29,9 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Trace"] := With[{
 },
     Re @ Tr[MatrixPower[ConjugateTranspose[m] . m, 1 / 2]] / 2
 ]
+
+QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Bures"] :=
+    Sqrt[2 (1 - Sqrt @ QuantumDistance[qs1, qs2, "Fidelity"])]
 
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "BuresAngle"] :=
     Re @ ArcCos @ QuantumDistance[qs1, qs2, "Fidelity"]
