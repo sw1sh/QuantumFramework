@@ -201,7 +201,7 @@ QuantumOperator[qo_ ? QuantumOperatorQ, order : (_ ? orderQ | Automatic)] :=
 QuantumOperator[qo_ ? QuantumOperatorQ, outputOrder : (_ ? orderQ | Automatic), inputOrder : (_ ? orderQ | Automatic)] :=
     QuantumOperator[qo, {outputOrder, inputOrder}]
 
-QuantumOperator[qo_ ? QuantumOperatorQ, order : {order1 : _ ? orderQ | Automatic, order2 : _ ? orderQ | Automatic}, opts___] := Block[{
+QuantumOperator[qo_ ? QuantumOperatorQ, order : {order1 : _ ? orderQ | Automatic, order2 : _ ? orderQ | Automatic}, opts : OptionsPattern[]] := Block[{
     outputOrder = Replace[order1, Automatic -> qo["OutputOrder"]],
     inputOrder = Replace[order2, Automatic -> qo["InputOrder"]],
     outputQudits = qo["FullOutputQudits"],
@@ -219,9 +219,14 @@ QuantumOperator[qo_ ? QuantumOperatorQ, order : {order1 : _ ? orderQ | Automatic
 
 QuantumOperator[qo_ ? QuantumOperatorQ, order : {_ ? orderQ | Automatic, _ ? orderQ | Automatic}] := With[{
     inputRepl =
-        Thread[Take[Join[qo["ControlOrder"], qo["TargetOrder"]], UpTo[Length[order[[2]]]]] -> Take[Replace[order[[2]], Automatic -> qo["FullInputOrder"]], UpTo[Length[qo["FullInputOrder"]]]]],
+        Thread[
+            Take[Join[#, Complement[qo["FullInputOrder"], #]] & @ Join[qo["ControlOrder"], qo["TargetOrder"]], UpTo[Length[order[[2]]]]] ->
+            Take[Replace[order[[2]], Automatic -> qo["FullInputOrder"]], UpTo[Length[qo["FullInputOrder"]]]]
+        ],
     outputRepl =
-        Thread[Take[qo["FullOutputOrder"], UpTo[Length[order[[1]]]]] -> Take[Replace[order[[1]], Automatic -> qo["FullOutputOrder"]], UpTo[Length[qo["FullOutputOrder"]]]]]
+        Thread[
+            Take[qo["FullOutputOrder"], UpTo[Length[order[[1]]]]] ->
+            Take[Replace[order[[1]], Automatic -> qo["FullOutputOrder"]], UpTo[Length[qo["FullOutputOrder"]]]]]
 },
     QuantumOperator[
         qo["State"],

@@ -351,7 +351,7 @@ QuantumOperator[{"Multiplexer" | "BlockDiagonal", qos__}, opts___] := Block[{sor
     ]["SetFullOrder"]
 ]
 
-QuantumOperator[{"Multiplexer" | "BlockDiagonal", qos__}, order : _ ? orderQ, opts___] := With[{
+QuantumOperator[{"Multiplexer" | "BlockDiagonal", qos__}, order : _ ? autoOrderQ, opts___] := With[{
     op = QuantumOperator[{"Multiplexer", qos}, opts]
 },
     QuantumOperator[op, order, QuantumBasis[Join[Table @@@ FactorInteger[op["OutputDimension"]]], Sequence @@ op["Basis"]["Meta"]]] /; op["OutputDimension"] == op["InputDimension"]
@@ -493,13 +493,9 @@ QuantumOperator["RandomUnitary", order : (_ ? orderQ) : {1}, opts___] := Enclose
     QuantumOperator[{"RandomUnitary", ConfirmBy[QuantumBasis[2, Length[order], opts, "Label" -> None], QuantumBasisQ]}, order]
 
 QuantumOperator[{"RandomUnitary", qb_ ? QuantumBasisQ}, order : (_ ? orderQ) : {1}, opts___] :=
-With[{
-    padOrder = Join[order, Complement[Min[order] - 1 + Range[qb["FullQudits"]], order]]
-},
     QuantumOperator[
            RandomVariate @ CircularUnitaryMatrixDistribution[qb["Dimension"]], order, qb, opts
     ]
-]
 
 QuantumOperator[{"RandomUnitary", args___}, order : (_ ? orderQ) : {1}, opts___] := Enclose @
     QuantumOperator[{"RandomUnitary", ConfirmBy[QuantumBasis[args], QuantumBasisQ]}, order, opts]
@@ -509,11 +505,7 @@ QuantumOperator["RandomHermitian", order : (_ ? orderQ) : {1}, opts___] := Enclo
     QuantumOperator[{"RandomHermitian", ConfirmBy[QuantumBasis[2, Length[order], opts], QuantumBasisQ]}, order]
 
 QuantumOperator[{"RandomHermitian", qb_ ? QuantumBasisQ}, order : (_ ? orderQ) : {1}, opts___] :=
-With[{
-    padOrder = Join[order, Complement[Min[order] - 1 + Range[qb["FullQudits"]], order]]
-},
     QuantumState["RandomMixed", qb]["Operator", opts]
-]
 
 QuantumOperator[{"RandomHermitian", args___}, order : (_ ? orderQ) : {1}] := Enclose @
     QuantumOperator[{"RandomHermitian", ConfirmBy[QuantumBasis[args], QuantumBasisQ]}, order]
