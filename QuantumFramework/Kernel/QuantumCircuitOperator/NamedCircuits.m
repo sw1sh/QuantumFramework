@@ -454,53 +454,53 @@ QuantumCircuitOperator[{"Trotterization", opArgs_, args___}] := Block[{
 QuantumCircuitOperator["Magic"] := QuantumCircuitOperator[{"S" -> {1, 2}, "H" -> {2}, "CNOT" -> {2, 1}}]
 
 
-QuantumCircuitOperator[{"Multiplexer"| "Multiplexor", ops__}, opts___] := Block[{n = Length[{ops}], seq},
-    seq = Values[<|0 -> {}, 1 -> {}, PositionIndex[#]|>] & /@ Take[Tuples[{1, 0}, Ceiling[Log2[n]]], n];
-    QuantumCircuitOperator[MapThread[{"C", #1, Splice[#2]} &, {{ops}, seq}], opts]
+QuantumCircuitOperator[{"Multiplexer"| "Multiplexor", ops__} -> defaultK : _Integer ? Positive | Automatic : Automatic, opts___] := Block[{
+    n = Length[{ops}],
+    m, k, seq
+},
+    m = Ceiling[Log2[n]];
+    k = Replace[defaultK, Automatic :> m + 1];
+    seq = Values[<|0 -> {}, 1 -> {}, PositionIndex[#]|>] & /@ Take[Tuples[{1, 0}, m], n];
+    QuantumCircuitOperator[MapThread[If[MatchQ[#1, "I" | {"I"..}], Nothing, {"C", #1, Splice[#2 /. c_Integer /; c == k :> m + 1]}] &, {{ops}, seq}], opts]
 ]
+
+QuantumCircuitOperator[{"Multiplexer"| "Multiplexor", ops__}, opts___] := QuantumCircuitOperator[{"Multiplexer", ops} -> Automatic, opts]
 
 
 
 RZY[vec_ ? VectorQ] := Block[{a, b, phi, psi, y, z},
     If[Length[vec] == 0, Return[{}]];
-    {{a, phi}, {b, psi}} = AbsArg[vec];
-    y = If[a == b == 0, Pi / 2, 2 ArcSin[(a - b) / Sqrt[2 (a ^ 2 + b ^ 2)]]];
-    z = phi - psi;
-    {If[z == 0, Nothing, {"RZ", z}], If[y == 0, Nothing, {"RY", y}]}
-]
-
-RZYdagger[vec_ ? VectorQ] := Block[{a, b, phi, psi, y, z},
-    If[Length[vec] == 0, Return[{}]];
-    {{a, phi}, {b, psi}} = AbsArg[vec];
-    y = If[a == b == 0, - Pi / 2, - 2 ArcSin[(a - b) / Sqrt[2 (a ^ 2 + b ^ 2)]]];
-    z = - (phi - psi);
-    {If[y == 0, Nothing, {"RY", y}], If[z == 0, Nothing, {"RZ", z}]}
+    {{a, phi}, {b, psi}} = AbsArg[Simplify[Normal[vec]]];
+    y = Simplify[If[TrueQ[Simplify[a == b == 0]], Pi / 2, 2 ArcSin[(a - b) / Sqrt[2 (a ^ 2 + b ^ 2)]]]];
+    z = Simplify[phi - psi];
+    Replace[
+        {If[TrueQ[z == 0], Nothing, {"RZ", z}], If[TrueQ[y == 0], Nothing, {"RY", y}]},
+        {} -> {"I"}
+    ]
 ]
 
 
-multiplexer[qs_, permute_] := Block[{vec, qc, qcDagger, multiplexer},
-    vec = qs["StateVector"];
-    multiplexer = Replace[{"Multiplexer", Splice[RZY /@ Partition[vec, 2]]}, {"Multiplexer"} -> Nothing];
-    multiplexerDagger = QuantumCircuitOperator[Replace[{"Multiplexer", Splice[RZYdagger /@ Partition[vec, 2]]}, {"Multiplexer"} -> Nothing], None];
-    qc = If[MatchQ[permute, {_, 0}],
+multiplexer[qs_, n_, i_] := Block[{rzy, rzyDagger, qc, multiplexer, multiplexerDagger},
+    rzy = RZY /@ Partition[qs["StateVector"], 2];
+    rzyDagger = Reverse /@ rzy /. {r : "RZ" | "RY", angle_} :> {r, - angle};
+    {multiplexer, multiplexerDagger} = {"Multiplexer", Splice[#]} & /@ {rzy, rzyDagger};
+    qc = If[i === 0,
         QuantumCircuitOperator[{multiplexer, {"H", qs["Qudits"]}}],
-        QuantumCircuitOperator[{multiplexer, {"Permutation", Cycles[{permute}]}}]
+        QuantumCircuitOperator[{multiplexer, {"Permutation", Cycles[{{n, i}}]}}]
     ];
-    qcDagger = If[MatchQ[permute, {_, 0}],
-        QuantumCircuitOperator[{{"H", qs["Qudits"]}, multiplexerDagger}],
-        QuantumCircuitOperator[{{"Permutation", Cycles[{permute}]}, multiplexerDagger}]
+    Sow @ If[i === 0,
+        {multiplexerDagger, {"H", qs["Qudits"]}},
+        {multiplexerDagger, {"Permutation", Cycles[{{n, i}}]}}
     ];
-    Sow[qcDagger];
     qc[qs]
 ]
 
-stateEvolution[qs_] := Block[{n, list},
-    n = qs["Qudits"];
-    list = Table[{n, i}, {i, n - 1, 0, -1}];
-    FoldList[multiplexer, qs, list]
+stateEvolution[qs_] := With[{n = qs["Qudits"]},
+    FoldList[multiplexer[#1, n, #2] &, qs, Range[n - 1, 0, -1]]
 ]
 
-QuantumCircuitOperator[qs_QuantumState | {"QuantumState", qs_QuantumState}] := QuantumCircuitOperator[Composition @@ Reap[stateEvolution[qs]][[2, 1]], qs["Label"]]
+QuantumCircuitOperator[qs_QuantumState | {"QuantumState", qs_QuantumState}] /; MatchQ[qs["Dimensions"], {2 ..}] :=
+    QuantumCircuitOperator[Reverse @ Catenate @ Reap[stateEvolution[qs]][[2, 1]], qs["Label"]]["Flatten"]
 
 QuantumCircuitOperator["QuantumState"] := QuantumCircuitOperator[{"QuantumState", QuantumState[{"UniformSuperposition", 3}]}]
 
