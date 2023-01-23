@@ -12,7 +12,7 @@ $QuantumStateNames = {
     "UniformSuperposition",
     "UniformMixture",
     "RandomPure", "RandomMixed",
-    "GHZ", "Bell",
+    "GHZ", "Bell", "Dicke",
     "W",
     "Werner",
     "Graph",
@@ -187,6 +187,15 @@ QuantumState["BlochVector", args___] := QuantumState[{"BlochVector", {0, 0, 1}},
 
 QuantumState[{"BlochVector", r_ /; VectorQ[r] && Length[r] == 3}, args___] :=
     QuantumState[1 / 2 (identityMatrix[2] + r . Table[PauliMatrix[i], {i, 3}]), args]
+
+QuantumState[{"Dicke", n_Integer ? Positive, k_Integer}, args___] /; n >= k := QuantumState[{"Dicke", {n - k, k}}]
+
+QuantumState[{"Dicke", k_}, args___] /; VectorQ[k, IntegerQ[#] && NonNegative[#] & ] := Block[{
+    n = Total[k], dim = Length[k], s
+},
+    s = Table[QuantumState[{"Register", {dim}, i}], {i, 0, dim - 1}];
+    Total[QuantumTensorProduct /@ Permutations @ Catenate[ConstantArray[#1, #2] & @@@ Transpose[{s, k}]]]["Normalized"]
+]
 
 
 QuantumState[SuperDagger[arg_], opts___] := QuantumState[arg, opts]["Dagger"]
