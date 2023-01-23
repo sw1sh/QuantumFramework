@@ -69,7 +69,8 @@ $QuantumMeasurementProperties = {
     "Entropy",
     "PostMeasurementState",
     "Eigenvalues", "EigenvalueVectors",
-    "Eigenvectors", "Projectors"
+    "Eigenvectors", "Projectors",
+    "SimulatedMeasurement", "SimulatedCounts"
 };
 
 
@@ -191,6 +192,8 @@ QuantumMeasurementProp[qm_, "Entropy"] := TimeConstrained[Quantity[qm["Distribut
 QuantumMeasurementProp[qm_, "SimulatedMeasurement"] := RandomVariate[qm["Distribution"]]
 
 QuantumMeasurementProp[qm_, "SimulatedMeasurement", n_Integer] := RandomVariate[qm["Distribution"], n]
+
+QuantumMeasurementProp[qm_, "SimulatedCounts", n_Integer : 100] := RandomVariate[MultinomialDistribution[n, qm["ProbabilitiesList"]]]
 
 QuantumMeasurementProp[qm_, "Mean"] := Replace[Total @ MapThread[Times, {qm["ProbabilitiesList"], qm["EigenvalueVectors"]}], {x_} :> x]
 

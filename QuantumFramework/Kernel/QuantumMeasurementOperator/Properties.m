@@ -119,7 +119,7 @@ QuantumMeasurementOperatorProp[qmo_, "ProjectionQ"] := qmo["Type"] === "Projecti
 
 QuantumMeasurementOperatorProp[qmo_, "POVMQ"] := qmo["Type"] === "POVM"
 
-QuantumMeasurementOperatorProp[qmo_, "POVMElements"] := If[qmo["POVMQ"], # . ConjugateTranspose[#] & /@ qmo["Tensor"], qmo["Projectors"]]
+QuantumMeasurementOperatorProp[qmo_, "POVMElements"] := If[qmo["POVMQ"], # . ConjugateTranspose[#] & /@ qmo["Tensor"], qmo["Projectors", "Sort" -> True]]
 
 QuantumMeasurementOperatorProp[qmo_, "OrderedPOVMElements"] := If[qmo["POVMQ"],
     # . ConjugateTranspose[#] & /@ qmo["OrderedTensor"],
