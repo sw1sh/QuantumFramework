@@ -7,7 +7,7 @@ PacletObject[
     "Creator" -> "Wolfram Research, Quantum Computation Framework team",
     "License" -> "MIT",
     "PublisherID" -> "Wolfram",
-    "Version" -> "1.0.27",
+    "Version" -> "1.0.28",
     "WolframVersion" -> "13.1+",
     "Extensions" -> {
       {

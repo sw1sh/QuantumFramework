@@ -57,6 +57,7 @@
             "RandomMixed",
             "GHZ",
             "Bell",
+            "Dicke",
             "W",
             "Werner",
             "Graph",
@@ -249,7 +250,8 @@
             "Controlled",
             "Trotterization",
             "Magic",
-            "Multiplexer"
+            "Multiplexer",
+            "QuantumState"
         }
     },
     "QuantumEntanglementMonotone" -> {
@@ -270,6 +272,7 @@
             "Fidelity",
             "RelativeEntropy",
             "Trace",
+            "Bures",
             "BuresAngle",
             "HilbertSchmidt",
             "Bloch"
