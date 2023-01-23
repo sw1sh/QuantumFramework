@@ -29,7 +29,7 @@ $QuantumStateProperties = {
     "Bipartition",
     "Disentangle", "Decompose", "DecomposeWithProbabilities",
     "SchmidtDecompose",
-    "Formula", "Simplify"
+    "Formula", "Simplify", "FullSimplify"
 };
 
 QuantumState["Properties"] := Union @ Join[$QuantumStateProperties, QuantumBasis["Properties"]]
@@ -78,6 +78,8 @@ QuantumStateProp[qs_, "VectorQ" | "VectorStateQ"] := qs["StateType"] === "Vector
 QuantumStateProp[qs_, "MatrixQ" | "MatrixStateQ"] := qs["StateType"] === "Matrix"
 
 QuantumStateProp[qs_, "UnknownQ" | "UnknownStateQ"] := qs["StateType"] === "UnknownType"
+
+QuantumStateProp[qs_, "PhysicalQ"] := ! qs["UnknownQ"]
 
 
 QuantumStateProp[qs_, "Kind"] := Which[
@@ -143,7 +145,7 @@ QuantumStateProp[qs_, "Formula", OptionsPattern["Normalize" -> False]] := With[{
     ]
 ]
 
-QuantumStateProp[qs_, "Simplify"] := QuantumState[Map[Simplify, qs["State"], {If[qs["VectorQ"], 1, 2]}], qs["Basis"]]
+QuantumStateProp[qs_, prop : "Simplify" | "FullSimplify"] := QuantumState[Map[Symbol[prop], qs["State"], {If[qs["VectorQ"], 1, 2]}], qs["Basis"]]
 
 
 (* normalization *)
@@ -493,7 +495,7 @@ QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := With[{qb = qs["Basis"]
     ]
 ]
 
-QuantumStateProp[qs_, "Physical"] := If[! qs["UnknownQ"], qs,
+QuantumStateProp[qs_, "Physical"] := If[qs["PhysicalQ"], qs,
 	Block[{d, u},
 		{d, u} = eigensystem[qs["DensityMatrix"], Chop -> True, "Normalize" -> True];
 		d = Normalize[Max[#, 0] & /@ d, Total];
