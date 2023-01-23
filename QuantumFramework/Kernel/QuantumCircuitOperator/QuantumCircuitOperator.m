@@ -36,17 +36,19 @@ circuitElementOrder[op_, _] := op["InputOrder"]
 
 (* constructors *)
 
+circuitNamePattern = name_String | {name_String, ___} | (name_String -> _) | ({name_String, ___} -> _)
+
 FromCircuitOperatorShorthand[barrier_ ? BarrierQ] := barrier
 FromCircuitOperatorShorthand[qc_ ? QuantumCircuitOperatorQ] := qc
 FromCircuitOperatorShorthand[qc_ ? QuantumCircuitOperatorQ -> order_ ? orderQ] := QuantumCircuitOperator[qc, order]
-FromCircuitOperatorShorthand[arg : name_String | {name_String, ___}] /; MemberQ[$QuantumCircuitOperatorNames, name] := QuantumCircuitOperator[arg]
-FromCircuitOperatorShorthand[arg : (name_String | {name_String, ___} /; MemberQ[$QuantumCircuitOperatorNames, name]) -> order_ ? orderQ] :=
+FromCircuitOperatorShorthand[arg : circuitNamePattern] /; MemberQ[$QuantumCircuitOperatorNames, name] := QuantumCircuitOperator[arg]
+FromCircuitOperatorShorthand[(arg : circuitNamePattern /; MemberQ[$QuantumCircuitOperatorNames, name]) -> order_ ? orderQ] :=
     QuantumCircuitOperator[FromCircuitOperatorShorthand[arg], order]
 FromCircuitOperatorShorthand[arg_] := Replace[FromOperatorShorthand[arg], ops_List :> QuantumCircuitOperator[ops]]
 
 
 QuantumCircuitOperator[operators_ ? ListQ] := Enclose @ With[{ops = Confirm @* FromCircuitOperatorShorthand /@ operators},
-    QuantumCircuitOperator[<|"Elements" -> ops, "Label" -> RightComposition @@ (#["Label"] & /@ DeleteCases[ops, _ ? BarrierQ])|>]
+    QuantumCircuitOperator[<|"Elements" -> ops, "Label" -> Replace[RightComposition @@ (#["Label"] & /@ DeleteCases[ops, _ ? BarrierQ]), Identity -> "I"]|>]
 ]
 
 QuantumCircuitOperator[arg_, order_ ? orderQ, args___] := QuantumCircuitOperator[QuantumCircuitOperator[arg, args], order]

@@ -174,6 +174,10 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			Map[drawGate[{{#}, hpos}, Subscript["R", Subscript[subLabel, #]][angle], opts] &, vpos],
 			drawControlWires[#, {Subscript["R", Subscript[subLabel, #[[1]]]][angle], Subscript["R", Subscript[subLabel, #[[2]]]][angle]}] & /@ Partition[Sort[vpos], 2, 1]
 		},
+		"I" :> {
+			wireStyle,
+			Line[{center - {size / 2, 0}, center + {size / 2, 0}}]
+		},
 		"1" :> {
 			wireStyle,
 			Line[{center - {size / 2, 0}, center - {size / 8, 0}}],
@@ -547,12 +551,12 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	span = If[showMeasurementWireQ, width, Max[0, #2 - #1 + 1] & @@ MinMax @ order];
 	pad = width - span;
 	positions = circuitPositions[circuit, level, MatchQ[OptionValue["GateOverlap"], Automatic | True]];
+	height = Max[numGates - 1, positions] + 1;
 	wires = circuitWires[circuit];
 	If[ !emptyWiresQ,
 		wires = DeleteCases[wires, _[_, _, i_ /; ! MemberQ[order, i]]]
 	];
-	gatePositions = MapThread[With[{gateOrder = circuitElementOrder[#1, width]}, {gateOrder, #2[[gateOrder]]}] &, {circuit["Elements"], positions[[All, 2]]}];
-	height = Max[0, positions] + 1;
+	gatePositions = MapThread[With[{gateOrder = circuitElementOrder[#1, width]}, {gateOrder, #2[[gateOrder]]}] &, {circuit["FullElements"], positions[[All, 2]]}];
 	wires = Replace[wires, _[from_, to_, i_] :> {{If[from == 0, 0, positions[[from, 2, i]]], i}, {If[to == -1, height, positions[[to, 1, i]] + 1], i}}, {1}];
 	{
 		If[TrueQ[OptionValue["ShowOutline"]], drawOutline[If[emptyWiresQ, width, span], height, pad, FilterRules[{opts}, Options[drawOutline]]], Nothing],
@@ -583,7 +587,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 				True,
 				drawGate[#2, labelCounter @ #1["Label"], FilterRules[{opts}, Options[drawGate]]]
 			] &,
-			{circuit["Elements"], gatePositions, positions[[All, 1]]}
+			{circuit["FullElements"], gatePositions, positions[[All, 1]]}
 		],
 		drawWireLabels[
 			If[emptyWiresQ, Identity, Replace[Automatic -> Range[width - span + 1, width]]] @ OptionValue["WireLabels"],
@@ -609,7 +613,7 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, overlapQ : T
 				QuantumMeasurementOperatorQ[#2],
 				ReplacePart[ConstantArray[0, width], Thread[Range[Max[order]] -> 1]],
 				level > 0 && QuantumCircuitOperatorQ[#2],
-				ReplacePart[ConstantArray[0, width], Thread[Range @@ MinMax[order] -> Max[circuitPositions[#2, level - 1, overlapQ][[-1, 2]]]]],
+				ReplacePart[ConstantArray[0, width], Thread[Range @@ MinMax[order] -> Max[Replace[circuitPositions[#2, level - 1, overlapQ], {{___, {_, o_}} :> o, _ -> 0}]]]],
 				True,
 				ReplacePart[ConstantArray[0, width], Thread[order -> 1]]
 			];
@@ -627,14 +631,14 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, overlapQ : T
 			}
 		] &,
 		{ConstantArray[0, width], ConstantArray[0, width], <|0 -> {}|>},
-		circuit["Elements"]
+		circuit["FullElements"]
 	][[All, ;; 2]]
 ]
 
 circuitWires[qc_QuantumCircuitOperator] := Block[{
 	width = qc["Width"], orders
 },
-	orders = Select[circuitElementOrder[#, width], Positive] & /@ qc["Elements"];
+	orders = Select[circuitElementOrder[#, width], Positive] & /@ qc["FullElements"];
 	Catenate @ ReplacePart[{-1, _, 2} -> -1] @ FoldPairList[
 		{prev, order} |-> Block[{next = prev},
 			next[[ order ]] = Max[prev] + 1;

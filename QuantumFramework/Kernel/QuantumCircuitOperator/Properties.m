@@ -33,7 +33,9 @@ QuantumCircuitOperator::undefprop = "property `` is undefined for this circuit";
 
 QuantumCircuitOperatorProp[QuantumCircuitOperator[data_Association], key_String] /; KeyExistsQ[data, key] := data[key]
 
-QuantumCircuitOperatorProp[qco_, "Operators"] := DeleteCases[qco["Elements"], _ ? BarrierQ]
+QuantumCircuitOperatorProp[qco_, "FullElements"] := Replace[qco["Elements"], {} :> {QuantumOperator["I"]}]
+
+QuantumCircuitOperatorProp[qco_, "Operators"] := Replace[DeleteCases[qco["Elements"], _ ? BarrierQ], {} :> {QuantumOperator["I"]}]
 
 
 QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[Options[CircuitDraw]]] :=
@@ -153,7 +155,7 @@ QuantumCircuitOperatorProp[qco_, "Shift", n : _Integer ? NonNegative : 1] :=
 
 
 QuantumCircuitOperatorProp[qco_, "Dagger"] :=
-    QuantumCircuitOperator[#["Dagger"] & /@ Reverse @ qco["Operators"], SuperDagger[qco["Label"]]]
+    QuantumCircuitOperator[#["Dagger"] & /@ Reverse @ qco["Operators"], simplifyLabel[SuperDagger[qco["Label"]]]]
 
 QuantumCircuitOperatorProp[qco_, prop : "Conjugate" | "Dual"] :=
     QuantumCircuitOperator[#[prop] & /@ qco["Operators"], SuperStar[qco["Label"]]]
