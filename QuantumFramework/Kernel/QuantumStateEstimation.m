@@ -299,10 +299,10 @@ QuantumStateEstimate[measurementResult_ ? MeasurementResultQ, opt : OptionsPatte
 		"Invertible" -> inversionResult["invertible"],
 		"PhysicalInversion" -> physicalInversion,
 		"InversionState" -> QuantumState[inversionState],
-		"MaxLikelihoodState" -> QuantumState[maxLikelihoodState],
-		"MaxLikelihoodAcceptanceRatio" -> optimizationMeta["acceptanceRatio"][[1]],
-		"MaxLikelihoodConvergence" -> (# - Max[#] & @ optimizationMeta["optimization"][[;;, "likelihood"]]),
-		"MaxLikelihoodConvergenceStepSize" -> optimizationMeta["optimization"][[;;, "stepSize"]],
+		"MaximumLikelihoodState" -> QuantumState[maxLikelihoodState],
+		"MaximumLikelihoodAcceptanceRatio" -> optimizationMeta["acceptanceRatio"][[1]],
+		"MaximumLikelihoodConvergence" -> (# - Max[#] & @ optimizationMeta["optimization"][[;;, "likelihood"]]),
+		"MaximumLikelihoodConvergenceStepSize" -> optimizationMeta["optimization"][[;;, "stepSize"]],
 		"BayesianAcceptanceRatio" -> bayesianAcceptanceRatio,
 		"BayesianSampler" -> bayesianSampler,
 		"TotalCounts" -> Round[Total[events]],
@@ -1051,7 +1051,7 @@ QuantumStateEstimation /: MakeBoxes[obj : QuantumStateEstimation[info_Associatio
 	below = {
 		BoxForm`SummaryItem[{"Physical Inversion: ", info["PhysicalInversion"]}],
 		BoxForm`SummaryItem[{"Total Counts: ", info["TotalCounts"]}],
-		BoxForm`SummaryItem[{"maxLike Acceptance Ratio: ", info["MaxLikelihoodAcceptanceRatio"]}],
+		BoxForm`SummaryItem[{"Maximum Likelihood Acceptance Ratio: ", info["MaximumLikelihoodAcceptanceRatio"]}],
 		BoxForm`SummaryItem[{"Sampler Acceptance Ratio: ", info["BayesianAcceptanceRatio"]}],
 		BoxForm`SummaryItem[{"Sampler stepSize: ", info["MetropolisStepSize"]}]
 	};

@@ -555,15 +555,18 @@ QuantumOperatorProp[qo_, "ZYZ"] /; qo["Dimensions"] === {2, 2} := Enclose @ Modu
 ]
 
 QuantumOperatorProp[qo_, "SimpleQASM"] /; qo["Dimensions"] === {2, 2} := Enclose @ With[{
-    angles = StringReplace[ToLowerCase @ ToString[#, InputForm], {"Pi" -> "pi", "I" -> "im"}] & /@
+    angles = ToLowerCase @ ToString[NumberForm[N[#]]] & /@
         ConfirmBy[UnitaryEulerAngles[qo["MatrixRepresentation"]], AllTrue[NumericQ]]
 },
     StringTemplate["U(``, ``, ``)"][Sequence @@ angles]
 ]
 
-QuantumOperatorProp[qo_, "SimpleQASM"] /; qo["Label"] == "SWAP" := "swap"
-
-QuantumOperatorProp[qo_, "SimpleQASM"] := StringTemplate["// Unimplimented QASM for operator with label: `` ----"][qo["Label"]]
+QuantumOperatorProp[qo_, "SimpleQASM"] :=
+    Replace[qo["Label"], {
+        "SWAP" | "\[Pi]"[2, 1] :> "swap",
+        Superscript[label_, CircleTimes[_]] :> QuantumOperator[label]["SimpleQASM"],
+        label_ :> StringTemplate["// Unimplimented QASM for operator with label: `` ----"][label]
+    }]
 
 QuantumOperatorProp[qo_, "TargetOperator"] := Module[{control1, control0, n, m},
     control1 = qo["ControlOrder1"];

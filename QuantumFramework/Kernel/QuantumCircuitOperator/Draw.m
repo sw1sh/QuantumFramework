@@ -551,7 +551,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	span = If[showMeasurementWireQ, width, Max[0, #2 - #1 + 1] & @@ MinMax @ order];
 	pad = width - span;
 	positions = circuitPositions[circuit, level, MatchQ[OptionValue["GateOverlap"], Automatic | True]];
-	height = Max[numGates - 1, positions] + 1;
+	height = Max[0, positions] + 1;
 	wires = circuitWires[circuit];
 	If[ !emptyWiresQ,
 		wires = DeleteCases[wires, _[_, _, i_ /; ! MemberQ[order, i]]]
