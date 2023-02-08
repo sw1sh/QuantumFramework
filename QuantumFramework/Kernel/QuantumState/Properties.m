@@ -507,6 +507,15 @@ QuantumStateProp[qs_, "Physical"] := If[qs["PhysicalQ"], qs,
     ]
 ]
 
+QuantumStateProp[qs_, "EigenPrune", n : _Integer ? Positive : 1] :=
+	Block[{d, u, p},
+		{d, u} = eigensystem[qs["DensityMatrix"], Chop -> True, "Normalize" -> True];
+        p = PositionLargest[Abs[d], n];
+		d = Normalize[Extract[d, p], Total];
+        u = Extract[u, p];
+		QuantumState[Transpose[u] . DiagonalMatrix[d] . Conjugate[u] // Chop, qs["Basis"]]
+    ]
+
 
 QuantumStateProp[qs_, "TensorReverseOutput", qudits : {_Integer...}] := QuantumState[
     If[qs["VectorQ"], SparseArrayFlatten, ArrayReshape[#, qs["MatrixDimensions"]] &] @
