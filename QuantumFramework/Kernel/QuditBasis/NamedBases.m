@@ -28,8 +28,10 @@ QuditBasis[dimension_Integer, args___] := QuditBasis[{"Computational", dimension
 
 QuditBasis["Computational", args___] := QuditBasis[{"Computational", 2}, args]
 
-QuditBasis[{"Computational", dimension_Integer}, args___] :=
-    QuditBasis[QuditBasis[Range[dimension] - 1, identityMatrix[dimension] /. {{}} -> {}], args]
+QuditBasis[{"Computational", 0}, args___] := QuditBasis[{$QuditZero}, {{}}]
+
+QuditBasis[{"Computational", dimension_Integer ? Positive}, args___] :=
+    QuditBasis[QuditBasis[Range[dimension] - 1, identityMatrix[dimension]], args]
 
 
 QuditBasis["Bell", args___] := QuditBasis[

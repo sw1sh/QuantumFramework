@@ -110,9 +110,10 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; ! newBasis["Sort
 QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Basis"] == newBasis := QuantumState[qs["State"], newBasis]
 
 QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Dimension"] == newBasis["Dimension"] :=
-    Switch[
-        qs["StateType"],
-        "Vector",
+    Which[
+        qs["Dimension"] == 0,
+        QuantumState[qs["State"], newBasis],
+        qs["VectorQ"],
         QuantumState[
             SparseArrayFlatten @ Dot[
                 SparsePseudoInverse[newBasis["Output"]["ReducedMatrix"]],
@@ -121,7 +122,7 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Dimension"] 
             ],
             newBasis
         ],
-        "Matrix",
+        qs["MatrixQ"],
         QuantumState[
             Dot[
                 SparsePseudoInverse[newBasis["ReducedMatrix"]],
@@ -129,7 +130,9 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Dimension"] 
                 newBasis["ReducedMatrix"]
             ],
             newBasis
-        ]
+        ],
+        True,
+        $Failed
     ]
 
 QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] := Switch[
@@ -247,8 +250,12 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
 (qs1_QuantumState ? QuantumStateQ)[(qs2_QuantumState ? QuantumStateQ)] /; qs1["Input"] == qs2["Output"] := Module[{
     state
 },
-    state = If[ qs1["VectorQ"] && qs2["VectorQ"],
+    state = Which[
+        qs1["OutputDimension"] * qs2["InputDimension"] == 0,
+        {},
+        qs1["VectorQ"] && qs2["VectorQ"],
         SparseArrayFlatten[qs1["StateMatrix"] . qs2["StateMatrix"]],
+        True,
         With[{q1 = If[qs1["VectorQ"], qs1["Double"], qs1], q2 = If[qs2["VectorQ"], qs2["Double"], qs2]},
             ArrayReshape[
                 q1["StateMatrix"] . q2["StateMatrix"],
@@ -268,9 +275,12 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
 (qs1_QuantumState ? QuantumStateQ)[(qs2_QuantumState ? QuantumStateQ)] /; qs1["InputDimension"] == qs2["OutputDimension"] := Module[{
     q1 = qs1["Computational"], q2 = qs2["Computational"], state
 },
-    state = If[
+    state = Which[
+        qs1["OutputDimension"] * qs2["InputDimension"] == 0,
+        {},
         TrueQ[qs1["VectorQ"] && qs2["VectorQ"]],
         SparseArrayFlatten[q1["StateMatrix"] . q2["StateMatrix"]],
+        True,
         If[qs1["VectorQ"], q1 = q1["Double"]];
         If[qs2["VectorQ"], q2 = q2["Double"]];
         ArrayReshape[

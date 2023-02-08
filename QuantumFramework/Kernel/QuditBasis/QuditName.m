@@ -112,7 +112,7 @@ QuantumTensorProduct[qbn1_QuditName, qbn2_QuditName] := Which[
 QuditName /: MakeBoxes[qbn : QuditName[name_, OptionsPattern[]], format_] := With[{
     boxes = Block[{BoxForm`UseTextFormattingQ = False},
         StyleBox[
-            Switch[name, $QuditZero, "\[EmptySet]", $QuditIdentity, "\[ScriptOne]", _,
+            Switch[name, {}, "\[EmptySet]", $QuditIdentity, "\[ScriptOne]", _,
                 If[ FreeQ[qbn["Name"], _QuditName],
                     TemplateBox[{RowBox[Riffle[ToBoxes[#, format] & /@ {##}, "\[InvisibleSpace]"]]}, If[qbn["DualQ"], "Bra", "Ket"]],
                     RowBox[ToBoxes[#, format] & /@ {##}]

@@ -42,7 +42,7 @@ PackageScope["profile"]
 symbolicTensorQ[a_] := MatchQ[a, _Symbol] || TensorQ[a] && AnyTrue[Level[a, {-1}], MatchQ[_Symbol]]
 
 
-basisMultiplicity[dim_, size_] := Quiet[Ceiling @ Log[size, dim] /. 0 | Indeterminate -> 1, Divide::indet]
+basisMultiplicity[dim_, size_] := Quiet[Replace[Ceiling @ Log[size, dim], Except[_Integer ? Positive] -> 1], {Divide::indet, Power::infy}]
 
 
 (* test functions *)

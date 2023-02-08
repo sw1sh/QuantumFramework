@@ -8,7 +8,7 @@ $QuantumStateProperties = {
     "NormalizedState", "NormalizedAmplitudes", "NormalizedStateVector", "NormalizedDensityMatrix",
     "Entropy", "VonNeumannEntropy",
     "Purity", "Type", "PureStateQ", "MixedStateQ",
-    "Kind", "Number",
+    "Kind", "Scalar",
     "Norm", "TraceNorm", "NormalizedQ",
     "BlochSphericalCoordinates", "BlochCartesianCoordinates",
     "BlochPlot",
@@ -84,7 +84,7 @@ QuantumStateProp[qs_, "PhysicalQ"] := ! qs["UnknownQ"]
 
 QuantumStateProp[qs_, "Kind"] := Which[
     qs["InputQudits"] === qs["OutputQudits"] === 0,
-    "Number",
+    "Scalar",
     qs["InputQudits"] === 0,
     "State",
     qs["OutputQudits"] === 0,
@@ -119,7 +119,7 @@ QuantumStateProp[qs_, "StateVector"] := Module[{result},
     result /; !FailureQ[result]
 ]
 
-QuantumStateProp[qs_, "Number"] /; qs["Kind"] === "Number" := First[Flatten[qs["State"]]]
+QuantumStateProp[qs_, "Scalar" | "Number"] /; qs["Kind"] === "Scalar" := First[Flatten[qs["State"]]]
 
 QuantumStateProp[qs_, "Weights"] := If[qs["PureStateQ"],
     Abs[qs["StateVector"]] ^ 2,
@@ -196,7 +196,7 @@ QuantumStateProp[qs_, "Projector"] := QuantumState[Flatten @ qs["DensityMatrix"]
 
 QuantumStateProp[qs_, "NormalizedProjector"] := QuantumState[Flatten @ qs["NormalizedDensityMatrix"], QuantumBasis[qs["Basis"], "Input" -> qs["Output"]["Dual"]]]
 
-QuantumStateProp[qs_, "MatrixDimensions"] := {qs["Dimension"], qs["Dimension"]}
+QuantumStateProp[qs_, "MatrixDimensions"] := Replace[{qs["Dimension"], qs["Dimension"]}, {0, 0} -> {1, 0}]
 
 QuantumStateProp[qs_, "Eigenvalues"] := Eigenvalues[qs["DensityMatrix"]]
 
@@ -237,6 +237,8 @@ QuantumStateProp[qs_, "Purity"] := Enclose[
 ]
 
 QuantumStateProp[qs_, "Type"] := Which[
+    qs["Dimension"] == 0,
+    "Empty",
     AllTrue[qs["State"], TrueQ[# == 0] &, If[qs["VectorQ"], 1, 2]],
     (* TrueQ[qs["Purity"] == Indeterminate], *)
     "Degenerate",
@@ -253,6 +255,8 @@ QuantumStateProp[qs_, "PureStateQ"] := qs["Type"] === "Pure"
 QuantumStateProp[qs_, "MixedStateQ"] := qs["Type"] === "Mixed"
 
 QuantumStateProp[qs_, "DegenerateStateQ"] := qs["Type"] === "Degenerate"
+
+QuantumStateProp[qs_, "EmptyStateQ"] := qs["Type"] === "Empty"
 
 QuantumStateProp[qs_, "UnknownQ"] := qs["Type"] === "Unknown"
 

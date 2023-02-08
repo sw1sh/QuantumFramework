@@ -43,7 +43,7 @@ QuantumBasis /: MakeBoxes[qb_QuantumBasis /; QuantumBasisQ[Unevaluated @ qb], fo
         },
         {
             BoxForm`SummaryItem[{"Dimensions: ",
-                If[qb["InputQudits"] > 0, MapAt[Style[#, Bold] &, qb["Dimensions"], {- qb["InputQudits"] ;; }], qb["Dimensions"]]}]
+                Join[Style[#, Bold] & /@ qb["OutputDimensions"], qb["InputDimensions"]]}]
         },
         {
             BoxForm`SummaryItem[{"Element dimensions: ", qb["ElementDimensions"]}]

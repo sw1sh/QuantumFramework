@@ -41,8 +41,9 @@ qb_QuditBasis /; System`Private`HoldNotValidQ[qb] && quditBasisQ[Unevaluated @ q
 
 QuditBasis[] := QuditBasis[{QuditName[]}, {1}]
 
-QuditBasis[{}] := QuditBasis[0]
-QuditBasis[{1 ..}] := QuditBasis[]
+QuditBasis[$QuditZero] := QuditBasis[0]
+
+QuditBasis[{}] := QuditBasis[]
 
 QuditBasis[qb_QuditBasis] := qb
 
@@ -57,8 +58,8 @@ QuditBasis[names : {Except[_Integer | (name_String | {name_String, ___} /; Membe
 QuditBasis[names_List, elements_ ? ArrayQ] :=
     QuditBasis[AssociationThread[names, Normal @ elements]]
 
-QuditBasis[elements_Association] /; Not @ AllTrue[elements, NumericQ[#] || SparseArrayQ[#] &] :=
-    QuditBasis[Map[If[NumericQ[#], #, SparseArray[#]] &, elements]]
+QuditBasis[elements_Association] /; Not @ AllTrue[elements, SparseArrayQ[#] || AtomQ[#] || # === {} &] :=
+    QuditBasis[Map[If[AtomQ[#], #, SparseArray[#]] &, elements]]
 
 (* QuditBasis[elements_Association] /; !OrderedQ[Reverse /@ Keys[elements]] :=
     QuditBasis[KeySortBy[elements, Reverse]] *)

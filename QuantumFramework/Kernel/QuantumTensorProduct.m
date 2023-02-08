@@ -12,7 +12,7 @@ resetIndex[qb_QuditBasis] := With[{index = Sort @ qb["Index"]},
     KeyMap[MapAt[Replace[Thread[index -> Range[Length[index]]]], 2], KeySortBy[{Last}] @ qb["Representations"]]
 ]
 
-QuantumTensorProduct[qb1_QuditBasis, qb2_QuditBasis] := If[qb1["Size"] == 0 || qb2["Size"] == 0, QuditBasis[0],
+QuantumTensorProduct[qb1_QuditBasis, qb2_QuditBasis] := If[qb1["Length"] == 0 || qb2["Length"] == 0, QuditBasis[0],
     QuditBasis[
         Association[resetIndex[qb1], KeyMap[MapAt[# + qb1["FullQudits"] &, 2]] @ resetIndex[qb2]]
     ]

@@ -6,7 +6,7 @@ QuditBasis["Properties"] = {
     "Representations",
     "Association", "Names", "Elements",
     "Length", "Size", "Qudits", "Rank",
-    "Dimensions", "FullDimensions", "NameRank", "NameTensor",
+    "Dimensions", "Shape", "NameRank", "NameTensor",
     "ElementDimensions", "ElementDimension", "Rank",
     "MatrixDimensions", "TensorDimensions",
     "ElementsDimensions",
@@ -34,11 +34,11 @@ QuditBasisProp[qb_, "Length"] := Length[qb["Representations"]]
 
 QuditBasisProp[qb_, "Index"] := DeleteDuplicates @ Keys[qb["Representations"]][[All, -1]]
 
-normalRepresentations[repr_] := Replace[DeleteCases[repr, Except[_ ? ArrayQ]], <||> -> QuditBasis[]["Representations"]]
+normalRepresentations[repr_Association] := If[Length[repr] == 0 || MemberQ[repr, {}], <||>, Replace[DeleteCases[repr, Except[_ ? ArrayQ]], <||> :> Select[repr, AtomQ, 1]]]
 
-QuditBasisProp[qb_, "FullDimensions"] := Values @ KeySort @ ResourceFunction["KeyGroupBy"][qb["Representations"], Last, Length @* normalRepresentations]
+QuditBasisProp[qb_, "Shape" | "FullDimensions"] := If[qb["Length"] > 0, Values @ KeySort @ ResourceFunction["KeyGroupBy"][qb["Representations"], Last, Length @* normalRepresentations], {0}]
 
-QuditBasisProp[qb_, "Dimensions"] := If[qb["Length"] > 0, Replace[DeleteCases[qb["FullDimensions"], 1], {} -> {1}], {}]
+QuditBasisProp[qb_, "Dimensions"] := DeleteCases[qb["Shape"], 1]
 
 QuditBasisProp[qb_, "Names"] := If[qb["Length"] > 0,
     QuantumTensorProduct @* Map[QuditName] /@ Tuples @ Values @ KeySort @ ResourceFunction["KeyGroupBy"][qb["Representations"], Last, Keys[normalRepresentations[#]][[All, 1]] &],
@@ -55,16 +55,16 @@ QuditBasisProp[qb_, "Names", pos_ : All] := Enclose @ If[qb["Length"] > 0,
     {}
 ]
 
-QuditBasisProp[qb_, "NameRank" | "Qudits"] := Count[qb["Dimensions"], Except[1]]
+QuditBasisProp[qb_, "NameRank" | "Qudits"] := Count[qb["Dimensions"], Except[0]]
 
-QuditBasisProp[qb_, "FullNameRank"] := Count[qb["FullDimensions"], Except[1]]
+QuditBasisProp[qb_, "FullNameRank" | "ShapeRank"] := Count[qb["Shape"], Except[1 | 0]]
 
-QuditBasisProp[qb_, "FullQudits"] := Length[qb["FullDimensions"]]
+QuditBasisProp[qb_, "FullQudits"] := Length[qb["Shape"]]
 
-QuditBasisProp[qb_, "NameTensor"] := ArrayReshape[qb["Names"], qb["FullDimensions"]]
+QuditBasisProp[qb_, "NameTensor"] := ArrayReshape[qb["Names"], qb["Shape"]]
 
 
-computationalBasisQ[repr_] := And @@ ResourceFunction["KeyGroupBy"][repr, Last, With[{vs = SparseArray @ Values @ normalRepresentations @ #}, vs == IdentityMatrix[Length[vs], SparseArray]] &]
+computationalBasisQ[repr_] := And @@ ResourceFunction["KeyGroupBy"][repr, Last, With[{vs = Values @ normalRepresentations @ #}, Last[Dimensions[vs]] == 0 || SparseArray[vs] == IdentityMatrix[Length[vs], SparseArray]] &]
 
 QuditBasisProp[qb_, "Elements"] /; computationalBasisQ[qb["Representations"]] := With[{
     dims = qb["Dimensions"], dim = qb["Dimension"], qudits = qb["Qudits"]
@@ -107,19 +107,23 @@ QuditBasisProp[qb_, "ReducedElements"] := If[qb["Length"] > 0,
 
 QuditBasisProp[qb_, "Association"] := Association @ Thread[qb["Names"] -> qb["Elements"]]
 
-QuditBasisProp[qb_, "Size" | "Dimension"] := If[qb["Length"] > 0, Times @@ qb["Dimensions"], 0]
+QuditBasisProp[qb_, "Size" | "Dimension"] := Times @@ qb["Dimensions"]
 
-QuditBasisProp[qb_, "ElementDimensions"] := Catenate @ Values @ KeySort @ ResourceFunction["KeyGroupBy"][
-    qb["Representations"],
-    Last,
-    Map[Dimensions] /* Sort /* Last /* Replace[{} -> {1}]
+QuditBasisProp[qb_, "ElementDimensions"] :=  If[
+    qb["Length"] > 0,
+    Catenate @ Values @ KeySort @ ResourceFunction["KeyGroupBy"][
+        qb["Representations"],
+        Last,
+        Map[Dimensions] /* Sort /* Last
+    ],
+    {0}
 ]
 
-QuditBasisProp[qb_, "ElementDimension"] := If[qb["Size"] > 0, Times @@ qb["ElementDimensions"], 0]
+QuditBasisProp[qb_, "ElementDimension"] := Times @@ qb["ElementDimensions"]
 
-QuditBasisProp[qb_, "Rank"] := If[qb["Size"] > 1, Count[qb["ElementDimensions"], Except[1]], 0]
+QuditBasisProp[qb_, "Rank"] := Count[qb["ElementDimensions"], Except[1 | 0]]
 
-QuditBasisProp[qb_, "MatrixDimensions"] := {qb["ElementDimension"], qb["Dimension"]}
+QuditBasisProp[qb_, "MatrixDimensions"] := Replace[{qb["ElementDimension"], qb["Dimension"]}, {0, d_} :> {Max[d, 1], 0}]
 
 QuditBasisProp[qb_, "TensorDimensions"] := Join[qb["ElementDimensions"], qb["Dimensions"]]
 
@@ -137,7 +141,7 @@ QuditBasisProp[qb_, "ReducedTensor"] := If[qb["Rank"] > 0,
 
 QuditBasisProp[qb_, "Matrix"] := ArrayReshape[qb["Tensor"], qb["MatrixDimensions"]]
 
-QuditBasisProp[qb_, "ReducedMatrix"] := ArrayReshape[qb["ReducedTensor"], {qb["Dimension"], qb["Dimension"]}]
+QuditBasisProp[qb_, "ReducedMatrix"] := ArrayReshape[qb["ReducedTensor"], qb["MatrixDimensions"]]
 
 
 QuditBasisProp[qb_, "Dual"] := QuditBasis @ KeyMap[MapAt[#["Dual"] &, 1], qb["Representations"]]
@@ -156,7 +160,7 @@ QuditBasisProp[qb_, "Sort"] := QuditBasis[KeySortBy[qb["Representations"], {Last
 QuditBasisProp[qb_, "Permute", perm_Cycles] := Enclose @ If[
     perm === Cycles[{}],
     qb,
-    Module[{idx = Delete[qb["Index"], Position[qb["FullDimensions"], 1]], repl},
+    Module[{idx = Delete[qb["Index"], Position[qb["Shape"], 1]], repl},
         repl = Thread[idx -> PermutationList[perm, Length[idx]][[Ordering @ Ordering @ idx]]];
         QuditBasis[
             KeyMap[MapAt[Replace[repl], 2]] @ qb["Representations"]
