@@ -130,6 +130,6 @@ Module[{
 
     };
     box = GeometricTransformation[box, RotationTransform[OptionValue["Rotate"], labelPos]];
-    Graphics[{box, Text[Style[qb["Label"], OptionValue["LabelStyle"]], labelPos]}]
+    Graphics[{box, If[qb["Label"] === None, Nothing, Text[Style[qb["Label"], OptionValue["LabelStyle"]], labelPos]]}]
 ]
 

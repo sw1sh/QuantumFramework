@@ -381,7 +381,7 @@ expandQuditBasis[qb_QuditBasis, order1_ ? orderQ, order2_ ? orderQ, defaultDim_I
     QuantumTensorProduct[order2 /. Append[Thread[order1 -> qb["Decompose"]], _Integer -> QuditBasis[defaultDim]]]
 )
 
-matrixFunction[f_, mat_] := Enclose[ConfirmBy[MatrixFunction[f, mat, Method -> "Jordan"], MatrixQ], MatrixFunction[f, mat] &]
+matrixFunction[f_, mat_] := Enclose[Quiet @ ConfirmBy[MatrixFunction[f, mat, Method -> "Jordan"], MatrixQ], MatrixFunction[f, mat] &]
 
 QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator] ...] /; MemberQ[Attributes[f], NumericFunction] := With[{op = qo["Sort"]},
     Enclose @ QuantumOperator[

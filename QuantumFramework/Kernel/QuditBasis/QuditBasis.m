@@ -58,7 +58,7 @@ QuditBasis[names : {Except[_Integer | (name_String | {name_String, ___} /; Membe
 QuditBasis[names_List, elements_ ? ArrayQ] :=
     QuditBasis[AssociationThread[names, Normal @ elements]]
 
-QuditBasis[elements_Association] /; Not @ AllTrue[elements, SparseArrayQ[#] || AtomQ[#] || # === {} &] :=
+QuditBasis[elements_Association] /; Not @ AllTrue[elements, SparseArrayQ[#] || AtomQ[#] || emptyTensorQ[#] &] :=
     QuditBasis[Map[If[AtomQ[#], #, SparseArray[#]] &, elements]]
 
 (* QuditBasis[elements_Association] /; !OrderedQ[Reverse /@ Keys[elements]] :=
@@ -158,7 +158,7 @@ QuditBasis /: MakeBoxes[qb_QuditBasis /; QuditBasisQ[Unevaluated @ qb], format_]
     },
     {
         {
-            BoxForm`SummaryItem[{"Dimensions: ", qb["Dimensions"]}]
+            BoxForm`SummaryItem[{"Shape: ", qb["Shape"]}]
         },
         {
             BoxForm`SummaryItem[{"Element dimensions: ", qb["ElementDimensions"]}]

@@ -57,7 +57,7 @@ QuantumState /: MakeBoxes[qs_QuantumState /; QuantumStateQ[Unevaluated @ qs], fo
         },
         {
             BoxForm`SummaryItem[{"Dimensions: ",
-                Join[Style[#, Bold] & /@ qs["OutputDimensions"], qs["InputDimensions"]]}]
+                Join[qs["OutputDimensions"], Style[#, Bold] & /@ qs["InputDimensions"]]}]
         },
         {
             BoxForm`SummaryItem[{"ParameterArity: ", qs["ParameterArity"]}],

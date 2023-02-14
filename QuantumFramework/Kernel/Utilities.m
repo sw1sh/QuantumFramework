@@ -10,6 +10,7 @@ PackageScope["orderQ"]
 PackageScope["autoOrderQ"]
 PackageScope["targetQ"]
 PackageScope["measurementReprQ"]
+PackageScope["emptyTensorQ"]
 
 PackageScope["normalizeMatrix"]
 PackageScope["tensorToVector"]

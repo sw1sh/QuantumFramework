@@ -158,13 +158,13 @@ QuantumBasisProp[qb_, "OutputNameDimension" | "OutputDimension"] := qb["Output"]
 QuantumBasisProp[qb_, "NameDimension" | "Dimension"] := qb["OutputDimension"] qb["InputDimension"]
 
 
-QuantumBasisProp[qb_, "MatrixNameDimensions"] := Replace[{qb["OutputNameDimension"], qb["InputNameDimension"]}, {0, d_} :> {Max[d, 1], 0}]
+QuantumBasisProp[qb_, "MatrixNameDimensions"] := Replace[{qb["OutputNameDimension"], qb["InputNameDimension"]}, {0, _} :> {0}]
 
-QuantumBasisProp[qb_, "MatrixElementDimensions"] := Replace[{qb["OutputElementDimension"], qb["InputElementDimension"]}, {0, d_} :> {Max[d, 1], 0}]
+QuantumBasisProp[qb_, "MatrixElementDimensions"] := Replace[{qb["OutputElementDimension"], qb["InputElementDimension"]}, {0, _} :> {0}]
 
 QuantumBasisProp[qb_, "TensorDimensions"] := Join[qb["ElementDimensions"], qb["Dimensions"]]
 
-QuantumBasisProp[qb_, "MatrixDimensions"] := Replace[{qb["ElementDimension"], qb["Dimension"]}, {0, d_} :> {Max[d, 1], 0}]
+QuantumBasisProp[qb_, "MatrixDimensions"] := Replace[{qb["ElementDimension"], qb["Dimension"]}, {0, _} :> {0}]
 
 
 QuantumBasisProp[qb_, "InputBasis"] := QuantumBasis[qb, "Output" -> QuditBasis[]]

@@ -22,6 +22,7 @@ labelToGate = Replace[{
     Subscript["R", axis_String][angle_] :> {"r" <> ToLowerCase[axis], N @ angle},
     Subscript["C", Subscript["R", axis_String][angle_]][__] :> {"cr" <> ToLowerCase[axis], N @ angle},
     Subscript["C", Superscript[Subscript["R", axis_String][angle_], CircleTimes[range_]]][__] :> {"cr" <> ToLowerCase[axis], N @ angle, range},
+    "\[Pi]"[perm___] :> {"perm", PermutationCycles[{perm}]},
     x_String :> ToLowerCase[x],
     x_String[params___] :> {ToLowerCase[x], params}
 }]
@@ -57,6 +58,8 @@ QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
                             Join[range, t] - 1
                         }
                     ],
+                {"perm", Cycles[{swap : {_, _}}]} :> {"swap", {}, swap - 1},
+                {"perm", perm_Cycles} :> {"permutation", PermutationList[perm] - 1, #["InputOrder"] - 1},
                 {name_String /; MemberQ[existingGateNames, name], params___} :> {
                     name,
                     N @ {params},
@@ -85,7 +88,7 @@ from wolframclient.language import wl
 from qiskit import QuantumCircuit
 from qiskit.extensions import UnitaryGate
 from qiskit.circuit.gate import Gate
-from qiskit.circuit.library.standard_gates import XGate, YGate, ZGate, HGate, RXGate, RYGate, RZGate, PhaseGate, U2Gate, U3Gate, SwapGate
+from qiskit.circuit.library import XGate, YGate, ZGate, HGate, RXGate, RYGate, RZGate, PhaseGate, U2Gate, U3Gate, SwapGate, PermutationGate
 
 import pickle
 
@@ -124,9 +127,12 @@ for name, data, order in <* Wolfram`QuantumFramework`Qiskit`PackagePrivate`opera
         else:
             base_gate = Gate(base_name, n_qubits=data[0])
         circuit.append(base_gate.control(len(data[2]), ctrl_state=data[2]), tuple(order))
+    elif name == 'permutation':
+        circuit.append(PermutationGate(data), tuple(order))
     elif name == 'm':
         circuit.measure(*tuple(order))
     else:
+        print(name)
         circuit.append(UnitaryGate(data, name), tuple(order))
 wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(circuit))
     "]
@@ -260,6 +266,18 @@ for gate, qubits, clbits in qc:
         ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('CY', order))
     elif gate.name == 'cz':
         ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('CZ', order))
+    elif gate.name == 'crx':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['C', ['R', *xs, 'X']], order))
+    elif gate.name == 'cry':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['C', ['R', *xs, 'Y']], order))
+    elif gate.name == 'crz':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['C', ['R', *xs, 'Z']], order))
+    elif gate.name == 'c    rx_o0':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['C0', ['R', *xs, 'X']], order))
+    elif gate.name == 'cry_o0':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['C0', ['R', *xs, 'Y']], order))
+    elif gate.name == 'crz_o0':
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['C0', ['R', *xs, 'Z']], order))
     elif gate.name == 't':
         ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('T', order))
     elif gate.name == 'tdg':
@@ -321,7 +339,7 @@ qiskitApply[qc_QiskitCircuit, qs_QuantumState, OptionsPattern[]] := Enclose @ Bl
     Wolfram`QuantumFramework`$backendName = Replace[OptionValue["Backend"], Automatic -> Null],
     result
 },
-    ConfirmAssert[qs["InputDimensions"] == {1}];
+    ConfirmAssert[qs["InputDimensions"] == {}];
     ConfirmAssert[AllTrue[qs["OutputDimensions"], EqualTo[2]]];
     ExternalEvaluate[$PythonSession, If[ OptionValue["Provider"] === "IBMQ", "
 from qiskit import IBMQ
@@ -358,14 +376,14 @@ else:
 
 
 circuit.initialize(<* Wolfram`QuantumFramework`$state *>)
-circuit.extend(qc)
+circuit = circuit.compose(qc)
 
 circuit = transpile(circuit, backend)
 
 result = backend.run(circuit, shots = <* Wolfram`QuantumFramework`$shots *>).result()
 
 if qc.num_clbits > 0:
-    result = result.get_counts()
+    result = result.get_counts(circuit)
 else:
     result = result.get_statevector().data
 result
