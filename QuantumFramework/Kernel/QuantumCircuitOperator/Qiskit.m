@@ -132,8 +132,7 @@ for name, data, order in <* Wolfram`QuantumFramework`Qiskit`PackagePrivate`opera
     elif name == 'm':
         circuit.measure(*tuple(order))
     else:
-        print(name)
-        circuit.append(UnitaryGate(data, name), tuple(order))
+        circuit.append(UnitaryGate(data, name), tuple(sorted(order)))
 wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(circuit))
     "]
 ]
@@ -180,8 +179,7 @@ fig = pickle.loads(<* Wolfram`QuantumFramework`$pythonBytes *>).draw(output='mpl
 fig.canvas.draw()
 PIL.Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
 "];
-    ConfirmAssert[ImageQ[image], "Qiskit diagram could not be generated."];
-    ImageCrop[image]
+    ImageCrop[ConfirmBy[image, ImageQ]]
 ]
 
 
@@ -337,12 +335,27 @@ qiskitApply[qc_QiskitCircuit, qs_QuantumState, OptionsPattern[]] := Enclose @ Bl
     Wolfram`QuantumFramework`$state = NumericArray @ N @ qs["Reverse"]["StateVector"],
     Wolfram`QuantumFramework`$shots = OptionValue["Shots"],
     Wolfram`QuantumFramework`$backendName = Replace[OptionValue["Backend"], Automatic -> Null],
+    provider,
+    Wolfram`QuantumFramework`$token = None,
     result
 },
     ConfirmAssert[qs["InputDimensions"] == {}];
     ConfirmAssert[AllTrue[qs["OutputDimensions"], EqualTo[2]]];
-    ExternalEvaluate[$PythonSession, If[ OptionValue["Provider"] === "IBMQ", "
+
+    {provider, params} = Replace[OptionValue["Provider"], {
+        {name_, params : OptionsPattern[]} | name_ :> {name, Flatten[{params}]}
+    }];
+
+    If[ provider === "IBMQ",
+        Wolfram`QuantumFramework`$token = Lookup[params, "Token", None];
+    ];
+
+    ExternalEvaluate[$PythonSession, If[ provider === "IBMQ", "
 from qiskit import IBMQ
+token = <* Wolfram`QuantumFramework`$token *>
+if token is not None:
+    from qiskit_ibm_runtime import QiskitRuntimeService
+    QiskitRuntimeService.save_account(channel='ibm_quantum', token=token, overwrite=True)
 provider = IBMQ.load_account()
 backend_name = <* Wolfram`QuantumFramework`$backendName *>
 ",
