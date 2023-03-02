@@ -18,8 +18,8 @@ SetAttributes[QuantumMeasurementOperator, NHoldRest]
 QuantumMeasurementOperator[arg_ -> eigenvalues_ ? VectorQ, args___] :=
     Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumBasis[arg], QuantumBasisQ] -> eigenvalues, args]
 
-QuantumMeasurementOperator[target : _ ? targetQ] :=
-    QuantumMeasurementOperator[QuantumBasis[], target]
+QuantumMeasurementOperator[target : _ ? targetQ, args___] :=
+    QuantumMeasurementOperator[QuantumBasis[args], target]
 
 QuantumMeasurementOperator[] := QuantumMeasurementOperator[{1}]
 
