@@ -38,6 +38,7 @@ PacletObject[
           "Wolfram`QuantumFramework`QuantumChannel"
         }
       },
+      {"IBMQ"},
       {"Documentation", "Language" -> "English"},
       {"AutoCompletionData", "Root" -> "AutoCompletionData"},
       {"FrontEnd"}

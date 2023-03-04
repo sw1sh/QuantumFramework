@@ -23,12 +23,15 @@ IBMQdata[] = {
         ]
     ] ,
     "ClientInfo" :> Enclose @ With[{
-        token = Confirm @ Lookup[
-            OAuthDialogDump`Private`MultipleKeyDialog[
-                "IBMQ",
-                {"API token" -> "token"},
-                "https://quantum-computing.ibm.com/account",
-                "https://quantum-computing.ibm.com/terms/privacy"
+        token = Lookup[
+            ConfirmMatch[
+                OAuthDialogDump`Private`MultipleKeyDialog[
+                    "IBMQ",
+                    {"API token" -> "token"},
+                    "https://quantum-computing.ibm.com/account",
+                    "https://quantum-computing.ibm.com/terms/privacy"
+                ],
+                KeyValuePattern[{"token" -> _String}]
             ],
             "token"
         ]
@@ -41,9 +44,9 @@ IBMQdata[] = {
             "JSON"
         ]
     ],
-    "RawGets" -> {"RawMe", "RawJobStatus", "RawJobResults"},
+    "RawGets" -> {"RawAccount", "RawNetwork", "RawJobStatus", "RawJobResults"},
     "RawPosts" -> {"RawRun"},
-    "Gets" -> {"JobStatus", "JobResults"},
+    "Gets" -> {"Account", "Devices", "JobStatus", "JobResults"},
     "Posts" -> {"RunCircuit"},
     "Information" -> "IBMQ connection for WolframLanguage"
 }
@@ -51,7 +54,7 @@ IBMQdata[] = {
 IBMQdata["icon"] := Entity["Financial", "NYSE:IBM"][EntityProperty["Financial", "Image"]]
 
 
-IBMQdata["RawMe"] := {
+IBMQdata["RawAccount"] := {
     "URL"				-> "https://auth.quantum-computing.ibm.com/api/users/me",
     "HTTPSMethod"		-> "GET",
     "Headers"			-> {"Content-Type" -> "application/json"},
@@ -59,6 +62,22 @@ IBMQdata["RawMe"] := {
     "RequiredParameters"-> {},
     "ResultsFunction"	-> (# &)
 }
+
+IBMQcookeddata["Account", id_, OptionsPattern[]] := Dataset @ Association @ KeyClient`rawkeydata[id, "RawAccount"]
+
+IBMQdata["RawNetwork"] := {
+    "URL"				-> "https://api.quantum-computing.ibm.com/api/Network",
+    "HTTPSMethod"		-> "GET",
+    "Headers"			-> {"Content-Type" -> "application/json"},
+    "Parameters"		-> {},
+    "RequiredParameters"-> {},
+    "ResultsFunction"	-> (# &)
+}
+
+IBMQcookeddata["Devices", id_, OptionsPattern[]] := AssociationThread @@ Query[{
+        Query[All, "name"],
+        Query[All, "groups", "open", "projects", "main", "devices", All, 2, "name"]
+    }] @ KeyClient`rawkeydata[id, "RawNetwork"]
 
 IBMQdata["RawRun"] := {
     "URL"				-> (URLBuild[{#, "jobs"}] &),
@@ -71,9 +90,9 @@ IBMQdata["RawRun"] := {
     "ResultsFunction"	-> (# &)
 }
 
-getRuntimeUrl[id_] := Query["urls", "services", "runtime"] @ KeyClient`rawkeydata[id, "RawMe"]
+getRuntimeUrl[id_] := Query["urls", "services", "runtime"] @ KeyClient`rawkeydata[id, "RawAccount"]
 
-IBMQcookeddata["RunCircuit", id_, opts : OptionsPattern[]] := Enclose @ KeyClient`rawkeydata[id,
+IBMQcookeddata["RunCircuit", id_, opts : OptionsPattern[]] := Enclose @ Dataset @ Association @ KeyClient`rawkeydata[id,
     "RawRun",
     {
         "RuntimeUrl" -> Confirm @ getRuntimeUrl[id],
@@ -111,7 +130,7 @@ IBMQdata["RawJobResults"] := {
     "ResultsFunction"	-> (# &)
 }
 
-IBMQcookeddata["JobStatus", id_, opts : OptionsPattern[]] := Enclose @ KeyClient`rawkeydata[id,
+IBMQcookeddata["JobStatus", id_, opts : OptionsPattern[]] := Enclose @ Dataset @ Association @ KeyClient`rawkeydata[id,
     "RawJobStatus",
     {
         "RuntimeUrl" -> Confirm @ getRuntimeUrl[id],
@@ -120,7 +139,7 @@ IBMQcookeddata["JobStatus", id_, opts : OptionsPattern[]] := Enclose @ KeyClient
 ]
 
 
-IBMQcookeddata["JobResults", id_, opts : OptionsPattern[]] := Enclose @ KeyClient`rawkeydata[id,
+IBMQcookeddata["JobResults", id_, opts : OptionsPattern[]] := Enclose @ Dataset @ Association @ KeyClient`rawkeydata[id,
     "RawJobResults",
     {
         "RuntimeUrl" -> Confirm @ getRuntimeUrl[id],
