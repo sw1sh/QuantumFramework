@@ -44,14 +44,21 @@ IBMQdata[] = {
             "JSON"
         ]
     ],
-    "RawGets" -> {"RawAccount", "RawNetwork", "RawJobStatus", "RawJobResults"},
+    "RawGets" -> {"RawAccount", "RawNetwork", "RawBackends", "RawBackend", "RawJobStatus", "RawJobResults"},
     "RawPosts" -> {"RawRun"},
-    "Gets" -> {"Account", "Devices", "JobStatus", "JobResults"},
+    "Gets" -> {"Account", "Devices", "Backends", "Backend", "BackendQueue", "JobStatus", "JobResults"},
     "Posts" -> {"RunCircuit"},
     "Information" -> "IBMQ connection for WolframLanguage"
 }
 
 IBMQdata["icon"] := Entity["Financial", "NYSE:IBM"][EntityProperty["Financial", "Image"]]
+
+
+importJson[json_Association] := Dataset @ json
+
+importJson[json : {___Rule}] := importJson[json //. rules : {___Rule} :> RuleCondition[Association[rules]]]
+
+importJson[json_String] := importJson @ ImportString[json, "RawJSON"]
 
 
 IBMQdata["RawAccount"] := {
@@ -63,15 +70,14 @@ IBMQdata["RawAccount"] := {
     "ResultsFunction"	-> (# &)
 }
 
-IBMQcookeddata["Account", id_, OptionsPattern[]] := Dataset @ Association @ KeyClient`rawkeydata[id, "RawAccount"]
+IBMQcookeddata["Account", id_, OptionsPattern[]] := importJson @ KeyClient`rawkeydata[id, "RawAccount"]
 
 IBMQdata["RawNetwork"] := {
     "URL"				-> "https://api.quantum-computing.ibm.com/api/Network",
     "HTTPSMethod"		-> "GET",
     "Headers"			-> {"Content-Type" -> "application/json"},
     "Parameters"		-> {},
-    "RequiredParameters"-> {},
-    "ResultsFunction"	-> (# &)
+    "RequiredParameters"-> {}
 }
 
 IBMQcookeddata["Devices", id_, OptionsPattern[]] := AssociationThread @@ Query[{
@@ -86,13 +92,12 @@ IBMQdata["RawRun"] := {
     "Headers"			-> {"Content-Type" -> "application/json"},
     "PathParameters"    -> {"RuntimeUrl"},
     "Parameters"		-> {"Data"},
-    "RequiredParameters"-> {"RuntimeUrl", "Data"},
-    "ResultsFunction"	-> (# &)
+    "RequiredParameters"-> {"RuntimeUrl", "Data"}
 }
 
 getRuntimeUrl[id_] := Query["urls", "services", "runtime"] @ KeyClient`rawkeydata[id, "RawAccount"]
 
-IBMQcookeddata["RunCircuit", id_, opts : OptionsPattern[]] := Enclose @ Dataset @ Association @ KeyClient`rawkeydata[id,
+IBMQcookeddata["RunCircuit", id_, opts : OptionsPattern[]] := Enclose @ importJson @ KeyClient`rawkeydata[id,
     "RawRun",
     {
         "RuntimeUrl" -> Confirm @ getRuntimeUrl[id],
@@ -101,10 +106,10 @@ IBMQcookeddata["RunCircuit", id_, opts : OptionsPattern[]] := Enclose @ Dataset 
             "params" -> <|
                 "circuits" -> <|
                     "__type__" -> "QuantumCircuit",
-                    "__value__" -> Confirm @ OptionValue[{opts}, "QPY"]
+                    "__value__" -> Confirm @ Lookup[Flatten[{opts}], "QPY"]
                 |>
             |>,
-            "backend" -> Confirm @ OptionValue[{opts}, "Backend"],
+            "backend" -> Confirm @ Lookup[Flatten[{opts}], "Backend"],
             "hub" -> "ibm-q",
             "group" -> "open",
             "project" -> "main"
@@ -112,13 +117,13 @@ IBMQcookeddata["RunCircuit", id_, opts : OptionsPattern[]] := Enclose @ Dataset 
     }
 ]
 
+
 IBMQdata["RawJobStatus"] := {
     "URL"				-> (URLBuild[{#1, "jobs", #2}] &),
     "HTTPSMethod"		-> "GET",
     "Headers"			-> {"Content-Type" -> "application/json"},
     "PathParameters"    -> {"RuntimeUrl", "JobID"},
-    "RequiredParameters"-> {"RuntimeUrl", "JobID"},
-    "ResultsFunction"	-> (# &)
+    "RequiredParameters"-> {"RuntimeUrl", "JobID"}
 }
 
 IBMQdata["RawJobResults"] := {
@@ -126,26 +131,64 @@ IBMQdata["RawJobResults"] := {
     "HTTPSMethod"		-> "GET",
     "Headers"			-> {"Content-Type" -> "application/json"},
     "PathParameters"    -> {"RuntimeUrl", "JobID"},
-    "RequiredParameters"-> {"RuntimeUrl", "JobID"},
-    "ResultsFunction"	-> (# &)
+    "RequiredParameters"-> {"RuntimeUrl", "JobID"}
 }
 
-IBMQcookeddata["JobStatus", id_, opts : OptionsPattern[]] := Enclose @ Dataset @ Association @ KeyClient`rawkeydata[id,
+
+IBMQcookeddata["JobStatus", id_, opts : OptionsPattern[]] := Enclose @ importJson @ KeyClient`rawkeydata[id,
     "RawJobStatus",
     {
         "RuntimeUrl" -> Confirm @ getRuntimeUrl[id],
-        "JobID" -> Confirm @ OptionValue[{opts}, "JobID"]
+        "JobID" -> Confirm @ Lookup[Flatten[{opts}], "JobID"]
     }
 ]
 
 
-IBMQcookeddata["JobResults", id_, opts : OptionsPattern[]] := Enclose @ Dataset @ Association @ KeyClient`rawkeydata[id,
+IBMQcookeddata["JobResults", id_, opts : OptionsPattern[]] := Enclose @ importJson @ KeyClient`rawkeydata[id,
     "RawJobResults",
     {
         "RuntimeUrl" -> Confirm @ getRuntimeUrl[id],
-        "JobID" -> Confirm @ OptionValue[{opts}, "JobID"]
+        "JobID" -> Confirm @ Lookup[Flatten[{opts}], "JobID"]
     }
 ]
+
+IBMQdata["RawBackends"] := {
+    "URL"				-> (URLBuild[{#1, "backends"}] &),
+    "HTTPSMethod"		-> "GET",
+    "Headers"			-> {"Content-Type" -> "application/json"},
+    "PathParameters"    -> {"RuntimeUrl"},
+    "RequiredParameters"-> {"RuntimeUrl"}
+}
+
+IBMQdata["RawBackend"] := {
+    "URL"				-> (URLBuild[{#1, "backends", #2, #3}] &),
+    "HTTPSMethod"		-> "GET",
+    "Headers"			-> {"Content-Type" -> "application/json"},
+    "PathParameters"    -> {"RuntimeUrl", "ID", "Property"},
+    "RequiredParameters"-> {"RuntimeUrl", "ID", "Property"}
+}
+
+IBMQcookeddata["Backends", id_, opts : OptionsPattern[]] := Enclose @ importJson @ KeyClient`rawkeydata[id,
+    "RawBackends",
+    {
+        "RuntimeUrl" -> Confirm @ getRuntimeUrl[id]
+    }
+]
+
+IBMQcookeddata["Backend", id_, opts : OptionsPattern[]] := Enclose @ importJson @ KeyClient`rawkeydata[id,
+    "RawBackend",
+    {
+        "RuntimeUrl" -> Confirm @ getRuntimeUrl[id],
+        "ID" -> Confirm @ Lookup[Flatten[{opts}], "ID"],
+        "Property" -> ToLowerCase @ Lookup[Flatten[{opts}], "Property", "properties"]
+    }
+]
+
+IBMQcookeddata["BackendQueue", id_, opts : OptionsPattern[]] :=
+    IBMQcookeddata["Backends", id]["devices"][
+        AssociationMap[IBMQcookeddata["Backend", id, "ID" -> #, "Property" -> "Status"]["length_queue"] &]]
+
+
 
 
 IBMQcookeddata[___] := $Failed
