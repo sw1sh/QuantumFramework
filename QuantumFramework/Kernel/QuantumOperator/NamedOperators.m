@@ -56,9 +56,9 @@ FromOperatorShorthand[order_ ? orderQ] := QuantumMeasurementOperator[order]
 FromOperatorShorthand[name_] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[name]
 FromOperatorShorthand[{name_, args___}] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}]
 FromOperatorShorthand[{name_, args___} -> order_ ? orderQ] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, order]
-FromOperatorShorthand[{name_, args___} -> rest_] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, Sequence @@ Developer`ToList[rest]]
 FromOperatorShorthand[lhs_ -> order_ ? orderQ] := QuantumOperator[QuantumOperator[Unevaluated[lhs]], order]
 FromOperatorShorthand[lhs_ -> n_Integer] := FromOperatorShorthand[Unevaluated[lhs -> {n}]]
+FromOperatorShorthand[{name_, args___} -> rest_] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, Sequence @@ Developer`ToList[rest]]
 FromOperatorShorthand[lhs_ -> rest_] := QuantumOperator[Unevaluated[lhs], Sequence @@ Developer`ToList[rest]]
 FromOperatorShorthand[args_List] := FromOperatorShorthand /@ args
 FromOperatorShorthand[arg_] := QuantumOperator[arg]
@@ -215,7 +215,8 @@ QuantumOperator[{"CNOT", dimension_Integer}, opts___] := QuantumOperator[{"Contr
 
 QuantumOperator["CPHASE" | "CP", opts___] := QuantumOperator[{"CPHASE", Pi}, opts]
 
-QuantumOperator[{"CPHASE" | "CP", angle_, dimension : _Integer ? Positive : 2}, opts___] := QuantumOperator[{"Controlled", {"Phase", angle, dimension} -> 2}, opts]
+QuantumOperator[{"CPHASE" | "CP", angle_, dimension : _Integer ? Positive : 2}, opts___] :=
+    QuantumOperator[{"Controlled", {"Phase", angle, dimension} -> 2}, opts]
 
 
 controlledMatrix[matrix_ ? MatrixQ, dimension_Integer] := ReplacePart[
