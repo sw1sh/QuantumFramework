@@ -91,12 +91,12 @@ Cell[BoxData[StyleBox[\"par\", \"TI\"]], \"InlineFormula\", Rule[FontFamily, \
 
 QuantumCircuitOperator::usage = "\!\(\*Cell[BoxData[GridBox[{{\"\", \
 Cell[TextData[{Cell[BoxData[RowBox[{\"QuantumCircuitOperator\", \"[\", \
-StyleBox[\"qgates\", \"TI\"], \"]\"}]], \"InlineFormula\", Rule[FontFamily, \
-\"Source Sans Pro\"]], \" \\[LineSeparator]represents a quantum circuit with \
-list of quantum discrete operators or quantum measurement operators \", \
-Cell[BoxData[StyleBox[\"qgates\", \"TI\"]], \"InlineFormula\", \
-Rule[FontFamily, \"Source Sans Pro\"]], \".\"}]]}}]], \"Usage\", Rule[CellID, \
-982511436]]\)"
+StyleBox[RowBox[{\"{\", RowBox[{\"op1\", \",\", \"op2\", \",\", \"op3\", \
+\",\", \"...\"}], \"}\"}], \"TR\"], \"]\"}]], \"InlineFormula\", \
+Rule[FontFamily, \"Source Sans Pro\"]], \" \\[LineSeparator]represents a \
+quantum circuit with list of quantum operations, e.g., quantum operator, \
+quantum channel or quantum measurement operators.\"}]]}}]], \"Usage\", \
+Rule[CellID, 982511436]]\)"
 
 
 
@@ -304,6 +304,23 @@ Cell[BoxData[StyleBox[\"s\", \"TI\"]], \"InlineFormula\", Rule[FontFamily, \
 
 
 
+QuantumStateEstimate::usage = "\!\(\*Cell[BoxData[GridBox[{{\"\", \
+Cell[TextData[{Cell[BoxData[RowBox[{RowBox[{RowBox[{\"QuantumStateEstimate\", \
+\"[\", RowBox[{\"\[LeftAssociation]\", RowBox[{RowBox[{SubscriptBox[\"qmo\", \
+\"1\"], \"->\", SubscriptBox[\"result\", \"1\"]}], \",\", \
+RowBox[{SubscriptBox[\"qmo\", \"2\"], \"->\", SubscriptBox[\"result\", \
+\"2\"]}], \",\", \"...\"}]}]}], \"|>\"}], \"]\"}]], \"InlineFormula\", \
+Rule[FontFamily, \"Source Sans Pro\"]], \" \\[LineSeparator]represents a \
+quantum state estimate with quantum measurement operators \", \
+Cell[BoxData[SubscriptBox[StyleBox[\"qmo\", \"TI\"], \"i\"]], \
+\"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \", amnd the \
+experimental (or simulated) results \", \
+Cell[BoxData[SubscriptBox[StyleBox[\"result\", \"TI\"], \"i\"]], \
+\"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \".\"}]]}}]], \
+\"Usage\", Rule[CellID, 14939724]]\)"
+
+
+
 QuantumState::usage = "\!\(\*Cell[BoxData[GridBox[{{\"\", \
 Cell[TextData[{Cell[BoxData[RowBox[{TemplateBox[List[Cell[TextData[\"QuantumS\
 tate\"]], \"paclet:Wolfram/QuantumFramework/ref/QuantumState\", \"Wolfram \
@@ -336,11 +353,11 @@ Cell[BoxData[StyleBox[\"qb\", \"TI\"]], \"InlineFormula\", Rule[FontFamily, \
 Cell[TextData[{Cell[BoxData[RowBox[{TemplateBox[List[Cell[TextData[\"QuantumS\
 tate\"]], \"paclet:Wolfram/QuantumFramework/ref/QuantumState\", \"Wolfram \
 Package Symbol\"], \"PackageLink\", Rule[BaseStyle, \"InlineFormula\"]], \
-\"[\", StyleBox[\"name\", \"TI\"], \"]\"}]], \"InlineFormula\", \
-Rule[FontFamily, \"Source Sans Pro\"]], \"\\[LineSeparator]represents the \
-named quantum state identified by \", Cell[BoxData[StyleBox[\"name\", \
-\"TI\"]], \"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \
-\".\"}]]}, {\"\", \
+\"[\", \"\\\"\\!\\(\\*StyleBox[\\\"name\\\", \\\"TI\\\"]\\)\\\"\", \"]\"}]], \
+\"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \
+\"\\[LineSeparator]represents the named quantum state identified by \", \
+Cell[BoxData[StyleBox[\"name\", \"TI\"]], \"InlineFormula\", Rule[FontFamily, \
+\"Source Sans Pro\"]], \".\"}]]}, {\"\", \
 Cell[TextData[{Cell[BoxData[RowBox[{TemplateBox[List[Cell[TextData[\"QuantumS\
 tate\"]], \"paclet:Wolfram/QuantumFramework/ref/QuantumState\", \"Wolfram \
 Package Symbol\"], \"PackageLink\", Rule[BaseStyle, \"InlineFormula\"]], \
