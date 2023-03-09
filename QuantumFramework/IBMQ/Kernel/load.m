@@ -1,3 +1,3 @@
 PacletManager`Package`getPacletWithProgress["ServiceConnection_IBMQ"]
 
-Get["IBMQLoad`"]
+Get["Wolfram`IBMQLoad`"]

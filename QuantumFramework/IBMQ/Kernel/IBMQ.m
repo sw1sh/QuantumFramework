@@ -1,4 +1,4 @@
-Begin["IBMQAPI`"] (* Begin Private Context *)
+Begin["Wolfram`IBMQAPI`"] (* Begin Private Context *)
 
 
 Begin["`Private`"](* Begin Private Context *)
@@ -205,8 +205,8 @@ SetAttributes[{}, {ReadProtected, Protected}]
 (* Return three functions to define oauthservicedata, oauthcookeddata, oauthsendmessage  *)
 
 {
-    IBMQAPI`Private`IBMQdata,
-    IBMQAPI`Private`IBMQcookeddata,
-    IBMQAPI`Private`IBMQsendmessage
+    Wolfram`IBMQAPI`Private`IBMQdata,
+    Wolfram`IBMQAPI`Private`IBMQcookeddata,
+    Wolfram`IBMQAPI`Private`IBMQsendmessage
 }
 

@@ -1,6 +1,6 @@
 (* Mathematica Package *)
 
-BeginPackage["IBMQLoad`"]
+BeginPackage["Wolfram`IBMQLoad`"]
 (* Exported symbols added here with SymbolName::usage *)
 
 Begin["`Private`"] (* Begin Private Context *)

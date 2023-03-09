@@ -4,7 +4,7 @@ Paclet[
     MathematicaVersion -> "10+",
     Extensions ->
         {
-            {"Kernel", Root -> "Kernel", Context -> {"IBMQ`", "IBMQLoad`"}}
+            {"Kernel", Root -> "Kernel", Context -> {"Wolfram`IBMQLoad`"}}
         }
 ]
 
