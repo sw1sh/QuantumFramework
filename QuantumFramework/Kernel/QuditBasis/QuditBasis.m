@@ -135,7 +135,11 @@ QuditBasis /: Plus[qb__QuditBasis ? QuditBasisQ] := Module[{
 
 (* formatting *)
 
-QuditBasis /: MakeBoxes[qb_QuditBasis /; QuditBasisQ[Unevaluated @ qb], format_] := With[{
+QuditBasis /: MakeBoxes[qb_QuditBasis ? QuditBasisQ, format : TraditionalForm] := With[{boxes = ToBoxes[Normal /@ qb["Association"], format]},
+    InterpretationBox[boxes, qb]
+]
+
+QuditBasis /: MakeBoxes[qb_QuditBasis ? QuditBasisQ, format_] := With[{
     icon = If[
         qb["ElementDimension"] < 2 ^ 9,
         ComplexArrayPlot[

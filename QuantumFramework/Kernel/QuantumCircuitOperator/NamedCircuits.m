@@ -411,7 +411,7 @@ QuantumCircuitOperator[{"C" | "Controlled", qc_, control1 : _ ? orderQ | Automat
 
 
 QuantumCircuitOperator[pauliString_String] := With[{chars = Characters[pauliString]},
-    QuantumCircuitOperator[MapIndexed[QuantumOperator, chars]] /; ContainsOnly[chars, {"I", "X", "Y", "Z"}]
+    QuantumCircuitOperator[MapIndexed[QuantumOperator, chars]] /; ContainsOnly[chars, {"I", "X", "Y", "Z", "H", "S", "T", "V", "P"}]
 ]
 
 

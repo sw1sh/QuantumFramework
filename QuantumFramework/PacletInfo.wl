@@ -36,7 +36,8 @@ PacletObject[
           "Wolfram`QuantumFramework`QuantumEntangledQ",
           "Wolfram`QuantumFramework`QuantumWignerTransform",
           "Wolfram`QuantumFramework`QuantumChannel",
-          "Wolfram`QuantumFramework`QuantumStateEstimate"
+          "Wolfram`QuantumFramework`QuantumStateEstimate",
+          "Wolfram`QuantumFramework`QuantumMeasurementSimulation"
         }
       },
       {"IBMQ"},

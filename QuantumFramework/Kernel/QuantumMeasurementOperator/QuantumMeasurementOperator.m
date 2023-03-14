@@ -108,12 +108,14 @@ QuantumMeasurementOperator[ops : {_ ? QuantumOperatorQ..}, target : (_ ? targetQ
 
 QuantumMeasurementOperator[
     qb_ ? QuantumBasisQ,
-    target : _ ? targetQ : {1},
+    defaultTarget : _ ? targetQ : Automatic,
     args___
     ] :=
-Enclose @ Module[{
-    basis = ConfirmBy[QuantumBasis[qb, args], QuantumBasisQ]
+Enclose @ Block[{
+    basis = ConfirmBy[QuantumBasis[qb, args], QuantumBasisQ],
+    target
 },
+    target = Replace[defaultTarget, Automatic -> Range[basis["Qudits"]]];
     If[ basis["Qudits"] < Length[target],
         basis = QuantumBasis[basis, Ceiling[Length[target] / Max[1, basis["Qudits"]]]]
     ];

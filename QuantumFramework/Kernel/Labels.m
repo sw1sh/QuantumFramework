@@ -44,8 +44,8 @@ QuantumLabelName[label_, dim_ : 2, order_ : {}] := With[{nameOrder = If[order ==
         Subscript["R", subLabel_][angle_] :> {"R", Sow[Chop @ angle, subLabel], QuantumLabelName[subLabel, dim, order]},
         "\[Pi]"[perm__] :> nameOrder @ {"Permutation", PermutationCycles[{perm}]},
         OverHat[x_] :> nameOrder @ {"Diagonal", x},
-        (subLabel : "P" | "U2" | "U")[params___] :> nameOrder @ {subLabel, params},
-        subLabel : "X" | "Y" | "Z" | "I" :> nameOrder @ {subLabel, dim},
+        (subLabel : "P" | "PhaseShift" | "U2" | "U")[params___] :> nameOrder @ {subLabel, params},
+        subLabel : "X" | "Y" | "Z" | "I" | "NOT" :> nameOrder @ If[dim === 2, subLabel, {subLabel, dim}],
         name_ :> If[MemberQ[$QuantumOperatorNames, name], Identity, Missing] @ nameOrder[name]
     }]
 ]

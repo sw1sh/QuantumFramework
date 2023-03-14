@@ -11,7 +11,7 @@
 
 Package["Wolfram`QuantumFramework`"]
 
-PackageExport["MeasurementSimulation"]
+PackageExport["QuantumMeasurementSimulation"]
 PackageExport["QuantumStateEstimate"]
 PackageExport["QuantumStateEstimation"]
 PackageExport["QuantumStateSampler"]
@@ -22,7 +22,7 @@ PackageExport["QuantumStateSampler"]
 (*Public Symbols*)
 
 
-MeasurementSimulation::usage = "MeasurementSimulation[_QuantumState, (list of _QuantumMeasurementOperator), counts (list or per measurement operator)]";
+QuantumMeasurementSimulation::usage = "QuantumMeasurementSimulation[_QuantumState, (list of _QuantumMeasurementOperator), counts (list or per measurement operator)]";
 
 inversion::usage = "inversion[measurementResult]";
 
@@ -56,7 +56,7 @@ MeasurementResultQ[___] := False
 (*Measurement Simulation*)
 
 
-MeasurementSimulation[state_ ? QuantumStateQ, measurementOperators_ ? (VectorQ[#, QuantumMeasurementOperatorQ] &), n_] :=
+QuantumMeasurementSimulation[state_ ? QuantumStateQ, measurementOperators_ ? (VectorQ[#, QuantumMeasurementOperatorQ] &), n_] :=
 	AssociationMap[RandomVariate[MultinomialDistribution[n, #[state]["ProbabilitiesList"]]] &, measurementOperators]
 
 
