@@ -16,6 +16,7 @@ existingGateNames = {
 };
 
 labelToGate = Replace[{
+    Subscript["C", subLabel_][{}, {}] :> labelToGate[subLabel],
     Subscript["C", x_String][__] :> "c" <> Replace[ToLowerCase[x], "not" -> "x"],
     Subscript["C", x_String[args__]][__] :> {"c" <> ToLowerCase[x], Sequence @@ N[{args}]},
     SuperDagger[x_String] :> ToLowerCase[x] <> "dg",
