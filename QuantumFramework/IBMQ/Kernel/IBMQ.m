@@ -59,7 +59,7 @@ importJson[json_Association] := Dataset @ json
 
 importJson[json : {___Rule}] := importJson[json //. rules : {___Rule} :> RuleCondition[Association[rules]]]
 
-importJson[json_String] := importJson @ ImportString[json, "RawJSON"]
+importJson[json_String] := Enclose @ importJson @ ConfirmBy[ImportString[json, "RawJSON"], AssociationQ]
 
 
 IBMQdata["RawAccount"] := {
@@ -81,10 +81,12 @@ IBMQdata["RawNetwork"] := {
     "RequiredParameters"-> {}
 }
 
-IBMQcookeddata["Devices", id_, OptionsPattern[]] := AssociationThread @@ Query[{
+IBMQcookeddata["Devices", id_, OptionsPattern[]] := Enclose[
+    AssociationThread @@ Query[{
         Query[All, "name"],
         Query[All, "groups", "open", "projects", "main", "devices", All, 2, "name"]
-    }] @ KeyClient`rawkeydata[id, "RawNetwork"]
+    }] @ Confirm @ KeyClient`rawkeydata[id, "RawNetwork"]
+]
 
 IBMQdata["RawRun"] := {
     "URL"				-> (URLBuild[{#, "jobs"}] &),
@@ -96,7 +98,7 @@ IBMQdata["RawRun"] := {
     "RequiredParameters"-> {"RuntimeUrl", "Data"}
 }
 
-getRuntimeUrl[id_] := Query["urls", "services", "runtime"] @ KeyClient`rawkeydata[id, "RawAccount"]
+getRuntimeUrl[id_] := Enclose @ Query["urls", "services", "runtime"] @ Confirm @ KeyClient`rawkeydata[id, "RawAccount"]
 
 IBMQcookeddata["RunCircuit", id_, opts : OptionsPattern[]] := Enclose @ importJson @ KeyClient`rawkeydata[id,
     "RawRun",
