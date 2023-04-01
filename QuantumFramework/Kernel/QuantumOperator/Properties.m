@@ -449,7 +449,7 @@ With[{
     parameter = First @ qo["Parameters"]
 },
     QuantumOperator[
-        If[ FreeQ[Normal[qo["Matrix"]], parameter],
+        If[ NumericQ[parameter] || FreeQ[Normal[qo["Matrix"]], parameter],
             MatrixExp[-I parameter qo["Matrix"]],
             DSolveValue[
                 {
