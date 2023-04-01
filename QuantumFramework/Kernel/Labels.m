@@ -1,6 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
 PackageExport["QuantumLabelName"]
+PackageExport["QuantumShortcut"]
 
 PackageScope["simplifyLabel"]
 
@@ -26,7 +27,10 @@ simplifyLabel[l_] := Replace[l, {
 
 QuantumLabelName[qo_QuantumOperator] := Replace[
     QuantumLabelName[qo["Label"], First @ qo["Dimensions"], qo["TargetOrder"]],
-    _Missing /; qo["Dimensions"] == {2, 2} :> QuantumLabelName[qo["ZYZ"]]
+    {
+        _Missing /; qo["Dimensions"] === {2, 2} && MatrixQ[qo["Matrix"], NumericQ] :> QuantumLabelName[qo["ZYZ"]],
+        _Missing :> qo["Matrix"]
+    }
 ]
 
 QuantumLabelName[qmo_QuantumMeasurementOperator] := qmo["InputOrder"]
@@ -46,7 +50,10 @@ QuantumLabelName[label_, dim_ : 2, order_ : {}] := With[{nameOrder = If[order ==
         OverHat[x_] :> nameOrder @ {"Diagonal", x},
         (subLabel : "P" | "PhaseShift" | "U2" | "U")[params___] :> nameOrder @ {subLabel, params},
         subLabel : "X" | "Y" | "Z" | "I" | "NOT" :> nameOrder @ If[dim === 2, subLabel, {subLabel, dim}],
+        SuperDagger[subLabel_] :> nameOrder @ SuperDagger[QuantumLabelName[subLabel, dim, order]],
         name_ :> If[MemberQ[$QuantumOperatorNames, name], Identity, Missing] @ nameOrder[name]
     }]
 ]
+
+QuantumShortcut = QuantumLabelName
 
