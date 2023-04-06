@@ -7,7 +7,7 @@ PackageScope["$QuantumChannelNames"]
 $QuantumChannelNames = {
     "BitFlip", "PhaseFlip", "BitPhaseFlip", "Depolarizing",
     "AmplitudeDamping", "GeneralizedAmplitudeDamping",
-    "PhaseDamping"
+    "PhaseDamping", "ResetError"
 }
 
 quantumChannel[qo_ ? QuantumOperatorQ] := QuantumChannel @
@@ -73,6 +73,18 @@ QuantumChannel[{"Depolarizing", p_ : .5}, args___] :=
     },
         args,
         "Label" -> "\[CapitalDelta]"[p]
+    ]
+
+QuantumChannel[{"ResetError", p0_ : .25, p1_ : .25}, args___] :=
+    quantumChannel[{
+        Sqrt[1 - p0 - p1] IdentityMatrix[2],
+        Sqrt[p0] {{1, 0}, {0, 0}},
+        Sqrt[p0] {{0, 1}, {0, 0}},
+        Sqrt[p1] {{0, 0}, {1, 0}},
+        Sqrt[p1] {{0, 0}, {0, 1}}
+    },
+        args,
+        "Label" -> "ResetError"[p0, p1]
     ]
 
 QuantumChannel[name_String, args___] := QuantumChannel[{name}, args]

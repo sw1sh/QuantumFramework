@@ -207,7 +207,8 @@
             "Depolarizing",
             "AmplitudeDamping",
             "GeneralizedAmplitudeDamping",
-            "PhaseDamping"
+            "PhaseDamping",
+            "ResetError"
         },
         {
             "Computational",
