@@ -4,7 +4,8 @@ Paclet[
     MathematicaVersion -> "10+",
     Extensions ->
         {
-            {"Kernel", Root -> "Kernel", Context -> {"Wolfram`IBMQLoad`"}}
+            {"Kernel", Root -> "Kernel", Context -> {"Wolfram`IBMQLoad`"}},
+            {"Asset", "Root" -> "Assets", "Assets" -> {{"logo", "IBM_Quantum_logotype_pos_RGB.png"}}}
         }
 ]
 
