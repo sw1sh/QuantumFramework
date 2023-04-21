@@ -83,7 +83,7 @@ QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
     ],
     arity = {qco["Width"], Replace[Quiet[qco["TargetArity"]], Except[_Integer] -> Nothing]}
 },
-    ExternalEvaluate[Confirm @ $PythonSession, "
+    Confirm @ ExternalEvaluate[Confirm @ $PythonSession, "
 from wolframclient.language import wl
 
 from qiskit import QuantumCircuit
@@ -346,22 +346,43 @@ qiskitInitBackend[qc_QiskitCircuit, OptionsPattern[]] := Enclose @ Block[{
     ];
 
     Confirm @ ExternalEvaluate[$PythonSession, Switch[provider,
-    "IBMQ", "
-from qiskit import IBMQ
-token = <* Wolfram`QuantumFramework`$token *>
-if token is not None:
-    from qiskit_ibm_runtime import QiskitRuntimeService
-    QiskitRuntimeService.save_account(channel='ibm_quantum', token=token, overwrite=True)
-provider = IBMQ.load_account()
+    "IBMQ",
+    Confirm @ ResourceFunction["PythonPackageInstall"][$PythonSession, "qiskit-ibm-provider"];
+"
+try:
+    assert(isinstance(provider, AccountProvider))
+except:
+    from qiskit import IBMQ
+    from qiskit.providers.ibmq.accountprovider import AccountProvider
+    token = <* Wolfram`QuantumFramework`$token *>
+    if token is not None:
+        from qiskit_ibm_runtime import QiskitRuntimeService
+        QiskitRuntimeService.save_account(channel='ibm_quantum', token=token, overwrite=True)
+    provider = IBMQ.load_account()
 ",
-    "IBMProvider", "
-from qiskit_ibm_provider import IBMProvider
-token = <* Wolfram`QuantumFramework`$token *>
-if token is not None:
-    IBMProvider.save_account(token=token, overwrite=True)
-provider = IBMProvider()
+    "IBMProvider",
+    Confirm @ ResourceFunction["PythonPackageInstall"][$PythonSession, "qiskit-ibm-provider"];
+"
+try:
+    assert(isinstance(provider, IBMProvider))
+except:
+    from qiskit_ibm_provider import IBMProvider
+    token = <* Wolfram`QuantumFramework`$token *>
+    if token is not None:
+        IBMProvider.save_account(token=token, overwrite=True)
+    provider = IBMProvider()
 ",
-    _, "
+    "AWSBraket",
+    Confirm @ ResourceFunction["PythonPackageInstall"][$PythonSession, "qiskit-braket-provider"];
+"
+try:
+    assert(isinstance(provider, AWSBraketProvider))
+except:
+    from qiskit_braket_provider import AWSBraketProvider
+    provider = AWSBraketProvider()
+",
+    _,
+"
 provider = None
 "]
     ];
@@ -404,23 +425,28 @@ qiskitApply[qc_QiskitCircuit, qs_QuantumState, opts : OptionsPattern[]] := Enclo
 import pickle
 from qiskit import QuantumCircuit
 from qiskit import transpile
+from qiskit_braket_provider import AWSBraketProvider
 
 # Run the quantum circuit on a statevector simulator backend
 
 circuit = QuantumCircuit(qc.num_qubits, qc.num_clbits)
 
 
-circuit.initialize(<* Wolfram`QuantumFramework`$state *>)
+if not isinstance(provider, AWSBraketProvider):
+    circuit.initialize(<* Wolfram`QuantumFramework`$state *>)
 circuit = circuit.compose(qc)
 
 circuit = transpile(circuit, backend)
 
 result = backend.run(circuit, shots = <* Wolfram`QuantumFramework`$shots *>).result()
 
-if qc.num_clbits > 0:
-    result = result.get_counts(circuit)
+if isinstance(provider, AWSBraketProvider):
+    result = result.get_counts()
 else:
-    result = result.get_statevector().data
+    if qc.num_clbits > 0:
+        result = result.get_counts(circuit)
+    else:
+        result = result.get_statevector().data
 result
 "];
     Which[
@@ -460,14 +486,17 @@ qc_QiskitCircuit[opts : OptionsPattern[qiskitApply]] := qiskitApply[qc, QuantumS
 
 qc_QiskitCircuit[qs_QuantumState, opts : OptionsPattern[qiskitApply]] := qiskitApply[qc, qs, opts]
 
-qc_QiskitCircuit["QASM"] := qc["Eval", "qasm"]
+qc_QiskitCircuit["QASM", opts : OptionsPattern[qiskitInitBackend]] := Enclose[
+    Confirm @ qiskitInitBackend[qc, opts];
+    ExternalEvaluate[$PythonSession, "
+from qiskit import transpile
+
+transpile(qc, backend).qasm()
+"]
+]
 
 
-qc_QiskitCircuit["QPY", opts : OptionsPattern[qiskitQPY]] := qiskitQPY[qc, opts]
-
-Options[qiskitQPY] = {"Provider" -> None, "Backend" -> Automatic}
-
-qiskitQPY[qc_QiskitCircuit, opts : OptionsPattern[]] := Enclose[
+qc_QiskitCircuit["QPY", opts : OptionsPattern[qiskitInitBackend]] := Enclose[
     Confirm @ qiskitInitBackend[qc, opts];
     ExternalEvaluate[$PythonSession, "
 from qiskit import qpy
@@ -479,6 +508,17 @@ qc = transpile(qc, backend)
 bytes = BytesIO()
 qpy.dump(qc, bytes)
 zlib.compress(bytes.getvalue())
+"]
+]
+
+qc_QiskitCircuit["Transpile", opts : OptionsPattern[qiskitInitBackend]]:= Enclose[
+    Confirm @ qiskitInitBackend[qc, opts];
+    ExternalEvaluate[$PythonSession, "
+import pickle
+from qiskit import transpile
+from wolframclient.language import wl
+
+wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(transpile(qc, backend)))
 "]
 ]
 

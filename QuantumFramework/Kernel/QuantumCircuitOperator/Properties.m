@@ -27,8 +27,7 @@ QuantumCircuitOperator::undefprop = "property `` is undefined for this circuit";
     If[ TrueQ[$QuantumFrameworkPropCache] && ! MemberQ[{"Elements", "Diagram", "Qiskit", "QiskitCircuit", "QuantumOperator"}, propName[prop]],
         QuantumCircuitOperatorProp[qds, prop, args] = result,
         result
-    ] /;
-        !FailureQ[Unevaluated @ result] && (!MatchQ[Unevaluated @ result, _QuantumCircuitOperatorProp] || Message[QuantumCircuitOperator::undefprop, prop])
+    ] /; !MatchQ[Unevaluated @ result, _QuantumCircuitOperatorProp] || Message[QuantumCircuitOperator::undefprop, prop]
 ]
 
 QuantumCircuitOperatorProp[QuantumCircuitOperator[data_Association], key_String] /; KeyExistsQ[data, key] := data[key]

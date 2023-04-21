@@ -5,7 +5,7 @@ PackageScope["$PythonSession"]
 
 
 
-$PythonPackages = {"qiskit", "qiskit-ibm-provider", "matplotlib", "pylatexenc"}
+$PythonPackages = {"qiskit", "matplotlib", "pylatexenc"}
 
 confirmPython[session_] := confirmPython[session] = AllTrue[$PythonPackages, ResourceFunction["PythonPackageInstalledQ"][session, #] &] &&
     ExternalEvaluate[session, "import qiskit\nfrom qiskit import QuantumCircuit"] === Null
