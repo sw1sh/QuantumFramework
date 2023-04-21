@@ -533,13 +533,17 @@ QuantumOperatorProp[qo_, "PauliDecompose"] /; qo["InputDimensions"] == qo["Outpu
 ]
 
 
-UnitaryEulerAngles[b_, c_] := FullSimplify /@ {2 ArcSin[Abs[b]], Mod[Arg[c], 2 Pi], Mod[Arg[b] - Pi, 2 Pi]}
-UnitaryEulerAngles[u_ ? SquareMatrixQ] /; Dimensions[u] === {2, 2} := UnitaryEulerAngles[u[[1, 2]] , u[[2, 1]]]
+UnitaryEulerAngles[a_, b_, c_] := With[{phase = Arg[a], theta = FullSimplify[2 ArcSin[Abs[b]]]},
+    If[theta == 0, {0, 0, FullSimplify[- 2 phase]}, {theta, FullSimplify[Mod[Arg[c], 2 Pi]], FullSimplify[Mod[Arg[b] - Pi, 2 Pi]]}]
+]
+UnitaryEulerAngles[u_ ? SquareMatrixQ] /; Dimensions[u] === {2, 2} := UnitaryEulerAngles[u[[1, 1]], u[[1, 2]] , u[[2, 1]]]
 
 UnitaryEulerAngles[qo_QuantumOperator] := UnitaryEulerAngles[qo["MatrixRepresentation"]]
 
 UnitaryEulerAnglesWithPhase[u_ ? SquareMatrixQ] /; Dimensions[u] === {2, 2} := With[{b = u[[1, 2]], c = u[[2, 1]]},
-    With[{phase = Arg[u[[1, 1]]]}, {{2 ArcSin[Abs[b]], Mod[Arg[c] - phase, 2 Pi], Mod[Arg[b] - Pi - phase, 2 Pi]}, phase}]
+    With[{phase = FullSimplify[Arg[u[[1, 1]]]], theta = FullSimplify[2 ArcSin[Abs[b]]]},
+        {If[theta == 0, {0, 0, - 2 phase}, {theta, FullSimplify[Mod[Arg[c] - phase, 2 Pi]], FullSimplify[Mod[Arg[b] - Pi - phase, 2 Pi]]}], phase}
+    ]
 ]
 
 UnitaryEulerAnglesWithPhase[qo_QuantumOperator] := UnitaryEulerAnglesWithPhase[qo["MatrixRepresentation"]]
