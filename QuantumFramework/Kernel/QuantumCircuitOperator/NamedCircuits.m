@@ -24,8 +24,13 @@ $QuantumCircuitOperatorNames = {
 }
 
 
-QuantumCircuitOperator[{"Graph", g_Graph, m : _Integer ? NonNegative : 0, gate_ : "CZ"}, opts___] := QuantumCircuitOperator[
-    Join["H" -> # & /@  VertexList[g], QuantumOperator[gate, {#1, #2} + m] & @@@ EdgeList[IndexGraph @ g]], "\[ScriptCapitalG]", opts
+QuantumCircuitOperator[{"Graph", g_Graph, m : _Integer ? NonNegative : 0, gate_ : "CZ"}, opts___] := With[{
+    ig = If[AllTrue[VertexList[g], Internal`PositiveIntegerQ], g, IndexGraph @ g]
+},
+    QuantumCircuitOperator[
+        Join["H" -> # & /@ Range[Max[VertexList[ig]]], QuantumOperator[gate, {#1, #2} + m] & @@@
+            EdgeList[ig]], "\[ScriptCapitalG]", opts
+    ]
 ]
 
 
