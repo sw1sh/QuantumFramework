@@ -534,7 +534,7 @@ QuantumOperatorProp[qo_, "PauliDecompose"] /; qo["InputDimensions"] == qo["Outpu
 
 
 UnitaryEulerAngles[a_, b_, c_, d_] := With[{theta = FullSimplify[2 ArcSin[Abs[b]]]},
-    If[theta == 0, {0, 0, FullSimplify[Arg[a] - Arg[d]]}, {theta, FullSimplify[Mod[Arg[c], 2 Pi]], FullSimplify[Mod[Arg[b] - Pi, 2 Pi]]}]
+    If[theta == 0, {0, 0, FullSimplify[Mod[Arg[a] - Arg[d], 2 Pi]]}, {theta, FullSimplify[Mod[Arg[c], 2 Pi]], FullSimplify[Mod[Arg[b] - Pi, 2 Pi]]}]
 ]
 UnitaryEulerAngles[u_ ? SquareMatrixQ] /; Dimensions[u] === {2, 2} := UnitaryEulerAngles[u[[1, 1]], u[[1, 2]] , u[[2, 1]], u[[2, 2]]]
 
