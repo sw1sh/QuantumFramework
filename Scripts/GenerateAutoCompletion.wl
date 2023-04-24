@@ -26,7 +26,7 @@ $AutoCompletionData = With[{
     }
 ]
 
-$path = FileNameJoin @ {DirectoryName[$InputFileName], "AutoCompletionData"}
+$path = FileNameJoin @ {DirectoryName[$InputFileName], "..", "QuantumFramework", "AutoCompletionData"}
 
 If[ !FileExistsQ[$path],
     CreateDirectory[$path, CreateIntermediateDirectories -> True]

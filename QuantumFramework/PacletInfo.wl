@@ -7,7 +7,7 @@ PacletObject[
     "Creator" -> "Wolfram Research, Quantum Computation Framework team",
     "License" -> "MIT",
     "PublisherID" -> "Wolfram",
-    "Version" -> "1.0.33",
+    "Version" -> "1.0.34",
     "WolframVersion" -> "13.1+",
     "PrimaryContext" -> "Wolfram`QuantumFramework`",
     "Extensions" -> {
@@ -41,10 +41,11 @@ PacletObject[
           "Wolfram`QuantumFramework`QuantumMeasurementSimulation"
         }
       },
-      {"IBMQ"},
+      (* {"IBMQ"}, *)
       {"Documentation", "Language" -> "English"},
       {"AutoCompletionData", "Root" -> "AutoCompletionData"},
-      {"FrontEnd"}
+      {"FrontEnd"},
+      {"Asset", "Root" -> "Assets", "Assets" -> {{"IBMQ.paclet", "ServiceConnection_IBMQ-0.0.1.paclet"}}}
     }
   |>
 ]
