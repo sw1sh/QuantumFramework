@@ -21,8 +21,8 @@ $QuantumStateNames = {
 
 (*QuantumState[name_ ? nameQ, args : PatternSequence[] | Except[PatternSequence[_Integer ? Positive, ___]]] := QuantumState[name, 2, args]*)
 
-QuantumState[name_ ? nameQ, basisName : Except[Alternatives @@ $QuantumBasisPictures, _ ? nameQ]] :=
-    QuantumState[QuantumState[name], QuantumBasis[basisName]]
+(* QuantumState[name_ ? nameQ, basisName : Except[Alternatives @@ $QuantumBasisPictures, _ ? nameQ]] :=
+    QuantumState[QuantumState[name], QuantumBasis[basisName]] *)
 
 QuantumState[] := QuantumState["0"]
 
@@ -38,21 +38,21 @@ QuantumState[s_String /; StringMatchQ[s, DigitCharacter..], dim : (_Integer ? Po
     QuantumState[{"BasisState", digits}, dim, "Label" -> s, args]
 ]
 
-QuantumState["Plus" | "+", args___] := QuantumState[Normalize @ {1, 1}, "Label" -> "+", args]
+QuantumState["Plus" | "+", args___] := QuantumState[Normalize @ {1, 1}, args, "Label" -> "+"]
 
-QuantumState["Minus" | "-", args___] := QuantumState[Normalize @ {-1, 1}, "Label" -> "-", args]
+QuantumState["Minus" | "-", args___] := QuantumState[Normalize @ {-1, 1}, args, "Label" -> "-"]
 
-QuantumState["Left" | "L", args___] := QuantumState[Normalize @ {I, 1}, "Label" -> "L", args]
+QuantumState["Left" | "L", args___] := QuantumState[Normalize @ {I, 1}, args, "Label" -> "L"]
 
-QuantumState["Right" | "R", args___] := QuantumState[Normalize @ {-I, 1}, "Label" -> "R", args]
+QuantumState["Right" | "R", args___] := QuantumState[Normalize @ {-I, 1}, args, "Label" -> "R"]
 
-QuantumState["PhiPlus", args___] := QuantumState[Normalize @ {1, 0, 0, 1}, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(+\)]", args]
+QuantumState["PhiPlus", args___] := QuantumState[Normalize @ {1, 0, 0, 1}, args, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(+\)]"]
 
-QuantumState["PhiMinus", args___] := QuantumState[Normalize @ {1, 0, 0, -1}, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(-\)]", args]
+QuantumState["PhiMinus", args___] := QuantumState[Normalize @ {1, 0, 0, -1}, args, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(-\)]"]
 
-QuantumState["PsiPlus", args___] := QuantumState[Normalize @ {0, 1, 1, 0}, "Label" -> "\*SubscriptBox[\[CapitalPsi], \(+\)]", args]
+QuantumState["PsiPlus", args___] := QuantumState[Normalize @ {0, 1, 1, 0}, args, "Label" -> "\*SubscriptBox[\[CapitalPsi], \(+\)]"]
 
-QuantumState["PsiMinus", args___] := QuantumState[Normalize @ {0, 1, -1, 0}, "Label" -> "\*SubscriptBox[\[CapitalPsi], \(-\)]", args]
+QuantumState["PsiMinus", args___] := QuantumState[Normalize @ {0, 1, -1, 0}, args, "Label" -> "\*SubscriptBox[\[CapitalPsi], \(-\)]"]
 
 QuantumState[{name : "Plus" | "Minus" | "Left" | "Right" | "PsiPlus" | "PsiMinus" | "PhiPlus" | "PhiMinus", n_Integer ? Positive}, args___] :=
     QuantumTensorProduct @ Table[QuantumState[name, args], n]
@@ -74,15 +74,15 @@ QuantumState[{"Register", subsystemCount : _Integer ? Positive, state : _Integer
     QuantumState[SparseArray[{{state + 1} -> 1}, {dimension ^ subsystemCount}], Table[dimension, Max[subsystemCount, 1]], "Label" -> state, args]
 
 QuantumState[{"Register", subsystemCount: _Integer ? Positive, state : _Integer ? NonNegative : 0}, args___] :=
-    QuantumState[SparseArray[{{state + 1} -> 1}, {2 ^ subsystemCount}], "Label" -> state, args]
+    QuantumState[SparseArray[{{state + 1} -> 1}, {2 ^ subsystemCount}], args, "Label" -> state]
 
 QuantumState[{"Register", 0, ___}, args___] := QuantumState[1, 1, args]
 
 QuantumState[{"Register", dims : {__Integer ? Positive}, state : _Integer ? NonNegative : 0}, args___] :=
-    QuantumState[SparseArray[{{state + 1} -> 1}, {Times @@ dims}], dims, "Label" -> state, args]
+    QuantumState[SparseArray[{{state + 1} -> 1}, {Times @@ dims}], dims, args, "Label" -> state]
 
 QuantumState[{"Register", basisArgs_, state : _Integer ? NonNegative : 0}, args___] := With[{qb = QuantumBasis[basisArgs]},
-    QuantumState[SparseArray[{{state + 1} -> 1}, qb["Dimension"]], qb, "Label" -> state, args]
+    QuantumState[SparseArray[{{state + 1} -> 1}, qb["Dimension"]], qb, args, "Label" -> state]
 ]
 
 
