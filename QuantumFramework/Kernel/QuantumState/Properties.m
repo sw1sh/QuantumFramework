@@ -408,7 +408,7 @@ PrimesUpTo[n_Integer] := If[n < 2, {}, First @ NestWhile[{Append[#[[1]], Prime[#
 DimensionPartition[n_Integer] := Sort @ First @ TakeSmallestBy[IntegerPartitions[n, All, PrimesUpTo[n]], Apply[Times], 1]
 
 QuantumStateProp[qs_, "Uncompress", ds : {_Integer ? Positive..} | Automatic : Automatic] /; qs["Qudits"] == 1 := Enclose @ Module[{
-    qb = qs["Basis"]["QuditBasis"]["RemoveIdentities"],
+    qb = qs["Basis"]["QuditBasis"]["Canonical"],
     repr, d,
     dims
 },

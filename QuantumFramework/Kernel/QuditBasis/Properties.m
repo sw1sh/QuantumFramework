@@ -86,7 +86,7 @@ QuditBasisProp[qb_, "Elements"] := If[qb["Length"] > 0,
         Transpose[
             Outer[Times,
                 Sequence @@ Values @ KeySort @ ResourceFunction["KeyGroupBy"][
-                    SparseArrayFlatten /@ qb["RemoveIdentities"]["Representations"], Last, Values @* normalRepresentations
+                    SparseArrayFlatten /@ qb["Canonical"]["Representations"], Last, Values @* normalRepresentations
                 ]
             ],
             FindPermutation[Join[Range[1, 2 qb["Qudits"], 2], Range[2, 2 qb["Qudits"], 2]]]
@@ -101,7 +101,7 @@ QuditBasisProp[qb_, "ReducedElements"] := If[qb["Length"] > 0,
         Transpose[
             Outer[Times,
                 Sequence @@ Map[If[MatrixQ[#] && ! SquareMatrixQ[#], SparseArray[# . PseudoInverse[RowReduce[#]]], #] &] @ Values @ KeySort @ ResourceFunction["KeyGroupBy"][
-                    SparseArrayFlatten /@ qb["RemoveIdentities"]["Representations"], Last, Values @* normalRepresentations
+                    SparseArrayFlatten /@ qb["Canonical"]["Representations"], Last, Values @* normalRepresentations
                 ]
             ],
             FindPermutation[Join[Range[1, 2 qb["Qudits"], 2], Range[2, 2 qb["Qudits"], 2]]]
@@ -125,7 +125,7 @@ QuditBasisProp[qb_, "ElementShape"] :=  If[
     {0}
 ]
 
-QuditBasisProp[qb_, "ElementDimensions"] := shapeDimensions[qb["RemoveIdentities"]["ElementShape"]]
+QuditBasisProp[qb_, "ElementDimensions"] := shapeDimensions[qb["Canonical"]["ElementShape"]]
 
 QuditBasisProp[qb_, "ElementDimension"] := Times @@ qb["ElementDimensions"]
 
@@ -158,7 +158,7 @@ QuditBasisProp[qb_, "Dual", qudits : {_Integer...}] := With[{index = Lookup[MapI
     QuditBasis @ KeyMap[If[MemberQ[index, #[[2]]], MapAt[#["Dual"] &, #, 1], #] &, qb["Representations"]]
 ]
 
-QuditBasisProp[qb_, "DualQ"] := AllTrue[Keys[qb["RemoveIdentities"]["Representations"]][[All, 1]], #["DualQ"] &]
+QuditBasisProp[qb_, "DualQ"] := AllTrue[Keys[qb["Canonical"]["Representations"]][[All, 1]], #["DualQ"] &]
 
 
 QuditBasisProp[qb_, "SortedQ"] := OrderedQ[Last /@ Keys @ qb["Representations"]]
@@ -185,9 +185,13 @@ QuditBasisProp[qb_, "Ordered", qudits_Integer, order_ ? orderQ] := If[qb["Dimens
     ]
 ]
 
-QuditBasisProp[qb_, "RemoveIdentities"] := QuditBasis @ If[ qb["Dimension"] > 1,
+QuditBasisProp[qb_, "Canonical"] := QuditBasis @ Which[
+    qb["Dimension"] > 1,
     Select[qb["Representations"], Times @@ Dimensions[#] > 1 &],
-    qb["Representations"][[;; UpTo[1]]]
+    qb["Dimension"] == 0,
+    Select[qb["Representations"], # === {} &, 1],
+    True,
+    Select[qb["Representations"], Times @@ Dimensions[#] == 1 &, 1]
 ]
 
 QuditBasisProp[qb_, "Split", __] /; qb["Size"] == 0 := {QuditBasis[0], QuditBasis[0]}
@@ -197,7 +201,7 @@ QuditBasisProp[qb_, "Split", _Integer] /; qb["Dimension"] == 1 := {QuditBasis[],
 QuditBasisProp[qb_, "Split", n_Integer] /; 0 <= n <= qb["Qudits"] := Module[{
     repr, idx
 },
-    repr = KeySortBy[qb["RemoveIdentities"]["Representations"], {Last}];
+    repr = KeySortBy[qb["Canonical"]["Representations"], {Last}];
     idx = AssociationThread[Union @ Keys[repr][[All, -1]], Range[qb["Qudits"]]];
     {
         If[n > 0, QuditBasis[KeySelect[idx[Last[#]] <= n &] @ repr], QuditBasis[]],
