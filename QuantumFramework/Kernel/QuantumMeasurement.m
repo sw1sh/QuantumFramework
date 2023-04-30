@@ -235,6 +235,11 @@ QuantumMeasurement /: Equal[qms : _QuantumMeasurement ...] :=
 
 (* formatting *)
 
+QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement, TraditionalForm] /; QuantumMeasurementQ[Unevaluated[qm]] :=
+    With[{proba = ToBoxes[qm["Probabilities"]]},
+        InterpretationBox[proba, qm]
+    ]
+
 QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement ? QuantumMeasurementQ, format_] := Module[{icon},
     icon = With[{proba = TimeConstrained[qm["Probabilities"], 1]},
         If[
