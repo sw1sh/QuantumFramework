@@ -79,7 +79,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
         "Schrodinger" | "Schroedinger" | "Schrödinger",
         Fold[ReverseApplied[Construct], qs, qco["Operators"]],
         Automatic | "TensorNetwork",
-        TensorNetworkApply[qco, qs],
+        TensorNetworkApply[qco["Flatten"], qs],
         "QuEST",
         QuESTApply[qco, qs],
         "Qiskit",
@@ -93,10 +93,11 @@ QuantumCircuitOperator::dim = "Circuit expecting dimensions `1`, but the state h
 quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[]] :=
     (Message[QuantumCircuitOperator::dim, qco["InputDimensions"], qs["OutputDimensions"]]; $Failed)
 
+
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qs_ ? QuantumStateQ, opts : OptionsPattern[quantumCircuitApply]] :=
     With[{result = quantumCircuitApply[
         qco /* QuantumCircuitOperator["I" -> # & /@ Complement[Range[Max[qco["Width"], qs["OutputQudits"]]], qco["InputOrder"]]],
-        If[# === {}, qs, QuantumTensorProduct[qs, QuantumState[{"Register", #}]]] & @ ConstantArray[2, qco["Width"] - qs["OutputQudits"]],
+        If[# === {}, qs, QuantumTensorProduct[qs, QuantumState[{"Register", #}]]] & @ ConstantArray[2, Max[0, qco["Width"] - qs["OutputQudits"]]],
         opts
     ]},
         result /; ! FailureQ[result]
@@ -105,6 +106,8 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[quantumCircuitApply]] :=
     qco[QuantumState[{"Register", ReplacePart[ConstantArray[2, qco["Width"]], Thread[qco["InputOrder"] -> qco["InputDimensions"]]]}], opts]
 
+(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qm_QuantumMeasurement, OptionsPattern[]] :=
+    QuantumMeasurement[Fold[ReverseApplied[Construct], qm["QuantumOperator"], qco["Operators"]]]
 
 op_QuantumMeasurementOperator[qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ] :=
     QuantumCircuitOperator[Append[qco["Elements"], op], op["Label"][qco["Label"]]]
