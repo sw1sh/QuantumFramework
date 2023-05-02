@@ -28,7 +28,7 @@ QuantumEvolve[
         parameter = Replace[defaultParameter, {p_Symbol, _, _} :> p];
         parameterSpec = Replace[defaultParameter, _Symbol :> {parameter, 0, 1}]
     ];
-    numericQ = MatchQ[defaultParameter, {_Symbol, _ ? NumericQ, _ ? NumericQ}] || ! FreeQ[Normal[hamiltonian["Matrix"]], parameter];
+    numericQ = MatchQ[defaultParameter, {_Symbol, _ ? NumericQ, _ ? NumericQ}];
     matrix = If[numericQ, Normal, Identity] @ TrigToExp[hamiltonian["Matrix"]];
     solution = If[numericQ, NDSolveValue, DSolveValue][
         {
