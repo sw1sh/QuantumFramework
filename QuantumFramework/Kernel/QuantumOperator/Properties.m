@@ -444,28 +444,7 @@ QuantumOperatorProp[qo_, "Simplify"] := QuantumOperator[qo["State"]["Simplify"],
 
 (* evolution *)
 
-QuantumOperatorProp[qo_, "EvolutionOperator", args___] /; qo["ParameterArity"] == 1 && qo["InputDimension"] == qo["OutputDimension"] :=
-With[{
-    parameter = First @ qo["Parameters"]
-},
-    QuantumOperator[
-        If[ NumericQ[parameter] || FreeQ[Normal[qo["Matrix"]], parameter],
-            MatrixExp[-I parameter qo["Matrix"]],
-            DSolveValue[
-                {
-                    \[FormalU]'[parameter] == 1 / I TrigToExp[qo["Matrix"]] . \[FormalU][parameter],
-                    \[FormalU][0] == IdentityMatrix[qo["InputDimension"]]
-                },
-                \[FormalU][parameter] \[Element] Matrices[qo["MatrixNameDimensions"]],
-                parameter,
-                args
-            ]
-        ],
-        qo["Order"],
-        qo["Basis"],
-        "ParameterSpec" -> First @ qo["ParameterSpec"]
-    ]
-]
+QuantumOperatorProp[qo_, "EvolutionOperator", args___] := QuantumEvolve[qo, None, args]
 
 QuantumOperatorProp[qo_, "NEvolutionOperator", args___] /; qo["ParameterArity"] == 1 := Module[{
     parameter = First @ qo["Parameters"],
