@@ -229,7 +229,7 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 		    Line[{top + size / 5 {1, -1} / Sqrt[2], top + size / 5 {-1, 1} / Sqrt[2]}],
 			EdgeForm[Replace[subLabel, gateBoundaryStyle]],
 			FaceForm[Replace[subLabel, gateBackgroundStyle]],
-			Rectangle[center - size / 5, center + size / 5, FilterRules[{opts}, Options[Rectangle]]],
+			Rectangle[center - size / 5, center + size / 5, Sequence @@ FilterRules[{opts}, Options[Rectangle]]],
 			If[gateLabelsQ, Text[Style["1 / 2", labelStyleOpts], center], Nothing]
 		}],
 		"\[Pi]"[perm__] :> {
@@ -266,7 +266,7 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 		SuperDagger[subLabel_] | subLabel_ :> {
 			EdgeForm[Replace[subLabel, gateBoundaryStyle]],
 			FaceForm[Replace[subLabel, gateBackgroundStyle]],
-			Rectangle[Sequence @@ corners, FilterRules[{opts}, Options[Rectangle]]],
+			Rectangle[Sequence @@ corners, Sequence @@ FilterRules[{opts}, Options[Rectangle]]],
 			If[connectorsQ, {FaceForm[Directive[$DefaultGray, Opacity[1]]], Disk[#, size / 32] & /@ {{center[[1]] - size / 2, - vGapSize #}, {center[[1]] + size / 2, - vGapSize #}} & /@ vpos}, Nothing],
 			If[gateLabelsQ, Rotate[Text[Style[Replace[label, OptionValue["GateLabels"]], labelStyleOpts], center], rotateLabel], Nothing]
 		}
@@ -301,7 +301,7 @@ drawMeasurement[pos : {vpos_, hpos_}, width_, opts : OptionsPattern[]] := Block[
 	center = Mean[corners];
 	{
 		EdgeForm[OptionValue["MeasurementBoundaryStyle"]], FaceForm[OptionValue["MeasurementBackgroundStyle"]],
-		Rectangle[Sequence @@ corners, FilterRules[{opts}, Options[Rectangle]]],
+		Rectangle[Sequence @@ corners, Sequence @@ FilterRules[{opts}, Options[Rectangle]]],
 
 		Thickness[Small],
 		Table[Line[{center + 0.25 size {Cos[a], Sin[a]} - {0, size / 4}, center + 0.35 size {Cos[a], Sin[a]} - {0, size / 4}}], {a, Pi Subdivide[.2, .8, 7]}],
@@ -356,7 +356,7 @@ drawChannel[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 	center = Mean[corners];
 	{
 		EdgeForm[OptionValue["ChannelBoundaryStyle"]], FaceForm[OptionValue["ChannelBackgroundStyle"]],
-		Rectangle[Sequence @@ corners, FilterRules[{opts}, Options[Rectangle]]],
+		Rectangle[Sequence @@ corners, Sequence @@ FilterRules[{opts}, Options[Rectangle]]],
 		If[connectorsQ, {FaceForm[Directive[$DefaultGray, Opacity[1]]], Disk[#, size / 32] & /@ {{center[[1]] - size / 2, - vGapSize #}, {center[[1]] + size / 2, - vGapSize #}} & /@ vpos}, Nothing],
 		If[gateLabelsQ, Rotate[Text[Style[Replace[label, OptionValue["GateLabels"]], labelStyleOpts], center], rotateLabel], Nothing]
 	}
@@ -487,7 +487,7 @@ Options[drawOutline] = Join[{"Size" -> .75, "VerticalGapSize" -> 1, "HorizontalG
 	Options[Rectangle]
 ];
 drawOutline[width_, height_, pad_, opts : OptionsPattern[]] := With[{size = OptionValue["Size"], vGapSize = OptionValue["VerticalGapSize"], hGapSize = OptionValue["HorizontalGapSize"]},
-	{OptionValue["OutlineStyle"], Rectangle[{hGapSize - 5 size / 8, - pad - vGapSize / 2}, {hGapSize (height - 1) + 5 size / 8, - pad - vGapSize width - vGapSize / 2}, FilterRules[{opts}, Options[Rectangle]]]}
+	{OptionValue["OutlineStyle"], Rectangle[{hGapSize - 5 size / 8, - pad - vGapSize / 2}, {hGapSize (height - 1) + 5 size / 8, - pad - vGapSize width - vGapSize / 2}, Sequence @@ FilterRules[{opts}, Options[Rectangle]]]}
 ]
 
 Options[drawLabel] = Join[{"VerticalGapSize" -> 1, "HorizontalGapSize" -> 1}, Options[Style]];
