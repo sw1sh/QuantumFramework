@@ -399,10 +399,13 @@ if provider is None:
         backend = Aer.get_backend('statevector_simulator')
 else:
     if backend_name is None:
-        if qc.num_clbits > 0:
-            backend = provider.get_backend('ibmq_qasm_simulator')
+        if isinstance(provider, AWSBraketProvider):
+            backend = provider.get_backend('SV1')
         else:
-            backend = provider.get_backend('simulator_statevector')
+            if qc.num_clbits > 0:
+                backend = provider.get_backend('ibmq_qasm_simulator')
+            else:
+                backend = provider.get_backend('simulator_statevector')
     else:
         backend = provider.get_backend(backend_name)
 "
@@ -491,7 +494,14 @@ qc_QiskitCircuit["QASM", opts : OptionsPattern[qiskitInitBackend]] := Enclose[
     ExternalEvaluate[$PythonSession, "
 from qiskit import transpile
 
-transpile(qc, backend).qasm()
+circuit = transpile(qc, backend)
+if isinstance(provider, AWSBraketProvider):
+    from qiskit_braket_provider.providers.adapter import convert_qiskit_to_braket_circuit
+    from braket.circuits.serialization import IRType
+    result = convert_qiskit_to_braket_circuit(circuit).to_ir(IRType.OPENQASM).source
+else:
+    result = circuit.qasm()
+result
 "]
 ]
 
