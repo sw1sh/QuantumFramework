@@ -636,7 +636,8 @@ QuantumStateProp[qs_, "NormalizedMatrixRepresentation"] := normalizeMatrix @ qs[
 (* block sphere*)
 
 QuantumStateProp[qs_, "BlochSphericalCoordinates"] /; qs["Dimension"] == 2 := With[{
-    state = qs["Computational"]["NormalizedStateVector"], matrix = qs["Computational"]["NormalizedDensityMatrix"]
+    state = Simplify @ Normal[qs["Computational"]["NormalizedStateVector"]],
+    matrix = Simplify @ Normal[qs["Computational"]["NormalizedDensityMatrix"]]
 },
     If[
         qs["PureStateQ"],
@@ -659,7 +660,8 @@ QuantumStateProp[qs_, "BlochSphericalCoordinates"] /; qs["Dimension"] == 2 := Wi
 ]
 
 QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 :=  With[{
-    state = qs["Computational"]["NormalizedStateVector"], matrix = qs["Computational"]["NormalizedDensityMatrix"]
+    state = Simplify @ Normal[qs["Computational"]["NormalizedStateVector"]],
+    matrix = Simplify @ Normal[qs["Computational"]["NormalizedDensityMatrix"]]
 },
     If[
         qs["PureStateQ"],
@@ -680,7 +682,7 @@ QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 :=  W
 ]
 
 
-Options[BlochPlot] = Join[{"ShowLabels" -> True, "ShowGreatCircles" -> True, "ShowAxes" -> True}, Options[Show]]
+Options[BlochPlot] = Join[{"ShowLabels" -> True, "ShowGreatCircles" -> True, "ShowAxes" -> True}, Options[Graphics3D]]
 
 BlochPlot[qs_, opts : OptionsPattern[]] := Module[{
     greatCircles, referenceStates, u, v, w
@@ -713,7 +715,7 @@ BlochPlot[qs_, opts : OptionsPattern[]] := Module[{
     ];
     {u, v, w} = qs["BlochCartesianCoordinates"];
     Show[{greatCircles, referenceStates},
-        FilterRules[{opts}, Options[Show]],
+        FilterRules[{opts}, Options[Graphics3D]],
         PlotRange -> All,
         ViewPoint -> {1, 1, 1},
         Axes -> False,
