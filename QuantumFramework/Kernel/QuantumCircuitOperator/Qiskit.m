@@ -79,7 +79,7 @@ QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
             }
             ]
         ] &,
-        qco["Flatten"]["Elements"]
+        QuantumCircuitOperator[QuantumShortcut[qco]]["Flatten"]["Elements"]
     ],
     arity = {qco["Width"], Replace[Quiet[qco["TargetArity"]], Except[_Integer] -> Nothing]}
 },
@@ -375,6 +375,8 @@ except:
     "AWSBraket",
     Confirm @ ResourceFunction["PythonPackageInstall"][$PythonSession, "qiskit-braket-provider"];
 "
+from qiskit_braket_provider import AWSBraketProvider
+
 try:
     assert(isinstance(provider, AWSBraketProvider))
 except:
@@ -389,6 +391,7 @@ provider = None
     ExternalEvaluate[$PythonSession, "
 import pickle
 from qiskit import Aer
+from qiskit_braket_provider import AWSBraketProvider
 
 qc = pickle.loads(<* Wolfram`QuantumFramework`$pythonBytes *>)
 backend_name = <* Wolfram`QuantumFramework`$backendName *>
@@ -493,6 +496,7 @@ qc_QiskitCircuit["QASM", opts : OptionsPattern[qiskitInitBackend]] := Enclose[
     Confirm @ qiskitInitBackend[qc, opts];
     ExternalEvaluate[$PythonSession, "
 from qiskit import transpile
+from qiskit_braket_provider import AWSBraketProvider
 
 circuit = transpile(qc, backend)
 if isinstance(provider, AWSBraketProvider):
