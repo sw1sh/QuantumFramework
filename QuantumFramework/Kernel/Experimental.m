@@ -73,14 +73,15 @@ CircuitMultiwayGraph[circuit_, initStates : Except[OptionsPattern[]] : Automatic
 							"Created" -> op["FullOutputOrder"],
 							"Step" -> Length[newPos],
 							"TreePosition" -> newPos,
-							"Index" -> index
+							"Index" -> index,
+							"Operator" -> op
 						|>]
 					] &,
 					Confirm @ operatorApply[op, states]
 				]
 			)],
 			{{{}, Replace[initStates, Automatic -> Table[QuantumState["0"], circuit["Width"]]]}},
-			#["Sort"] & /@ circuit["Operators"],
+			#["Sort"] & /@ circuit["Flatten"]["Operators"],
 			opts,
 			GraphLayout -> {"LayeredDigraphEmbedding", "Orientation" -> Left}
 		],
