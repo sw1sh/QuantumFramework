@@ -37,6 +37,8 @@ QuantumLabelName[qmo_QuantumMeasurementOperator] := qmo["InputOrder"]
 
 QuantumLabelName[qc_QuantumCircuitOperator] := QuantumLabelName /@ qc["Operators"]
 
+QuantumLabelName[qc_QuantumChannel] := qc
+
 QuantumLabelName[label_, dim_ : 2, order_ : {}] := With[{nameOrder = If[order === {}, Identity, # -> order &]},
     Replace[label, {
         Subscript["C", subLabel_Composition][c0_, c1_] :> ({"C", nameOrder @ QuantumLabelName[#], c0, c1} & /@ Reverse[List @@ subLabel]),
@@ -44,6 +46,7 @@ QuantumLabelName[label_, dim_ : 2, order_ : {}] := With[{nameOrder = If[order ==
         HoldPattern[Composition[subLabels___]] :> nameOrder @ Reverse[QuantumLabelName /@ {subLabels}],
         Superscript[subLabel_, CircleTimes[n_Integer]] /; n == Length[order] :> Thread[ConstantArray[QuantumLabelName[subLabel], n] -> order],
         Superscript[subLabel_, CircleTimes[n_Integer]] :> QuantumLabelName[subLabel, dim, order],
+        CircleTimes[subLabels___] /; Length[{subLabels}] == Length[order] :> MapThread[QuantumLabelName[#1, dim, {#2}] &, {{subLabels}, order}],
         Subscript["R", subLabel_Composition][angle_] :> (nameOrder @ {"R", Sow[Chop @ angle, #], QuantumLabelName[#]}& /@ Reverse[List @@ subLabel]),
         Subscript["R", subLabel_][angle_] :> {"R", Sow[Chop @ angle, subLabel], QuantumLabelName[subLabel, dim, order]},
         "\[Pi]"[perm__] :> nameOrder @ {"Permutation", PermutationCycles[{perm}]},
