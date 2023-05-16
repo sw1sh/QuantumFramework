@@ -3,7 +3,7 @@ Package["Wolfram`QuantumFramework`"]
 PackageScope["DecomposedQuantumStateProbabilities"]
 PackageScope["QuantumBeamSearch"]
 
-PackageExport["CircuitMultiwayGraph"]
+PackageExport["QuantumCircuitMultiwayGraph"]
 PackageExport["QuantumDiagramProcess"]
 
 
@@ -59,7 +59,7 @@ operatorApply[op_ ? QuantumOperatorQ, states : {_ ? QuantumStateQ ..}] := Enclos
 	]
 ]
 
-CircuitMultiwayGraph[circuit_, initStates : Except[OptionsPattern[]] : Automatic, opts : OptionsPattern[]] := Enclose @ Block[{
+QuantumCircuitMultiwayGraph[circuit_, initStates : Except[OptionsPattern[]] : Automatic, opts : OptionsPattern[]] := Enclose @ Block[{
 	index = 0
 },
 	VertexReplace[
