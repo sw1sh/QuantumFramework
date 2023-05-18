@@ -2,10 +2,11 @@ Package["Wolfram`QuantumFramework`"]
 
 PackageScope["PythonEvalAttr"]
 PackageScope["$PythonSession"]
+PackageScope["PythonEvaluate"]
 
 
 
-$PythonPackages = {"qiskit", "matplotlib", "pylatexenc"}
+$PythonPackages = {"qiskit", "matplotlib", "pylatexenc", "qiskit-ibm-provider", "qiskit-braket-provider"}
 
 confirmPython[session_] := confirmPython[session] = AllTrue[$PythonPackages, ResourceFunction["PythonPackageInstalledQ"][session, #] &] &&
     ExternalEvaluate[session, "import qiskit\nfrom qiskit import QuantumCircuit"] === Null
@@ -26,23 +27,32 @@ Enclose[
 ]
 
 
+PythonEvaluate[code_] := Enclose @ ExternalEvaluate[Confirm @ $PythonSession, code]
+
+PythonEvaluate[ctx_, code_] := WithCleanup[
+    PrependTo[$ContextPath, ctx],
+    PythonEvaluate[code],
+    $ContextPath = DeleteCases[$ContextPath, ctx]
+]
+
+
 PythonEvalAttr[{bytes_ByteArray, attr_String, args___, kwargs : OptionsPattern[]}, OptionsPattern[{"ReturnBytes" -> False}]] := Block[{
-    Wolfram`QuantumFramework`pythonBytes = bytes,
-    Wolfram`QuantumFramework`pythonAttr = attr,
-    Wolfram`QuantumFramework`pythonArgs = {args},
-    Wolfram`QuantumFramework`pythonKWargs = Association @ {kwargs},
-    Wolfram`QuantumFramework`returnBytes = OptionValue["ReturnBytes"]
+    pythonBytes = bytes,
+    pythonAttr = attr,
+    pythonArgs = {args},
+    pythonKWargs = Association @ {kwargs},
+    returnBytes = OptionValue["ReturnBytes"]
 },
-    ExternalEvaluate[$PythonSession, "
+    PythonEvaluate[Context[pythonBytes], "
 import pickle
 
-attr = getattr(pickle.loads(<* Wolfram`QuantumFramework`pythonBytes *>), <* Wolfram`QuantumFramework`pythonAttr *>)
+attr = getattr(pickle.loads(<* pythonBytes *>), <* pythonAttr *>)
 if hasattr(attr, '__call__'):
-    result = attr(* <* Wolfram`QuantumFramework`pythonArgs *>, ** <* Wolfram`QuantumFramework`pythonKWargs *>)
+    result = attr(* <* pythonArgs *>, ** <* pythonKWargs *>)
 else:
     result = attr
 
-if <* TrueQ @ Wolfram`QuantumFramework`returnBytes  *>:
+if <* TrueQ @ returnBytes  *>:
     result = pickle.dumps(result)
 
 result
