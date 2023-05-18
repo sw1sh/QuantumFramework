@@ -1,13 +1,13 @@
 Package["Wolfram`QuantumFramework`"]
 
-PackageExport["TensorNetworkQ"]
-PackageExport["ContractTensorNetwork"]
-PackageExport["TensorNetworkFreeIndices"]
-PackageExport["InitializeTensorNetwork"]
 PackageExport["TensorNetworkIndexGraph"]
-PackageExport["TensorNetworkApply"]
-PackageExport["TensorNetworkCompile"]
 
+PackageScope["TensorNetworkQ"]
+PackageScope["ContractTensorNetwork"]
+PackageScope["TensorNetworkFreeIndices"]
+PackageScope["InitializeTensorNetwork"]
+PackageScope["TensorNetworkApply"]
+PackageScope["TensorNetworkCompile"]
 PackageScope["QuantumTensorNetwork"]
 
 

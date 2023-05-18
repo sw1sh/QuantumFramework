@@ -1,11 +1,11 @@
 Package["Wolfram`QuantumFramework`"]
 
-PackageExport[QuEST]
-PackageExport[FromQuESTLink]
-PackageExport[ToQuESTLink]
+PackageScope[QuEST]
+PackageScope[FromQuESTLink]
+PackageScope[ToQuESTLink]
 
-PackageExport[QuESTCompile]
-PackageExport[QuESTApply]
+PackageScope[QuESTCompile]
+PackageScope[QuESTApply]
 
 
 

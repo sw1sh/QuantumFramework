@@ -1,6 +1,5 @@
 Package["Wolfram`QuantumFramework`"]
 
-PackageExport["QuantumLabelName"]
 PackageExport["QuantumShortcut"]
 
 PackageScope["simplifyLabel"]
@@ -25,38 +24,38 @@ simplifyLabel[l_] := Replace[l, {
 }]
 
 
-QuantumLabelName[qo_QuantumOperator] := Replace[
-    QuantumLabelName[qo["Label"], First @ qo["Dimensions"], qo["TargetOrder"]],
+QuantumShortcut[qo_QuantumOperator] := Replace[
+    QuantumShortcut[qo["Label"], First @ qo["Dimensions"], qo["TargetOrder"]],
     {
-        _Missing /; qo["Dimensions"] === {2, 2} && MatrixQ[qo["Matrix"], NumericQ] :> QuantumLabelName[qo["ZYZ"]],
+        _Missing /; qo["Dimensions"] === {2, 2} && MatrixQ[qo["Matrix"], NumericQ] :> QuantumShortcut[qo["ZYZ"]],
         _Missing :> qo["Matrix"]
     }
 ]
 
-QuantumLabelName[qmo_QuantumMeasurementOperator] := qmo["InputOrder"]
+QuantumShortcut[qmo_QuantumMeasurementOperator] := qmo["InputOrder"]
 
-QuantumLabelName[qc_QuantumCircuitOperator] := QuantumLabelName /@ qc["Operators"]
+QuantumShortcut[qc_QuantumCircuitOperator] := QuantumShortcut /@ qc["Operators"]
 
-QuantumLabelName[qc_QuantumChannel] := qc
+QuantumShortcut[qc_QuantumChannel] := qc
 
-QuantumLabelName[label_, dim_ : 2, order_ : {}] := With[{nameOrder = If[order === {}, Identity, # -> order &]},
+QuantumShortcut[label_, dim_ : 2, order_ : {}] := With[{nameOrder = If[order === {}, Identity, # -> order &]},
     Replace[label, {
-        Subscript["C", subLabel_Composition][c0_, c1_] :> ({"C", nameOrder @ QuantumLabelName[#], c0, c1} & /@ Reverse[List @@ subLabel]),
-        Subscript["C", subLabel_][c0_, c1_] :> {"C", QuantumLabelName[subLabel, dim, order], c0, c1},
-        HoldPattern[Composition[subLabels___]] :> nameOrder @ Reverse[QuantumLabelName /@ {subLabels}],
-        Superscript[subLabel_, CircleTimes[n_Integer]] /; n == Length[order] :> Thread[ConstantArray[QuantumLabelName[subLabel], n] -> order],
-        Superscript[subLabel_, CircleTimes[n_Integer]] :> QuantumLabelName[subLabel, dim, order],
-        CircleTimes[subLabels___] /; Length[{subLabels}] == Length[order] :> MapThread[QuantumLabelName[#1, dim, {#2}] &, {{subLabels}, order}],
-        Subscript["R", subLabel_Composition][angle_] :> (nameOrder @ {"R", Sow[Chop @ angle, #], QuantumLabelName[#]}& /@ Reverse[List @@ subLabel]),
-        Subscript["R", subLabel_][angle_] :> {"R", Sow[Chop @ angle, subLabel], QuantumLabelName[subLabel, dim, order]},
+        Subscript["C", subLabel_Composition][c0_, c1_] :> ({"C", nameOrder @ QuantumShortcut[#], c0, c1} & /@ Reverse[List @@ subLabel]),
+        Subscript["C", subLabel_][c0_, c1_] :> {"C", QuantumShortcut[subLabel, dim, order], c0, c1},
+        HoldPattern[Composition[subLabels___]] :> nameOrder @ Reverse[QuantumShortcut /@ {subLabels}],
+        Superscript[subLabel_, CircleTimes[n_Integer]] /; n == Length[order] :> Thread[ConstantArray[QuantumShortcut[subLabel], n] -> order],
+        Superscript[subLabel_, CircleTimes[n_Integer]] :> QuantumShortcut[subLabel, dim, order],
+        CircleTimes[subLabels___] /; Length[{subLabels}] == Length[order] :> MapThread[QuantumShortcut[#1, dim, {#2}] &, {{subLabels}, order}],
+        Subscript["R", subLabel_Composition][angle_] :> (nameOrder @ {"R", Sow[Chop @ angle, #], QuantumShortcut[#]}& /@ Reverse[List @@ subLabel]),
+        Subscript["R", subLabel_][angle_] :> {"R", Sow[Chop @ angle, subLabel], QuantumShortcut[subLabel, dim, order]},
         "\[Pi]"[perm__] :> nameOrder @ {"Permutation", PermutationCycles[{perm}]},
         OverHat[x_] :> nameOrder @ {"Diagonal", x},
         (subLabel : "P" | "PhaseShift" | "U2" | "U")[params___] :> nameOrder @ {subLabel, params},
         subLabel : "X" | "Y" | "Z" | "I" | "NOT" :> nameOrder @ If[dim === 2, subLabel, {subLabel, dim}],
-        SuperDagger[subLabel_] :> nameOrder @ SuperDagger[QuantumLabelName[subLabel, dim, order]],
+        SuperDagger[subLabel_] :> nameOrder @ SuperDagger[QuantumShortcut[subLabel, dim, order]],
         name_ :> If[MemberQ[$QuantumOperatorNames, name], Identity, Missing] @ nameOrder[name]
     }]
 ]
 
-QuantumShortcut = QuantumLabelName
+QuantumShortcut = QuantumShortcut
 

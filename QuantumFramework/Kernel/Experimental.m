@@ -2,9 +2,9 @@ Package["Wolfram`QuantumFramework`"]
 
 PackageScope["DecomposedQuantumStateProbabilities"]
 PackageScope["QuantumBeamSearch"]
+PackageScope["QuantumDiagramProcess"]
 
 PackageExport["QuantumCircuitMultiwayGraph"]
-PackageExport["QuantumDiagramProcess"]
 
 
 
