@@ -161,7 +161,7 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qs_ ? QuantumStateQ] := Enclose @ With[{
     qudits = qmo["Eigenqudits"],
-    op = qmo["SuperOperator"]
+    op = qmo["SuperOperator"]["SortOutput"]
 },
     QuantumMeasurement[
         QuantumOperator[
@@ -188,6 +188,8 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
         ]
     ]
 ]
+
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[] := qmo[QuantumState[{"Register", qmo["InputDimensions"]}]]
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qo_ ? QuantumOperatorQ] := Enclose @ With[{
     op = qmo["SuperOperator"]
