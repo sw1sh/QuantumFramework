@@ -70,7 +70,11 @@ QuditBasisProp[qb_, "FullQudits"] := Length[qb["Shape"]]
 QuditBasisProp[qb_, "NameTensor"] := ArrayReshape[qb["Names"], qb["Shape"]]
 
 
-computationalBasisQ[repr_] := And @@ ResourceFunction["KeyGroupBy"][repr, Last, With[{vs = Values @ normalRepresentations @ #}, emptyTensorQ[vs] || SparseArray[vs] == IdentityMatrix[Length[vs], SparseArray]] &]
+computationalBasisQ[repr_] := And @@ ResourceFunction["KeyGroupBy"][repr, Last,
+    With[{vs = ArrayReshape[Values @ normalRepresentations @ #, Table[Length[#], 2]]},
+        emptyTensorQ[vs] || SparseArray[vs] == IdentityMatrix[Length[vs], SparseArray]
+    ] &
+]
 
 QuditBasisProp[qb_, "Elements"] /; computationalBasisQ[qb["Representations"]] := With[{
     dims = qb["Dimensions"], dim = qb["Dimension"], qudits = qb["Qudits"]
@@ -81,7 +85,7 @@ QuditBasisProp[qb_, "Elements"] /; computationalBasisQ[qb["Representations"]] :=
     ]
 ]
 
-QuditBasisProp[qb_, "Elements"] := If[qb["Length"] > 0,
+QuditBasisProp[qb_, "Elements"] := If[qb["Size"] > 0,
     ArrayReshape[
         Transpose[
             Outer[Times,
@@ -96,7 +100,7 @@ QuditBasisProp[qb_, "Elements"] := If[qb["Length"] > 0,
     {}
 ]
 
-QuditBasisProp[qb_, "ReducedElements"] := If[qb["Length"] > 0,
+QuditBasisProp[qb_, "ReducedElements"] := If[qb["Size"] > 0,
     ArrayReshape[
         Transpose[
             Outer[Times,
