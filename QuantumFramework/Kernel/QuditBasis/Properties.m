@@ -169,7 +169,7 @@ QuditBasisProp[qb_, "Permute", perm_Cycles] := Enclose @ If[
     perm === Cycles[{}],
     qb,
     Module[{idx = Delete[qb["Index"], Position[qb["Shape"], 1]], repl},
-        repl = Thread[idx -> PermutationList[perm, Length[idx]][[Ordering @ Ordering @ idx]]];
+        repl = Thread[idx -> Permute[idx, perm]];
         QuditBasis[
             KeyMap[MapAt[Replace[repl], 2]] @ qb["Representations"]
         ]
