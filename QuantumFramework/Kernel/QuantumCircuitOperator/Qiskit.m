@@ -438,7 +438,10 @@ if not isinstance(provider, AWSBraketProvider):
     circuit.initialize(<* $state *>)
 circuit = circuit.compose(qc)
 
-circuit = transpile(circuit, backend)
+try:
+    circuit = transpile(circuit, backend)
+except:
+    pass
 
 result = backend.run(circuit, shots = <* $shots *>).result()
 
@@ -454,19 +457,20 @@ result
     Which[
         AssociationQ[result],
         Enclose[
-            With[{size = StringLength @ First @ Keys[result]},
+            Block[{counts = KeyMap[StringDelete[Whitespace]] @ result, size},
+                size = StringLength @ First @ Keys[counts];
                 ConfirmAssert[size <= 8];
                 ConfirmBy[
                     QuantumMeasurement[
                         Join[
                             Association[# -> 0 & /@ IntegerDigits[Range[2 ^ size] - 1, 2, size]],
-                            KeyMap[Characters[#] /. {"0" -> 0, "1" -> 1} &] @ result
+                            KeyMap[Characters[#] /. {"0" -> 0, "1" -> 1} &] @ counts
                         ]
                     ],
                     QuantumMeasurementQ
                 ]
             ],
-            result &
+            counts &
         ],
         NumericArrayQ[result],
         QuantumState[Chop @ Normal[result]]["Reverse"],
