@@ -172,8 +172,8 @@ QuditBasisProp[qb_, "Sort"] := QuditBasis[KeySortBy[qb["Representations"], {Last
 QuditBasisProp[qb_, "Permute", perm_Cycles] := Enclose @ If[
     perm === Cycles[{}],
     qb,
-    Module[{idx = Delete[qb["Index"], Position[qb["Shape"], 1]], repl},
-        repl = Thread[idx -> Permute[idx, perm]];
+    Module[{idx = Sort @ Delete[qb["Index"], Position[qb["Shape"], 1 | 0]], repl},
+        repl = Thread[idx -> Permute[idx, InversePermutation[perm]]];
         QuditBasis[
             KeyMap[MapAt[Replace[repl], 2]] @ qb["Representations"]
         ]
