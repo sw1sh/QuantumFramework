@@ -323,7 +323,7 @@ QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orde
                         {Join[#1, rhs], DeleteElements[#2, lhs]}
                     ] &
                 ],
-                {control, qo["InputOrder"]},
+                {control, Sort[qo["InputOrder"]]},
                 Apply[IntersectingQ]
             ]
         },

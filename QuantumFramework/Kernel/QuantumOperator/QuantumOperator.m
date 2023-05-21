@@ -362,9 +362,9 @@ Enclose @ With[{
                 QuditBasis[]
             ];
             If[ bottom["FullOutputOrder"] != order,
-                bottom = bottom["OrderedOutput", order, basis]
+                bottom = ConfirmBy[bottom["OrderedOutput", order, basis], QuantumOperatorQ]
             ];
-            top = top["OrderedInput", order, basis];
+            top = ConfirmBy[top["OrderedInput", order, basis], QuantumOperatorQ];
         ]
     ];
     ConfirmAssert[top["InputDimension"] == bottom["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
