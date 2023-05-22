@@ -46,7 +46,7 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
     newTarget = Replace[target, Automatic -> op["FullInputOrder"]];
     order = PadRight[newTarget, Max[1, op["InputQudits"]], DeleteCases[op["FullInputOrder"], Alternatives @@ newTarget]];
     qmo = QuantumMeasurementOperator[
-        QuantumOperator[op["State"], {Automatic, Sort @ order}],
+        QuantumOperator[op["State"], {Automatic, Sort @ order}, "Label" -> "M"],
         order[[;; Length @ newTarget]],
         args
     ];

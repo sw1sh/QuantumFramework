@@ -216,7 +216,7 @@ QuantumMeasurementProp[qm_, "SimulatedStateMeasurement"] := qm["StateAssociation
 
 QuantumMeasurementProp[qm_, "SimulatedStateMeasurement", n_] := Part[qm["StateAssociation"], Key /@ qm["SimulatedMeasurement", n]]
 
-QuantumMeasurementProp[qm_, "MeanState"] := qm["Mean"] /. qm["StateAssociation"]
+QuantumMeasurementProp[qm_, "MeanState"] := Total @ KeyValueMap[Times, qm["StateAssociation"]]
 
 QuantumMeasurementProp[qm_, "Simplify"] := QuantumMeasurement[qm["QuantumOperator"]["Simplify"]]
 
