@@ -36,9 +36,11 @@ QuantumCircuitOperatorProp[qco_, "FullElements"] := Replace[qco["Elements"], {} 
 
 QuantumCircuitOperatorProp[qco_, "Operators"] := Replace[DeleteCases[qco["Elements"], _ ? BarrierQ], {} :> {QuantumOperator["I"]}]
 
-QuantumCircuitOperatorProp[qco_, "NormalOperators"] := Block[{m = 0},
+QuantumCircuitOperatorProp[qco_, "NormalOperators", elements_ : False] := Block[{m = 0},
     Map[
         Which[
+            BarrierQ[#],
+            #,
             QuantumMeasurementOperatorQ[#],
             QuantumOperator[
                 #["POVM"]["QuantumOperator"],
@@ -57,7 +59,7 @@ QuantumCircuitOperatorProp[qco_, "NormalOperators"] := Block[{m = 0},
                 op
             ]
         ] &,
-        qco["Operators"]
+        qco[If[elements, "FullElements", "Operators"]]
     ]
 ]
 
@@ -129,9 +131,9 @@ QuantumCircuitOperatorProp[qco_, "Depth"] := Max[1, Counts[Catenate[Union @@@ qc
 
 QuantumCircuitOperatorProp[qco_, "Arity"] := Length @ qco["InputOrder"]
 
-QuantumCircuitOperatorProp[qco_, "Min"] := Replace[Min @@ qco["Order"], Infinity -> 1]
+QuantumCircuitOperatorProp[qco_, "Min"] := Replace[Min[qco["NormalOrders"]], Infinity -> 1]
 
-QuantumCircuitOperatorProp[qco_, "Max"]	:= Replace[Max @@ qco["Order"], - Infinity -> 1]
+QuantumCircuitOperatorProp[qco_, "Max"]	:= Replace[Max[qco["NormalOrders"]], - Infinity -> 1]
 
 QuantumCircuitOperatorProp[qco_, "Width"] := Max[qco["Max"], 1] - Min[qco["Min"], 1] + 1
 

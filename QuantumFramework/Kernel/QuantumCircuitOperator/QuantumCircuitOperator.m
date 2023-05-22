@@ -9,7 +9,7 @@ PackageScope["FromCircuitOperatorShorthand"]
 
 
 
-BarrierQ[barrier_] := MatchQ[barrier, "Barrier" | "Barrier"[_ ? orderQ] | "Barrier"[_Span]]
+BarrierQ[barrier_] := MatchQ[barrier, "Barrier" | "Barrier"[_ ? orderQ] | "Barrier"[Span[_Integer, _Integer | All]]]
 
 QuantumCircuitOperatorQ[QuantumCircuitOperator[data_Association]] /; ! AtomQ[Unevaluated[data]] :=
     QuantumCircuitOperatorQ[QuantumCircuitOperator[data]]
@@ -26,11 +26,8 @@ QuantumCircuitOperatorQ[QuantumCircuitOperator[KeyValuePattern[{"Elements" -> el
 QuantumCircuitOperatorQ[___] := False
 
 circuitElementPosition["Barrier", from_, to_] := Range[to - from + 1]
-circuitElementPosition["Barrier"[order_ ? orderQ], from_, to_] := Clip[order - from + 1, {from, to}]
-circuitElementPosition["Barrier"[span_Span], from_, to_] := Enclose[
-    Clip[Range @@ Confirm @ ResourceFunction["SpanRange"][span, to - from + 1], {from, to}],
-    Range[to - from + 1] &
-]
+circuitElementPosition["Barrier"[order_ ? orderQ], from_, to_] := Select[order, Between[{from, to}]] - from + 1
+circuitElementPosition["Barrier"[span : Span[_Integer, _Integer | All]], from_, to_] := Range @@ (Replace[List @@ span, {x_Integer :> Clip[x, {from ,to}], All -> to}, {1}] - from + 1)
 circuitElementPosition[op_, from_, _] := Union @@ op["Order"] - from + 1
 
 
