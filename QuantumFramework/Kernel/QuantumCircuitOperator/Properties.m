@@ -61,9 +61,11 @@ QuantumCircuitOperatorProp[qco_, "NormalOperators"] := Block[{m = 0},
     ]
 ]
 
-QuantumCircuitOperatorProp[qco_, "NormalOrders"] := Block[{m = 0},
+QuantumCircuitOperatorProp[qco_, "NormalOrders", elements_ : False] := Block[{m = 0},
     Map[
         Which[
+            BarrierQ[#],
+            Table[circuitElementPosition[#, qco["Min"], qco["Max"]] + qco["Min"] - 1, 2],
             QuantumMeasurementOperatorQ[#],
             {Join[Reverse @ Table[m--, #["Eigenqudits"]], Select[#["OutputOrder"], Positive]], #["InputOrder"]},
             QuantumChannelQ[#],
@@ -73,7 +75,7 @@ QuantumCircuitOperatorProp[qco_, "NormalOrders"] := Block[{m = 0},
             m = Min[m, 0];
             #["Order"]
         ] &,
-        qco["Operators"]
+        qco[If[elements, "FullElements", "Operators"]]
     ]
 ]
 
@@ -114,7 +116,7 @@ QuantumCircuitOperatorProp[qco_, "InputOrders"] := qco["NormalOrders"][[All, 2]]
 
 QuantumCircuitOperatorProp[qco_, "OutputOrders"] := qco["NormalOrders"][[All, 1]]
 
-QuantumCircuitOperatorProp[qco_, "Orders"] := Thread[{qco["OutputOrders"], qco["InputOrders"]}]
+QuantumCircuitOperatorProp[qco_, "Orders"] := Through[qco["Operators"]["Order"]]
 
 QuantumCircuitOperatorProp[qco_, "Order"] :=
     Fold[{Union[#2[[1]], Complement[#1[[1]], #2[[2]]]], Union[#1[[2]], Complement[#2[[2]], #1[[1]]]]} &, qco["NormalOrders"]]
@@ -123,11 +125,17 @@ QuantumCircuitOperatorProp[qco_, "InputOrder"] := qco["Order"][[2]]
 
 QuantumCircuitOperatorProp[qco_, "OutputOrder"] := qco["Order"][[1]]
 
-QuantumCircuitOperatorProp[qco_, "Depth"] := Max[1, Counts[Catenate[Union @@@ qco["Orders"]]]]
+QuantumCircuitOperatorProp[qco_, "Depth"] := Max[1, Counts[Catenate[Union @@@ qco["NormalOrders"]]]]
 
 QuantumCircuitOperatorProp[qco_, "Arity"] := Length @ qco["InputOrder"]
 
-QuantumCircuitOperatorProp[qco_, "Width"] := Max[1, #2 - Min[Max[#1, 1], 1] + 1] & @@ MinMax[{qco["InputOrder"], qco["OutputOrder"]}]
+QuantumCircuitOperatorProp[qco_, "Min"] := Replace[Min @@ qco["Order"], Infinity -> 1]
+
+QuantumCircuitOperatorProp[qco_, "Max"]	:= Replace[Max @@ qco["Order"], - Infinity -> 1]
+
+QuantumCircuitOperatorProp[qco_, "Width"] := Max[qco["Max"], 1] - Min[qco["Min"], 1] + 1
+
+QuantumCircuitOperatorProp[qco_, "Span"] := qco["Max"] - qco["Min"] + 1
 
 QuantumCircuitOperatorProp[qco_, "InputDimensions"] :=
     (q |-> #["InputDimensions"][[ q /. #["InputOrderQuditMapping"] ]] & @
@@ -141,18 +149,24 @@ QuantumCircuitOperatorProp[qco_, "OutputDimensions"] :=
 
 QuantumCircuitOperatorProp[qco_, "OutputDimension"] := Times @@ qco["OutputDimensions"]
 
-QuantumCircuitOperatorProp[qco_, "Input"] := With[{ops = qco["NormalOperators"]},
-    QuantumTensorProduct[
-        (q |-> #["Input"]["Extract", {q /. #["InputOrderQuditMapping"]}] & @
-            SelectFirst[ops, op |-> MemberQ[op["FullInputOrder"], q]]) /@ qco["InputOrder"]
-    ]
+QuantumCircuitOperatorProp[qco_, "Input"] := If[Length[qco["InputOrder"]] > 0,
+    With[{ops = qco["NormalOperators"]},
+        QuantumTensorProduct[
+            (q |-> #["Input"]["Extract", {q /. #["InputOrderQuditMapping"]}] & @
+                SelectFirst[ops, op |-> MemberQ[op["FullInputOrder"], q]]) /@ qco["InputOrder"]
+        ]
+    ],
+    QuditBasis[]
 ]
 
-QuantumCircuitOperatorProp[qco_, "Output"] := With[{ops = Reverse @ qco["NormalOperators"]},
-    QuantumTensorProduct[
-        (q |-> #["Output"]["Extract", {q /. #["OutputOrderQuditMapping"]}] & @
-            SelectFirst[ops, op |-> MemberQ[op["FullOutputOrder"], q]]) /@ qco["OutputOrder"]
-    ]
+QuantumCircuitOperatorProp[qco_, "Output"] := If[Length[qco["OutputOrder"]] > 0,
+    With[{ops = Reverse @ qco["NormalOperators"]},
+        QuantumTensorProduct[
+            (q |-> #["Output"]["Extract", {q /. #["OutputOrderQuditMapping"]}] & @
+                SelectFirst[ops, op |-> MemberQ[op["FullOutputOrder"], q]]) /@ qco["OutputOrder"]
+        ]
+    ],
+    QuditBasis[]
 ]
 
 QuantumCircuitOperatorProp[qco_, "Basis"] := QuantumBasis[qco["Output"], qco["Input"]]

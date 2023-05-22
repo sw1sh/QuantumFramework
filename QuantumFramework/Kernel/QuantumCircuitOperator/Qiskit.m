@@ -37,7 +37,7 @@ QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
         },
             Replace[
                 label, {
-                {"barrier", barrier_} :> With[{order = circuitElementOrder[barrier, qco["Width"]]}, {
+                {"barrier", barrier_} :> With[{order = circuitElementPosition[barrier, qco["Width"]]}, {
                     "barrier",
                     {},
                     order - 1

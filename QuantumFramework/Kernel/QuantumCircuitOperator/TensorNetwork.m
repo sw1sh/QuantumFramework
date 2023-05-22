@@ -144,10 +144,10 @@ TensorNetworkIndexGraph[net_Graph ? (TensorNetworkQ[True]), opts : OptionsPatter
 
 Options[QuantumTensorNetwork] = Join[{"PrependInitial" -> True}, Options[Graph]]
 
-QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Module[{width, targets, ops, size, orders, vertices, edges, tensors},
+QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Module[{width, min, ops, size, orders, vertices, edges, tensors},
 	ConfirmAssert[AllTrue[qc["Operators"], #["Order"] === #["FullOrder"] &]];
-    targets = qc["Targets"];
     width = qc["Width"];
+    min = qc["Min"];
     ops = Through[qc["NormalOperators"]["Computational"]];
     If[ TrueQ[OptionValue["PrependInitial"]],
         PrependTo[ops, QuantumOperator[QuantumState[{1}, PadLeft[qc["InputDimensions"], qc["Width"], 2], "Label" -> "Initial"], Range @ qc["Width"]]]
@@ -158,11 +158,11 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
 	edges = Catenate @ FoldPairList[
 		{prev, order} |-> Module[{output, input, n = Max[prev] + 1, next = prev, indices},
 			{output, input} = order;
-			next[[ Union[output, input] + targets ]] = n;
-            indices = {Superscript[prev[[# + targets]], #], Subscript[next[[# + targets]], #]} & /@ input;
-			{Thread[DirectedEdge[prev[[ input + targets ]], next[[ input + targets ]], indices]], next}
+			next[[ Union[output, input] - min + 1 ]] = n;
+            indices = {Superscript[prev[[# - min + 1]], #], Subscript[next[[# - min + 1]], #]} & /@ input;
+			{Thread[DirectedEdge[prev[[ input - min + 1 ]], next[[ input - min + 1]], indices]], next}
 		],
-		Table[0, width + targets],
+		Table[0, width],
 		Rest @ orders
 	];
 	tensors = #["Tensor"] & /@ ops;
@@ -201,12 +201,10 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
         circuit = qco;
         state = qs
     ];
-    res = TensorNetworkCompile[QuantumCircuitOperator[{QuantumOperator[state], circuit}]];
+    res = TensorNetworkCompile[QuantumCircuitOperator[{QuantumOperator[state], Splice @ circuit["Operators"]}]];
     Which[
         QuantumMeasurementOperatorQ[res],
         QuantumMeasurement[res],
-        QuantumChannelQ[res],
-        res[],
         QuantumOperatorQ[res],
         res["State"],
         True,
@@ -215,16 +213,24 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
 ]
 
 
-TensorNetworkCompile[qco_QuantumCircuitOperator] :=
-    Which[
-        qco["Eigenqudits"] > 0,
-        QuantumMeasurementOperator[QuantumOperator[#, qco["Order"]], qco["Target"]] &,
-        qco["TraceQudits"] > 0,
-        QuantumChannel[QuantumOperator[#, qco["Order"]]] &,
-        True,
-        QuantumOperator[#, qco["Order"]] &
-    ] @ QuantumState[SparseArrayFlatten[#], QuantumBasis @@ Reverse @ TakeDrop[TensorDimensions[#], - qco["Arity"]], "Label" -> qco["Label"]] & @
-    With[{tn = VertexDelete[qco["TensorNetwork"], 0]},
-        Transpose[ContractTensorNetwork[tn], Ordering @ OrderingBy[TensorNetworkFreeIndices[tn], Replace[{Superscript[_, x_] :> {0, x}, Subscript[_, x_] :> {1, x}}]]]
+TensorNetworkCompile[qco_QuantumCircuitOperator] := Block[{net = VertexDelete[qco["TensorNetwork"], 0], order, res},
+    order = qco["Order"];
+    res = Transpose[
+        ContractTensorNetwork[net],
+        Ordering @ OrderingBy[TensorNetworkFreeIndices[net], Replace[{Superscript[_, x_] :> {0, x}, Subscript[_, x_] :> {1, x}}]]
+    ];
+    res = QuantumState[
+        SparseArrayFlatten[res],
+        qco["Basis"]
+    ];
+    If[ qco["TraceQudits"] > 0,
+        res = QuantumPartialTrace[res, qco["TraceOrder"] - qco["Min"] + 1];
+        order = Replace[order, Alternatives @@ qco["TraceOrder"] -> Nothing, {1}]
+    ];
+
+    If[ qco["Targets"] > 0,
+        QuantumMeasurementOperator[QuantumOperator[res, order], qco["Target"]],
+        QuantumOperator[res, order]
     ]
+]
 
