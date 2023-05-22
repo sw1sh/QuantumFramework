@@ -17,7 +17,7 @@ QuantumCircuitOperatorQ[QuantumCircuitOperator[data_Association]] /; ! AtomQ[Une
 QuantumCircuitOperatorQ[QuantumCircuitOperator[KeyValuePattern[{"Elements" -> elements_, "Label" -> _}]]] :=
     AllTrue[elements,
         BarrierQ[#] ||
-        QuantumOperatorQ[#] && AllTrue[Join @@ #["Order"], GreaterEqualThan[1]] ||
+        QuantumOperatorQ[#](* && AllTrue[Join @@ #["Order"], GreaterEqualThan[1]]*) ||
         QuantumMeasurementOperatorQ[#] && AllTrue[#["InputOrder"], GreaterEqualThan[1]] ||
         QuantumChannelQ[#] && AllTrue[#["InputOrder"], GreaterEqualThan[1]] ||
         QuantumCircuitOperatorQ[#] &
@@ -25,13 +25,13 @@ QuantumCircuitOperatorQ[QuantumCircuitOperator[KeyValuePattern[{"Elements" -> el
 
 QuantumCircuitOperatorQ[___] := False
 
-circuitElementOrder["Barrier", width_] := Range[width]
-circuitElementOrder["Barrier"[order_ ? orderQ], width_] := Clip[order, {1, width}]
-circuitElementOrder["Barrier"[span_Span], width_] := Enclose[
-    Clip[Range @@ Confirm @ ResourceFunction["SpanRange"][span, width], {1, width}],
-    Range[width] &
+circuitElementOrder["Barrier", from_, to_] := Range[- from + 1, to - from + 1]
+circuitElementOrder["Barrier"[order_ ? orderQ], from_, to_] := Clip[order + from- 1, {from, to}]
+circuitElementOrder["Barrier"[span_Span], from_, to_] := Enclose[
+    Clip[Range @@ Confirm @ ResourceFunction["SpanRange"][span, to - from + 1], {from, to}],
+    Range[to - from + 1] &
 ]
-circuitElementOrder[op_, _] := op["InputOrder"]
+circuitElementOrder[op_, from_, _] := Union @@ op["Order"] - from + 1
 
 
 (* constructors *)

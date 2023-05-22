@@ -81,7 +81,7 @@ QuantumMeasurementOperatorProp[qmo_, "StateDimensions"] := Drop[qmo["Dimensions"
 
 QuantumMeasurementOperatorProp[qmo_, "StateDimension"] := Times @@ qmo["StateDimensions"]
 
-QuantumMeasurementOperatorProp[qmo_, "TargetBasis"] := qmo["Output"]["Extract", qmo["TargetIndex"]]
+QuantumMeasurementOperatorProp[qmo_, "TargetBasis"] := qmo["Output"]["Extract", Reverse[qmo["TargetIndex"]]]
 
 QuantumMeasurementOperatorProp[qmo_, "StateBasis"] :=
     QuantumBasis[qmo["Basis"], "Output" -> Last @ qmo["Output"]["Split", qmo["ExtraQudits"]], "Input" -> qmo["Input"]]

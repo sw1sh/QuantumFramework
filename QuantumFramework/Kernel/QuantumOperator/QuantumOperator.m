@@ -204,8 +204,8 @@ QuantumOperator[qo_ ? QuantumOperatorQ, outputOrder : (_ ? orderQ | Automatic), 
 QuantumOperator[qo_ ? QuantumOperatorQ, order : {order1 : _ ? orderQ | Automatic, order2 : _ ? orderQ | Automatic}, opts : OptionsPattern[]] := Block[{
     outputOrder = Replace[order1, Automatic -> qo["OutputOrder"]],
     inputOrder = Replace[order2, Automatic -> qo["InputOrder"]],
-    outputQudits = qo["FullOutputQudits"],
-    inputQudits = qo["FullInputQudits"]
+    outputQudits = Max[qo["FullOutputQudits"], 1],
+    inputQudits = Max[qo["FullInputQudits"], 1]
 },
     QuantumOperator[
         {qo, LCM[Quotient[Length[outputOrder], outputQudits], Quotient[Length[inputOrder], inputQudits]]},
@@ -258,7 +258,9 @@ QuantumOperator[{qo : _ ? QuantumOperatorQ, multiplicity_Integer ? Positive}] :=
 QuantumOperator[{qo : _ ? QuantumOperatorQ, multiplicity_Integer ? Positive}, opts__] :=
     QuantumOperator[QuantumTensorProduct @ Table[qo, multiplicity], opts]
 
-QuantumOperator[x : Except[_ ? QuantumStateQ | _ ? QuantumOperatorQ], args___] := Enclose @
+QuantumOperator[qc_ ? QuantumCircuitOperatorQ, opts___] := QuantumOperator[qc["QuantumOperator"], opts]
+
+QuantumOperator[x : Except[_ ? QuantumStateQ | _ ? QuantumOperatorQ | _ ? QuantumCircuitOperatorQ], args___] := Enclose @
     ConfirmBy[QuantumOperator[{"Diagonal", If[AtomQ[x], x, HoldForm[x]]}, args], QuantumOperatorQ]
 
 
@@ -373,10 +375,13 @@ Enclose @ With[{
 
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qmo_ ? QuantumMeasurementOperatorQ] /; qo["Picture"] == qmo["Picture"] :=
-    QuantumMeasurementOperator[qo @ qmo["Operator"], qmo["Target"]]
+    If[ Equal @@ Sort /@ qo["Order"],
+        QuantumMeasurementOperator[qo @ qmo["Operator"], qmo["Target"]],
+        qo @ qmo["Operator"]
+    ]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qm_ ? QuantumMeasurementQ] /; qo["Picture"] == qm["Picture"] :=
-    QuantumMeasurement[qo[qm["QuantumOperator"]]["Sort"]]
+    If[QuantumMeasurementOperatorQ[#], QuantumMeasurement[#["Sort"]], #] & @ qo[qm["QuantumOperator"]]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ] :=
     QuantumCircuitOperator[Append[qco["Operators"], qo]]

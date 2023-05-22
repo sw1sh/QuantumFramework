@@ -632,7 +632,8 @@ QuantumOperator["Discard", order : _ ? orderQ : {1}, args___] := With[{basis = Q
                 basis
             ]
         ]["Dagger"],
-    {}, order
+        {{}, order},
+        "Label" -> "Discard"
     ]
 ]
 

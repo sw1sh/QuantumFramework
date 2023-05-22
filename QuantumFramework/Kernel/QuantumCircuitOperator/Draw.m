@@ -530,13 +530,13 @@ Options[circuitDraw] := DeleteDuplicatesBy[First] @ Join[
 circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	numGates = circuit["Gates"],
 	width = circuit["Width"],
-	order = circuit["InputOrder"],
+	order = Union @@ circuit["Order"],
 	level = Max[OptionValue["SubcircuitLevel"]],
 	hGapSize = OptionValue["HorizontalGapSize"],
 	span,
 	pad,
 	height,
-	orders = #["InputOrder"] & /@ circuit["Operators"],
+	orders = Union @@ #["Order"] & /@ circuit["Operators"],
 	labels = #["Label"] & /@ circuit["Operators"],
 	positions,
 	gatePositions,
@@ -545,7 +545,8 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	showMeasurementWireQ = TrueQ[OptionValue["ShowMeasurementWire"]] && circuit["Measurements"] > 0,
 	labelCount = 0,
 	labelCounter,
-	gateLabelsQ = TrueQ[OptionValue["ShowGateLabels"]]
+	gateLabelsQ = TrueQ[OptionValue["ShowGateLabels"]],
+	from = Min[Min @@ circuit["Order"], 1]
 },
 	labelCounter = ReplaceAll[None :> (labelCount++; Subscript["U", labelCount])];
 	span = If[showMeasurementWireQ, width, Max[0, #2 - #1 + 1] & @@ MinMax @ order];
@@ -556,7 +557,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	If[ !emptyWiresQ,
 		wires = DeleteCases[wires, _[_, _, i_ /; ! MemberQ[order, i]]]
 	];
-	gatePositions = MapThread[With[{gateOrder = circuitElementOrder[#1, width]}, {gateOrder, #2[[gateOrder]]}] &, {circuit["FullElements"], positions[[All, 2]]}];
+	gatePositions = MapThread[With[{gateOrder = circuitElementOrder[#1, from, width]}, {gateOrder + from - 1, #2[[gateOrder]]}] &, {circuit["FullElements"], positions[[All, 2]]}];
 	wires = Replace[wires, _[from_, to_, i_] :> {{If[from == 0, 0, positions[[from, 2, i]]], i}, {If[to == -1, height, positions[[to, 1, i]] + 1], i}}, {1}];
 	{
 		If[TrueQ[OptionValue["ShowOutline"]], drawOutline[If[emptyWiresQ, width, span], height, pad, FilterRules[{opts}, Options[drawOutline]]], Nothing],
@@ -576,7 +577,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 							"ShowMeasurementWire" -> False, "ShowEmptyWires" -> False, "ShortOuterWires" -> False,
 							opts
 						],
-						{hGapSize Max[#3[[#1["InputOrder"]]]], 0}
+						{hGapSize Max[#3[[circuitElementOrder[#1, from, width]]]], 0}
 					],
 					drawGate[#2, labelCounter @ #1["Label"], FilterRules[{opts}, Options[drawGate]]]
 				],
@@ -598,15 +599,21 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	}
 ]
 
-circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, overlapQ : True | False : False] := With[{width = circuit["Width"]},
+circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, overlapQ : True | False : False] := Block[{
+	from = Min[Min @@ circuit["Order"], 1],
+	to = Max @@ circuit["Order"],
+	width
+},
+	width = to - from + 1;
 	Rest @ FoldList[
 		Block[{
-			order = circuitElementOrder[#2, width],
+			order = circuitElementOrder[#2, from, to],
 			gatePos = #1[[2]],
 			ranges = #1[[3]],
 			shift,
-			overlapShift = Function[x, If[! overlapQ, NestWhile[# + 1 &, 0, ContainsAny[Lookup[ranges, x + #, {}], order] &], 0]]
+			overlapShift
 		},
+			overlapShift = Function[x, If[! overlapQ, NestWhile[# + 1 &, 0, ContainsAny[Lookup[ranges, x + #, {}], order] &], 0]];
 			shift = Which[
 				BarrierQ[#2],
 				ReplacePart[ConstantArray[0, width], Thread[order -> 1]],
@@ -638,7 +645,7 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, overlapQ : T
 circuitWires[qc_QuantumCircuitOperator] := Block[{
 	width = qc["Width"], orders
 },
-	orders = Select[circuitElementOrder[#, width], Positive] & /@ qc["FullElements"];
+	orders = Select[circuitElementOrder[#, 1, width], Positive] & /@ qc["FullElements"];
 	Catenate @ ReplacePart[{-1, _, 2} -> -1] @ FoldPairList[
 		{prev, order} |-> Block[{next = prev},
 			next[[ order ]] = Max[prev] + 1;
@@ -650,16 +657,11 @@ circuitWires[qc_QuantumCircuitOperator] := Block[{
 ]
 
 Options[CircuitDraw] := Join[Options[circuitDraw], Options[Graphics]];
-CircuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := If[
-	And @@ Equal @@@ Map[Select[GreaterThan[0]], circuit["Orders"], {2}],
-	Graphics[
-		circuitDraw[
-			circuit,
-			FilterRules[{opts}, Options[circuitDraw]],
-			RoundingRadius -> 0.1
-		],
-		FilterRules[{opts}, Options[Graphics]]
+CircuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Graphics[
+	circuitDraw[
+		circuit,
+		FilterRules[{opts}, Options[circuitDraw]],
+		RoundingRadius -> 0.1
 	],
-	Show[QuantumCircuitOperator["Magic"]["Icon"] /. {_RGBColor -> Gray, rect_Rectangle :> {EdgeForm[Dotted], rect}}, ImageSize -> 64]
+	FilterRules[{opts}, Options[Graphics]]
 ]
-

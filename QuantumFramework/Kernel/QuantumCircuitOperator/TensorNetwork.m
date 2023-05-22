@@ -124,7 +124,7 @@ InitializeTensorNetwork[net_Graph ? TensorNetworkQ, tensor_ ? TensorQ, index_Lis
     {net, 0},
     {
         "Tensor" -> tensor,
-        "Index" -> Replace[index, Automatic -> With[{
+        "Index" -> Replace[index, Automatic :> With[{
                 oldIndex = AnnotationValue[{net, 0}, "Index"]
             },
                 Join[oldIndex, Take[Subscript @@@ oldIndex, UpTo[Max[0, TensorRank[tensor] - Length[oldIndex]]]]]
@@ -148,31 +148,7 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
 	ConfirmAssert[AllTrue[qc["Operators"], #["Order"] === #["FullOrder"] &]];
     targets = qc["Targets"];
     width = qc["Width"];
-    ops =
-        Module[{m = - qc["Eigenqudits"] - qc["TraceQudits"] + 1},
-            Map[
-                Which[
-                    QuantumMeasurementOperatorQ[#],
-                    With[{povm = #["POVM"]},
-                        QuantumOperator[
-                            povm["QuantumOperator"],
-                            {Join[Reverse @ Table[m++, povm["Eigenqudits"]], Drop[povm["OutputOrder"], povm["Eigenqudits"]]], povm["InputOrder"]},
-                            "Label" -> "Measurement"
-                        ]
-                    ],
-                    QuantumChannelQ[#],
-                    With[{op = #["QuantumOperator"]},
-                        QuantumOperator[
-                            op,
-                            {Join[Reverse @ Table[m++, #["TraceQudits"]], Drop[op["OutputOrder"], #["TraceQudits"]]], op["InputOrder"]}
-                        ]
-                    ],
-                    True,
-                    #
-                ]["Computational"] &,
-                qc["Operators"]
-            ]
-        ];
+    ops = Through[qc["NormalOperators"]["Computational"]];
     If[ TrueQ[OptionValue["PrependInitial"]],
         PrependTo[ops, QuantumOperator[QuantumState[{1}, PadLeft[qc["InputDimensions"], qc["Width"], 2], "Label" -> "Initial"], Range @ qc["Width"]]]
     ];
@@ -182,7 +158,7 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
 	edges = Catenate @ FoldPairList[
 		{prev, order} |-> Module[{output, input, n = Max[prev] + 1, next = prev, indices},
 			{output, input} = order;
-			next[[ input + targets ]] = n;
+			next[[ Union[output, input] + targets ]] = n;
             indices = {Superscript[prev[[# + targets]], #], Subscript[next[[# + targets]], #]} & /@ input;
 			{Thread[DirectedEdge[prev[[ input + targets ]], next[[ input + targets ]], indices]], next}
 		],
@@ -215,7 +191,7 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
 
 
 TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
-    circuit, state
+    circuit, state, res
 },
     If[ qs["MatrixQ"],
         (* bend state and double a circuit *)
@@ -225,58 +201,16 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
         circuit = qco;
         state = qs
     ];
-    (* contract tensor network and make a state *)
-    state = QuantumState[SparseArrayFlatten[#], TensorDimensions[#], "Label" -> qs["Label"] /* qco["Label"]] & @
-        ContractTensorNetwork @ InitializeTensorNetwork[
-            circuit["TensorNetwork"],
-            state["Computational"]["Tensor"],
-            Join[Superscript[0, #] & /@ circuit["InputOrder"], Subscript[0, #] & /@ (Range[state["InputQudits"]])]
-        ];
-    If[ qs["MatrixQ"],
-        state = QuantumState[
-                state["PermuteOutput",
-                    With[{a = qco["Eigenqudits"] + qco["TraceQudits"], b = qs["Qudits"]},
-                        FindPermutation[
-                            Join[Array[0, a], Array[1, a], Array[2, b], Array[3, b]],
-                            Join[Array[0, a], Array[2, b], Array[1, a], Array[3, b]]
-                        ]
-                    ]]["Unbend"],
-                "Label" -> qs["Label"] /* qco["Label"]
-            ]
-    ];
-    If[ qco["Channels"] > 0,
-        state = QuantumPartialTrace[state,
-            First @ Fold[
-                {
-                    Join[#1[[1]], If[QuantumChannelQ[#2], #1[[2]] + Range[#2["TraceQudits"]], {}]],
-                        #1[[2]] + Which[QuantumChannelQ[#2], #2["TraceQudits"], QuantumMeasurementOperatorQ[#2], #2["Eigenqudits"], True, 0]
-                } &,
-                {{}, 0},
-                qco["Operators"]
-            ]
-        ]
-    ];
-    If[ qco["Measurements"] > 0,
-        QuantumMeasurement[
-            QuantumMeasurementOperator[
-                QuantumOperator[
-                    state,
-                    {
-                        Join[Range[- qco["Eigenqudits"] + 1, 0], DeleteCases[qco["OutputOrder"], _ ? NonPositive]],
-                        qco["InputOrder"]
-                    }
-                ],
-                qco["Target"]
-            ],
-            Fold[
-                ReverseApplied[Construct],
-                Prepend[
-                    Select[qco["Operators"] , QuantumMeasurementOperatorQ],
-                    If[Length[#] > 0, QuantumOperator["I", #], Nothing] & @ Complement[Range[qco["Arity"]], qco["Target"]]
-                ]
-            ]["POVM"]["Sort"]["OutputBasis"]
-        ],
-        state
+    res = TensorNetworkCompile[QuantumCircuitOperator[{QuantumOperator[state], circuit}]];
+    Which[
+        QuantumMeasurementOperatorQ[res],
+        QuantumMeasurement[res],
+        QuantumChannelQ[res],
+        res[],
+        QuantumOperatorQ[res],
+        res["State"],
+        True,
+        res
     ]
 ]
 
@@ -284,7 +218,7 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
 TensorNetworkCompile[qco_QuantumCircuitOperator] :=
     Which[
         qco["Eigenqudits"] > 0,
-        QuantumMeasurementOperator[QuantumOperator[#, {Join[Range[- qco["Eigenqudits"] + 1, 0], qco["OutputOrder"]], qco["InputOrder"]}], qco["Target"]] &,
+        QuantumMeasurementOperator[QuantumOperator[#, qco["Order"]], qco["Target"]] &,
         qco["TraceQudits"] > 0,
         QuantumChannel[QuantumOperator[#, qco["Order"]]] &,
         True,

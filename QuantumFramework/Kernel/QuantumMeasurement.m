@@ -143,7 +143,7 @@ QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
         MatchQ[qm["LabelHead"], "Eigen"] || qm["Eigendimension"] != qm["TargetDimension"],
         qm["Eigenstate"],
         True,
-        qm["Canonical"]["Eigenstate"]
+        qm["Canonical"]["Eigenstate"]["ReverseOutput"]
     ]["Probabilities"]
 
 QuantumMeasurementProp[qm_, "Eigenvalues"] := qm["Eigenstate"]["Names"]

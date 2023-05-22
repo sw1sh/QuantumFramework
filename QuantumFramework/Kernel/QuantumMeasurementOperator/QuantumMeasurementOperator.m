@@ -215,7 +215,7 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
 
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qm : _ ? QuantumMeasurementOperatorQ | _ ? QuantumMeasurementQ] := Enclose @ Module[{
-    top, bottom, result, target, eigens
+    top, bottom, result
 },
 
     top = qmo["SuperOperator"]["SortOutput"];
@@ -228,19 +228,25 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
         ]
     ];
 
-    target = Join[qm["Target"], qmo["Target"]];
-    eigens = qmo["Eigenqudits"] + qm["Eigenqudits"];
-    top = QuantumOperator[top["State"],
-        {Join[1 - Drop[Reverse[Range[eigens]], qm["Eigenqudits"]], Drop[top["OutputOrder"], qmo["Eigenqudits"]]], top["InputOrder"]}
-    ];
-    bottom = QuantumOperator[bottom["State"],
-        {Join[1 - Take[Reverse[Range[eigens]], qm["Eigenqudits"]], Drop[bottom["OutputOrder"], qm["Eigenqudits"]]], bottom["InputOrder"]}
-    ];
+    top = QuantumOperator[top["State"], {Join[
+            With[{
+                topEigens = Select[top["OutputOrder"], NonPositive],
+                botEigens = Select[bottom["OutputOrder"], NonPositive]
+            },
+                Join[
+                    Take[Complement[1 - Range[Length[topEigens] + Length[botEigens]], botEigens], - Length[topEigens]],
+                    Complement[topEigens, botEigens]
+                ]
+            ],
+            Select[top["OutputOrder"], Positive]
+        ],
+        top["InputOrder"]
+    }];
     result = top[bottom]["SortOutput"];
     If[ QuantumMeasurementQ[qm], QuantumMeasurement, Identity] @
         QuantumMeasurementOperator[
             result,
-            target
+            Join[qm["Target"], qmo["Target"]]
         ]
 ]
 
