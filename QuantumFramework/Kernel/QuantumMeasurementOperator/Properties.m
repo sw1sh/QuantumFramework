@@ -211,7 +211,7 @@ QuantumMeasurementOperatorProp[qmo_, "QASM"] := StringRiffle[MapIndexed[StringTe
 
 
 QuantumMeasurementOperatorProp[qmo_, "Shift", n : _Integer ? NonNegative : 1] :=
-    QuantumMeasurementOperator[qmo["QuantumOperator"]["Shift", n], qmo["Target"] + n]
+    QuantumMeasurementOperator[QuantumOperator[qmo["QuantumOperator"], qmo["Order"] /. k_Integer ? Positive :> k + n], qmo["Target"] + n]
 
 
 QuantumMeasurementOperatorProp[qmo_, prop : "Conjugate" | "Dual"] :=

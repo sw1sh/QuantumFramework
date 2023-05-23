@@ -364,7 +364,7 @@ QuantumOperatorProp[qo_, "OrderedFormula", OptionsPattern["Normalize" -> False]]
     ]
 ]
 
-QuantumOperatorProp[qo_, "Shift", n : _Integer ? NonNegative : 1] := QuantumOperator[qo, qo["Order"] /. k_Integer ? Positive :> k + n]
+QuantumOperatorProp[qo_, "Shift", n : _Integer ? NonNegative : 1] := QuantumOperator[qo, qo["Order"] /. k_Integer :> k + n]
 
 
 QuantumOperatorProp[qo_, "UnstackOutput", n_Integer : 1] /; 1 <= n <= qo["OutputQudits"] :=

@@ -200,7 +200,9 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
                 op["FullOutputOrder"],
                 Thread[
                     List /@ Range[qmo["Eigenqudits"]] ->
-                    Min[op["FirstOutputQudit"] + qmo["Eigenqudits"], qo["FirstOutputQudit"]] - Reverse @ Range[qmo["Eigenqudits"]]
+                    With[{extras = Select[qo["FullOutputOrder"], NonPositive]},
+                        Take[Complement[1 - Range[Length[extras] + qmo["Eigenqudits"]], extras], - qmo["Eigenqudits"]]
+                    ]
                 ]
             ],
             op["InputOrder"]

@@ -201,7 +201,7 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
         state = qs
     ];
     If[ state["Qudits"] > 1,
-        circuit = QuantumCircuitOperator[{QuantumOperator[state], Splice @ circuit["Operators"]}]
+        circuit = QuantumCircuitOperator[{QuantumOperator[state, qco["FullInputOrder"]], Splice @ circuit["Operators"]}]
     ];
     res = TensorNetworkCompile[circuit];
     Which[

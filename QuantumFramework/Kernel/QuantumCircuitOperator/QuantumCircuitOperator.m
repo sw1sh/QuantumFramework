@@ -77,7 +77,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
     Switch[
         OptionValue[Method],
         "Schrodinger" | "Schroedinger" | "Schrödinger",
-        Fold[ReverseApplied[Construct], qs, qco["Operators"]],
+        Fold[ReverseApplied[Construct], QuantumOperator[qs, qco["FullInputOrder"]], qco["Operators"]]["State"],
         Automatic | "TensorNetwork",
         TensorNetworkApply[qco["Flatten"], qs],
         "QuEST",
@@ -96,15 +96,15 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qs_ ? QuantumStateQ, opts : OptionsPattern[quantumCircuitApply]] :=
     With[{result = quantumCircuitApply[
-        qco /* QuantumCircuitOperator["I" -> # & /@ Complement[Range[Max[qco["Arity"], qs["OutputQudits"]]], qco["InputOrder"]]],
-        If[# === {}, qs, QuantumTensorProduct[qs, QuantumState[{"Register", #}]]] & @ ConstantArray[2, Max[0, qco["Arity"] - qs["OutputQudits"]]],
+        qco /* QuantumCircuitOperator["I" -> # & /@ qco["FreeOrder"]],
+        If[# === {}, qs, QuantumTensorProduct[qs, QuantumState[{"Register", #}]]] & @ ConstantArray[2, Max[0, Length[qco["FullInputOrder"]] - qs["OutputQudits"]]],
         opts
     ]},
         result /; ! FailureQ[result]
     ]
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[quantumCircuitApply]] :=
-    qco[QuantumState[{"Register", ReplacePart[ConstantArray[2, qco["Arity"]], Thread[qco["InputOrder"] -> qco["InputDimensions"]]]}], opts]
+    qco[QuantumState[{"Register", ReplacePart[ConstantArray[2, qco["Arity"]], Thread[qco["InputOrder"] - qco["Min"] + 1 -> qco["InputDimensions"]]]}], opts]
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qm_QuantumMeasurement, OptionsPattern[]] :=
     QuantumMeasurement[Fold[ReverseApplied[Construct], qm["QuantumOperator"], qco["Operators"]]]

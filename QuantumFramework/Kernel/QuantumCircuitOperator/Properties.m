@@ -36,7 +36,8 @@ QuantumCircuitOperatorProp[qco_, "FullElements"] := Replace[qco["Elements"], {} 
 
 QuantumCircuitOperatorProp[qco_, "Operators"] := Replace[DeleteCases[qco["Elements"], _ ? BarrierQ], {} :> {QuantumOperator["I"]}]
 
-QuantumCircuitOperatorProp[qco_, "NormalOperators", elements_ : False] := Block[{m = 0},
+QuantumCircuitOperatorProp[qco_, "NormalOperators", elements_ : False] := Block[{occupied = {}, getNext},
+    getNext[] := With[{next = Last[Complement[Range[Min[occupied, 0] - 1, 0], occupied]]}, AppendTo[occupied, next]; next];
     Map[
         Which[
             BarrierQ[#],
@@ -44,18 +45,17 @@ QuantumCircuitOperatorProp[qco_, "NormalOperators", elements_ : False] := Block[
             QuantumMeasurementOperatorQ[#],
             QuantumOperator[
                 #["POVM"]["QuantumOperator"],
-                {Join[Reverse @ Table[m--, #["Eigenqudits"]], Select[#["OutputOrder"], Positive]], #["InputOrder"]},
+                {Join[Reverse @ Table[getNext[], #["Eigenqudits"]], Select[#["OutputOrder"], Positive]], #["InputOrder"]},
                 "Label" -> "Measurement"
             ],
             QuantumChannelQ[#],
             QuantumOperator[
                 #["QuantumOperator"],
-                {Join[Reverse @ Table[m--, #["TraceQudits"]], Select[#["OutputOrder"], Positive]], #["InputOrder"]}
+                {Join[Reverse @ Table[getNext[], #["TraceQudits"]], Select[#["OutputOrder"], Positive]], #["InputOrder"]}
             ],
             True,
             With[{op = If[ QuantumCircuitOperatorQ[#], QuantumCircuitOperator[#["Flatten"]["NormalOperators"], #["Label"]], #]},
-                m += Count[Complement[op["InputOrder"], op["OutputOrder"]], _ ? NonPositive];
-                m = Min[m, 0];
+                occupied = Union[occupied, Select[op["OutputOrder"], NonPositive]];
                 op
             ]
         ] &,
@@ -63,18 +63,18 @@ QuantumCircuitOperatorProp[qco_, "NormalOperators", elements_ : False] := Block[
     ]
 ]
 
-QuantumCircuitOperatorProp[qco_, "NormalOrders", elements_ : False] := Block[{m = 0},
+QuantumCircuitOperatorProp[qco_, "NormalOrders", elements_ : False] := Block[{occupied = {}, getNext},
+    getNext[] := With[{next = Last[Complement[Range[Min[occupied, 0] - 1, 0], occupied]]}, AppendTo[occupied, next]; next];
     Map[
         Which[
             BarrierQ[#],
             Table[circuitElementPosition[#, qco["Min"], qco["Max"]] + qco["Min"] - 1, 2],
             QuantumMeasurementOperatorQ[#],
-            {Join[Reverse @ Table[m--, #["Eigenqudits"]], Select[#["OutputOrder"], Positive]], #["InputOrder"]},
+            {Join[Reverse @ Table[getNext[], #["Eigenqudits"]], Select[#["OutputOrder"], Positive]], #["InputOrder"]},
             QuantumChannelQ[#],
-            {Join[Reverse @ Table[m--, #["TraceQudits"]], Select[#["OutputOrder"], Positive]], #["InputOrder"]},
+            {Join[Reverse @ Table[getNext[], #["TraceQudits"]], Select[#["OutputOrder"], Positive]], #["InputOrder"]},
             True,
-            m += Count[Complement[#["InputOrder"], #["OutputOrder"]], _ ? NonPositive];
-            m = Min[m, 0];
+            occupied = Union[occupied, Select[#["OutputOrder"], NonPositive]];
             #["Order"]
         ] &,
         qco[If[elements, "FullElements", "Operators"]]
@@ -134,6 +134,12 @@ QuantumCircuitOperatorProp[qco_, "Arity"] := Length @ qco["InputOrder"]
 QuantumCircuitOperatorProp[qco_, "Min"] := Replace[Min[qco["NormalOrders"]], Infinity -> 1]
 
 QuantumCircuitOperatorProp[qco_, "Max"]	:= Replace[Max[qco["NormalOrders"]], - Infinity -> 1]
+
+QuantumCircuitOperatorProp[qco_, "FreeOrder"] := Complement[Range[qco["Min"], qco["Max"]], Union @@ qco["Order"]]
+
+QuantumCircuitOperatorProp[qco_, "FullInputOrder"] := Union[qco["InputOrder"], qco["FreeOrder"]]
+
+QuantumCircuitOperatorProp[qco_, "FullOutputOrder"] := Union[qco["OutputOrder"], qco["FreeOrder"]]
 
 QuantumCircuitOperatorProp[qco_, "Width"] := Max[qco["Max"], 1] - Min[qco["Min"], 1] + 1
 
