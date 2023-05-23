@@ -304,10 +304,15 @@ for gate, qubits, clbits in qc:
         ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(*xs, wl.Rule('Label', gate.label)))
     elif gate.name == 'measure':
         ops.append(wl.Wolfram.QuantumFramework.QuantumMeasurementOperator(order))
+    elif gate.name == 'reset':
+        ops.extend([
+            wl.Wolfram.QuantumFramework.QuantumOperator('Discard', order),
+            wl.Wolfram.QuantumFramework.QuantumOperator(wl.Wolfram.QuantumFramework.QuantumState(('Register', len(order)), wl.Rule('Label', wl.Ket(0))), order)
+        ])
     elif gate.name == 'barrier':
         ops.append('Barrier')
     else:
-        print('Unknonwn gate: ', gate.name, gate.params, [q.index for q in qubits])
+        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(gate.to_matrix(), wl.Rule('Label', gate.label)))
 wl.Wolfram.QuantumFramework.QuantumCircuitOperator(ops)
 "]
 ]
