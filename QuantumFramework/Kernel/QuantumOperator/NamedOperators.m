@@ -164,7 +164,7 @@ QuantumOperator[{"ShiftPhase", dimension : _Integer ? Positive : 2}, opts___] :=
 QuantumOperator["PhaseShift", opts___] := QuantumOperator[{"PhaseShift", 1}, opts]
 
 QuantumOperator[{"PhaseShift", k : _Integer | _Symbol : 1}, opts___] := QuantumOperator[
-    QuantumOperator[{"Phase", 2 Pi / 2 ^ k}, "Label" -> "PhaseShift"[k]],
+    QuantumOperator[{"Phase", Sign[k] 2 Pi / 2 ^ Abs[k]}, "Label" -> "PhaseShift"[k]],
     opts
 ]
 
