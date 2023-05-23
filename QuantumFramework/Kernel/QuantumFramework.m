@@ -24,5 +24,7 @@ Scan[
 
 Quiet[CreateDocumentationIndex[FileNameJoin[{PacletObject["Wolfram/QuantumFramework"]["Location"], "Documentation", "English"}]]]
 
-PacletInstall[PacletObject["Wolfram/QuantumFramework"]["AssetLocation", "IBMQ.paclet"], ForceVersionInstall -> True]
+If[ PacletFind["ServiceConnection_IBMQ"] === {},
+    PacletInstall[PacletObject["Wolfram/QuantumFramework"]["AssetLocation", "IBMQ.paclet"]]
+]
 
