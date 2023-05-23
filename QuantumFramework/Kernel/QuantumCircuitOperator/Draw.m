@@ -320,7 +320,7 @@ drawMeasurement[{vpos_, hpos_}, max_, opts : OptionsPattern[]] := Block[{
 				If[	! showMeasurementWireQ,
 					{
 						wireStyle,
-						Line[{{corners[[1, 1]], - vGapSize top}, {corners[[2, 1]], - vGapSize top}}]
+						Line[{{center[[1]], - vGapSize top}, {corners[[2, 1]], - vGapSize top}}]
 					},
 					Nothing
 				]
@@ -666,16 +666,18 @@ circuitWires[circuit_QuantumCircuitOperator] := Block[{
 	min = circuit["Min"],
 	max = circuit["Max"],
 	width = circuit["Width"],
-	positions
+	positions, orders
 },
 	positions = circuitElementPosition[#, min, max] & /@ circuit["NormalOperators", True];
+	orders = circuit["NormalOrders", True];
 	Catenate @ ReplacePart[{-1, _, 2} -> -1] @ FoldPairList[
-		{prev, order} |-> Block[{next = prev},
-			next[[ order ]] = Max[prev] + 1;
-			{DirectedEdge[prev[[#]], next[[#]], #] & /@ order, next}
+		{prev, order} |-> Block[{next = prev, input, output},
+			{output, input} = order - min + 1;
+			next[[ Union[output, input] ]] = Max[prev] + 1;
+			{DirectedEdge[prev[[#]], next[[#]], #] & /@ input, next}
 		],
 		Table[0, width],
-		Append[positions, Range[width]]
+		Append[{{}, Union[circuit["OutputOrder"], Complement[Range[max], circuit["InputOrder"]]]}] @ orders
 	]
 ]
 
