@@ -28,7 +28,7 @@ BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
             BoxForm`SummaryItem[{"Dimension: ", qco["InputDimension"]}]
         },
         {
-            BoxForm`SummaryItem[{"Order: ", qco["InputOrder"]}]
+            BoxForm`SummaryItem[{"Order: ", qco["InputOrder"] -> qco["OutputOrder"]}]
         },
         {
             BoxForm`SummaryItem[{"Target: ", qco["Target"]}]

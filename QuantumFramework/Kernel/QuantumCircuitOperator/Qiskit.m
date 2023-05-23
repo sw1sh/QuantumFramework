@@ -81,7 +81,7 @@ QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
         ] &,
         QuantumCircuitOperator[QuantumShortcut[qco]]["Flatten"]["Elements"]
     ],
-    arity = {qco["Width"], Replace[Quiet[qco["TargetArity"]], Except[_Integer] -> Nothing]}
+    arity = {qco["Arity"], Replace[Quiet[qco["TargetArity"]], Except[_Integer] -> Nothing]}
 },
     Confirm @ PythonEvaluate[Context[arity], "
 from wolframclient.language import wl

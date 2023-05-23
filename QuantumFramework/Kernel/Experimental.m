@@ -80,7 +80,7 @@ QuantumCircuitMultiwayGraph[circuit_, initStates : Except[OptionsPattern[]] : Au
 					Confirm @ operatorApply[op, states]
 				]
 			)],
-			{{{}, Replace[initStates, Automatic -> Table[QuantumState["0"], circuit["Width"]]]}},
+			{{{}, Replace[initStates, Automatic -> Table[QuantumState["0"], circuit["Arity"]]]}},
 			#["Sort"] & /@ circuit["Flatten"]["Operators"],
 			opts,
 			GraphLayout -> {"LayeredDigraphEmbedding", "Orientation" -> Left}
@@ -104,7 +104,7 @@ QuantumDiagramProcess[qco_QuantumCircuitOperator] := With[{
             Subsuperscript[
                 With[{mat = ops[[#]]["Computational"]["Tensor"]}, Labeled[Part[mat, ##] &, ops[[#]]["Label"]]],
                 Sequence @@ Reverse @ Replace[
-                    MapAt[ReplaceAll[map], TakeDrop[HoldForm /@ AnnotationValue[{net, # - 1}, "Index"], ops[[#]]["OutputQudits"]], 2],
+                    MapAt[ReplaceAll[map], TakeDrop[HoldForm /@ AnnotationValue[{net, #}, "Index"], ops[[#]]["OutputQudits"]], 2],
                     With[{
                         outs = Alternatives @@ Cases[freeIndices, _Superscript],
                         ins = Alternatives @@ Cases[freeIndices, _Subscript]
