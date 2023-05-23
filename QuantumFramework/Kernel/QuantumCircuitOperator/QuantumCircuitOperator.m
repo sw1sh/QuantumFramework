@@ -93,15 +93,15 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qs_ ? QuantumStateQ, opts : OptionsPattern[quantumCircuitApply]] :=
     With[{result = quantumCircuitApply[
-        qco /* QuantumCircuitOperator["I" -> # & /@ Complement[Range[Max[qco["Max"], qs["OutputQudits"]]], qco["InputOrder"]]],
-        If[# === {}, qs, QuantumTensorProduct[qs, QuantumState[{"Register", #}]]] & @ ConstantArray[2, Max[0, qco["Max"] - qs["OutputQudits"]]],
+        qco /* QuantumCircuitOperator["I" -> # & /@ Complement[Range[Max[qco["Arity"], qs["OutputQudits"]]], qco["InputOrder"]]],
+        If[# === {}, qs, QuantumTensorProduct[qs, QuantumState[{"Register", #}]]] & @ ConstantArray[2, Max[0, qco["Arity"] - qs["OutputQudits"]]],
         opts
     ]},
         result /; ! FailureQ[result]
     ]
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[quantumCircuitApply]] :=
-    qco[QuantumState[{"Register", ReplacePart[ConstantArray[2, qco["Max"]], Thread[qco["InputOrder"] -> qco["InputDimensions"]]]}], opts]
+    qco[QuantumState[{"Register", ReplacePart[ConstantArray[2, qco["Arity"]], Thread[qco["InputOrder"] -> qco["InputDimensions"]]]}], opts]
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qm_QuantumMeasurement, OptionsPattern[]] :=
     QuantumMeasurement[Fold[ReverseApplied[Construct], qm["QuantumOperator"], qco["Operators"]]]

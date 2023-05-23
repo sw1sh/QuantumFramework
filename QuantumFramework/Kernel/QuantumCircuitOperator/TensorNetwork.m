@@ -144,15 +144,14 @@ TensorNetworkIndexGraph[net_Graph ? (TensorNetworkQ[True]), opts : OptionsPatter
 
 Options[QuantumTensorNetwork] = Join[{"PrependInitial" -> True}, Options[Graph]]
 
-QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Module[{width, min, ops, size, orders, vertices, edges, tensors},
+QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
+    width, min, ops, orders, vertices, edges, tensors
+},
 	ConfirmAssert[AllTrue[qc["Operators"], #["Order"] === #["FullOrder"] &]];
     width = qc["Width"];
     min = qc["Min"];
     ops = Through[qc["NormalOperators"]["Computational"]];
-    If[ TrueQ[OptionValue["PrependInitial"]],
-        PrependTo[ops, QuantumOperator[QuantumState[{1}, PadLeft[qc["InputDimensions"], qc["Width"], 2], "Label" -> "Initial"], Range @ qc["Width"]]]
-    ];
-	size = Length[ops];
+    PrependTo[ops, QuantumOperator[QuantumState[{1}, PadLeft[qc["InputDimensions"], qc["Arity"], 2], "Label" -> "Initial"], qc["InputOrder"]]];
 	orders = #["Order"] & /@ ops;
     vertices = Range[Length[ops]] - 1;
 	edges = Catenate @ FoldPairList[
@@ -167,7 +166,7 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
 	];
 	tensors = #["Tensor"] & /@ ops;
 	ConfirmBy[
-        Graph[
+        If[TrueQ[OptionValue["PrependInitial"]] && qc["Arity"] > 0, Identity, VertexDelete[#, 0] &] @ Graph[
             vertices,
             edges,
             FilterRules[{opts}, Options[Graph]],
@@ -201,7 +200,10 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
         circuit = qco;
         state = qs
     ];
-    res = TensorNetworkCompile[QuantumCircuitOperator[{QuantumOperator[state], Splice @ circuit["Operators"]}]];
+    If[ state["Qudits"] > 1,
+        circuit = QuantumCircuitOperator[{QuantumOperator[state], Splice @ circuit["Operators"]}]
+    ];
+    res = TensorNetworkCompile[circuit];
     Which[
         QuantumMeasurementOperatorQ[res],
         QuantumMeasurement[res],
@@ -213,7 +215,7 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
 ]
 
 
-TensorNetworkCompile[qco_QuantumCircuitOperator] := Block[{net = VertexDelete[qco["TensorNetwork"], 0], order, res},
+TensorNetworkCompile[qco_QuantumCircuitOperator] := Block[{net = qco["TensorNetwork", "PrependInitial" -> False], order, res},
     order = qco["Order"];
     res = Transpose[
         ContractTensorNetwork[net],
