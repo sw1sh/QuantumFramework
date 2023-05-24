@@ -5,7 +5,7 @@ PackageScope["$QuantumCircuitOperatorNames"]
 
 
 $QuantumCircuitOperatorNames = {
-    "Graph",
+    "Graph", "GHZ",
     "GroverDiffusion", "GroverDiffusion0",
     "GroverPhaseDiffusion", "GroverPhaseDiffusion0",
     "BooleanOracle", "PhaseOracle",
@@ -32,6 +32,10 @@ QuantumCircuitOperator[{"Graph", g_Graph, m : _Integer ? NonNegative : 0, gate_ 
             EdgeList[ig]], "\[ScriptCapitalG]", opts
     ]
 ]
+
+
+QuantumCircuitOperator["GHZ" | {"GHZ", n : _Integer ? Positive : 3}, opts___] :=
+    QuantumCircuitOperator[{"H", Splice["CNOT" -> # & /@ Partition[Range[n], 2, 1]]}, "GHZ", opts]
 
 
 QuantumCircuitOperator[{"GroverAmplification" | "GroverDiffusion",
