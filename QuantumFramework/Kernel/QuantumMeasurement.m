@@ -101,10 +101,16 @@ QuantumMeasurementProp[QuantumMeasurement[qmo_], "QuantumOperator"] := qmo
 
 QuantumMeasurementProp[qm_, "Operator"] := qm["QuantumOperator"]["Operator"]
 
-QuantumMeasurementProp[qm_, "Canonical"] := QuantumMeasurement @ qm["QuantumOperator"]["Canonical"]
+QuantumMeasurementProp[qm_, prop : "Canonical" | "Computational"] :=
+    QuantumMeasurement @ qm["QuantumOperator"][prop]
 
-QuantumMeasurementProp[qm_, "Computational"] := QuantumMeasurement @ qm["QuantumOperator"]["Computational"]
-
+QuantumMeasurementProp[qm_, prop : "Reverse"] := QuantumMeasurement[
+        qm["Operator"]["PermuteOutput", FindPermutation[
+            Join[Reverse[Range[qm["Eigenqudits"]]], qm["Eigenqudits"] + Range[qm["StateQudits"]]],
+            Join[Range[qm["Eigenqudits"]], qm["Eigenqudits"] + Reverse[Range[qm["StateQudits"]]]]
+        ]],
+        Reverse[qm["StateQudits"] - qm["Target"] + 1]
+    ]
 
 QuantumMeasurementProp[qm_, "StateDual"] := qm["State"]["Split", qm["Qudits"]]["PermuteOutput",
     FindPermutation @ Catenate[{#1, #3, #2}] & @@
@@ -112,7 +118,7 @@ QuantumMeasurementProp[qm_, "StateDual"] := qm["State"]["Split", qm["Qudits"]]["
 ]["Split", qm["Eigenqudits"] + qm["InputQudits"]]
 
 QuantumMeasurementProp[qm_, "Eigenstate"] :=
-    QuantumPartialTrace[qm["State"], qm["Eigenqudits"] + Range[qm["StateQudits"]]]
+    QuantumPartialTrace[qm["State"], qm["Eigenqudits"] + Range[qm["StateQudits"]]]["ReverseOutput"]
 
 
 QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumPartialTrace[
@@ -143,7 +149,7 @@ QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
         MatchQ[qm["LabelHead"], "Eigen"] || qm["Eigendimension"] != qm["TargetDimension"],
         qm["Eigenstate"],
         True,
-        qm["Canonical"]["Eigenstate"]["ReverseOutput"]
+        qm["Canonical"]["Eigenstate"]
     ]["Probabilities"]
 
 QuantumMeasurementProp[qm_, "Eigenvalues"] := qm["Eigenstate"]["Names"]

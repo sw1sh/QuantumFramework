@@ -81,13 +81,13 @@ QuantumMeasurementOperatorProp[qmo_, "StateDimensions"] := Drop[qmo["Dimensions"
 
 QuantumMeasurementOperatorProp[qmo_, "StateDimension"] := Times @@ qmo["StateDimensions"]
 
-QuantumMeasurementOperatorProp[qmo_, "TargetBasis"] := qmo["Output"]["Extract", Reverse[qmo["TargetIndex"]]]
+QuantumMeasurementOperatorProp[qmo_, "TargetBasis"] := qmo["Output"]["Extract", qmo["TargetIndex"]]
 
 QuantumMeasurementOperatorProp[qmo_, "StateBasis"] :=
     QuantumBasis[qmo["Basis"], "Output" -> Last @ qmo["Output"]["Split", qmo["ExtraQudits"]], "Input" -> qmo["Input"]]
 
 QuantumMeasurementOperatorProp[qmo_, "CanonicalBasis"] :=
-    QuantumBasis[qmo["Basis"], "Output" -> QuantumTensorProduct[qmo["TargetBasis"], qmo["StateBasis"]["Output"]], "Input" -> qmo["Input"]]
+    QuantumBasis[qmo["Basis"], "Output" -> QuantumTensorProduct[qmo["TargetBasis"]["Reverse"], qmo["StateBasis"]["Output"]], "Input" -> qmo["Input"]]
 
 
 QuantumMeasurementOperatorProp[qmo_, "Canonical"] /; qmo["Eigendimension"] == qmo["TargetDimension"] := With[{
@@ -98,7 +98,7 @@ QuantumMeasurementOperatorProp[qmo_, "Canonical"] /; qmo["Eigendimension"] == qm
             QuantumState[
                 qmo["SuperOperator"]["State"],
                 basis
-            ]["PermuteOutput", InversePermutation @ FindPermutation @ qmo["Target"]],
+            ]["PermuteOutput", FindPermutation[Reverse[qmo["Target"]], Reverse[Sort[qmo["Target"]]]]],
             {Join[Range[- qmo["Targets"] + 1, 0], DeleteCases[qmo["OutputOrder"], _ ? NonPositive]], qmo["InputOrder"]}
         ],
         Sort @ qmo["Target"]

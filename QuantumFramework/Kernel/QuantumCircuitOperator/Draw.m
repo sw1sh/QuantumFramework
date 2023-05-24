@@ -521,8 +521,6 @@ drawBarrier[{vpos_, hpos_}, OptionsPattern[]] := Block[{
 	x = hGapSize First[hpos];
 	y = If[showMeasurementWireQ, Select[vpos, Positive], vpos];
 	{
-		Replace[OptionValue["WireStyle"], Automatic -> Directive[$DefaultGray, Opacity[.3]]],
-		Line[{{x - size / 2, - vGapSize #}, {x + size / 2, - vGapSize #}}] & /@ y,
 		Replace[OptionValue["BarrierStyle"], Automatic -> Directive[$DefaultGray, Dashed, Opacity[.8], Thickness[Large]]],
 		Line[Map[{x, #} &, List @@ Interval @@ (vGapSize {- # + 1 / 2, - # - 1 / 2} & /@ y), {2}]]
 	}
@@ -666,17 +664,17 @@ circuitWires[circuit_QuantumCircuitOperator] := Block[{
 	min = circuit["Min"],
 	max = circuit["Max"],
 	width = circuit["Width"],
-	positions, orders
+	orders
 },
-	positions = circuitElementPosition[#, min, max] & /@ circuit["NormalOperators", True];
-	orders = circuit["NormalOrders", True];
+	orders = circuit["NormalOrders"];
 	Catenate @ ReplacePart[{-1, _, 2} -> -1] @ FoldPairList[
-		{prev, order} |-> Block[{next = prev, input, output},
+		{prev, order} |-> Block[{next, skip, input, output},
+			{next, skip} = prev;
 			{output, input} = order - min + 1;
-			next[[ Union[output, input] ]] = Max[prev] + 1;
-			{DirectedEdge[prev[[#]], next[[#]], #] & /@ input, next}
+			next[[ Union[output, input] ]] = Max[next] + skip;
+			{DirectedEdge[prev[[1, #]], next[[#]], #] & /@ input, {next, If[order === {{}, {}}, skip + 1, 1]}}
 		],
-		Table[0, width],
+		{Table[0, width], 1},
 		Append[{{}, Union[circuit["OutputOrder"], Complement[Range[max], circuit["InputOrder"]]]}] @ orders
 	]
 ]

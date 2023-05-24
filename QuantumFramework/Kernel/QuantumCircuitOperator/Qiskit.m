@@ -398,7 +398,7 @@ qc = pickle.loads(<* $pythonBytes *>)
 backend_name = <* $backendName *>
 if provider is None:
     if qc.num_clbits > 0:
-        backend = Aer.get_backend('qasm_simulator')
+        backend = Aer.get_backend('qasm_simulator' if backend_name is None else backend_name)
     else:
         backend = Aer.get_backend('statevector_simulator')
 else:
