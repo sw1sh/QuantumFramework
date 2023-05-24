@@ -141,9 +141,17 @@ QuantumCircuitOperatorProp[qco_, "FullInputOrder"] := Union[qco["InputOrder"], q
 
 QuantumCircuitOperatorProp[qco_, "FullOutputOrder"] := Union[qco["OutputOrder"], qco["FreeOrder"]]
 
+QuantumCircuitOperatorProp[qco_, "InputQudits"] := Length[qco["FullInputOrder"]]
+
+QuantumCircuitOperatorProp[qco_, "OutputQudits"] := Length[qco["FullOutputOrder"]]
+
 QuantumCircuitOperatorProp[qco_, "Width"] := Max[qco["Max"], 1] - Min[qco["Min"], 1] + 1
 
 QuantumCircuitOperatorProp[qco_, "Span"] := qco["Max"] - qco["Min"] + 1
+
+QuantumCircuitOperatorProp[qco_, "InputOrderQuditMapping"] := Thread[# -> Range[Length[#]]] & @ qco["FullInputOrder"]
+
+QuantumCircuitOperatorProp[qco_, "OutputOrderQuditMapping"] := Thread[# -> Range[Length[#]]] & @ qco["FullOutputOrder"]
 
 QuantumCircuitOperatorProp[qco_, "InputDimensions"] :=
     (q |-> #["InputDimensions"][[ q /. #["InputOrderQuditMapping"] ]] & @
