@@ -547,6 +547,7 @@ Options[circuitDraw] := DeleteDuplicatesBy[First] @ Join[
 circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	numGates = circuit["Gates"],
 	order = Union @@ circuit["Order"],
+	freeOrder = circuit["FreeOrder"],
 	level = Max[OptionValue["SubcircuitLevel"]],
 	hGapSize = OptionValue["HorizontalGapSize"],
 	height,
@@ -571,7 +572,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	height = Max[0, positions] + 1;
 	wires = circuitWires[circuit];
 	If[ ! emptyWiresQ,
-		wires = DeleteCases[wires, _[_, _, pos_ /; ! MemberQ[order, pos + min - 1]]]
+		wires = DeleteCases[wires, _[_, _, pos_ /; MemberQ[freeOrder, pos + min - 1]]]
 	];
 	If[ ! extraQuditsQ,
 		wires = DeleteCases[wires, _[_, _, pos_ /; pos + min - 1 < 1]]
@@ -675,7 +676,7 @@ circuitWires[circuit_QuantumCircuitOperator] := Block[{
 			{DirectedEdge[prev[[1, #]], next[[#]], #] & /@ input, {next, If[order === {{}, {}}, skip + 1, 1]}}
 		],
 		{Table[0, width], 1},
-		Append[{{}, Union[circuit["OutputOrder"], Complement[Range[max], circuit["InputOrder"]]]}] @ orders
+		Append[{{}, Union[circuit["OutputOrder"], circuit["FreeOrder"]]}] @ orders
 	]
 ]
 

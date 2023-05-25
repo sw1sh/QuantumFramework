@@ -135,7 +135,7 @@ QuantumCircuitOperatorProp[qco_, "Min"] := Replace[Min[qco["NormalOrders"]], Inf
 
 QuantumCircuitOperatorProp[qco_, "Max"]	:= Replace[Max[qco["NormalOrders"]], - Infinity -> 1]
 
-QuantumCircuitOperatorProp[qco_, "FreeOrder"] := Complement[Range[qco["Min"], qco["Max"]], Union @@ qco["Order"]]
+QuantumCircuitOperatorProp[qco_, "FreeOrder"] := Complement[Range[qco["Min"], qco["Max"]], Union @@ Catenate[qco["NormalOrders"]]]
 
 QuantumCircuitOperatorProp[qco_, "FullInputOrder"] := Union[qco["InputOrder"], qco["FreeOrder"]]
 
