@@ -28,33 +28,37 @@ QuantumShortcut[qo_QuantumOperator] := Replace[
     QuantumShortcut[qo["Label"], First @ qo["Dimensions"], qo["TargetOrder"]],
     {
         _Missing /; qo["Dimensions"] === {2, 2} && MatrixQ[qo["Matrix"], NumericQ] :> QuantumShortcut[qo["ZYZ"]],
-        _Missing :> qo["Matrix"]
+        _Missing :> Labeled[qo["Matrix"], qo["Label"]]
     }
 ]
 
-QuantumShortcut[qmo_QuantumMeasurementOperator] := qmo["InputOrder"]
+QuantumShortcut[qmo_QuantumMeasurementOperator] := {qmo["InputOrder"]}
 
-QuantumShortcut[qc_QuantumCircuitOperator] := QuantumShortcut /@ qc["Operators"]
+QuantumShortcut[qc_QuantumCircuitOperator] := Catenate[QuantumShortcut /@ qc["Operators"]]
 
-QuantumShortcut[qc_QuantumChannel] := qc
+QuantumShortcut[qc_QuantumChannel] := {qc}
 
-QuantumShortcut[label_, dim_ : 2, order_ : {}] := With[{nameOrder = If[order === {}, Identity, # -> order &]},
+QuantumShortcut[label_, dim_ : 2, order_ : {}] := Enclose[Confirm @ With[{nameOrder = If[order === {}, Identity, # -> order &]},
     Replace[label, {
-        Subscript["C", subLabel_Composition][c0_, c1_] :> ({"C", nameOrder @ QuantumShortcut[#], c0, c1} & /@ Reverse[List @@ subLabel]),
-        Subscript["C", subLabel_][c0_, c1_] :> {"C", QuantumShortcut[subLabel, dim, order], c0, c1},
-        HoldPattern[Composition[subLabels___]] :> nameOrder @ Reverse[QuantumShortcut /@ {subLabels}],
-        Superscript[subLabel_, CircleTimes[n_Integer]] /; n == Length[order] :> Thread[ConstantArray[QuantumShortcut[subLabel], n] -> order],
+        HoldPattern[Composition[subLabels___]] :> Catenate[Reverse[Confirm @ QuantumShortcut[#, dim, order] & /@ {subLabels}]],
+        Subscript["C", subLabel_][{}, {}] :> QuantumShortcut[subLabel, dim, order],
+        Subscript["C", subLabel_][controls__] :> ({"C", #, controls} & /@ Confirm @ QuantumShortcut[subLabel, dim, Complement[order, Flatten[{controls}]]]),
+        Superscript[subLabel_, CircleTimes[n_Integer]] /; n == Length[order] :> Thread[ConstantArray[Confirm @ QuantumShortcut[subLabel], n] -> order, List, 1],
         Superscript[subLabel_, CircleTimes[n_Integer]] :> QuantumShortcut[subLabel, dim, order],
-        CircleTimes[subLabels___] /; Length[{subLabels}] == Length[order] :> MapThread[QuantumShortcut[#1, dim, {#2}] &, {{subLabels}, order}],
-        Subscript["R", subLabel_Composition][angle_] :> (nameOrder @ {"R", Sow[Chop @ angle, #], QuantumShortcut[#]}& /@ Reverse[List @@ subLabel]),
-        Subscript["R", subLabel_][angle_] :> {"R", Sow[Chop @ angle, subLabel], QuantumShortcut[subLabel, dim, order]},
-        "\[Pi]"[perm__] :> nameOrder @ {"Permutation", PermutationCycles[{perm}]},
-        OverHat[x_] :> nameOrder @ {"Diagonal", x},
-        (subLabel : "P" | "PhaseShift" | "U2" | "U")[params___] :> nameOrder @ {subLabel, params},
-        subLabel : "X" | "Y" | "Z" | "I" | "NOT" :> nameOrder @ If[dim === 2, subLabel, {subLabel, dim}],
-        SuperDagger[subLabel_] :> nameOrder @ SuperDagger[QuantumShortcut[subLabel, dim, order]],
-        name_ :> If[MemberQ[$QuantumOperatorNames, name], Identity, Missing] @ nameOrder[name]
+        CircleTimes[subLabels___] /; Length[{subLabels}] == Length[order] :> Catenate @ MapThread[Confirm @ QuantumShortcut[#1, dim, {#2}] &, {{subLabels}, order}],
+        Subscript["R", subLabel_][angle_] :> ({"R", Sow[Chop @ angle], subLabel} & /@ Confirm @ QuantumShortcut[subLabel, dim, order]),
+        "\[Pi]"[perm__] :> {nameOrder @ {"Permutation", PermutationCycles[{perm}]}},
+        OverHat[x_] :> {nameOrder @ {"Diagonal", x}},
+        (subLabel : "P" | "PhaseShift" | "U2" | "U")[params___] :> {nameOrder @ {subLabel, params}},
+        subLabel : "X" | "Y" | "Z" | "I" | "NOT" :> {nameOrder @ If[dim === 2, subLabel, {subLabel, dim}]},
+        Times[x_ ? NumericQ, subLabel_] :> QuantumShortcut[Composition[OverHat[x], subLabel], dim, order],
+        SuperDagger[subLabel_] :> nameOrder @* SuperDagger /@ Confirm @ QuantumShortcut[subLabel, dim, order],
+        name_ /; MemberQ[$QuantumOperatorNames, name] :> {nameOrder[name]},
+        barrier_ ? BarrierQ :> {barrier},
+        _ :> Missing[label]
     }]
+],
+    Missing[label] &
 ]
 
 QuantumShortcut = QuantumShortcut

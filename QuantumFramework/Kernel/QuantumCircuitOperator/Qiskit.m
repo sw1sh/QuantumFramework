@@ -7,89 +7,47 @@ PackageScope["QuantumCircuitOperatorToQiskit"]
 
 
 
-existingGateNames = {
-    "barrier", "measure", "reset", "u3", "u2", "u1",
-    "cx", "id", "u0", "u", "p", "x", "y", "z", "h", "s", "sdg", "t",
-    "tdg", "rx", "ry", "rz", "sx", "sxdg", "cz", "cy", "swap", "ch",
-    "ccx", "cswap", "crx", "cry", "crz", "cu1", "cp", "cu3", "csx",
-    "cu", "rxx", "rzz", "rccx", "rc3x", "c3x", "c3sx", "c4x"
-};
-
-labelToGate = Replace[{
-    Subscript["C", subLabel_][{}, {}] :> labelToGate[subLabel],
-    Subscript["C", x_String][__] :> "c" <> Replace[ToLowerCase[x], "not" -> "x"],
-    Subscript["C", x_String[args__]][__] :> {"c" <> ToLowerCase[x], Sequence @@ N[{args}]},
-    SuperDagger[x_String] :> ToLowerCase[x] <> "dg",
-    Subscript["R", axis_String][angle_] :> {"r" <> ToLowerCase[axis], N @ angle},
-    Subscript["C", Subscript["R", axis_String][angle_]][__] :> {"cr" <> ToLowerCase[axis], N @ angle},
-    Subscript["C", Superscript[Subscript["R", axis_String][angle_], CircleTimes[range_]]][__] :> {"cr" <> ToLowerCase[axis], N @ angle, range},
-    "\[Pi]"[perm___] :> {"perm", PermutationCycles[{perm}]},
-    x_String :> ToLowerCase[x],
-    x_String[params___] :> {ToLowerCase[x], params}
-}]
+shortcutToGate = Replace[
+    {
+        (name_ -> (order_ ? orderQ)) :> shortcutToGate[name] -> Flatten[{order}],
+        "X" -> "XGate",
+        "Y" -> "YGate",
+        "Z" -> "ZGate",
+        "H" -> "HGate",
+        "S" -> "SGate"
+        "T" -> "TGate",
+        "V" -> "SXGate",
+        "SWAP" -> "SwapGate",
+        {"Diagonal", x_} :> If[ListQ[x], {"Diagonal", NumericArray @ N[x]}, {"GlobalPhaseGate", N[Arg[x]]}],
+        {"U2", a_, b_} :> {"U2Gate", a, b},
+        {"U", a_, b_, c_} :> {"U3Gate", a, b, c},
+        {"Permutation", perm_} :> {"PermutationGate", PermutationList[perm] - 1},
+        {"GlobalPhase", phase_} :> {"GlobalPhaseGate", N[phase]},
+        {"R", angle_, "X"} :> {"RXGate", angle},
+        {"R", angle_, "Y"} :> {"RYGate", angle},
+        {"R", angle_, "Z"} :> {"RZGate", angle},
+        {"P", phase_} :> {"PhaseGate", phase},
+        {"C", name_, controls___} :> {"Control", shortcutToGate[name], controls},
+        SuperDagger[name_] :> {"Dagger", shortcutToGate[name]},
+        barrier: "Barrier" | "Barrier"[arg_] :> "Barrier",
+        Labeled[arr_NumericArray, label_] :> {"Unitary", arr, ToString[label]},
+        target_ ? orderQ :> {"Measure", target},
+        shortcut_ :> {"Unitary", N @ NumericArray @ QuantumOperator[shortcut]["Matrix"], ToString[shortcut]}
+    }
+]
 
 QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
-    operators = Map[
-        With[{
-            label = Which[BarrierQ[#], {"barrier", #}, QuantumMeasurementOperatorQ[#], "m", True, labelToGate @ #["Label"]],
-            nTargets = qco["Targets"],
-            targetIndex = First /@ PositionIndex[qco["Target"]]
-        },
-            Replace[
-                label, {
-                {"barrier", barrier_} :> With[{order = circuitElementPosition[barrier, qco["Width"]]}, {
-                    "barrier",
-                    {},
-                    order - 1
-                }],
-                "m" :>
-                    Splice[With[{target = #["Target"]}, Map[{label, None, {# - 1, nTargets - targetIndex[#]}} &, target]]],
-                (name : "cx" | "cy" | "cz" | "ch" | "cswap") | {name : "crx" | "cry" | "crz" | "cp" | "cu2" | "cu", params___} :>
-                    Block[{c1, c0, t = #["TargetOrder"], range},
-                        {c1, c0} = Replace[#["Label"], Subscript["C", _][c1_, c0_] :> {c1, c0}];
-                        range = Join[c1, c0];
-                        {
-                            "control",
-                            {
-                                Length[c1] + Length[c0],
-                                name,
-                                StringReverse @ StringJoin @ Replace[range, Join[Thread[c1 -> "1"], Thread[c0 -> "0"]], {1}],
-                                {params}
-                            },
-                            Join[range, t] - 1
-                        }
-                    ],
-                {"perm", Cycles[{swap : {_, _}}]} :> {"swap", {}, swap - 1},
-                {"perm", perm_Cycles} :> {"permutation", PermutationList[perm] - 1, #["InputOrder"] - 1},
-                {name_String /; MemberQ[existingGateNames, name], params___} :> {
-                    name,
-                    N @ {params},
-                    #["InputOrder"] - 1
-                },
-                name_String /; MemberQ[existingGateNames, name] :> {
-                    name,
-                    {},
-                    #["InputOrder"] - 1
-                },
-                _ :> {
-                    ToString[label],
-                    NumericArray @ N @ Normal @ #["Sort"]["Reverse"]["MatrixRepresentation"],
-                    #["InputOrder"] - 1
-                }
-            }
-            ]
-        ] &,
-        QuantumCircuitOperator[QuantumShortcut[qco]]["Flatten"]["Elements"]
-    ],
+    gates = shortcutToGate /@ Catenate[QuantumShortcut /@ qco["Flatten"]["Elements"]],
     arity = {qco["Arity"], Replace[Quiet[qco["TargetArity"]], Except[_Integer] -> Nothing]}
 },
     Confirm @ PythonEvaluate[Context[arity], "
 from wolframclient.language import wl
+from wolframclient.language.expression import WLFunction
 
 from qiskit import QuantumCircuit
 from qiskit.extensions import UnitaryGate
 from qiskit.circuit.gate import Gate
-from qiskit.circuit.library import XGate, YGate, ZGate, HGate, RXGate, RYGate, RZGate, PhaseGate, U2Gate, U3Gate, SwapGate, PermutationGate
+from qiskit.circuit.library import *
 
 import pickle
 
@@ -97,42 +55,52 @@ circuit = QuantumCircuit(
     * <* arity *>
 )
 
-for name, data, order in <* operators *>:
-    if name.lower() in <* existingGateNames *>:
-        getattr(circuit, name.lower())(*data, *tuple(order))
-    elif name == 'control':
-        base_name = data[1][1:]
-        if base_name == 'x':
-            base_gate = XGate()
-        elif base_name == 'y':
-            base_gate = YGate()
-        elif base_name == 'z':
-            base_gate = ZGate()
-        elif base_name == 'h':
-            base_gate = HGate()
-        elif base_name == 'rx':
-            base_gate = RXGate(*data[3])
-        elif base_name == 'ry':
-            base_gate = RYGate(*data[3])
-        elif base_name == 'rz':
-            base_gate = RZGate(*data[3])
-        elif base_name == 'p':
-            base_gate = PhaseGate(*data[3])
-        elif base_name == 'u2':
-            base_gate = U2Gate(*data[3])
-        elif base_name == 'u':
-            base_gate = U3Gate(*data[3])
-        elif base_name == 'swap':
-            base_gate = SwapGate(*data[3])
-        else:
-            base_gate = Gate(base_name, n_qubits=data[0])
-        circuit.append(base_gate.control(len(data[2]), ctrl_state=data[2]), tuple(order))
-    elif name == 'permutation':
-        circuit.append(PermutationGate(data), tuple(order))
-    elif name == 'm':
-        circuit.measure(*tuple(order))
+def make_gate(gate_spec):
+    order = target = []
+    if type(gate_spec) == WLFunction and gate_spec.head == wl.Rule:
+        gate, order, target = make_gate(gate_spec[0])
+        order = list(gate_spec[1])
+        return gate, order, target
+    elif isinstance(gate_spec, tuple):
+        name, *args = gate_spec
     else:
-        circuit.append(UnitaryGate(data, name), tuple(sorted(order)))
+        name = gate_spec
+        args = []
+    if name == 'Control':
+        base_gate, base_order, base_target = make_gate(args[0])
+        size1 = len(args[1])
+        size0 = len(args[2])
+        gate = base_gate.control(size1 + size0, ctrl_state='1' * size1 + '0' * size0)
+        order = list(args[1]) + list(args[2])
+        if base_gate.name != 'global_phase':
+            order = base_order + order
+    elif name == 'Dagger':
+        base_gate, base_order = make_gate(args[0])
+        gate = base_gate.adjoint()
+    elif name == 'Unitary':
+        gate = UnitaryGate(args[0], label=args[1])
+    elif name == 'Barrier':
+        gate = Barrier()
+    elif name == 'Measure':
+        target = order = list(args[0])
+        gate = Measure()
+    else:
+        gate = getattr(qiskit.circuit.library, name)(*args)
+    return gate, order, target
+
+def add_gate(circuit, gate_spec):
+    gate, order, target = make_gate(gate_spec)
+    for q in range(len(order)):
+        order[q] -= 1
+    for q in range(len(target)):
+        target[q] -= 1
+    if gate.name == 'global_phase':
+        order = []
+    circuit.append(gate, tuple(order), tuple(target))
+
+for gate_spec in <* gates *>:
+    add_gate(circuit, gate_spec)
+
 wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(circuit))
     "]
 ]
@@ -177,7 +145,9 @@ import matplotlib
 matplotlib.use('Agg')
 fig = pickle.loads(<* $pythonBytes *>).draw(output='mpl', scale=<* scale *>)
 fig.canvas.draw()
-PIL.Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
+image = PIL.Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
+matplotlib.pyplot.close()
+image
 "];
     ImageCrop[ConfirmBy[image, ImageQ]]
 ]

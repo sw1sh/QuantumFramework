@@ -189,6 +189,9 @@ QuantumOperator[array_ ? NumericArrayQ, args___] := QuantumOperator[Normal @ arr
 QuantumOperator[n_Integer, args___] := QuantumOperator[{"PhaseShift", n}, args]
 
 
+QuantumOperator[Labeled[arg_, label_], opts___] := QuantumOperator[arg, opts, "Label" -> label]
+
+
 QuantumOperator[arg_, order1 : _ ? orderQ -> order2 : _ ? orderQ, opts___] :=
     QuantumOperator[arg, {order2, order1}, opts]
 
