@@ -205,7 +205,7 @@ QuantumOperator["S", opts___] := QuantumOperator[QuantumOperator[{"Phase", Pi / 
 
 QuantumOperator["T", opts___] := QuantumOperator[QuantumOperator[{"Phase", Pi / 4}, "Label" -> "T"], opts]
 
-QuantumOperator[name : "V" | "SX", opts___] := QuantumOperator[QuantumOperator[Sqrt[QuantumOperator["X"]], "Label" -> name], opts]
+QuantumOperator[name : "V" | "SX", opts___] := QuantumOperator[QuantumOperator[Sqrt[QuantumOperator["X"]], "Label" -> "V"], opts]
 
 
 QuantumOperator["CNOT", opts___] := QuantumOperator[{"CNOT", 2}, opts]
