@@ -17,9 +17,9 @@ QuantumCircuitOperatorQ[QuantumCircuitOperator[data_Association]] /; ! AtomQ[Une
 QuantumCircuitOperatorQ[QuantumCircuitOperator[KeyValuePattern[{"Elements" -> elements_, "Label" -> _}]]] :=
     AllTrue[elements,
         BarrierQ[#] ||
-        QuantumOperatorQ[#](* && AllTrue[Join @@ #["Order"], GreaterEqualThan[1]]*) ||
-        QuantumMeasurementOperatorQ[#] && AllTrue[#["InputOrder"], GreaterEqualThan[1]] ||
-        QuantumChannelQ[#] && AllTrue[#["InputOrder"], GreaterEqualThan[1]] ||
+        QuantumOperatorQ[#] ||
+        QuantumMeasurementOperatorQ[#] ||
+        QuantumChannelQ[#] ||
         QuantumCircuitOperatorQ[#] &
     ]
 
