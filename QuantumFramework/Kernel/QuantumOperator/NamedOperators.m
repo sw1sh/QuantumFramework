@@ -54,11 +54,15 @@ FromOperatorShorthand[f_Symbol[
 FromOperatorShorthand[op_ ? QuantumFrameworkOperatorQ] := op
 FromOperatorShorthand[order_ ? orderQ] := QuantumMeasurementOperator[order]
 FromOperatorShorthand[name_] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[name]
+FromOperatorShorthand[name_] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[name]
 FromOperatorShorthand[{name_, args___}] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}]
 FromOperatorShorthand[{name_, args___} -> order_ ? orderQ] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, order]
+FromOperatorShorthand[({name_, args___} | name_) -> order_ ? orderQ] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[{name, args}, order]
+FromOperatorShorthand[(qc_ ? QuantumChannelQ) -> order_ ? orderQ] := QuantumChannel[qc, order]
 FromOperatorShorthand[lhs_ -> order_ ? orderQ] := QuantumOperator[QuantumOperator[Unevaluated[lhs]], order]
 FromOperatorShorthand[lhs_ -> n_Integer] := FromOperatorShorthand[Unevaluated[lhs -> {n}]]
 FromOperatorShorthand[{name_, args___} -> rest_] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, Sequence @@ Developer`ToList[rest]]
+FromOperatorShorthand[{name_, args___} -> rest_] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[{name, args}, Sequence @@ Developer`ToList[rest]]
 FromOperatorShorthand[lhs_ -> rest_] := QuantumOperator[Unevaluated[lhs], Sequence @@ Developer`ToList[rest]]
 FromOperatorShorthand[args_List] := FromOperatorShorthand /@ args
 FromOperatorShorthand[arg_] := QuantumOperator[arg]

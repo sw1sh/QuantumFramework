@@ -25,6 +25,8 @@ QuantumChannel[opArgs_List, args___] := Enclose @ Block[{ops = QuantumOperator[#
     ]
 ]
 
+QuantumChannel[qc_ ? QuantumChannelQ, args___] := QuantumChannel[QuantumOperator[qc["QuantumOperator"], args]]
+
 
 (qc_QuantumChannel ? QuantumChannelQ)[qs_ ? QuantumStateQ] := QuantumPartialTrace[qc["Operator"] @ qs, Range @ qc["TraceQudits"]]
 
