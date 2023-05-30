@@ -268,6 +268,9 @@ QuantumStateProp[qs_, "Computational"] := QuantumState[qs,
     "Input" -> QuditBasis[qs["InputDimensions"]]["Dual"]
 ]
 
+QuantumStateProp[qs_, "Canonical"] := QuantumState[qs, qs["Basis"]["Canonical"]]
+
+
 QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /; dim === Automatic || Divisible[qs["Dimension"], dim] := Module[{
     uMatrix, alphaValues, wMatrix,
     n = Replace[dim, Automatic -> If[

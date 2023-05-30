@@ -271,6 +271,7 @@ QuantumBasisProp[qb_, "Sort"] := QuantumBasis[qb, "Output" -> qb["Output"]["Sort
 
 QuantumBasisProp[qb_, "Decompose"] := QuantumBasis /@ Join[qb["Output"]["Decompose"], qb["Input"]["Decompose"]]
 
+QuantumBasisProp[qb_, "Canonical"] := QuantumBasis[qb, "Output" -> qb["Output"]["Canonical"], "Input" -> qb["Input"]["Canonical"]]
 
 
 QuantumBasisProp[qb_, "Diagram", opts : OptionsPattern[QuantumDiagramGraphics]] := QuantumDiagramGraphics[

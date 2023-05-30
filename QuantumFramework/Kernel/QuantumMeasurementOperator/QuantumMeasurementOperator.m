@@ -134,10 +134,11 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args : PatternSeq
     QuantumMeasurementOperator[QuantumOperator[qmo["Operator"], args], qmo["Target"]]
 
 QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ : Automatic, args___] := With[{
-    target = Replace[t, Automatic -> qmo["Target"]]
+    target = Replace[t, Automatic -> qmo["Target"]],
+    inputOrder = qmo["Operator"]["InputOrder"]
 },
     QuantumMeasurementOperator[
-        If[ContainsAll[qmo["Operator"]["InputOrder"], target], QuantumOperator[qmo["Operator"], args], QuantumOperator[qmo["Operator"], target, args]],
+        If[inputOrder === {} || ContainsAll[inputOrder, target], QuantumOperator[qmo["Operator"], args], QuantumOperator[qmo["Operator"], target, args]],
         target
     ]
 ]

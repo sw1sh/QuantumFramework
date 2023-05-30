@@ -118,7 +118,7 @@ QuantumMeasurementProp[qm_, "StateDual"] := qm["State"]["Split", qm["Qudits"]]["
 ]["Split", qm["Eigenqudits"] + qm["InputQudits"]]
 
 QuantumMeasurementProp[qm_, "Eigenstate"] :=
-    QuantumPartialTrace[qm["State"], qm["Eigenqudits"] + Range[qm["StateQudits"]]]["ReverseOutput"]
+    QuantumPartialTrace[qm["State"]["Canonical"], qm["Eigenqudits"] + Range[qm["StateQudits"]]]["ReverseOutput"]
 
 
 QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumPartialTrace[
