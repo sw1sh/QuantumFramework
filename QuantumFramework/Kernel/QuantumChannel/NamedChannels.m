@@ -13,7 +13,10 @@ $QuantumChannelNames = {
 quantumChannel[qo_ ? QuantumOperatorQ] := QuantumChannel @
     QuantumOperator[
         qo,
-        {Prepend[qo["InputOrder"], 0], qo["InputOrder"]},
+        {
+            Prepend[qo["InputOrder"], Last[Complement[Range[Min[1, qo["InputOrder"]] - 1, 0], Select[qo["InputOrder"], NonPositive]], 0]],
+            qo["InputOrder"]
+        },
         "Output" -> QuditBasis @ KeyMap[Replace[{qn_QuditName, 1} :> {QuditName[Subscript["K", qn["Name"]]], 1}]] @
             qo["Output"]["Representations"]
     ]
