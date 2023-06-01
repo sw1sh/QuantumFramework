@@ -14,7 +14,7 @@ shortcutToGate = Replace[
         "Y" -> "YGate",
         "Z" -> "ZGate",
         "H" -> "HGate",
-        "S" -> "SGate"
+        "S" -> "SGate",
         "T" -> "TGate",
         "V" -> "SXGate",
         "SWAP" -> "SwapGate",
