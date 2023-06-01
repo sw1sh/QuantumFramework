@@ -43,7 +43,7 @@ QuantumShortcut[label_, dim_ : 2, order_ : {}] := Enclose[Confirm @ With[{nameOr
         HoldPattern[Composition[subLabels___]] :> Catenate[Reverse[Confirm @ QuantumShortcut[#, dim, order] & /@ {subLabels}]],
         Subscript["C", subLabel_][{}, {}] :> QuantumShortcut[subLabel, dim, order],
         Subscript["C", subLabel_][controls__] :> ({"C", #, controls} & /@ Confirm @ QuantumShortcut[subLabel, dim, Complement[order, Flatten[{controls}]]]),
-        Superscript[subLabel_, CircleTimes[n_Integer]] /; n == Length[order] :> Thread[ConstantArray[Confirm @ QuantumShortcut[subLabel], n] -> order, List, 1],
+        Superscript[subLabel_, CircleTimes[n_Integer]] /; n == Length[order] :> Catenate @ MapThread[Thread[#1 -> {#2}, List, 1] &, {ConstantArray[Confirm @ QuantumShortcut[subLabel], n], order}],
         Superscript[subLabel_, CircleTimes[n_Integer]] :> QuantumShortcut[subLabel, dim, order],
         CircleTimes[subLabels___] /; Length[{subLabels}] == Length[order] :> Catenate @ MapThread[Confirm @ QuantumShortcut[#1, dim, {#2}] &, {{subLabels}, order}],
         Subscript["R", subLabel_][angle_] :> ({"R", Sow[Chop @ angle], subLabel} & /@ Confirm @ QuantumShortcut[subLabel, dim, order]),
