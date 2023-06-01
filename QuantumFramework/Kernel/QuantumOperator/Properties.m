@@ -376,7 +376,7 @@ QuantumOperatorProp[qo_, "UnstackInput", n_Integer : 1] /; 1 <= n <= qo["InputQu
 
 QuantumOperatorProp[qo_, "HermitianQ"] := HermitianMatrixQ[qo["Matrix"]]
 
-QuantumOperatorProp[qo_, "UnitaryQ"] := UnitaryMatrixQ[qo["Matrix"]]
+QuantumOperatorProp[qo_, "UnitaryQ"] := UnitaryMatrixQ[N[qo["Matrix"]]]
 
 QuantumOperatorProp[qo_, "Eigenvalues"] /; qo["SquareQ"] := Eigenvalues[qo["MatrixRepresentation"]]
 
