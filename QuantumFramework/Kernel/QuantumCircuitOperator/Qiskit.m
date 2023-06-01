@@ -70,10 +70,10 @@ def make_gate(gate_spec):
         base_gate, base_order, base_target = make_gate(args[0])
         size1 = len(args[1])
         size0 = len(args[2])
-        gate = base_gate.control(size1 + size0, ctrl_state='1' * size1 + '0' * size0)
+        gate = base_gate.control(size1 + size0, ctrl_state='0' * size0 + '1' * size1)
         order = list(args[1]) + list(args[2])
         if base_gate.name != 'global_phase':
-            order = base_order + order
+            order = order + base_order
     elif name == 'Dagger':
         base_gate, base_order = make_gate(args[0])
         gate = base_gate.adjoint()
