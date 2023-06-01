@@ -61,5 +61,3 @@ QuantumShortcut[label_, dim_ : 2, order_ : {}] := Enclose[Confirm @ With[{nameOr
     Missing[label] &
 ]
 
-QuantumShortcut = QuantumShortcut
-

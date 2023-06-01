@@ -158,7 +158,7 @@ QuantumOperator["ShiftPhase", opts___] := QuantumOperator[{"ShiftPhase", 2}, opt
 
 QuantumOperator[{"ShiftPhase", dimension : _Integer ? Positive : 2}, opts___] := QuantumOperator[
     QuantumOperator[
-        SparseArray[{{i_, i_} -> Exp[2 Pi I (i - 1) / dimension]}, {dimension, dimension}],
+        SparseArray[{{i_, i_} :> Exp[2 Pi I (i - 1) / dimension]}, {dimension, dimension}],
         dimension,
         "Label" -> "ShiftPhase"
     ],
