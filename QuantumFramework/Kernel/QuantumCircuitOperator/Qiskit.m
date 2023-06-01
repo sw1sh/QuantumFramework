@@ -38,7 +38,7 @@ shortcutToGate = Replace[
 
 QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
     gates = shortcutToGate /@ Catenate[QuantumShortcut /@ qco["Flatten"]["Elements"]],
-    arity = {qco["Arity"], Replace[Quiet[qco["TargetArity"]], Except[_Integer] -> Nothing]}
+    arity = {qco["Max"], Replace[Quiet[qco["TargetArity"]], Except[_Integer] -> Nothing]}
 },
     Confirm @ PythonEvaluate[Context[arity], "
 from wolframclient.language import wl
@@ -88,18 +88,22 @@ def make_gate(gate_spec):
         gate = getattr(qiskit.circuit.library, name)(*args)
     return gate, order, target
 
-def add_gate(circuit, gate_spec):
+def add_gate(circuit, gate_spec, c):
     gate, order, target = make_gate(gate_spec)
     for q in range(len(order)):
         order[q] -= 1
-    for q in range(len(target)):
-        target[q] -= 1
     if gate.name == 'global_phase':
         order = []
-    circuit.append(gate, tuple(order), tuple(target))
+    if len(target) > 0:
+        circuit.append(gate, tuple(order), (c, ))
+    else:
+        circuit.append(gate, tuple(order))
+    return c + len(target)
+
+c = 0
 
 for gate_spec in <* gates *>:
-    add_gate(circuit, gate_spec)
+    c = add_gate(circuit, gate_spec, c)
 
 wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(circuit))
     "]
