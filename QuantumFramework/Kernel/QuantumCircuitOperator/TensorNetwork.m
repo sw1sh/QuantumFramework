@@ -180,8 +180,8 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
                 ],
             VertexLabels ->
                 Thread[vertices -> (Replace[#["Label"], {
-                    Subscript["C", label_][__] :> Row[{"C", label}],
-                    Subscript["R", rops__][angle_] :> Subscript["R", rops][angle]
+                    label : Subscript["C", cop_][__] :> Interpretation[Row[{"C", cop}], label],
+                    label : Subscript["R", rops__][angle_] :> Interpretation[Subscript["R", rops][angle], label]
                 }] & /@ ops)],
             GraphLayout -> "SpringElectricalEmbedding"
         ],
@@ -278,7 +278,7 @@ FromTensorNetwork[net_ /; DirectedGraphQ[net] && AcyclicGraphQ[net]] := Block[{
 		}],
 		index
 	];
-	labels = KeyValueMap[Replace[#2, $Failed | Automatic :> #1] &, AssociationThread[vs, AnnotationValue[{net, vs}, VertexLabels]]];
+	labels = KeyValueMap[Replace[#2, {$Failed | Automatic :> #1, Interpretation[_, label_] :> label}] &, AssociationThread[vs, AnnotationValue[{net, vs}, VertexLabels]]];
 	QuantumCircuitOperator @ MapIndexed[
 		With[{order = {outOrders[[#2[[1]]]], inOrders[[#2[[1]]]]}, label = labels[[#2[[1]]]]},
 			QuantumOperator[
