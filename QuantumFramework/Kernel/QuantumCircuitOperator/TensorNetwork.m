@@ -1,6 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
 PackageExport["TensorNetworkIndexGraph"]
+PackageExport["FromTensorNetwork"]
 
 PackageScope["TensorNetworkQ"]
 PackageScope["ContractTensorNetwork"]
@@ -234,5 +235,59 @@ TensorNetworkCompile[qco_QuantumCircuitOperator] := Block[{net = qco["TensorNetw
         QuantumMeasurementOperator[QuantumOperator[res, order], qco["Target"]],
         QuantumOperator[res, order]
     ]
+]
+
+
+FromTensorNetwork[net_ /; DirectedGraphQ[net] && AcyclicGraphQ[net]] := Block[{
+	vs = Developer`FromPackedArray[TopologicalSort[net]],
+	labels,
+	inputs, outputs, inputOrder, outputOrder,
+    orders, output,
+	index, outOrders, inOrders
+},
+	orders = <||>;
+	output = {};
+	Do[
+		inputs = VertexInComponent[net, gate, {1}];
+		outputs = VertexOutComponent[net, gate, {1}];
+		inputOrder = Lookup[First /@ PositionIndex[output], inputs, Nothing];
+		inputOrder = Take[Join[inputOrder, Length[output] + Range[Length[inputs] - Length[inputOrder]]], UpTo[Length[inputs]]];
+		If[ Length[outputs] <= Length[inputs],
+			outputOrder = Take[inputOrder, Length[outputs]],
+			outputOrder = Take[Join[inputOrder, Lookup[PositionIndex[output], None, {}], Length[output] + Range[Length[outputs]]], Length[outputs]]
+		];
+		output = PadRight[output, Max[Length[output], outputOrder], None];
+		output[[Complement[inputOrder, outputOrder]]] = None;
+		Scan[(output[[#]] = gate) &, outputOrder];
+		orders[gate] = {outputOrder, inputOrder};
+		,
+		{gate, vs}
+	];
+	index = AssociationThread[vs, AnnotationValue[{net, vs}, "Index"]];
+	outOrders = KeyValueMap[{v, i} |->
+		Replace[i, {
+			$Failed :> orders[v][[1]],
+			indices_List :> Cases[indices, Superscript[_, o_] :> o]
+		}],
+		index
+	];
+	inOrders = KeyValueMap[{v, i} |->
+		Replace[i, {
+			$Failed :> orders[v][[2]],
+			indices_List :> Cases[indices, Subscript[_, o_] :> o]
+		}],
+		index
+	];
+	labels = KeyValueMap[Replace[#2, $Failed | Automatic :> #1] &, AssociationThread[vs, AnnotationValue[{net, vs}, VertexLabels]]];
+	QuantumCircuitOperator @ MapIndexed[
+		With[{order = {outOrders[[#2[[1]]]], inOrders[[#2[[1]]]]}, label = labels[[#2[[1]]]]},
+			QuantumOperator[
+				Replace[#1, {$Failed :> QuantumState[{"Register", Total[Length /@ order]}], tensor_ :> QuantumState[Flatten[tensor]]}]["Split", Length[order[[1]]]],
+				order,
+				"Label" -> label
+			]
+		] &,
+		AnnotationValue[{net, vs}, "Tensor"]
+	]
 ]
 
