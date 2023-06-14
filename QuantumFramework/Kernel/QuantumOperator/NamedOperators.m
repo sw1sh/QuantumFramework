@@ -24,7 +24,8 @@ $QuantumOperatorNames = {
     "Spider", "ZSpider", "XSpider",
     "Switch",
     "Discard",
-    "Multiplexer"
+    "Multiplexer",
+    "WignerD", "JX", "JY", "JZ"
 }
 
 
@@ -656,6 +657,30 @@ QuantumOperator[{"HeisenbergWeyl", p_Integer ? Positive, i_Integer : 0, a_ : \[F
     opts,
     "Label" -> "HeisenbergWeyl"
 ]
+
+wignerD[j_, {a_, b_, c_}] := Table[WignerD[{j, m1, m2}, a, b, c], {m1, -j, j}, {m2, -j, j}]
+
+wignerD[j_, b_] := Table[WignerD[{j, m1, m2}, b], {m1, -j, j}, {m2, -j, j}]
+
+jUp[j_] := Table[Sqrt[(j - m2) (j + m2 + 1)] KroneckerDelta[m1, m2 + 1], {m2, -j, j}, {m1, -j, j}]
+
+jDown[j_] := Table[Sqrt[(j + m2) (j - m2 + 1)] KroneckerDelta[m1, m2 - 1], {m2, -j, j}, {m1, -j, j}]
+
+jX[j_] := 1 / 2 (jUp[j] + jDown[j])
+
+jY[j_] := 1 / (2 I) (jUp[j] - jDown[j])
+
+jZ[j_] := DiagonalMatrix[Table[m, {m, j, -j, -1}]]
+
+QuantumOperator[{"WignerD", j_, {a_, b_, c_}}, arg___] :=  QuantumOperator[wignerD[j, {a, b, c}], arg, QuantumBasis[2 j + 1]]
+
+QuantumOperator[{"WignerD", j_, b_}, arg___] := QuantumOperator[wignerD[j, b], arg, QuantumBasis[2 j + 1]]
+
+QuantumOperator[{"JX" | "AngularMomentumX", j_}, arg___] := QuantumOperator[jX[j], arg, QuantumBasis[2 j + 1]]
+
+QuantumOperator[{"JY" | "AngularMomentumY", j_}, arg___] := QuantumOperator[jY[j], arg, QuantumBasis[2 j + 1]]
+
+QuantumOperator[{"JZ" | "AngularMomentumZ", j_}, arg___] := QuantumOperator[jZ[j], arg, QuantumBasis[2 j + 1]]
 
 
 QuantumOperator[chain_String, opts___] := With[{chars = Characters[chain]},

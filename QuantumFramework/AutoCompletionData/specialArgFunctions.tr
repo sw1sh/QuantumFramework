@@ -145,7 +145,11 @@
             "XSpider",
             "Switch",
             "Discard",
-            "Multiplexer"
+            "Multiplexer",
+            "WignerD",
+            "JX",
+            "JY",
+            "JZ"
         },
         {
             "Computational",
@@ -230,6 +234,7 @@
     "QuantumCircuitOperator" -> {
         {
             "Graph",
+            "GHZ",
             "GroverDiffusion",
             "GroverDiffusion0",
             "GroverPhaseDiffusion",
