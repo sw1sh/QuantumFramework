@@ -217,7 +217,7 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
 
 
 TensorNetworkCompile[qco_QuantumCircuitOperator] := Block[{net = qco["TensorNetwork", "PrependInitial" -> False], order, res},
-    order = qco["Order"];
+    order = Sort /@ qco["Order"];
     res = Transpose[
         ContractTensorNetwork[net],
         Ordering @ OrderingBy[TensorNetworkFreeIndices[net], Replace[{Superscript[_, x_] :> {0, x}, Subscript[_, x_] :> {1, x}}]]
