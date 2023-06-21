@@ -10,6 +10,7 @@ PackageScope["InitializeTensorNetwork"]
 PackageScope["TensorNetworkApply"]
 PackageScope["TensorNetworkCompile"]
 PackageScope["QuantumTensorNetwork"]
+PackageScope["QuantumCircuitHypergraph"]
 
 
 
@@ -189,6 +190,16 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
     ]
 ]
 
+QuantumCircuitHypergraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]] := Enclose @ Block[{
+    net = qc["TensorNetwork"], vs, indices, labels, edges
+},
+	Confirm @ Needs["WolframInstitute`Hypergraph`"];
+	vs = Developer`FromPackedArray @ VertexList[net];
+	indices = AnnotationValue[{net, vs}, "Index"];
+	labels = AnnotationValue[{net, vs}, VertexLabels];
+	edges = Replace[indices, Rule @@@ EdgeTags[net], {2}];
+	WolframInstitute`Hypergraph`Hypergraph[edges, opts, EdgeLabels -> Thread[edges -> labels]]
+]
 
 TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
     circuit, state, res
