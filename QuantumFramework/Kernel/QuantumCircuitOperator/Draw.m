@@ -236,7 +236,7 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 			wireStyle,
 			MapThread[Line[{{center[[1]] - size / 2, - #1 vGapSize}, {center[[1]] + size / 2, - #2 vGapSize}}] &, {vpos, vpos[[{perm}]]}]
 		},
-		"PhaseShift"[n_] | n_Integer :> {
+		"PhaseShift"[n_] | n_Integer /; Length[vpos] == 1 :> {
 			EdgeForm[Replace[label, gateBoundaryStyle]],
 			FaceForm[Replace[label, gateBackgroundStyle]],
 			Disk[center, size / 2],
