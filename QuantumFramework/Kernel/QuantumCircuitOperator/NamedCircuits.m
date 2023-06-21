@@ -137,7 +137,7 @@ QuantumCircuitOperator[{
         name : "GroverOperator" | "Grover" | "GroverOperator0" | "Grover0" |
         "GroverPhaseOperator" | "GroverPhase" | "GroverPhaseOperator0" | "GroverPhase0",
         formula_,
-        m : _Integer ? Positive | Automatic | None : Automatic,
+        m : _Integer | Automatic | None : Automatic,
         gate_ : Automatic
     },
     opts___
@@ -172,8 +172,8 @@ BooleanIndices[formula_, vars : _List] := Enclose @ Module[{
 QuantumCircuitOperator[{"BooleanOracle",
     formula_,
     varSpec : _List | _Association | Automatic : Automatic,
-    n : _Integer ? NonNegative | Automatic : Automatic,
-    m : _Integer ? NonNegative : 0,
+    n : _Integer | Automatic : Automatic,
+    m : _Integer : 0,
     gate_ : "NOT"
 }, opts___] := Enclose @ Module[{
     vars, order, indices, negIndices, isNegative = False, targetQubits

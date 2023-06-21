@@ -230,7 +230,7 @@ QuantumCircuitOperatorProp[qco_, "Flatten", n : _Integer ? NonNegative | Infinit
 QuantumCircuitOperatorProp[qco_, "Sort"] := QuantumCircuitOperator[#["Sort"] & /@ qco["Operators"]]
 
 
-QuantumCircuitOperatorProp[qco_, "Shift", n : _Integer ? NonNegative : 1] :=
+QuantumCircuitOperatorProp[qco_, "Shift", n : _Integer : 1] :=
     QuantumCircuitOperator[#["Shift", n] & /@ qco["Operators"], qco["Label"]]
 
 

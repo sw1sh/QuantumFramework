@@ -84,7 +84,7 @@ QuantumOperator[{"Identity" | "I", dims : {_Integer ? Positive ..}}, order : _ ?
 ]
 
 QuantumOperator[{"Identity" | "I", qb_ ? QuditBasisQ}, opts___] := QuantumOperator[
-    QuantumOperator[{"Identity", qb["Dimensions"]}, opts],
+    QuantumOperator[{"Identity", qb["FullDimensions"]}, opts],
     "Output" -> qb, "Input" -> qb["Dual"]
 ]
 
