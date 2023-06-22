@@ -449,6 +449,11 @@ addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator 
 QuantumOperator /: D[op : _QuantumOperator, args___] := QuantumOperator[D[op["State"], args], op["Order"]]
 
 
+(* dagger *)
+
+SuperDagger[qo_QuantumOperator] ^:= qo["Dagger"]
+
+
 (* join *)
 
 QuantumOperator[qo_ ? QuantumOperatorQ] := qo

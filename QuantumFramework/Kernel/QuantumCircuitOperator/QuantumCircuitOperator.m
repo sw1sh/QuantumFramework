@@ -126,6 +126,11 @@ With[{ops = List @@ Unevaluated[comp]},
 ]
 
 
+(* dagger *)
+
+SuperDagger[qco_QuantumCircuitOperator] ^:= qco["Dagger"]
+
+
 (* equality *)
 
 QuantumCircuitOperator /: Equal[left___, qco_QuantumCircuitOperator, right___] :=
