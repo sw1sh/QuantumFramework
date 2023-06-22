@@ -384,7 +384,20 @@ QuantumOperatorProp[qo_, "Eigenvectors", opts___] /; qo["SquareQ"] := eigenvecto
 
 QuantumOperatorProp[qo_, "Eigensystem", opts___] /; qo["SquareQ"] := eigensystem[qo["MatrixRepresentation"], opts, "Sort" -> False, "Normalize" -> True]
 
-QuantumOperatorProp[qo_, "Projectors", opts___] := projector /@ SparseArray @ Chop @ qo["Eigenvectors", opts]
+QuantumOperatorProp[qo_, "Eigenbasis", opts___] /; qo["SquareQ"] := With[{vecs = qo["Eigenvectors", opts, "Sort" -> True]},
+    QuantumBasis[AssociationThread[Symbol["\[FormalV]" <> ToString[#]] & /@ Range[Length[vectors]], vectors]]
+]
+
+QuantumOperatorProp[qo_, "Projectors", opts___] /; qo["SquareQ"] := projector /@ SparseArray @ Chop @ qo["Eigenvectors", opts]
+
+QuantumOperatorProp[qo_, "Diagonalize", opts___] /; qo["SquareQ"] := Block[{vectors, values},
+    {values, vectors} = qo["Eigensystem", opts, "Sort" -> True];
+    QuantumOperator[
+        DiagonalMatrix[values],
+        qo["Order"],
+        QuantumBasis[AssociationThread[Symbol["\[FormalV]" <> ToString[#]] & /@ Range[Length[values]], vectors]]
+    ]
+]
 
 QuantumOperatorProp[qo_, "Transpose"] := With[{qudits = Min[qo["OutputQudits"], qo["InputQudits"]]},
     qo["Transpose", Thread[{Take[qo["OutputOrder"], qudits], Take[qo["InputOrder"], qudits]}]]

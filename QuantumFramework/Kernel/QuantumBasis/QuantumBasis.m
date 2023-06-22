@@ -87,7 +87,7 @@ QuantumBasis[data_Association, args__] := Enclose @ Fold[ConfirmBy[QuantumBasis[
 
 (* construction *)
 
-QuantumBasis[elements_Association ? (Not @* KeyExistsQ["Output"]), args___] :=
+QuantumBasis[elements : (a_ /; ArrayQ[a, d_ /; d > 1, NumericQ]) | _Association ? (Not @* KeyExistsQ["Output"]), args___] :=
     Enclose @ QuantumBasis[<|"Output" -> ConfirmBy[QuditBasis[elements], QuditBasisQ]|>, args]
 
 QuantumBasis[output : _QuditBasis | _List, input : _QuditBasis | _List, args___] :=

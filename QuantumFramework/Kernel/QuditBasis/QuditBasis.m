@@ -52,6 +52,8 @@ QuditBasis[assoc_Association] /; ! AllTrue[Keys[assoc], MatchQ[{_QuditName, _Int
         KeyMap[{QuditName[#], 1} &, assoc]
     ]
 
+QuditBasis[elements_ /; ArrayQ[elements, d_ /; d > 1, NumericQ]] := QuditBasis[Range[0, Length[elements] - 1], elements]
+
 QuditBasis[names : {Except[_Integer | (name_String | {name_String, ___} /; MemberQ[$QuditBasisNames, name])] ..}] :=
     QuditBasis[names, If[Length[names] == 1, {1}, identityMatrix[Length[names]]]]
 
@@ -60,9 +62,6 @@ QuditBasis[names_List, elements_ ? ArrayQ] :=
 
 QuditBasis[elements_Association] /; Not @ AllTrue[elements, SparseArrayQ[#] || AtomQ[#] || emptyTensorQ[#] &] :=
     QuditBasis[Map[If[AtomQ[#], #, SparseArray[#]] &, elements]]
-
-(* QuditBasis[elements_Association] /; !OrderedQ[Reverse /@ Keys[elements]] :=
-    QuditBasis[KeySortBy[elements, Reverse]] *)
 
 
 (* tensor product of multiple parameter basis *)
