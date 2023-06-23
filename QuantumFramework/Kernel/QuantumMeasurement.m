@@ -101,8 +101,8 @@ QuantumMeasurementProp[QuantumMeasurement[qmo_], "QuantumOperator"] := qmo
 
 QuantumMeasurementProp[qm_, "Operator"] := qm["QuantumOperator"]["Operator"]
 
-QuantumMeasurementProp[qm_, prop : "Canonical" | "Computational"] :=
-    QuantumMeasurement @ qm["QuantumOperator"][prop]
+QuantumMeasurementProp[qm_, prop : "Canonical" | "Computational" | "SortTarget", opts___] :=
+    QuantumMeasurement @ qm["QuantumOperator"][prop, opts]
 
 QuantumMeasurementProp[qm_, prop : "Reverse"] := QuantumMeasurement[
         qm["Operator"]["PermuteOutput", FindPermutation[
