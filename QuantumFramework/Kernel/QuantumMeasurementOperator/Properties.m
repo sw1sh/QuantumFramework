@@ -90,15 +90,28 @@ QuantumMeasurementOperatorProp[qmo_, "CanonicalBasis"] :=
     QuantumBasis[qmo["Basis"], "Output" -> QuantumTensorProduct[qmo["TargetBasis"]["Reverse"], qmo["StateBasis"]["Output"]], "Input" -> qmo["Input"]]
 
 
+canonicalEigenPermutation[qmo_] := Block[{accumIndex = PositionIndex[FoldList[Times, qmo["TargetDimensions"]]]},
+	PermutationProduct[
+        FindPermutation[qmo["Target"]],
+        FindPermutation[Reverse[Range[qmo["Targets"]]]],
+        FindPermutation @ Catenate[
+            Reverse /@ TakeList[
+                Range[qmo["Targets"]],
+                Reverse @ Differences @ Prepend[0] @ Catenate @ Lookup[accumIndex, FoldList[Times, Reverse[qmo["Eigendimensions"]]]]
+            ]
+        ]
+    ]
+]
+
 QuantumMeasurementOperatorProp[qmo_, "Canonical"] /; qmo["Eigendimension"] == qmo["TargetDimension"] := With[{
     basis = qmo["CanonicalBasis"]
 },
     QuantumMeasurementOperator[
         QuantumOperator[
             QuantumState[
-                qmo["SuperOperator"]["State"],
+                qmo["SuperOperator"]["State"]["PermuteOutput", canonicalEigenPermutation[qmo]],
                 basis
-            ]["PermuteOutput", FindPermutation[Reverse[qmo["Target"]], Reverse[Sort[qmo["Target"]]]]],
+            ],
             {Join[Range[- qmo["Targets"] + 1, 0], DeleteCases[qmo["OutputOrder"], _ ? NonPositive]], qmo["InputOrder"]}
         ],
         Sort @ qmo["Target"]

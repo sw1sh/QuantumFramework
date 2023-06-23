@@ -236,10 +236,7 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
                 topEigens = Select[top["OutputOrder"], NonPositive],
                 botEigens = Select[bottom["OutputOrder"], NonPositive]
             },
-                Join[
-                    Take[Complement[1 - Range[Length[topEigens] + Length[botEigens]], botEigens], - Length[topEigens]],
-                    Complement[topEigens, botEigens]
-                ]
+                Take[Complement[1 - Range[Length[topEigens] + Length[botEigens]], botEigens], Length[topEigens]]
             ],
             Select[top["OutputOrder"], Positive]
         ],
