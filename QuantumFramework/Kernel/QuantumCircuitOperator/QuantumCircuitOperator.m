@@ -79,7 +79,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
     Switch[
         OptionValue[Method],
         "Schrodinger" | "Schroedinger" | "Schrödinger",
-        Fold[ReverseApplied[Construct], QuantumOperator[qs, qco["FullInputOrder"]], qco["Operators"]]["State"],
+        Fold[ReverseApplied[Construct], qs, qco["Operators"]],
         Automatic | "TensorNetwork",
         TensorNetworkApply[qco["Flatten"], qs],
         "QuEST",

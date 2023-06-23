@@ -90,20 +90,37 @@ QuantumMeasurementOperatorProp[qmo_, "CanonicalBasis"] :=
     QuantumBasis[qmo["Basis"], "Output" -> QuantumTensorProduct[qmo["TargetBasis"]["Reverse"], qmo["StateBasis"]["Output"]], "Input" -> qmo["Input"]]
 
 
-QuantumMeasurementOperatorProp[qmo_, "Canonical"] /; qmo["Eigendimension"] == qmo["TargetDimension"] := With[{
-    basis = qmo["CanonicalBasis"]
+canonicalEigenPermutation[qmo_] := Block[{accumIndex = PositionIndex[FoldList[Times, qmo["TargetDimensions"]]]},
+	FindPermutation @ Catenate[
+        Reverse /@ TakeList[
+            Range[qmo["Targets"]],
+            Reverse @ Differences @ Prepend[0] @ Catenate @ Lookup[accumIndex, FoldList[Times, Reverse[qmo["Eigendimensions"]]]]
+        ]
+    ]
+]
+
+QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> True}]] /; qmo["Eigendimension"] == qmo["TargetDimension"] := With[{
+    basis = qmo["CanonicalBasis"], perm = canonicalEigenPermutation[qmo]
 },
     QuantumMeasurementOperator[
         QuantumOperator[
             QuantumState[
-                qmo["SuperOperator"]["State"],
+                QuantumState[
+                    qmo["SuperOperator"]["State"],
+                    QuantumBasis[Join[Permute[Reverse[qmo["TargetDimensions"]], InversePermutation[perm]], qmo["StateBasis"]["OutputDimensions"]], basis["InputDimensions"]]
+                ]["PermuteOutput", perm],
                 basis
-            ]["PermuteOutput", FindPermutation[Reverse[qmo["Target"]], Reverse[Sort[qmo["Target"]]]]],
+            ]["PermuteOutput", PermutationProduct[
+                FindPermutation[Reverse[qmo["Target"]], ReverseSort[qmo["Target"]]],
+                If[TrueQ[OptionValue["Reverse"]], FindPermutation[Reverse[Range[qmo["Targets"]]]], Cycles[{}]]
+            ]],
             {Join[Range[- qmo["Targets"] + 1, 0], DeleteCases[qmo["OutputOrder"], _ ? NonPositive]], qmo["InputOrder"]}
         ],
         Sort @ qmo["Target"]
     ]
 ]
+
+QuantumMeasurementOperatorProp[qmo_, "SortTarget"] := qmo["Canonical", "Reverse" -> False]
 
 
 QuantumMeasurementOperatorProp[qmo_, "Type"] := Which[

@@ -176,7 +176,18 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 		},
 		"I" :> {
 			wireStyle,
-			Line[{center - {size / 2, 0}, center + {size / 2, 0}}]
+			If[ Length[vpos] == 2,
+				Line[{{center[[1]] - size / 2, - vpos[[2]] vGapSize}, {center[[1]] + size / 2, - vpos[[1]] vGapSize}}],
+				Line[{center - {size / 2, 0}, center + {size / 2, 0}}]
+			]
+		},
+		"Cup" :> {
+			wireStyle,
+			Circle[{center[[1]] + size / 2, center[[2]]}, vGapSize / 2, {Pi / 2, 3 Pi / 2}]
+		},
+		"Cap" :> {
+			wireStyle,
+			Circle[{center[[1]] - size / 2, center[[2]]}, vGapSize / 2, {- Pi / 2, Pi / 2}]
 		},
 		"1" :> {
 			wireStyle,
@@ -577,7 +588,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	If[ ! extraQuditsQ,
 		wires = DeleteCases[wires, _[_, _, pos_ /; pos + min - 1 < 1]]
 	];
-	gatePositions = MapThread[{#1, #2[[#1 - min + 1]]} &, {Union @@@ circuit["NormalOrders", True], positions[[All, 2]]}];
+	gatePositions = MapThread[{#1, #2[[#1 - min + 1]]} &, {DeleteDuplicates /@ Join @@@ circuit["NormalOrders", True], positions[[All, 2]]}];
 	wires = Replace[wires, _[left_, right_, pos_] :> {{If[left == 0, 0, positions[[left, 2, pos]]], pos + min - 1}, {If[right == -1, height, positions[[right, 1, pos]] + 1], pos + min - 1}}, {1}];
 	{
 		If[TrueQ[OptionValue["ShowOutline"]], drawOutline[outlineMin, max, height, FilterRules[{opts}, Options[drawOutline]]], Nothing],

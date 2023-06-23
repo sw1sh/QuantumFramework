@@ -436,9 +436,18 @@ trotterExpand[l_List, 2] := Join[l, Reverse[l]]
 trotterExpand[l_List, n_ ? EvenQ] := Catenate @ Table[trotterExpand[l, n - 2], 5]
 trotterExpand[l_List, n_ ? OddQ] := trotterExpand[l, Round[n, 2]]
 
-Trotterization[ops : {__QuantumOperator}, order : _Integer ? Positive : 1, reps : _Integer ? Positive : 1, const_ : 1] := With[{
-	newOps = Thread[Times[const trotterCoeffs[Length[ops], order, 1 / reps], trotterExpand[ops, order]]]
+Trotterization[ops : {__QuantumOperator}, order : _Integer ? Positive : 1, reps : _Integer ? Positive : 1, const_ : 1] := Block[{
+    coeffs = const * trotterCoeffs[Length[ops], order, 1 / reps],
+	newOps
 },
+    newOps = MapThread[
+        QuantumOperator[Exp[- I #1], "Label" -> Subscript["R", #2][2 #3]] &,
+        {
+            Thread[Times[coeffs, trotterExpand[ops, order]]],
+            trotterExpand[Through[ops["Label"]], order],
+            coeffs
+        }
+    ];
 	Table[newOps, reps]
 ]
 
@@ -446,11 +455,7 @@ QuantumCircuitOperator[{"Trotterization", opArgs_, args___}] := Block[{
     ops = QuantumCircuitOperator[opArgs]["Flatten"]["Operators"],
     trotterization
 },
-    trotterization = Map[
-        QuantumOperator[Exp[- I #], "Label" -> Replace[#["Label"], Times[Longest[c__], l_] :> Subscript["R", l][2 c]]] &,
-        Trotterization[ops, args],
-        {2}
-    ];
+    trotterization = Trotterization[ops, args];
     QuantumCircuitOperator[
         If[ Length[trotterization] > 1,
             MapIndexed[QuantumCircuitOperator[#1, First[#2]] &, trotterization],

@@ -24,7 +24,7 @@ $QuantumOperatorProperties = {
     "Transpose", "ConjugateTranspose",
     "UnstackOutput", "UnstackInput",
     "QuantumOperator", "Operator",
-    "Computational",
+    "Computational", "Diagonalize",
     "Dagger", "Dual",
     "TraceNorm",
     "PauliDecompose",
@@ -395,7 +395,7 @@ QuantumOperatorProp[qo_, "Diagonalize", opts___] /; qo["SquareQ"] := Block[{vect
     QuantumOperator[
         DiagonalMatrix[values],
         qo["Order"],
-        QuantumBasis[AssociationThread[Symbol["\[FormalV]" <> ToString[#]] & /@ Range[Length[values]], vectors]]
+        QuantumBasis[qo["Basis"], AssociationThread[Subscript["s", #] & /@ Range[Length[values]], vectors]]
     ]
 ]
 

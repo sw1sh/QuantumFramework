@@ -101,8 +101,8 @@ QuantumMeasurementProp[QuantumMeasurement[qmo_], "QuantumOperator"] := qmo
 
 QuantumMeasurementProp[qm_, "Operator"] := qm["QuantumOperator"]["Operator"]
 
-QuantumMeasurementProp[qm_, prop : "Canonical" | "Computational"] :=
-    QuantumMeasurement @ qm["QuantumOperator"][prop]
+QuantumMeasurementProp[qm_, prop : "Canonical" | "Computational" | "SortTarget", opts___] :=
+    QuantumMeasurement @ qm["QuantumOperator"][prop, opts]
 
 QuantumMeasurementProp[qm_, prop : "Reverse"] := QuantumMeasurement[
         qm["Operator"]["PermuteOutput", FindPermutation[
@@ -118,7 +118,7 @@ QuantumMeasurementProp[qm_, "StateDual"] := qm["State"]["Split", qm["Qudits"]]["
 ]["Split", qm["Eigenqudits"] + qm["InputQudits"]]
 
 QuantumMeasurementProp[qm_, "Eigenstate"] :=
-    QuantumPartialTrace[qm["State"]["Canonical"], qm["Eigenqudits"] + Range[qm["StateQudits"]]]["ReverseOutput"]
+    QuantumPartialTrace[qm["State"]["Canonical"], qm["Eigenqudits"] + Range[qm["StateQudits"]]]
 
 
 QuantumMeasurementProp[qm_, "PostMeasurementState"] := QuantumPartialTrace[
