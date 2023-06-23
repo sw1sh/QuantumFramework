@@ -32,7 +32,7 @@ shortcutToGate = Replace[
         barrier: "Barrier" | "Barrier"[arg_] :> "Barrier",
         Labeled[arr_NumericArray, label_] :> {"Unitary", arr, ToString[label]},
         target_ ? orderQ :> {"Measure", target},
-        shortcut_ :> {"Unitary", N @ NumericArray @ QuantumOperator[shortcut]["Matrix"], ToString[shortcut]}
+        shortcut_ :> {"Unitary", NumericArray @ Normal @ N @ QuantumOperator[shortcut]["Matrix"], ToString[shortcut]}
     }
 ]
 

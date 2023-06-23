@@ -202,6 +202,8 @@ QuantumStateProp[qs_, "Eigenvalues"] := Eigenvalues[qs["DensityMatrix"]]
 
 QuantumStateProp[qs_, "Eigenvectors", opts___] := eigenvectors[qs["DensityMatrix"], opts]
 
+QuantumStateProp[qs_, "Eigensystem", opts___] := eigensystem[qs["DensityMatrix"], opts]
+
 QuantumStateProp[qs_, "Eigenstates", opts___] := QuantumState[#, qs["Basis"]] & /@ qs["Eigenvectors", opts]
 
 

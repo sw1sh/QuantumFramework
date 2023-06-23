@@ -127,7 +127,7 @@ QuantumOperator[matrix_ ? MatrixQ, order : _ ? autoOrderQ, args___, opts : Optio
         Automatic -> op["Order"]
     }];
     newInputOrder = Join[newInputOrder, Take[DeleteElements[op["FullInputOrder"], newInputOrder], UpTo[op["FullInputQudits"] - Length[newInputOrder]]]];
-    newOutputOrder = newOutputOrder - Min[newOutputOrder] + Min[newInputOrder];
+    newOutputOrder = newOutputOrder - Min[newOutputOrder, 1] + Min[newInputOrder, 1];
     If[ op["FullInputQudits"] < Length[newInputOrder],
         QuantumOperator[{op, Ceiling[Length[newInputOrder], op["FullInputQudits"]] / op["FullInputQudits"]}, {Automatic, newInputOrder}, opts],
         QuantumOperator[op["State"], {newOutputOrder, newInputOrder}, opts]

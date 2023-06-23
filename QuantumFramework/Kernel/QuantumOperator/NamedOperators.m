@@ -550,7 +550,7 @@ QuantumOperator[name : "Curry" | {"Curry", ___}, opts___] := QuantumOperator[nam
 
 QuantumOperator[name : "ZSpider" | "XSpider" | "Spider", opts___] := QuantumOperator[{name}, opts]
 
-QuantumOperator[{"ZSpider", out : _Integer ? Positive : 1, in : _Integer ? Positive : 1, phase_ : 0}, opts___] := Module[{
+QuantumOperator[{"ZSpider", out : _Integer ? NonNegative : 1, in : _Integer ? NonNegative : 1, phase_ : 0}, opts___] := Module[{
     phases = If[ListQ[phase], phase, {0, phase}],
     dim, basis
 },
