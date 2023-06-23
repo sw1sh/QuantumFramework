@@ -185,7 +185,7 @@ QuantumCircuitOperatorProp[qco_, "Output"] := If[Length[qco["OutputOrder"]] > 0,
     QuditBasis[]
 ]
 
-QuantumCircuitOperatorProp[qco_, "Basis"] := QuantumBasis[qco["Output"], qco["Input"]]
+QuantumCircuitOperatorProp[qco_, "Basis"] := QuantumBasis["Output" -> qco["Output"], "Input" -> qco["Input"]]
 
 QuantumCircuitOperatorProp[qco_, "Measurements"] := Count[qco["Flatten"]["Operators"], _ ? QuantumMeasurementOperatorQ]
 

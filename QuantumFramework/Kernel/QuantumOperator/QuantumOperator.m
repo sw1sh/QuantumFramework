@@ -34,8 +34,8 @@ QuantumOperator[qs_ ? QuantumStateQ] :=
 QuantumOperator[arg : _ ? QuantumStateQ, outputOrder : _ ? orderQ | Automatic, inputOrder : _ ? orderQ | Automatic, opts___] :=
     QuantumOperator[QuantumState[arg, opts], {outputOrder, inputOrder}]
 
-QuantumOperator[arg : _ ? QuantumStateQ, order : _ ? orderQ | Automatic, opts___] :=
-    QuantumOperator[arg, {order, Automatic}, opts]
+QuantumOperator[qs : _ ? QuantumStateQ, order : _ ? orderQ | Automatic, opts___] :=
+    QuantumOperator[qs, {Replace[order, Automatic :> Range[qs["OutputQudits"]]], Automatic}, opts]
 
 
 QuantumOperator[qs_ ? QuantumStateQ, {Automatic, order_ ? orderQ}, opts___] :=

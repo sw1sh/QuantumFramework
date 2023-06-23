@@ -26,6 +26,7 @@ $QuantumStateProperties = {
     "Physical",
     "ReverseOutput", "ReverseInput", "Reverse",
     "TensorReverseOutput", "TensorReverseInput",
+    "Split", "SplitDual",
     "Bipartition",
     "Disentangle", "Decompose", "DecomposeWithProbabilities",
     "SchmidtDecompose",
