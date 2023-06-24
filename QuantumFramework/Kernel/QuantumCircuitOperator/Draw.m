@@ -52,11 +52,13 @@ Options[drawGate] := DeleteDuplicatesBy[First] @ Join[{
 },
 	Options[Style], Options[Rectangle]
 ];
-drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
+drawGate[{vpos_, hpos_}, args___] := drawGate[{vpos, vpos, hpos}, args]
+drawGate[pos : {vposOut_, vposIn_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
+	vpos, vposIndex,
 	size = OptionValue["Size"],
 	vGapSize = OptionValue["VerticalGapSize"],
 	hGapSize = OptionValue["HorizontalGapSize"],
-	rotateLabel = Replace[OptionValue["RotateGateLabel"], {True | Automatic -> If[Length[vpos] > 1, Pi / 2, 0], False | None -> 0}],
+	rotateLabel,
 	labelStyleOpts = {Background -> Transparent, FilterRules[{opts}, Options[Style]], $DefaultFontStyleOptions},
 	gateBackgroundStyle = DeleteDuplicatesBy[First] @
 		Flatten[{Replace[OptionValue["GateBackgroundStyle"], Automatic -> $GateDefaultBackgroundStyle], $GateDefaultBackgroundStyle}],
@@ -65,7 +67,6 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 	gateShapeFunction = Replace[label, Flatten[{Replace[OptionValue["GateShapeFunction"], Automatic -> Nothing], _ -> None}]],
 	corners,
 	center,
-	vposIndex = PositionIndex[Developer`ToList[vpos]],
 	gateLabelsQ = TrueQ[OptionValue["ShowGateLabels"]],
 	connectorsQ = TrueQ[OptionValue["ShowConnectors"]],
 	backgroundStyle,
@@ -73,7 +74,10 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 	drawControlWires,
 	wireStyle = Replace[OptionValue["WireStyle"], Automatic -> Directive[$DefaultGray, Opacity[.3]]]
 },
-	corners = positionCorners[pos, size, vGapSize, hGapSize];
+	vpos = Union[vposOut, vposIn];
+	vposIndex = PositionIndex[Developer`ToList[vpos]];
+	rotateLabel = Replace[OptionValue["RotateGateLabel"], {True | Automatic -> If[Length[vpos] > 1, Pi / 2, 0], False | None -> 0}];
+	corners = positionCorners[{vpos, hpos}, size, vGapSize, hGapSize];
 	center = Mean[corners];
 	backgroundStyle = Replace[label, gateBackgroundStyle];
 	boundaryStyle = Replace[label, gateBoundaryStyle];
@@ -176,10 +180,7 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 		},
 		"I" :> {
 			wireStyle,
-			If[ Length[vpos] == 2,
-				Line[{{center[[1]] - size / 2, - vpos[[2]] vGapSize}, {center[[1]] + size / 2, - vpos[[1]] vGapSize}}],
-				Line[{center - {size / 2, 0}, center + {size / 2, 0}}]
-			]
+			Line[{{center[[1]] - size / 2, - vposIn[[1]] vGapSize}, {center[[1]] + size / 2, - vposOut[[1]] vGapSize}}]
 		},
 		"Cup" :> {
 			wireStyle,
@@ -188,6 +189,18 @@ drawGate[pos : {vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 		"Cap" :> {
 			wireStyle,
 			Circle[{center[[1]] - size / 2, center[[2]]}, vGapSize / 2, {- Pi / 2, Pi / 2}]
+		},
+		(type : "ZSpider" | "XSpider")[phase_] :> {
+			wireStyle,
+			FaceForm[Switch[type, "ZSpider", White, "XSpider", LightGray]],
+			EdgeForm[wireStyle],
+			Disk[center, size / 3],
+			If[	phase === 0,
+				Nothing,
+				Text[Style[phase, labelStyleOpts], center]
+			],
+			Table[With[{p = {center[[1]] - size / 2, - i vGapSize}}, Line[{center + size / 3 Normalize[p - center], p}]], {i, vposIn}],
+			Table[With[{p = {center[[1]] + size / 2, - i vGapSize}}, Line[{center + size / 3 Normalize[p - center], p}]], {i, vposOut}]
 		},
 		"1" :> {
 			wireStyle,
@@ -300,7 +313,7 @@ Options[drawMeasurement] = Join[{
 	Options[Style],
 	Options[Rectangle]
 ];
-drawMeasurement[{vpos_, hpos_}, max_, opts : OptionsPattern[]] := Block[{
+drawMeasurement[{vpos_, _, hpos_}, max_, opts : OptionsPattern[]] := Block[{
 	size = OptionValue["Size"],
 	vGapSize = OptionValue["VerticalGapSize"],
 	hGapSize = OptionValue["HorizontalGapSize"],
@@ -365,7 +378,7 @@ Options[drawChannel] = Join[{
 	Options[Style],
 	Options[Rectangle]
 ];
-drawChannel[{vpos_, hpos_}, label_, opts : OptionsPattern[]] := Block[{
+drawChannel[{vpos_, _, hpos_}, label_, opts : OptionsPattern[]] := Block[{
 	size = OptionValue["Size"],
 	vGapSize = OptionValue["VerticalGapSize"],
 	hGapSize = OptionValue["HorizontalGapSize"],
@@ -588,7 +601,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	If[ ! extraQuditsQ,
 		wires = DeleteCases[wires, _[_, _, pos_ /; pos + min - 1 < 1]]
 	];
-	gatePositions = MapThread[{#1, #2[[#1 - min + 1]]} &, {DeleteDuplicates /@ Join @@@ circuit["NormalOrders", True], positions[[All, 2]]}];
+	gatePositions = MapThread[{#1[[1]], #1[[2]], #2[[Union @@ #1 - min + 1]]} &, {circuit["NormalOrders", True], positions[[All, 2]]}];
 	wires = Replace[wires, _[left_, right_, pos_] :> {{If[left == 0, 0, positions[[left, 2, pos]]], pos + min - 1}, {If[right == -1, height, positions[[right, 1, pos]] + 1], pos + min - 1}}, {1}];
 	{
 		If[TrueQ[OptionValue["ShowOutline"]], drawOutline[outlineMin, max, height, FilterRules[{opts}, Options[drawOutline]]], Nothing],

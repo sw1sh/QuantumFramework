@@ -58,7 +58,7 @@ FromOperatorShorthand[order_ ? orderQ] := QuantumMeasurementOperator[order]
 FromOperatorShorthand[name_] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[name]
 FromOperatorShorthand[name_] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[name]
 FromOperatorShorthand[{name_, args___}] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}]
-FromOperatorShorthand[{name_, args___} -> order_ ? autoOrderQ] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, order]
+FromOperatorShorthand[({name_, args___} | name_) -> order_ ? autoOrderQ] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, order]
 FromOperatorShorthand[({name_, args___} | name_) -> order_ ? autoOrderQ] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[{name, args}, order]
 FromOperatorShorthand[(qc_ ? QuantumChannelQ) -> order_ ? autoOrderQ] := QuantumChannel[qc, order]
 FromOperatorShorthand[lhs_ -> order_ ? autoOrderQ] := QuantumOperator[QuantumOperator[Unevaluated[lhs]], order]
@@ -550,12 +550,16 @@ QuantumOperator[name : "Curry" | {"Curry", ___}, opts___] := QuantumOperator[nam
 
 QuantumOperator[name : "ZSpider" | "XSpider" | "Spider", opts___] := QuantumOperator[{name}, opts]
 
-QuantumOperator[{"ZSpider", out : _Integer ? NonNegative : 1, in : _Integer ? NonNegative : 1, phase_ : 0}, opts___] := Module[{
+QuantumOperator[{name : "ZSpider" | "XSpider" | "Spider", args___}, order : _ ? orderQ, opts___] :=
+    QuantumOperator[{name, args}, {order, {}}, opts]
+
+QuantumOperator[{"ZSpider", phase_ : 0}, order : {outputOrder : _ ? orderQ, inputOrder : _ ? orderQ}, opts___] := Module[{
     phases = If[ListQ[phase], phase, {0, phase}],
-    dim, basis
+    dim, basis,
+    out = Length[outputOrder], in = Length[inputOrder]
 },
     dim = Length[phases];
-    basis = QuantumBasis[QuditBasis[{"PauliZ", dim}, out], QuditBasis[{"PauliZ", dim}, in], "Label" -> "ZSpider"];
+    basis = QuantumBasis[QuditBasis[dim, out], QuditBasis[dim, in], "Label" -> "ZSpider"[phase]];
     QuantumOperator[
         QuantumState[
             If[ basis["Dimension"] <= 1,
@@ -564,13 +568,14 @@ QuantumOperator[{"ZSpider", out : _Integer ? NonNegative : 1, in : _Integer ? No
             ],
             basis
         ],
+        order,
         opts
     ]
 ]
 
 
-QuantumOperator[{"XSpider", params___}, opts___] := With[{
-    zSpider = QuantumOperator[{"ZSpider", params}, opts]
+QuantumOperator[{"XSpider", phase_ : 0}, opts___] := With[{
+    zSpider = QuantumOperator[{"ZSpider", phase}, opts]
 },
     QuantumOperator[
         QuantumOperator[zSpider, QuantumBasis[
@@ -579,7 +584,7 @@ QuantumOperator[{"XSpider", params___}, opts___] := With[{
         ]["Matrix"],
         zSpider["Order"],
         zSpider["Basis"],
-        "Label" -> "XSpider"
+        "Label" -> "XSpider"[phase]
     ]
 ]
 
@@ -590,7 +595,7 @@ QuantumOperator[{"Spider", basis_ ? QuantumBasisQ, phase_ : 0}, opts___] /;
     Equal @@ basis["Dimensions"] || basis["OutputDimension"] == basis["InputDimension"] == 1 :=
 With[{
     zSpider = QuantumOperator[
-        {"ZSpider", basis["OutputQudits"], basis["InputQudits"], PadLeft[If[ListQ[phase], phase, {phase}], First @ basis["OutputDimensions"]]},
+        {"ZSpider", PadLeft[If[ListQ[phase], phase, {phase}], First @ basis["OutputDimensions"]]},
         opts
     ]
 },
@@ -598,7 +603,7 @@ With[{
         QuantumOperator[zSpider, basis]["Matrix"],
         zSpider["Order"],
         zSpider["Basis"],
-        "Label" -> basis["Label"]
+        "Label" -> "Spider"[basis["Label"], phase]
     ]
 ]
 
