@@ -202,6 +202,19 @@ drawGate[pos : {vposOut_, vposIn_, hpos_}, label_, opts : OptionsPattern[]] := B
 			Table[With[{p = {center[[1]] - size / 2, - i vGapSize}}, Line[{center + size / 3 Normalize[p - center], p}]], {i, vposIn}],
 			Table[With[{p = {center[[1]] + size / 2, - i vGapSize}}, Line[{center + size / 3 Normalize[p - center], p}]], {i, vposOut}]
 		},
+		"Discard" :> {
+			wireStyle,
+			Table[{
+				Line[{{center[[1]] - size /2, - i vGapSize}, {center[[1]], - i vGapSize}}],
+				Thickness[Large],
+				Table[
+					Line[{{center[[1]] + j size / 6, - i vGapSize + size / j / 2}, {center[[1]] + j size / 6, - i vGapSize - size / j / 2}}],
+					{j, 3}
+				]
+			},
+				{i, vposIn}
+			]
+		},
 		"1" :> {
 			wireStyle,
 			Line[{center - {size / 2, 0}, center - {size / 8, 0}}],
