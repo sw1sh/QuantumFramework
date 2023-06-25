@@ -184,11 +184,11 @@ drawGate[pos : {vposOut_, vposIn_, hpos_}, label_, opts : OptionsPattern[]] := B
 		},
 		"Cup" :> {
 			wireStyle,
-			Circle[{center[[1]] + size / 2, center[[2]]}, vGapSize / 2, {Pi / 2, 3 Pi / 2}]
+			Circle[{center[[1]] + size / 2, center[[2]]}, {vGapSize / 2, (Max[vpos] - Min[vpos]) vGapSize / 2}, {Pi / 2, 3 Pi / 2}]
 		},
 		"Cap" :> {
 			wireStyle,
-			Circle[{center[[1]] - size / 2, center[[2]]}, vGapSize / 2, {- Pi / 2, Pi / 2}]
+			Circle[{center[[1]] - size / 2, center[[2]]}, {vGapSize / 2, (Max[vpos] - Min[vpos]) vGapSize / 2}, {- Pi / 2, Pi / 2}]
 		},
 		(type : "ZSpider" | "XSpider")[phase_] :> {
 			wireStyle,
