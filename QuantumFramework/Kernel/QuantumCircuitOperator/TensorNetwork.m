@@ -103,9 +103,14 @@ NaiveContractTensorNetwork[net_Graph] := Enclose @ Module[{g, edges},
     ]
 ]
 
-FastContractTensorNetwork[net_Graph] := ResourceFunction["EinsteinSummation"][
-    (AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Index"] /. Rule @@@ EdgeTags[net]) -> TensorNetworkFreeIndices[net],
-    AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Tensor"]
+FastContractTensorNetwork[net_Graph] := Block[{indices, tensors, scalarPositions, scalars},
+    indices = AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Index"] /. Rule @@@ EdgeTags[net];
+    tensors =  AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Tensor"];
+    scalarPositions = Position[indices, {}, {1}, Heads -> False];
+    scalars = Extract[tensors, scalarPositions];
+    indices = Delete[indices, scalarPositions];
+    tensors = Delete[tensors, scalarPositions];
+    Times @@ scalars * ResourceFunction["EinsteinSummation"][indices -> TensorNetworkFreeIndices[net], tensors]
 ]
 
 Options[ContractTensorNetwork] = {Method -> Automatic}

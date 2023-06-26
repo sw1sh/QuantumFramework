@@ -482,13 +482,14 @@ QuantumCircuitOperator[{"Multiplexer"| "Multiplexor", ops__}, opts___] := Quantu
 
 
 
-RZY[vec_ ? VectorQ] := Block[{a, b, phi, psi, y, z},
+RZY[vec_ ? VectorQ] := Block[{a, b, phi, psi, y, z, phase},
     If[Length[vec] == 0, Return[{}]];
     {{a, phi}, {b, psi}} = AbsArg[Simplify[Normal[vec]]];
+    phase = Sow[phi + psi, "Phase"];
     y = Simplify[If[TrueQ[Simplify[a == b == 0]], Pi / 2, 2 ArcSin[(a - b) / Sqrt[2 (a ^ 2 + b ^ 2)]]]];
     z = Simplify[phi - psi];
     Replace[
-        {If[TrueQ[z == 0], Nothing, {"RZ", z}], If[TrueQ[y == 0], Nothing, {"RY", y}]},
+        {If[TrueQ[Chop[z] == 0], Nothing, {"RZ", z}], If[TrueQ[Chop[y] == 0], Nothing, {"RY", y}]},
         {} -> {"I"}
     ]
 ]
@@ -502,9 +503,12 @@ multiplexer[qs_, n_, i_] := Block[{rzy, rzyDagger, qc, multiplexer, multiplexerD
         QuantumCircuitOperator[{multiplexer, {"H", qs["Qudits"]}}],
         QuantumCircuitOperator[{multiplexer, {"Permutation", Cycles[{{n, i}}]}}]
     ];
-    Sow @ If[i === 0,
-        {multiplexerDagger, {"H", qs["Qudits"]}},
-        {multiplexerDagger, {"Permutation", Cycles[{{n, i}}]}}
+    Sow[
+        If[i === 0,
+            {multiplexerDagger, {"H", qs["Qudits"]}},
+            {multiplexerDagger, {"Permutation", Cycles[{{n, i}}]}}
+        ],
+        "Operators"
     ];
     qc[qs]
 ]
@@ -513,8 +517,10 @@ stateEvolution[qs_] := With[{n = qs["Qudits"]},
     FoldList[multiplexer[#1, n, #2] &, qs, Range[n - 1, 0, -1]]
 ]
 
-QuantumCircuitOperator[qs_QuantumState | {"QuantumState", qs_QuantumState}] /; MatchQ[qs["Dimensions"], {2 ..}] :=
-    QuantumCircuitOperator[Reverse @ Catenate @ Reap[stateEvolution[qs]][[2, 1]], qs["Label"]]["Flatten"]
+QuantumCircuitOperator[qs_QuantumState | {"QuantumState", qs_QuantumState}] /; MatchQ[qs["Dimensions"], {2 ..}] := Block[{operators, phases, n = qs["Qudits"]},
+    {operators, phases} = Reap[stateEvolution[qs], {"Operators", "Phase"}][[2, All, 1]];
+    QuantumCircuitOperator[Append[Reverse @ Catenate @ operators, {"GlobalPhase", Total[phases] / n / 2 ^ n}], qs["Label"]]["Flatten"]
+]
 
 QuantumCircuitOperator["QuantumState"] := QuantumCircuitOperator[{"QuantumState", QuantumState[{"UniformSuperposition", 3}]}]
 

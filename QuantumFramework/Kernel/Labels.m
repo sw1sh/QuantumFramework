@@ -25,7 +25,7 @@ simplifyLabel[l_] := Replace[l, {
 
 
 QuantumShortcut[qo_QuantumOperator] := Replace[
-    QuantumShortcut[qo["Label"], First @ qo["Dimensions"], qo["Order"]],
+    QuantumShortcut[qo["Label"], First[qo["Dimensions"], 1], qo["Order"]],
     {
         _Missing /; qo["Dimensions"] === {2, 2} && MatrixQ[qo["Matrix"], NumericQ] :> QuantumShortcut[qo["ZYZ"]],
         _Missing :> Labeled[qo["Matrix"], qo["Label"]]
@@ -54,6 +54,7 @@ QuantumShortcut[label_, dim_ : 2, order : {outputOrder : _ ? orderQ, inputOrder 
         "\[Pi]"[perm__] :> {nameOrder @ {"Permutation", PermutationCycles[{perm}]}},
         OverHat[x_] :> {nameOrder @ {"Diagonal", x}},
         (subLabel : "P" | "PhaseShift" | "U2" | "U" | "ZSpider" | "XSpider" | "Spider")[params___] :> {nameOrder @ {subLabel, params}},
+        (subLabel : "GlobalPhase")[params___] :> {{subLabel, params}},
         subLabel : "X" | "Y" | "Z" | "I" | "NOT" | "Cap" | "Cup" :> {nameOrder @ If[dim === 2, subLabel, {subLabel, dim}]},
         Times[x_ ? NumericQ, subLabel_] :> QuantumShortcut[Composition[OverHat[x], subLabel], dim, order],
         SuperDagger[subLabel_] :> nameOrder @* SuperDagger /@ Confirm @ QuantumShortcut[subLabel, dim, order],
