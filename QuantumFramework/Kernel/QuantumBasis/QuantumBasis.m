@@ -153,11 +153,11 @@ QuantumBasis[arg_, multiplicity_Integer ? Positive, args___] := Enclose @ With[{
     ]
 ]
 
-QuantumBasis[param : name_String | {name_String, ___}, args___] :=
-    Enclose @ QuantumBasis[<|"Output" -> ConfirmBy[QuditBasis[param], QuditBasisQ], "Label" -> StringDelete[name, "Basis"]|>, args]
+QuantumBasis[output : _ ? nameQ | _Integer, input  : _ ? nameQ | _Integer, args___] :=
+    Enclose @ QuantumBasis[<|"Output" -> ConfirmBy[QuditBasis[output], QuditBasisQ], "Input" -> ConfirmBy[QuditBasis[input], QuditBasisQ]["Dual"]|>, args]
 
-QuantumBasis[param : _ ? nameQ | _Integer, args___] :=
-    Enclose @ QuantumBasis[<|"Output" -> ConfirmBy[QuditBasis[param], QuditBasisQ]|>, args]
+QuantumBasis[output : _ ? nameQ | _Integer, args___] :=
+    Enclose @ QuantumBasis[<|"Output" -> ConfirmBy[QuditBasis[output], QuditBasisQ]|>, args]
 
 QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) | OptionsPattern[]) ...] :=
     QuantumBasis["Computational", args, "Label" -> None]
