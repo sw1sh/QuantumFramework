@@ -550,64 +550,47 @@ QuantumOperator[{"Uncurry", dims : {_Integer ? Positive ..}}, opts___] :=
 QuantumOperator[name : "Curry" | {"Curry", ___}, opts___] := QuantumOperator[name /. "Curry" -> "Uncurry", opts]["ConjugateTranspose"]
 
 
-QuantumOperator[name : "ZSpider" | "XSpider" | "Spider", opts___] := QuantumOperator[{name}, opts]
+QuantumOperator[(name : "XSpider" | "YSpider" | "ZSpider" | "Spider"), opts___] := QuantumOperator[{name}, opts]
 
-QuantumOperator[{name : "ZSpider" | "XSpider" | "Spider", args___}, order : _ ? orderQ, opts___] :=
-    QuantumOperator[{name, args}, {order, {}}, opts]
 
-QuantumOperator[{"ZSpider", phase_ : 0}, order : {outputOrder : _ ? orderQ, inputOrder : _ ? orderQ}, opts___] := Module[{
-    phases = If[ListQ[phase], phase, {0, phase}],
-    dim, basis,
-    out = Length[outputOrder], in = Length[inputOrder]
-},
-    dim = Length[phases];
-    basis = QuantumBasis[QuditBasis[dim, out], QuditBasis[dim, in], "Label" -> "ZSpider"[phase]];
-    QuantumOperator[
-        QuantumState[
-            If[ basis["Dimension"] <= 1,
-                {Exp[I Last[phases]]}[[;; basis["Dimension"]]],
-                SparseArrayFlatten @ SparseArray[Thread[Transpose[Table[Range[dim], basis["Qudits"]]] -> Exp[I phases]], basis["Dimensions"]]
-            ],
-            basis
+QuantumOperator[{name : "XSpider" | "YSpider" | "ZSpider", phase_ : 0}, order : {outputOrder : _ ? orderQ, inputOrder : _ ? orderQ}, opts___] := QuantumOperator[{
+        "Spider",
+        QuantumBasis[
+            QuditBasis[StringTake[name, 1], Length[outputOrder]],
+            QuditBasis[StringTake[name, 1], Length[inputOrder]]
         ],
-        order,
-        opts
-    ]
-]
-
-
-QuantumOperator[{"XSpider", phase_ : 0}, opts___] := With[{
-    zSpider = QuantumOperator[{"ZSpider", phase}, opts]
-},
-    QuantumOperator[
-        QuantumOperator[zSpider, QuantumBasis[
-            QuditBasis[{"PauliX", First[zSpider["Dimensions"], 1]}, zSpider["OutputQudits"]],
-            QuditBasis[{"PauliX", First[zSpider["Dimensions"], 1]}, zSpider["InputQudits"]]]
-        ]["Matrix"],
-        zSpider["Order"],
-        zSpider["Basis"],
-        "Label" -> "XSpider"[phase]
-    ]
+        phase
+    },
+    order,
+    opts,
+    "Label" -> name[phase]
 ]
 
 
 QuantumOperator["Spider", opts___] := QuantumOperator[{"Spider", QuantumBasis[QuditBasis[2], QuditBasis[2]]}, opts]
 
 QuantumOperator[{"Spider", basis_ ? QuantumBasisQ, phase_ : 0}, opts___] /;
-    Equal @@ basis["Dimensions"] || basis["OutputDimension"] == basis["InputDimension"] == 1 :=
-With[{
-    zSpider = QuantumOperator[
-        {"ZSpider", PadLeft[If[ListQ[phase], phase, {phase}], First @ basis["OutputDimensions"]]},
+    Equal @@ basis["Dimensions"] || basis["OutputDimension"] == basis["InputDimension"] == 1 := Block[{
+    phases, dim
+},
+    dim = First[basis["Dimensions"], 2];
+    phases = PadRight[Flatten[{phase}], dim];
+    QuantumOperator[
+        QuantumState[
+            If[ basis["Dimension"] <= 1,
+                {Exp[I First[phases, 0]]},
+                SparseArrayFlatten @ SparseArray[Thread[Transpose[Table[Range[dim], basis["Qudits"]]] -> Exp[I phases]], basis["Dimensions"]]
+            ],
+            basis
+        ],
         opts
     ]
-},
-    QuantumOperator[
-        QuantumOperator[zSpider, basis]["Matrix"],
-        zSpider["Order"],
-        zSpider["Basis"],
-        "Label" -> "Spider"[basis["Label"], phase]
-    ]
 ]
+
+
+QuantumOperator[({name : "XSpider" | "YSpider" | "ZSpider" | "Spider", args___}) | (name : "XSpider" | "YSpider" | "ZSpider" | "Spider"), order : _ ? orderQ : {1}, opts___] :=
+    QuantumOperator[{name, args}, {order, order}, opts]
+
 
 QuantumOperator["Cup" | {"Cup", dim : _Integer ? Positive : 2}, order : _ ? orderQ : {1, 2}, opts___] /; Length[order] == 2 :=
     QuantumOperator[QuantumOperator[{"I", dim}]["SplitDual", 2], {order, {}}, "Label" -> "Cup", opts]
