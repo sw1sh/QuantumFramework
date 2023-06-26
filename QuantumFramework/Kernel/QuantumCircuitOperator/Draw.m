@@ -300,6 +300,12 @@ drawGate[pos : {vposOut_, vposIn_, hpos_}, label_, opts : OptionsPattern[]] := B
 			MapIndexed[drawGate[{{#1}, hpos}, subLabel, opts] &, vpos],
 			drawControlWires[#, {subLabel, subLabel}] & /@ Partition[Sort[vpos], 2, 1]
 		},
+		subLabel : "GlobalPhase"[subSubLabel_] | (subSubLabel_ /; AnyTrue[hpos, LessThan[0]]) :> {
+			EdgeForm[Replace[subLabel, gateBoundaryStyle]],
+			FaceForm[Replace[subLabel, gateBackgroundStyle]],
+			GeometricTransformation[Rectangle[Sequence @@ corners, Sequence @@ FilterRules[{opts}, Options[Rectangle]]], RotationTransform[Pi / 4, center]],
+			If[gateLabelsQ, Rotate[Text[Style[subSubLabel, labelStyleOpts], center], rotateLabel], Nothing]
+		},
 		SuperDagger[subLabel_] | subLabel_ :> {
 			EdgeForm[Replace[subLabel, gateBoundaryStyle]],
 			FaceForm[Replace[subLabel, gateBackgroundStyle]],
@@ -600,7 +606,8 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	gateLabelsQ = TrueQ[OptionValue["ShowGateLabels"]],
 	min = circuit["Min"],
 	max = circuit["Max"],
-	outlineMin
+	outlineMin,
+	scalarPos = 1
 },
 	showMeasurementWireQ = TrueQ[OptionValue["ShowMeasurementWire"]] && ! extraQuditsQ && circuit["Measurements"] > 0;
 	labelCounter = ReplaceAll[None :> (labelCount++; Subscript["U", labelCount])];
@@ -643,7 +650,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 				QuantumChannelQ[#1],
 				drawChannel[#2, labelCounter @ #1["Label"], "ShowExtraQudits" -> extraQuditsQ, FilterRules[{opts}, Options[drawChannel]]],
 				True,
-				drawGate[#2, labelCounter @ #1["Label"], FilterRules[{opts}, Options[drawGate]]]
+				drawGate[If[#2 === {{}, {}, {}}, {{scalarPos}, {scalarPos++}, {- hGapSize / 2}}, #2], labelCounter @ #1["Label"], FilterRules[{opts}, Options[drawGate]]]
 			] &,
 			{circuit["FullElements"], gatePositions, positions[[All, 1]]}
 		],
@@ -669,6 +676,7 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, overlapQ : T
 			shift,
 			overlapShift
 		},
+			If[pos === {}, Return[#1, Block]];
 			overlapShift = Function[x, If[! overlapQ, NestWhile[# + 1 &, 0, ContainsAny[Lookup[ranges, x + #, {}], pos] &], 0]];
 			shift = Which[
 				BarrierQ[#2],

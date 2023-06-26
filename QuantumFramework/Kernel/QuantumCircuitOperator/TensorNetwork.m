@@ -24,10 +24,10 @@ TensorNetworkQ[net_Graph, verbose : _ ? BooleanQ : False] := Module[{
 },
     {tensors, indices} = AssociationThread[VertexList[net] -> #] & /@
         (AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, #] & /@ {"Tensor", "Index"});
-    (
+    (* (
         AllTrue[tensors, TensorQ] ||
         (If[verbose, Message[TensorNetworkQ::msg1]]; False)
-    ) &&
+    ) && *)
     (
         AllTrue[indices, MatchQ[#, {(Superscript | Subscript)[_, _] ...}] && DuplicateFreeQ[#] &] ||
         (If[verbose, Message[TensorNetworkQ::msg2]]; False)
@@ -157,13 +157,16 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
 	orders = #["Order"] & /@ ops;
     vertices = Range[Length[ops]] - 1;
 	edges = Catenate @ FoldPairList[
-		{prev, order} |-> Module[{output, input, n = Max[prev] + 1, next = prev, indices},
+		{nprev, order} |-> Block[{output, input, n, prev, next, indices},
+            {n, prev} = nprev;
+            n += 1;
+            next = prev;
 			{output, input} = order;
 			next[[ Union[output, input] - min + 1 ]] = n;
             indices = {Superscript[prev[[# - min + 1]], #], Subscript[next[[# - min + 1]], #]} & /@ input;
-			{Thread[DirectedEdge[prev[[ input - min + 1 ]], next[[ input - min + 1]], indices]], next}
+			{Thread[DirectedEdge[prev[[ input - min + 1 ]], next[[ input - min + 1]], indices]], {n, next}}
 		],
-		Table[0, width],
+		{0, Table[0, width]},
 		Rest @ orders
 	];
 	tensors = #["Tensor"] & /@ ops;

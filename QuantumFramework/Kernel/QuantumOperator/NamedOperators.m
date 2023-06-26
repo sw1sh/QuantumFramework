@@ -178,7 +178,14 @@ QuantumOperator[{"PhaseShift", k : _Integer | _Symbol : 1}, opts___] := QuantumO
 
 QuantumOperator["GlobalPhase", opts___] := QuantumOperator[{"GlobalPhase", Pi}, opts]
 
-QuantumOperator[{"GlobalPhase", angle_, dimension : _Integer ? Positiver : 2}, opts___] := QuantumOperator[{"Diagonal", Exp[I angle], dimension}, opts]
+QuantumOperator[{"GlobalPhase", angle_, dimension : _Integer ? Positive : 1}, opts___] := QuantumOperator[
+    QuantumOperator[
+        ReplacePart[identityMatrix[dimension], {i_, i_} -> Exp[I angle]],
+        dimension,
+        "Label" -> "GlobalPhase"[angle]
+    ],
+    opts
+]
 
 QuantumOperator[{"Diagonal", x_, dimension : _Integer ? Positive : 2}, opts___] := QuantumOperator[
     QuantumOperator[
