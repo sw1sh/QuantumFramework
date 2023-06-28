@@ -218,7 +218,7 @@ QuantumBasisProp[qb_, "Dual", out : {_Integer...}, in : {_Integer...}] :=
     QuantumBasis[qb, "Output" -> qb["Output"]["Dual", out], "Input" -> qb["Input"]["Dual", in]]
 
 QuantumBasisProp[qb_, "Dual", qudits : {_Integer...}] :=
-    qb["Dual", Sequence @@ MapAt[# - qb["OutputQudits"] &, 2] @ GatherBy[qudits, LessEqualThan[qb["OutputQudits"]]]]
+    qb["Dual", Sequence @@ (MapAt[# - qb["OutputQudits"] &, 2] @ PadRight[GatherBy[qudits, LessEqualThan[qb["OutputQudits"]]], 2, {{}}])]
 
 QuantumBasisProp[qb_, "Dual"] := qb["Dual", Range[qb["Qudits"]]]
 
