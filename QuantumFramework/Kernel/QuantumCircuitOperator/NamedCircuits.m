@@ -517,9 +517,16 @@ stateEvolution[qs_] := With[{n = qs["Qudits"]},
     FoldList[multiplexer[#1, n, #2] &, qs, Range[n - 1, 0, -1]]
 ]
 
-QuantumCircuitOperator[qs_QuantumState | {"QuantumState", qs_QuantumState}] /; MatchQ[qs["Dimensions"], {2 ..}] := Block[{operators, phases, n = qs["Qudits"]},
+QuantumCircuitOperator[qs_QuantumState | {"QuantumState", qs_QuantumState}] /; MatchQ[qs["Dimensions"], {2 ..}] := Block[{
+    operators, phases, phase, n = qs["Qudits"]
+},
     {operators, phases} = Reap[stateEvolution[qs], {"Operators", "Phase"}][[2, All, 1]];
-    QuantumCircuitOperator[Append[Reverse @ Catenate @ operators, {"GlobalPhase", Total[phases] / n / 2 ^ n}], qs["Label"]]["Flatten"]
+    phase = Total[phases] / n / 2 ^ n;
+    operators = Reverse @ Catenate @ operators;
+    If[ TrueQ[Chop[phase] != 0],
+        AppendTo[operators, {"GlobalPhase", phase}]
+    ];
+    QuantumCircuitOperator[operators, qs["Label"]]["Flatten"]
 ]
 
 QuantumCircuitOperator["QuantumState"] := QuantumCircuitOperator[{"QuantumState", QuantumState[{"UniformSuperposition", 3}]}]
