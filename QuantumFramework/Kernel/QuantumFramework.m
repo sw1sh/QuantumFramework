@@ -22,7 +22,7 @@ Scan[
     Import[FileNameJoin[{PacletObject["Wolfram/QuantumFramework"]["Location"], "AutoCompletionData", "specialArgFunctions.tr"}], "WL"]
 ]
 
-Quiet[CreateDocumentationIndex[FileNameJoin[{PacletObject["Wolfram/QuantumFramework"]["Location"], "Documentation", "English"}]]]
+(* Quiet[CreateDocumentationIndex[FileNameJoin[{PacletObject["Wolfram/QuantumFramework"]["Location"], "Documentation", "English"}]]] *)
 
 If[ PacletFind["ServiceConnection_IBMQ"] === {},
     PacletInstall[PacletObject["Wolfram/QuantumFramework"]["AssetLocation", "IBMQ.paclet"]]
