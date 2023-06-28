@@ -556,7 +556,8 @@ drawLabel[label_, height_, pos_, opts : OptionsPattern[]] := With[{vGapSize = Op
 ]
 
 Options[drawBarrier] = {"Size" -> .75, "VerticalGapSize" -> 1, "HorizontalGapSize" -> 1, "BarrierStyle" -> Automatic, "WireStyle" -> Automatic, "ShowMeasurementWire" -> True}
-drawBarrier[{vpos_, hpos_}, OptionsPattern[]] := Block[{
+drawBarrier[{vposOut_, vposIn_, hpos_}, OptionsPattern[]] := Block[{
+	vpos = Union[vposOut, vposIn],
 	size = OptionValue["Size"], vGapSize = OptionValue["VerticalGapSize"], hGapSize = OptionValue["HorizontalGapSize"],
 	showMeasurementWireQ = OptionValue["ShowMeasurementWire"],
 	x, y
