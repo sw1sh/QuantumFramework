@@ -415,12 +415,12 @@ QuantumCircuitOperator[{
 QuantumCircuitOperator[{"C" | "Controlled", qc_ ? QuantumCircuitOperatorQ, control1 : _ ? orderQ | Automatic : Automatic, control0 : _ ? orderQ : {}}, opts___] :=
     QuantumCircuitOperator[If[QuantumOperatorQ[#], QuantumOperator[{"Controlled", #, control1, control0}], #] & /@ qc["Elements"], Subscript["C", qc["Label"]][control1, control0]]
 
-QuantumCircuitOperator[{"C" | "Controlled", qc_, control1 : _ ? orderQ | Automatic : Automatic, control0 : _ ? orderQ : {}}] :=
-    QuantumCircuitOperator[{"C", QuantumCircuitOperator @ FromCircuitOperatorShorthand[qc], control1, control0}]
+QuantumCircuitOperator[{"C" | "Controlled", qc_, control1 : _ ? orderQ | Automatic : Automatic, control0 : _ ? orderQ : {}}, opts___] :=
+    QuantumCircuitOperator[{"C", QuantumCircuitOperator @ FromCircuitOperatorShorthand[qc], control1, control0}, opts]
 
 
-QuantumCircuitOperator[pauliString_String] := With[{chars = Characters[pauliString]},
-    QuantumCircuitOperator[MapIndexed[QuantumOperator, chars]] /; ContainsOnly[chars, {"I", "X", "Y", "Z", "H", "S", "T", "V", "P"}]
+QuantumCircuitOperator[pauliString_String, opts___] := With[{chars = Characters[pauliString]},
+    QuantumCircuitOperator[MapIndexed[QuantumOperator, chars], opts] /; ContainsOnly[chars, {"I", "X", "Y", "Z", "H", "S", "T", "V", "P"}]
 ]
 
 
@@ -451,7 +451,7 @@ Trotterization[ops : {__QuantumOperator}, order : _Integer ? Positive : 1, reps 
 	Table[newOps, reps]
 ]
 
-QuantumCircuitOperator[{"Trotterization", opArgs_, args___}] := Block[{
+QuantumCircuitOperator[{"Trotterization", opArgs_, args___}, opts___] := Block[{
     ops = QuantumCircuitOperator[opArgs]["Flatten"]["Operators"],
     trotterization
 },
@@ -461,11 +461,12 @@ QuantumCircuitOperator[{"Trotterization", opArgs_, args___}] := Block[{
             MapIndexed[QuantumCircuitOperator[#1, First[#2]] &, trotterization],
             Catenate[trotterization]
         ],
+        opts,
         "Trotterization"
     ]
 ]
 
-QuantumCircuitOperator["Magic"] := QuantumCircuitOperator[{"S" -> {1, 2}, "H" -> {2}, "CNOT" -> {2, 1}}]
+QuantumCircuitOperator["Magic", opts___] := QuantumCircuitOperator[{"S" -> {1, 2}, "H" -> {2}, "CNOT" -> {2, 1}}, opts]
 
 
 QuantumCircuitOperator[{"Multiplexer"| "Multiplexor", ops__} -> defaultK : _Integer ? Positive | Automatic : Automatic, opts___] := Block[{
@@ -517,7 +518,7 @@ stateEvolution[qs_] := With[{n = qs["Qudits"]},
     FoldList[multiplexer[#1, n, #2] &, qs, Range[n - 1, 0, -1]]
 ]
 
-QuantumCircuitOperator[qs_QuantumState | {"QuantumState", qs_QuantumState}] /; MatchQ[qs["Dimensions"], {2 ..}] := Block[{
+QuantumCircuitOperator[qs_QuantumState | {"QuantumState", qs_QuantumState}, opts___] /; MatchQ[qs["Dimensions"], {2 ..}] := Block[{
     operators, phases, phase, n = qs["Qudits"]
 },
     {operators, phases} = Reap[stateEvolution[qs], {"Operators", "Phase"}][[2, All, 1]];
@@ -526,8 +527,8 @@ QuantumCircuitOperator[qs_QuantumState | {"QuantumState", qs_QuantumState}] /; M
     If[ TrueQ[Chop[phase] != 0],
         AppendTo[operators, {"GlobalPhase", phase}]
     ];
-    QuantumCircuitOperator[operators, qs["Label"]]["Flatten"]
+    QuantumCircuitOperator[operators, opts, qs["Label"]]["Flatten"]
 ]
 
-QuantumCircuitOperator["QuantumState"] := QuantumCircuitOperator[{"QuantumState", QuantumState[{"UniformSuperposition", 3}]}]
+QuantumCircuitOperator["QuantumState", opts___] := QuantumCircuitOperator[{"QuantumState", QuantumState[{"UniformSuperposition", 3}]}, opts]
 
