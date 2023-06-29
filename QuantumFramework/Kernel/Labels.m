@@ -50,7 +50,7 @@ QuantumShortcut[label_, dim_ : 2, order : {outputOrder : _ ? orderQ, inputOrder 
         Superscript[subLabel_, CircleTimes[n_Integer]] /; n == Length[inputOrder] :> Catenate @ MapThread[Thread[#1 -> {#2}, List, 1] &, {ConstantArray[Confirm @ QuantumShortcut[subLabel], n], inputOrder}],
         Superscript[subLabel_, CircleTimes[n_Integer]] :> QuantumShortcut[subLabel, dim, order],
         CircleTimes[subLabels___] /; Length[{subLabels}] == Length[inputOrder] :> Catenate @ MapThread[Confirm @ QuantumShortcut[#1, dim, {#2}] &, {{subLabels}, inputOrder}],
-        Subscript["R", subLabel_][angle_] :> ({"R", Sow[Chop @ angle], subLabel} & /@ Confirm @ QuantumShortcut[subLabel, dim, order]),
+        Subscript["R", subLabel_][angle_] :> {{"R", Sow[Chop @ angle], Confirm @ QuantumShortcut[subLabel, dim, order]}},
         "\[Pi]"[perm__] :> {nameOrder @ {"Permutation", PermutationCycles[{perm}]}},
         OverHat[x_] :> {nameOrder @ {"Diagonal", x}},
         (subLabel : "P" | "PhaseShift" | "U2" | "U" | "ZSpider" | "XSpider" | "Spider")[params___] :> {nameOrder @ {subLabel, params}},
