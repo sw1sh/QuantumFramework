@@ -187,12 +187,15 @@ QuantumOperator[{"GlobalPhase", angle_, dimension : _Integer ? Positive : 1}, op
     opts
 ]
 
-QuantumOperator[{"Diagonal", x_, dimension : _Integer ? Positive : 2}, opts___] := QuantumOperator[
+QuantumOperator[{"Diagonal", x_, dimension : _Integer ? Positive : 2}, opts___] := QuantumOperator[{"Diagonal", x, dimension}, {1}, opts]
+
+QuantumOperator[{"Diagonal", x_, dimension : _Integer ? Positive : 2}, order_ ? orderQ, opts___] := QuantumOperator[
     QuantumOperator[
-        ReplacePart[identityMatrix[dimension], {i_, i_} -> x],
+        ReplacePart[identityMatrix[dimension ^ Length[order]], {i_, i_} -> x],
         dimension,
         "Label" -> OverHat[x]
     ],
+    order,
     opts
 ]
 
