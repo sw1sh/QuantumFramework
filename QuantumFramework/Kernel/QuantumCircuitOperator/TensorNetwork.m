@@ -103,14 +103,17 @@ NaiveContractTensorNetwork[net_Graph] := Enclose @ Module[{g, edges},
     ]
 ]
 
-FastContractTensorNetwork[net_Graph] := Block[{indices, tensors, scalarPositions, scalars},
-    indices = AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Index"] /. Rule @@@ EdgeTags[net];
-    tensors =  AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Tensor"];
-    scalarPositions = Position[indices, {}, {1}, Heads -> False];
-    scalars = Extract[tensors, scalarPositions];
-    indices = Delete[indices, scalarPositions];
-    tensors = Delete[tensors, scalarPositions];
-    Times @@ scalars * ResourceFunction["EinsteinSummation"][indices -> TensorNetworkFreeIndices[net], tensors]
+FastContractTensorNetwork[net_Graph] := Enclose[
+    Block[{indices, tensors, scalarPositions, scalars},
+        indices = AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Index"] /. Rule @@@ EdgeTags[net];
+        tensors =  AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Tensor"];
+        scalarPositions = Position[indices, {}, {1}, Heads -> False];
+        scalars = Extract[tensors, scalarPositions];
+        indices = Delete[indices, scalarPositions];
+        tensors = Delete[tensors, scalarPositions];
+        Times @@ scalars * ConfirmQuiet[ResourceFunction["EinsteinSummation"][indices -> TensorNetworkFreeIndices[net], tensors]]
+    ],
+    (ReleaseHold[#["HeldMessageCall"]]; #) &
 ]
 
 Options[ContractTensorNetwork] = {Method -> Automatic}
@@ -235,10 +238,10 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
 ]
 
 
-TensorNetworkCompile[qco_QuantumCircuitOperator] := Block[{net = qco["TensorNetwork", "PrependInitial" -> False], transpose, order, res},
+TensorNetworkCompile[qco_QuantumCircuitOperator] := Enclose @ Block[{net = qco["TensorNetwork", "PrependInitial" -> False], transpose, order, res},
     order = Sort /@ qco["Order"];
     transpose = Ordering @ OrderingBy[TensorNetworkFreeIndices[net], Replace[{Superscript[_, x_] :> {0, x}, Subscript[_, x_] :> {1, x}}]];
-    res = ContractTensorNetwork[net];
+    res = Confirm @ ContractTensorNetwork[net];
     If[ transpose =!= {},
         res = Transpose[res, transpose]
     ];
