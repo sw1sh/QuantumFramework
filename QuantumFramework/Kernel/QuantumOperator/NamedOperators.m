@@ -507,12 +507,24 @@ QuantumOperator["CSWAP" | "Fredkin", opts___] := QuantumOperator[{"Controlled", 
 
 
 
-QuantumOperator["RandomUnitary", order : (_ ? orderQ) : {1}, opts___] := Enclose @
-    QuantumOperator[{"RandomUnitary", ConfirmBy[QuantumBasis[2, Length[order], opts, "Label" -> None], QuantumBasisQ]}, order]
+QuantumOperator["RandomUnitary", order : {outputOrder_ ? orderQ, inputOrder_ ? orderQ}, opts___] := Enclose @
+    QuantumOperator[{"RandomUnitary", ConfirmBy[QuantumBasis[QuditBasis[2, Length[outputOrder]], QuditBasis[2, Length[inputOrder]], opts, "Label" -> None], QuantumBasisQ]}, order]
 
-QuantumOperator[{"RandomUnitary", qb_ ? QuantumBasisQ}, order : (_ ? orderQ) : {1}, opts___] :=
+
+QuantumOperator["RandomUnitary", order : (_ ? orderQ) : {1}, opts___] := Enclose @
+    QuantumOperator["RandomUnitary", {order, order}, opts]
+
+QuantumOperator[{"RandomUnitary", qb_ ? QuantumBasisQ}, order : (_ ? autoOrderQ), opts___] :=
     QuantumOperator[
-           RandomVariate @ CircularUnitaryMatrixDistribution[qb["Dimension"]], order, qb, opts
+        Which[
+            qb["InputDimension"] == 1,
+            RandomVariate @ CircularUnitaryMatrixDistribution[qb["OutputDimension"]],
+            IntegerQ[Sqrt[qb["Dimension"]]],
+            RandomVariate @ CircularUnitaryMatrixDistribution[Sqrt[qb["Dimension"]]],
+            True,
+            QuantumState["RandomPure", qb["Dimensions"]]["Split", qb["OutputQudits"]]
+        ],
+        order, qb, opts
     ]
 
 QuantumOperator[{"RandomUnitary", args___}, order : (_ ? orderQ) : {1}, opts___] := Enclose @
