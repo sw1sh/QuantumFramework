@@ -605,7 +605,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	labelCount = 0,
 	labelCounter,
 	gateLabelsQ = TrueQ[OptionValue["ShowGateLabels"]],
-	min = circuit["Min"],
+	min = Min[1, circuit["Min"]],
 	max = circuit["Max"],
 	outlineMin,
 	scalarPos = 1
@@ -617,13 +617,13 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	height = Max[0, positions] + 1;
 	wires = circuitWires[circuit];
 	If[ ! emptyWiresQ,
-		wires = DeleteCases[wires, _[_, _, pos_ /; MemberQ[freeOrder, pos + min - 1]]]
+		wires = DeleteCases[wires, _[_, _, pos_ /; MemberQ[freeOrder, pos]]]
 	];
 	If[ ! extraQuditsQ,
-		wires = DeleteCases[wires, _[_, _, pos_ /; pos + min - 1 < 1]]
+		wires = DeleteCases[wires, _[_, _, pos_ /; pos < 1]]
 	];
 	gatePositions = MapThread[{#1[[1]], #1[[2]], #2[[Union @@ #1 - min + 1]]} &, {circuit["NormalOrders", True], positions[[All, 2]]}];
-	wires = Replace[wires, _[left_, right_, pos_] :> {{If[left == 0, 0, positions[[left, 2, pos]]], pos + min - 1}, {If[right == -1, height, positions[[right, 1, pos]] + 1], pos + min - 1}}, {1}];
+	wires = Replace[wires, _[left_, right_, pos_] :> {{If[left == 0, 0, positions[[left, 2, pos - min + 1]]], pos}, {If[right == -1, height, positions[[right, 1, pos - min + 1]] + 1], pos}}, {1}];
 	{
 		If[TrueQ[OptionValue["ShowOutline"]], drawOutline[outlineMin, max, height, FilterRules[{opts}, Options[drawOutline]]], Nothing],
 		If[TrueQ[OptionValue["ShowWires"]], drawWires[wires, FilterRules[{opts}, Options[drawWires]]], Nothing],
@@ -665,7 +665,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 ]
 
 circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, overlapQ : True | False : False] := With[{
-	min = circuit["Min"],
+	min = Min[1, circuit["Min"]],
 	max = circuit["Max"],
 	width = circuit["Width"]
 },
@@ -708,7 +708,7 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, overlapQ : T
 ]
 
 circuitWires[circuit_QuantumCircuitOperator] := Block[{
-	min = circuit["Min"],
+	min = Min[1, circuit["Min"]],
 	max = circuit["Max"],
 	width = circuit["Width"],
 	orders
@@ -719,7 +719,7 @@ circuitWires[circuit_QuantumCircuitOperator] := Block[{
 			{next, skip} = prev;
 			{output, input} = order - min + 1;
 			next[[ Union[output, input] ]] = Max[next] + skip;
-			{DirectedEdge[prev[[1, #]], next[[#]], #] & /@ input, {next, If[order === {{}, {}}, skip + 1, 1]}}
+			{DirectedEdge[prev[[1, #]], next[[#]], # + min - 1] & /@ input, {next, If[order === {{}, {}}, skip + 1, 1]}}
 		],
 		{Table[0, width], 1},
 		Append[{{}, Union[circuit["OutputOrder"], circuit["FreeOrder"]]}] @ orders

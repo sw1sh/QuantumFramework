@@ -88,7 +88,7 @@ QuantumCircuitOperatorProp[qco_, "Icon", opts : OptionsPattern[Options[CircuitDr
     CircuitDraw[
         qco, opts,
         "ShowGateLabels" -> False, "ShowMeasurementWire" -> False, "WireLabels" -> None,
-        "SubcircuitOptions" -> {"ShowLabel" -> False},
+        "ShowEmptyWires" -> False, "SubcircuitOptions" -> {"ShowLabel" -> False},
         ImageSize -> Tiny
     ]
 
@@ -135,7 +135,7 @@ QuantumCircuitOperatorProp[qco_, "Min"] := Replace[Min[qco["NormalOrders"]], Inf
 
 QuantumCircuitOperatorProp[qco_, "Max"]	:= Replace[Max[qco["NormalOrders"]], - Infinity -> 1]
 
-QuantumCircuitOperatorProp[qco_, "FreeOrder"] := Complement[Range[qco["Min"], qco["Max"]], Union @@ Catenate[qco["NormalOrders"]]]
+QuantumCircuitOperatorProp[qco_, "FreeOrder"] := Complement[Range[Min[qco["Min"], 1], qco["Max"]], Union @@ Catenate[qco["NormalOrders"]]]
 
 QuantumCircuitOperatorProp[qco_, "FullInputOrder"] := Union[qco["InputOrder"], qco["FreeOrder"]]
 
