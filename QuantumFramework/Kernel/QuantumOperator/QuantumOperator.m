@@ -369,7 +369,7 @@ Enclose @ With[{
             If[ bottom["FullOutputOrder"] != order,
                 bottom = ConfirmBy[bottom["OrderedOutput", order, basis], QuantumOperatorQ]
             ];
-            top = ConfirmBy[top["OrderedInput", order, basis], QuantumOperatorQ];
+            top = ConfirmBy[top["OrderedInput", order, basis["Dual"]], QuantumOperatorQ];
         ]
     ];
     ConfirmAssert[top["InputDimension"] == bottom["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
