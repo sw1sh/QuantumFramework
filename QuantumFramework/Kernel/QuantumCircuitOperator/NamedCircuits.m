@@ -24,7 +24,7 @@ $QuantumCircuitOperatorNames = {
 }
 
 
-QuantumCircuitOperator[{"Graph", g_Graph, m : _Integer ? NonNegative : 0, gate_ : "CZ"}, opts___] := With[{
+QuantumCircuitOperator[{"Graph", HoldPattern[g_Graph : RandomGraph[{5, 8}]], m : _Integer ? NonNegative : 0, gate_ : "CZ"}, opts___] := With[{
     ig = If[AllTrue[VertexList[g], Internal`PositiveIntegerQ], g, IndexGraph @ g]
 },
     QuantumCircuitOperator[
@@ -34,7 +34,7 @@ QuantumCircuitOperator[{"Graph", g_Graph, m : _Integer ? NonNegative : 0, gate_ 
 ]
 
 
-QuantumCircuitOperator["GHZ" | {"GHZ", n : _Integer ? Positive : 3}, opts___] :=
+QuantumCircuitOperator[{"GHZ", n : _Integer ? Positive : 3}, opts___] :=
     QuantumCircuitOperator[{"H", Splice["CNOT" -> # & /@ Partition[Range[n], 2, 1]]}, "GHZ", opts]
 
 
@@ -111,7 +111,7 @@ QuantumCircuitOperator[{"GroverPhaseAmplification0" | "GroverPhaseDiffusion0",
 QuantumCircuitOperator[{
     name : "GroverAmplification" | "GroverAmplification0" | "GroverDiffusion" | "GroverDiffusion0" |
     "GroverPhaseAmplification" | "GroverPhaseDiffusion" | "GroverPhaseAmplification0" | "GroverPhaseDiffusion0",
-    n_Integer ? Positive, gate_ : Automatic}, opts___] :=
+    n : _Integer ? Positive : 3, gate_ : Automatic}, opts___] :=
     QuantumCircuitOperator[{name, Range[n], gate}, opts]
 
 
@@ -136,7 +136,7 @@ QuantumCircuitOperator[{
 QuantumCircuitOperator[{
         name : "GroverOperator" | "Grover" | "GroverOperator0" | "Grover0" |
         "GroverPhaseOperator" | "GroverPhase" | "GroverPhaseOperator0" | "GroverPhase0",
-        formula_,
+        formula_ : BooleanFunction[2 ^ 6, 3],
         m : _Integer | Automatic | None : Automatic,
         gate_ : Automatic
     },
@@ -170,7 +170,7 @@ BooleanIndices[formula_, vars : _List] := Enclose @ Module[{
 
 
 QuantumCircuitOperator[{"BooleanOracle",
-    formula_,
+    formula_ : BooleanFunction[2 ^ 6, 3],
     varSpec : _List | _Association | Automatic : Automatic,
     n : _Integer | Automatic : Automatic,
     m : _Integer : 0,
@@ -204,7 +204,7 @@ QuantumCircuitOperator[{"BooleanOracle",
 ]
 
 QuantumCircuitOperator[{"BooleanOracleR",
-    formula_,
+    formula_ : BooleanFunction[2 ^ 6, 3],
     varSpec : _List | _Association | Automatic : Automatic,
     n : _Integer ? NonNegative | Automatic : Automatic,
     m : _Integer ? NonNegative : 0,
@@ -255,7 +255,7 @@ BooleanGrayAngles[indices : indicesPattern, angle_ : Pi] := KeyValueMap[
 ]
 
 QuantumCircuitOperator[{"PhaseOracle",
-    formula_,
+    formula_ : BooleanFunction[2 ^ 6, 3],
     defaultVars : _List | Automatic : Automatic,
     n : _Integer ? NonNegative | Automatic : Automatic,
     m : _Integer ? NonNegative : 0
@@ -288,7 +288,7 @@ QuantumCircuitOperator[{"PhaseOracle",
     ]
 ]
 
-QuantumCircuitOperator[{"PhaseOracle", formula_, vars : KeyValuePattern[_ -> _Integer ? Positive], n : _Integer ? NonNegative : Automatic}, opts___] :=
+QuantumCircuitOperator[{"PhaseOracle", formula_ : BooleanFunction[2 ^ 6, 3], vars : KeyValuePattern[_ -> _Integer ? Positive], n : _Integer ? NonNegative : Automatic}, opts___] :=
     QuantumCircuitOperator[{"PhaseOracle", formula, Lookup[Reverse /@ Normal @ vars, Range[Max[vars]]], n}, opts]
 
 
@@ -322,7 +322,7 @@ QuantumCircuitOperator[{"Toffoli", n : _Integer ? NonNegative : 0}, opts___] := 
     "Toffoli"
 ]
 
-QuantumCircuitOperator[{"BernsteinVaziraniOracle", secret : {(0 | 1) ...}, m : _Integer ? NonNegative : 0}, opts___] := With[{n = Length[secret]},
+QuantumCircuitOperator[{"BernsteinVaziraniOracle", secret : {(0 | 1) ...} : {1, 0, 1}, m : _Integer ? NonNegative : 0}, opts___] := With[{n = Length[secret]},
     QuantumCircuitOperator[
         If[MatchQ[secret, {0 ...}], Append[QuantumOperator["I", {n + 1 + m}]], Identity] @
             MapIndexed[If[#1 === 1, QuantumOperator["CNOT", {First[#2], n + 1} + m], QuantumOperator["I", #2 + m]] & , secret],
@@ -331,10 +331,10 @@ QuantumCircuitOperator[{"BernsteinVaziraniOracle", secret : {(0 | 1) ...}, m : _
     ]
 ]
 
-QuantumCircuitOperator[{"BernsteinVaziraniOracle", secret_String /; StringMatchQ[secret, ("0" | "1") ...], m : _Integer ? NonNegative : 0}, opts___] :=
+QuantumCircuitOperator[{"BernsteinVaziraniOracle", secret_String : "101", m : _Integer ? NonNegative : 0} /; StringMatchQ[secret, ("0" | "1") ...], opts___] :=
     QuantumCircuitOperator[{"BernsteinVaziraniOracle", Characters[secret] /. {"0" -> 0, "1" -> 1}, m}, opts]
 
-QuantumCircuitOperator[{"BernsteinVazirani", (secret : {(0 | 1) ...}) | (secret_String /; StringMatchQ[secret, ("0" | "1") ...]), m : _Integer ? NonNegative : 0}, opts___] := With[{
+QuantumCircuitOperator[{"BernsteinVazirani", secret : {(0 | 1) ...} | (secret_String /; StringMatchQ[secret, ("0" | "1") ...]) : "101", m : _Integer ? NonNegative : 0}, opts___] := With[{
     n = If[ListQ[secret], Length[secret], StringLength[secret]]
 },
     QuantumCircuitOperator[{
@@ -374,11 +374,11 @@ QuantumCircuitOperator[{"InverseFourier", n_Integer ? Positive, m : _Integer ? N
 
 QuantumCircuitOperator[{
     "PhaseEstimation",
-    op_ ? QuantumOperatorQ /; op["InputDimensions"] === op["OutputDimensions"] && MatchQ[op["OutputDimensions"], {2 ..}] ,
+    (op : _ ? QuantumOperatorQ : QuantumOperator["RandomUnitary"]),
     n : _Integer ? Positive : 4,
     m : _Integer ? NonNegative : 0,
     params : OptionsPattern[{"PowerExpand" -> False}]
-}, opts___] :=
+} /; op["InputDimensions"] === op["OutputDimensions"] && MatchQ[op["OutputDimensions"], {2 ..}] , opts___] :=
 QuantumCircuitOperator[{
     Splice @ Table[QuantumOperator["X", {n + i + m}], {i, op["InputQudits"]}],
     Splice @ Table[QuantumOperator["H", {i + m}], {i, n}],
@@ -415,7 +415,7 @@ QuantumCircuitOperator[{
 QuantumCircuitOperator[{"C" | "Controlled", qc_ ? QuantumCircuitOperatorQ, control1 : _ ? orderQ | Automatic : Automatic, control0 : _ ? orderQ : {}}, opts___] :=
     QuantumCircuitOperator[If[QuantumOperatorQ[#], QuantumOperator[{"Controlled", #, control1, control0}], #] & /@ qc["Elements"], Subscript["C", qc["Label"]][control1, control0]]
 
-QuantumCircuitOperator[{"C" | "Controlled", qc_, control1 : _ ? orderQ | Automatic : Automatic, control0 : _ ? orderQ : {}}, opts___] :=
+QuantumCircuitOperator[{"C" | "Controlled", qc_ : "Magic", control1 : _ ? orderQ | Automatic : Automatic, control0 : _ ? orderQ : {}}, opts___] :=
     QuantumCircuitOperator[{"C", QuantumCircuitOperator @ FromCircuitOperatorShorthand[qc], control1, control0}, opts]
 
 
@@ -451,7 +451,7 @@ Trotterization[ops : {__QuantumOperator}, order : _Integer ? Positive : 1, reps 
 	Table[newOps, reps]
 ]
 
-QuantumCircuitOperator[{"Trotterization", opArgs_, args___}, opts___] := Block[{
+QuantumCircuitOperator[{"Trotterization", opArgs_ : {"X", "Y", "Z"}, args___}, opts___] := Block[{
     ops = QuantumCircuitOperator[opArgs]["Flatten"]["Operators"],
     trotterization
 },
@@ -468,6 +468,8 @@ QuantumCircuitOperator[{"Trotterization", opArgs_, args___}, opts___] := Block[{
 
 QuantumCircuitOperator["Magic", opts___] := QuantumCircuitOperator[{"S" -> {1, 2}, "H" -> {2}, "CNOT" -> {2, 1}}, opts]
 
+
+QuantumCircuitOperator[{"Multiplexer"| "Multiplexor"}, opts___] := QuantumCircuitOperator[{"Multiplexer", "X", "Y", "Z"}, opts]
 
 QuantumCircuitOperator[{"Multiplexer"| "Multiplexor", ops__} -> defaultK : _Integer ? Positive | Automatic : Automatic, opts___] := Block[{
     n = Length[{ops}],
