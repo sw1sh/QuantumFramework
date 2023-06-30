@@ -149,9 +149,9 @@ QuantumCircuitOperatorProp[qco_, "Width"] := Max[qco["Max"], 1] - Min[qco["Min"]
 
 QuantumCircuitOperatorProp[qco_, "Span"] := qco["Max"] - qco["Min"] + 1
 
-QuantumCircuitOperatorProp[qco_, "InputOrderQuditMapping"] := Thread[# -> Range[Length[#]]] & @ qco["FullInputOrder"]
+QuantumCircuitOperatorProp[qco_, "InputOrderQuditMapping"] := Thread[# -> Range[Length[#]]] & @ qco["InputOrder"]
 
-QuantumCircuitOperatorProp[qco_, "OutputOrderQuditMapping"] := Thread[# -> Range[Length[#]]] & @ qco["FullOutputOrder"]
+QuantumCircuitOperatorProp[qco_, "OutputOrderQuditMapping"] := Thread[# -> Range[Length[#]]] & @ qco["OutputOrder"]
 
 QuantumCircuitOperatorProp[qco_, "InputDimensions"] :=
     (q |-> #["InputDimensions"][[ q /. #["InputOrderQuditMapping"] ]] & @
