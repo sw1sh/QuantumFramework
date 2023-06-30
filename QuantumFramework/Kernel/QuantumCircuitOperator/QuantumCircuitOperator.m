@@ -33,13 +33,13 @@ circuitElementPosition[op_, from_, _] := Union @@ op["Order"] - from + 1
 
 (* constructors *)
 
-circuitNamePattern = name_String | {name_String, ___} | (name_String -> _) | ({name_String, ___} -> _)
+circuitNamePattern = name_String | {name_String, ___} /; MemberQ[$QuantumCircuitOperatorNames, name]
 
 FromCircuitOperatorShorthand[barrier_ ? BarrierQ] := barrier
 FromCircuitOperatorShorthand[qc_ ? QuantumCircuitOperatorQ] := qc
 FromCircuitOperatorShorthand[qc_ ? QuantumCircuitOperatorQ -> order_ ? orderQ] := QuantumCircuitOperator[qc, order]
-FromCircuitOperatorShorthand[arg : circuitNamePattern] /; MemberQ[$QuantumCircuitOperatorNames, name] := QuantumCircuitOperator[arg]
-FromCircuitOperatorShorthand[(arg : circuitNamePattern /; MemberQ[$QuantumCircuitOperatorNames, name]) -> order_ ? orderQ] :=
+FromCircuitOperatorShorthand[arg : circuitNamePattern] := QuantumCircuitOperator[arg]
+FromCircuitOperatorShorthand[(arg : circuitNamePattern) -> order_ ? orderQ] :=
     QuantumCircuitOperator[FromCircuitOperatorShorthand[arg], order]
 FromCircuitOperatorShorthand["M" | {"M", args___}] := FromCircuitOperatorShorthand[{"M", args} -> {1}]
 FromCircuitOperatorShorthand["M" | {"M", args___} -> target_Integer] := FromCircuitOperatorShorthand[{"M", args} -> {target}]
