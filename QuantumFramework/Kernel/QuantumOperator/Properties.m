@@ -306,7 +306,7 @@ QuantumOperatorProp[qo_, "OrderedInput", order_ ? orderQ, qb_ ? QuditBasisQ] := 
         If[ arity > qo["InputQudits"],
             QuantumTensorProduct[
                 QuantumOperator[qo, {qo["OutputOrder"], qo["FullInputOrder"]}, "Input" -> qb["Extract", pos]],
-                With[{iqb = qb["Delete", pos]},
+                With[{iqb = qb["Delete", pos]["Dual"]},
                     QuantumOperator[{"Identity", iqb}, Max[qo["LastOutputQudit"], qo["LastInputQudit"]] + Range @ iqb["Qudits"]]
                 ]
             ],
