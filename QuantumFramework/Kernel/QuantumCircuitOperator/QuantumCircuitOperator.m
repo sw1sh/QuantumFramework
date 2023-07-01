@@ -111,8 +111,8 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[quantumCircuitApply]] :=
     qco[QuantumState[{"Register", ReplacePart[ConstantArray[2, qco["Arity"]], Thread[qco["InputOrder"] - qco["Min"] + 1 -> qco["InputDimensions"]]]}], opts]
 
-(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qm_QuantumMeasurement, OptionsPattern[]] :=
-    QuantumMeasurement[Fold[ReverseApplied[Construct], qm["QuantumOperator"], qco["Operators"]]]
+(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qm_QuantumMeasurement, opts : OptionsPattern[]] :=
+    QuantumMeasurement[qco[qm["QuantumOperator"]]["QuantumOperator", opts]]
 
 op_QuantumMeasurementOperator[qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ] :=
     QuantumCircuitOperator[Append[qco["Elements"], op], op["Label"][qco["Label"]]]

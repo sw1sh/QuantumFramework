@@ -56,8 +56,9 @@ QuantumChannelProp[qc_, "NEvolutionChannel"] := QuantumChannel[
     (I #)["NEvolutionOperator"] & /@  qc["UnstackOutput", 1]
 ]
 
-QuantumChannelProp[qc_, name : "Dagger" | "Conjugate" | "Dual" | "Shift", args___] := QuantumChannel[qc["Operator"][name, args]]
+QuantumChannelProp[qc_, name : "Dagger" | "Conjugate" | "Dual", args___] := QuantumChannel[qc["Operator"][name, args]]
 
+QuantumChannelProp[qc_, "Shift", n : _Integer ? NonNegative : 1] := QuantumChannel[QuantumOperator[qc["Operator"], qc["Order"] /. k_Integer /; k > 0 :> k + n]]
 
 QuantumChannelProp[qc_, "CircuitDiagram", opts___] :=
     QuantumCircuitOperator[qc]["Diagram", opts]

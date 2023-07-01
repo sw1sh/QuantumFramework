@@ -224,9 +224,9 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
         state = qs
     ];
     If[ state["Qudits"] > 0,
-        circuit = QuantumCircuitOperator[{QuantumOperator[state, qco["FullInputOrder"]], Splice @ circuit["Operators"]}]
+        circuit = QuantumCircuitOperator[{QuantumOperator[state, circuit["FullInputOrder"]], Splice @ circuit["Operators"]}]
     ];
-    res = TensorNetworkCompile[circuit];
+    res = TensorNetworkCompile[circuit, "Unbend" -> qs["MatrixQ"]];
     Which[
         QuantumMeasurementOperatorQ[res],
         QuantumMeasurement[res],
@@ -238,7 +238,12 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
 ]
 
 
-TensorNetworkCompile[qco_QuantumCircuitOperator] := Enclose @ Block[{net = qco["TensorNetwork", "PrependInitial" -> False], transpose, order, res},
+Options[TensorNetworkCompile] = {"Unbend" -> False}
+
+TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ Block[{
+    net = ConfirmBy[qco["TensorNetwork", "PrependInitial" -> False], TensorNetworkQ], transpose, order, res,
+    traceQudits = qco["TraceQudits"], targets = qco["Targets"], max = qco["Max"]
+},
     order = Sort /@ qco["Order"];
     transpose = Ordering @ OrderingBy[TensorNetworkFreeIndices[net], Replace[{Superscript[_, x_] :> {0, x}, Subscript[_, x_] :> {1, x}}]];
     res = Confirm @ ContractTensorNetwork[net];
@@ -249,15 +254,36 @@ TensorNetworkCompile[qco_QuantumCircuitOperator] := Enclose @ Block[{net = qco["
         SparseArrayFlatten[res],
         qco["Basis"]
     ];
-    If[ qco["TraceQudits"] > 0,
-        res = QuantumPartialTrace[res, qco["TraceOrder"] - qco["Min"] + 1];
-        order = Replace[order, Alternatives @@ qco["TraceOrder"] -> Nothing, {1}]
-    ];
+    If[ TrueQ[OptionValue["Unbend"]],
+        res = res["PermuteOutput", InversePermutation @ FindPermutation[Join[
+            Range[(traceQudits + targets) / 2],
+            Range[(traceQudits + targets) / 2] + (max + traceQudits + targets) / 2,
+            Range[max / 2] + (traceQudits + targets) / 2,
+            Range[max / 2] + max / 2 + traceQudits + targets
+        ]]]["Unbend"];
+        order = {Drop[Drop[order[[1]], (traceQudits + targets) / 2], - max / 2], Take[order[[2]], Length[order[[2]] / 2]]};
 
-    If[ qco["Targets"] > 0,
-        QuantumMeasurementOperator[QuantumOperator[res, order], qco["Target"]],
-        QuantumOperator[res, order]
-    ]
+        If[ traceQudits > 0,
+            res = QuantumPartialTrace[res, Take[qco["TraceOrder"], traceQudits / 2] - qco["Min"] + 1];
+            order = {Replace[order[[1]], Alternatives @@ Drop[qco["TraceOrder"], traceQudits / 2] -> Nothing, {1}], order[[2]]}
+        ];
+
+        res = If[ targets > 0,
+            QuantumMeasurementOperator[QuantumOperator[res, order], Take[qco["Target"], targets / 2]],
+            QuantumOperator[res, order]
+        ],
+
+        If[ traceQudits > 0,
+            res = QuantumPartialTrace[res, qco["TraceOrder"] - qco["Min"] + 1];
+            order = {Replace[order[[1]], Alternatives @@ qco["TraceOrder"] -> Nothing, {1}], order[[2]]}
+        ];
+
+        res = If[ targets > 0,
+            QuantumMeasurementOperator[QuantumOperator[res, order], qco["Target"]],
+            QuantumOperator[res, order]
+        ]
+    ];
+    res
 ]
 
 

@@ -43,10 +43,17 @@ QuantumCircuitOperatorProp[qco_, "NormalOperators", elements_ : False] := Block[
             BarrierQ[#],
             #,
             QuantumMeasurementOperatorQ[#],
-            QuantumOperator[
-                #["POVM"]["QuantumOperator"],
-                {Join[Reverse @ Table[getNext[], #["Eigenqudits"]], Select[#["OutputOrder"], Positive]], #["InputOrder"]},
-                "Label" -> "Measurement"
+            If[ #["State"]["MatrixStateQ"] && #["InputOrder"] === {},
+                QuantumOperator[
+                    #["POVM"]["State"]["Bend"],
+                    ConstantArray[Join[Reverse @ Table[getNext[], #["Eigenqudits"]], Select[#["OutputOrder"], Positive]], 2],
+                    "Label" -> "Measurement"
+                ],
+                QuantumOperator[
+                    #["POVM"]["State"],
+                    {Join[Reverse @ Table[getNext[], #["Eigenqudits"]], Select[#["OutputOrder"], Positive]], #["InputOrder"]},
+                    "Label" -> "Measurement"
+                ]
             ],
             QuantumChannelQ[#],
             QuantumOperator[
@@ -209,7 +216,19 @@ QuantumCircuitOperatorProp[qco_, "TargetArity"] := Length @ qco["Target"]
 
 QuantumCircuitOperatorProp[qco_, "Eigenqudits"] := Total[#["Eigenqudits"] & /@ Select[qco["Flatten"]["Operators"], QuantumMeasurementOperatorQ]]
 
-QuantumCircuitOperatorProp[qco_, "TraceOrder"] := Union @@ (#["TraceOrder"] & /@ Select[qco["Flatten"]["Operators"], QuantumChannelQ])
+QuantumCircuitOperatorProp[qco_, "TraceOrder"] :=
+    Reverse @ Fold[
+        Which[
+            QuantumMeasurementOperatorQ[#2],
+            {#1[[1]], #1[[2]] - 1},
+            QuantumChannelQ[#2],
+            {Append[#1[[1]], #1[[2]]], #1[[2]] - 1},
+            True,
+            #1
+        ] &,
+        {{}, 0},
+        qco["Flatten"]["Operators"]
+    ][[1]]
 
 QuantumCircuitOperatorProp[qco_, "TraceQudits"] := Total[#["TraceQudits"] & /@ Select[qco["Flatten"]["Operators"], QuantumChannelQ]]
 
