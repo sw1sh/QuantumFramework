@@ -64,20 +64,24 @@ QuantumOperator[qs_ ? QuantumStateQ, opts : PatternSequence[Except[{_ ? orderQ, 
 ]
 
 
-QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, order : (_ ? autoOrderQ) : {1}, args___, opts : OptionsPattern[]] := Module[{
+QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, order : _ ? autoOrderQ : {1}, args___, opts : OptionsPattern[]] := Block[{
     dimensions = TensorDimensions[tensor],
-    rank,
+    outputOrder,
     basis,
     inputDimension, outputDimension
 },
-    rank = Max[Length[dimensions], Max[order] - Min[order] + 1];
-    {outputDimension, inputDimension} = Times @@@ TakeDrop[dimensions, rank - Length[order]];
+    outputOrder = Replace[order, {
+        Automatic :> Range[Quotient[Length[dimensions], 2]],
+        {o_ ? orderQ, _} :> o,
+        {Automatic, o_ ? orderQ} :> Range[Length[dimensions] - Length[o]]}
+    ];
+    {outputDimension, inputDimension} = Times @@@ TakeDrop[dimensions, Length[outputOrder]];
     basis = QuantumBasis[args];
     If[ basis["OutputDimension"] != outputDimension,
-        basis = QuantumBasis[basis, "Output" -> QuditBasis[dimensions[[;; - Length[order] - 1]]]]
+        basis = QuantumBasis[basis, "Output" -> QuditBasis[dimensions[[;; Length[outputOrder]]]]]
     ];
     If[ basis["InputDimension"] != inputDimension,
-        basis = QuantumBasis[basis, "Input" -> QuditBasis[dimensions[[- Length[order] ;;]]]["Dual"]]
+        basis = QuantumBasis[basis, "Input" -> QuditBasis[dimensions[[Length[outputOrder] + 1 ;;]]]["Dual"]]
     ];
     QuantumOperator[
         ArrayReshape[tensor, {outputDimension, inputDimension}],
@@ -127,12 +131,7 @@ QuantumOperator[matrix_ ? MatrixQ, order : _ ? autoOrderQ, args___, opts : Optio
         {out : _ ? orderQ | Automatic, in : _ ? orderQ | Automatic} :> {Replace[out, Automatic -> op["OutputOrder"]], Replace[in, Automatic -> op["InputOrder"]]},
         Automatic -> op["Order"]
     }];
-    newInputOrder = Join[newInputOrder, Take[DeleteElements[op["FullInputOrder"], newInputOrder], UpTo[op["FullInputQudits"] - Length[newInputOrder]]]];
-    newOutputOrder = newOutputOrder - Min[newOutputOrder, 1] + Min[newInputOrder, 1];
-    If[ op["FullInputQudits"] < Length[newInputOrder],
-        QuantumOperator[{op, Ceiling[Length[newInputOrder], op["FullInputQudits"]] / op["FullInputQudits"]}, {Automatic, newInputOrder}, opts],
-        QuantumOperator[op["State"], {newOutputOrder, newInputOrder}, opts]
-    ]
+    QuantumOperator[op["State"]["Split", Length[newOutputOrder]], {newOutputOrder, newInputOrder}, opts]
 ]
 
 QuantumOperator[matrix_ ? MatrixQ, args___, opts : OptionsPattern[]] := Module[{
