@@ -46,6 +46,10 @@ QuantumState["Left" | "L", args___] := QuantumState[Normalize @ {I, 1}, args, "L
 
 QuantumState["Right" | "R", args___] := QuantumState[Normalize @ {-I, 1}, args, "Label" -> "R"]
 
+QuantumState[s_String /; StringMatchQ[s, ("0" | "1" | "+" | "-" | "L" | "R") ..], args___] :=
+    QuantumState[QuantumTensorProduct[QuantumState /@ Characters[s]], args]
+
+
 QuantumState["PhiPlus", args___] := QuantumState[Normalize @ {1, 0, 0, 1}, args, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(+\)]"]
 
 QuantumState["PhiMinus", args___] := QuantumState[Normalize @ {1, 0, 0, -1}, args, "Label" -> "\*SubscriptBox[\[CapitalPhi], \(-\)]"]
