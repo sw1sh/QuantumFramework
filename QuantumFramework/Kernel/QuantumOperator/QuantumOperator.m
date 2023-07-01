@@ -124,6 +124,7 @@ QuantumOperator[matrix_ ? MatrixQ, order : _ ? autoOrderQ, args___, opts : Optio
 },
     {newOutputOrder, newInputOrder} = Replace[order, {
         o : Except[{_ ? orderQ | Automatic, _ ? orderQ | Automatic}] :> {op["OutputOrder"], Replace[o, Automatic -> op["InputOrder"]]},
+        {out : _ ? orderQ | Automatic, in : _ ? orderQ | Automatic} :> {Replace[out, Automatic -> op["OutputOrder"]], Replace[in, Automatic -> op["InputOrder"]]},
         Automatic -> op["Order"]
     }];
     newInputOrder = Join[newInputOrder, Take[DeleteElements[op["FullInputOrder"], newInputOrder], UpTo[op["FullInputQudits"] - Length[newInputOrder]]]];

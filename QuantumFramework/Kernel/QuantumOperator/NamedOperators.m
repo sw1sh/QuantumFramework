@@ -71,11 +71,13 @@ FromOperatorShorthand[lhs_ -> rest_] := QuantumOperator[Unevaluated[lhs], Sequen
 FromOperatorShorthand[args_List] := FromOperatorShorthand /@ args
 FromOperatorShorthand[arg_] := QuantumOperator[arg]
 
-(* QuantumOperator[name_ ? nameQ, basisName : Except[Alternatives @@ $QuantumBasisPictures, _ ? nameQ]] :=
-    QuantumOperator[QuantumOperator[name], QuantumBasis[basisName]] *)
 
 
 QuantumOperator[] := QuantumOperator["Identity"]
+
+QuantumOperator[arg : _String | {_String, ___}, n_Integer ? Positive, opts___] := QuantumOperator[arg, Range[n], opts]
+
+QuantumOperator[arg_, inputOrder : _ ? orderQ | Automatic -> outputOrder : _ ? orderQ | Automatic, opts___] := QuantumOperator[arg, {outputOrder, inputOrder}, opts]
 
 QuantumOperator["Identity" | "I", order : _ ? orderQ | Automatic, opts___] :=
     QuantumOperator[{"Identity", Table[2, If[order === Automatic, 1, Length[order]]]}, order, opts]
@@ -485,17 +487,12 @@ QuantumOperator[{"RootNOT", dimension : _Integer ? Positive}, opts___] := Quantu
 ]
 
 
-QuantumOperator["Hadamard" | "H", order : _ ? orderQ : {1}, opts___] := QuantumOperator[{"H", Length @ order}, order, opts]
-
-QuantumOperator[{"Hadamard" | "H", qudits_Integer ? Positive}, opts : PatternSequence[] | PatternSequence[Except[_ ? orderQ], ___]] :=
-    QuantumOperator[{"H", qudits}, Range[qudits], opts]
-
-QuantumOperator[{"Hadamard" | "H", qudits_Integer ? Positive}, order_ ? orderQ, opts___] :=
+QuantumOperator["Hadamard" | "H", order_ ? orderQ, opts___] :=
     QuantumOperator[
-        HadamardMatrix[2 ^ qudits, Method -> "BitComplement"],
+        HadamardMatrix[2 ^ Length[order], Method -> "BitComplement"],
         {order, order},
         opts,
-        "Label" -> If[qudits > 1, Superscript["H", CircleTimes[qudits]], "H"]
+        "Label" -> If[Length[order] > 1, Superscript["H", CircleTimes[Length[order]]], "H"]
     ]
 
 
@@ -527,7 +524,7 @@ QuantumOperator[{"RandomUnitary", qb_ ? QuantumBasisQ}, order : (_ ? autoOrderQ)
         order, qb, opts
     ]
 
-QuantumOperator[{"RandomUnitary", args___}, order : (_ ? orderQ) : {1}, opts___] := Enclose @
+QuantumOperator[{"RandomUnitary", args___}, order : (_ ? autoOrderQ) : {1}, opts___] := Enclose @
     QuantumOperator[{"RandomUnitary", ConfirmBy[QuantumBasis[args], QuantumBasisQ]}, order, opts]
 
 
@@ -535,7 +532,7 @@ QuantumOperator["RandomHermitian", order : (_ ? orderQ) : {1}, opts___] := Enclo
     QuantumOperator[{"RandomHermitian", ConfirmBy[QuantumBasis[2, Length[order], opts], QuantumBasisQ]}, order]
 
 QuantumOperator[{"RandomHermitian", qb_ ? QuantumBasisQ}, order : (_ ? orderQ) : {1}, opts___] :=
-    QuantumState["RandomMixed", qb]["Operator", opts]
+    QuantumState["RandomMixed", QuantumBasis[qb, opts]]["Operator", order]
 
 QuantumOperator[{"RandomHermitian", args___}, order : (_ ? orderQ) : {1}] := Enclose @
     QuantumOperator[{"RandomHermitian", ConfirmBy[QuantumBasis[args], QuantumBasisQ]}, order]
