@@ -216,19 +216,21 @@ QuantumCircuitOperatorProp[qco_, "TargetOrder"] := qco["InputOrder"]
 
 QuantumCircuitOperatorProp[qco_, "TargetArity"] := Length @ qco["Target"]
 
-QuantumCircuitOperatorProp[qco_, "Eigenqudits"] := Total[#["Eigenqudits"] & /@ Select[qco["Flatten"]["Operators"], QuantumMeasurementOperatorQ]]
-
-QuantumCircuitOperatorProp[qco_, "TraceOrder"] := Catenate @ MapThread[
-    If[QuantumChannelQ[#1], Select[#2, NonPositive], {}] &,
-    {qco["Flatten"]["Operators"], qco["Flatten"]["NormalOrders"][[All, 1]]}
+QuantumCircuitOperatorProp[qco_, "TraceOrder"] := Fold[
+    If[QuantumChannelQ[#2[[1]]], Join[#1, Select[#2[[2, 1]], NonPositive]], DeleteElements[#1, #2[[2, 2]]]] &,
+    {},
+    Thread[{qco["Flatten"]["Operators"], qco["Flatten"]["NormalOrders"]}]
 ]
 
-QuantumCircuitOperatorProp[qco_, "Eigenorder"] := Catenate @ MapThread[
-    If[QuantumMeasurementOperatorQ[#1] || QuantumMeasurementQ[#1], Select[#2, NonPositive], {}] &,
-    {qco["Flatten"]["Operators"], qco["Flatten"]["NormalOrders"][[All, 1]]}
+QuantumCircuitOperatorProp[qco_, "Eigenorder"] := Fold[
+    If[QuantumMeasurementOperatorQ[#2[[1]]] || QuantumMeasurementQ[#2[[1]]], Join[#1, Select[#2[[2, 1]], NonPositive]], DeleteElements[#1, #2[[2, 2]]]] &,
+    {},
+    Thread[{qco["Flatten"]["Operators"], qco["Flatten"]["NormalOrders"]}]
 ]
 
-QuantumCircuitOperatorProp[qco_, "TraceQudits"] := Total[#["TraceQudits"] & /@ Select[qco["Flatten"]["Operators"], QuantumChannelQ]]
+QuantumCircuitOperatorProp[qco_, "TraceQudits"] := Length[qco["TraceOrder"]]
+
+QuantumCircuitOperatorProp[qco_, "Eigenqudits"] := Length[qco["Eigenorder"]]
 
 
 QuantumCircuitOperatorProp[qco_, "QiskitCircuit" | "Qiskit"] := QuantumCircuitOperatorToQiskit[qco]

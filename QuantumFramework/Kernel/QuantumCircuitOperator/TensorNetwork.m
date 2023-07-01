@@ -233,15 +233,16 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
 
 
 TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ Block[{
-    circuit = qco, net, bendQ, transpose, order, outputOrder, res,
+    circuit = qco, net, bendQ, transpose, order, res,
     traceOrder, eigenOrder
 },
     traceOrder = circuit["TraceOrder"];
     eigenOrder = circuit["Eigenorder"];
     order = Sort /@ circuit["Order"];
-    outputOrder = DeleteElements[order[[1]], Join[traceOrder, eigenOrder]];
     bendQ = AnyTrue[circuit["Operators"], #["MatrixQ"] &];
     If[ bendQ,
+        (* TODO: handle this case somehow *)
+        ConfirmAssert[AllTrue[Join[DeleteElements[order[[1]], Join[traceOrder, eigenOrder]], order[[2]]], Positive]];
         circuit = circuit["Bend"];
         If[ circuit["TraceQudits"] > 0,
             circuit = circuit /* ({"Cap", #[[1, 2]]} -> #[[All, 1]] & /@ Partition[Thread[{circuit["TraceOrder"], circuit["TraceDimensions"]}], 2])
@@ -264,10 +265,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
     If[ bendQ,
         If[ eigenOrder =!= {},
             res = res["PermuteOutput", InversePermutation @ FindPermutation[
-                Join[
-                    Catenate[{- Length[eigenOrder] + # - 1, # + Length[outputOrder]} & /@ Range[Length[eigenOrder]]],
-                    outputOrder
-                ]
+                Catenate @ MapIndexed[If[MemberQ[eigenOrder, #], {#, Max[order[[1]]] + #2[[1]]}, {#}] &, order[[1]]]
             ]];
         ];
         res = res["Unbend"]
