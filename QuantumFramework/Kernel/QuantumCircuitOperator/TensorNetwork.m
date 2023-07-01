@@ -212,21 +212,15 @@ QuantumCircuitHypergraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]]
 	WolframInstitute`Hypergraph`Hypergraph[edges, opts, EdgeLabels -> Thread[edges -> labels]]
 ]
 
-TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
-    circuit, state, res
-},
-    If[ qs["MatrixQ"],
-        (* bend state and double a circuit *)
-        circuit = QuantumTensorProduct[qco, qco["Conjugate"]];
-        state = qs["Bend"],
 
-        circuit = qco;
-        state = qs
+TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
+    circuit, bendQ, res
+},
+    circuit = If[ qs["Qudits"] > 0,
+        QuantumCircuitOperator[Prepend[qs] @ qco["Operators"]],
+        qco
     ];
-    If[ state["Qudits"] > 0,
-        circuit = QuantumCircuitOperator[{QuantumOperator[state, circuit["FullInputOrder"]], Splice @ circuit["Operators"]}]
-    ];
-    res = TensorNetworkCompile[circuit, "Unbend" -> qs["MatrixQ"]];
+    res = TensorNetworkCompile[circuit];
     Which[
         QuantumMeasurementOperatorQ[res],
         QuantumMeasurement[res],
@@ -238,13 +232,23 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
 ]
 
 
-Options[TensorNetworkCompile] = {"Unbend" -> False}
-
 TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ Block[{
-    net = ConfirmBy[qco["TensorNetwork", "PrependInitial" -> False], TensorNetworkQ], transpose, order, res,
-    traceQudits = qco["TraceQudits"], targets = qco["Targets"], max = qco["Max"]
+    circuit = qco, net, bendQ, transpose, order, outputOrder, res,
+    traceOrder, eigenOrder
 },
-    order = Sort /@ qco["Order"];
+    traceOrder = circuit["TraceOrder"];
+    eigenOrder = circuit["Eigenorder"];
+    order = Sort /@ circuit["Order"];
+    outputOrder = DeleteElements[order[[1]], Join[traceOrder, eigenOrder]];
+    bendQ = AnyTrue[circuit["Operators"], #["MatrixQ"] &];
+    If[ bendQ,
+        circuit = circuit["Bend"];
+        If[ circuit["TraceQudits"] > 0,
+            circuit = circuit /* ({"Cap", #[[1, 2]]} -> #[[All, 1]] & /@ Partition[Thread[{circuit["TraceOrder"], circuit["TraceDimensions"]}], 2])
+        ]
+    ];
+    net = ConfirmBy[circuit["TensorNetwork", "PrependInitial" -> False], TensorNetworkQ];
+    order = {DeleteElements[order[[1]], traceOrder], order[[2]]};
     transpose = Ordering @ OrderingBy[TensorNetworkFreeIndices[net], Replace[{Superscript[_, x_] :> {0, x}, Subscript[_, x_] :> {1, x}}]];
     res = Confirm @ ContractTensorNetwork[net];
     If[ transpose =!= {},
@@ -252,36 +256,26 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
     ];
     res = QuantumState[
         SparseArrayFlatten[res],
-        qco["Basis"]
+        circuit["Basis"]
     ];
-    If[ TrueQ[OptionValue["Unbend"]],
-        res = res["PermuteOutput", InversePermutation @ FindPermutation[Join[
-            Range[(traceQudits + targets) / 2],
-            Range[(traceQudits + targets) / 2] + (max + traceQudits + targets) / 2,
-            Range[max / 2] + (traceQudits + targets) / 2,
-            Range[max / 2] + max / 2 + traceQudits + targets
-        ]]]["Unbend"];
-        order = {Drop[Drop[order[[1]], (traceQudits + targets) / 2], - max / 2], Take[order[[2]], Length[order[[2]] / 2]]};
-
-        If[ traceQudits > 0,
-            res = QuantumPartialTrace[res, Take[qco["TraceOrder"], traceQudits / 2] - qco["Min"] + 1];
-            order = {Replace[order[[1]], Alternatives @@ Drop[qco["TraceOrder"], traceQudits / 2] -> Nothing, {1}], order[[2]]}
+    If[ traceOrder =!= {} && ! bendQ,
+        res = QuantumPartialTrace[res, traceOrder - circuit["Min"] + 1]
+    ];
+    If[ bendQ,
+        If[ eigenOrder =!= {},
+            res = res["PermuteOutput", InversePermutation @ FindPermutation[
+                Join[
+                    Catenate[{- Length[eigenOrder] + # - 1, # + Length[outputOrder]} & /@ Range[Length[eigenOrder]]],
+                    outputOrder
+                ]
+            ]];
         ];
+        res = res["Unbend"]
+    ];
 
-        res = If[ targets > 0,
-            QuantumMeasurementOperator[QuantumOperator[res, order], Take[qco["Target"], targets / 2]],
-            QuantumOperator[res, order]
-        ],
-
-        If[ traceQudits > 0,
-            res = QuantumPartialTrace[res, qco["TraceOrder"] - qco["Min"] + 1];
-            order = {Replace[order[[1]], Alternatives @@ qco["TraceOrder"] -> Nothing, {1}], order[[2]]}
-        ];
-
-        res = If[ targets > 0,
-            QuantumMeasurementOperator[QuantumOperator[res, order], qco["Target"]],
-            QuantumOperator[res, order]
-        ]
+    res = If[ eigenOrder =!= {},
+        QuantumMeasurementOperator[QuantumOperator[res, order], qco["Target"]],
+        QuantumOperator[res, order]
     ];
     res
 ]

@@ -91,12 +91,37 @@ QuantumTensorProduct[qo1_QuantumOperator, qo2_QuantumOperator] :=
         }
     ]
 
+QuantumTensorProduct[qc1_QuantumChannel, qc2_QuantumChannel] :=
+    QuantumChannel @ QuantumTensorProduct[
+        qc1["QuantumOperator"],
+        QuantumOperator[qc2["QuantumOperator"], {
+            With[{neg = Select[qc2["OutputOrder"], NonPositive], pos = Select[qc2["OutputOrder"], Positive]},
+                Join[neg - Count[qc1["OutputOrder"], _ ? NonPositive], pos - Min[pos] + 1 + Max[qc1["Order"]]]
+            ],
+            qc2["InputOrder"] - Min[qc2["InputOrder"]] + 1 + Max[qc1["Order"]]
+        }]
+    ]["Sort"]
+
+
+QuantumTensorProduct[qmo1_QuantumMeasurementOperator, qmo2_QuantumMeasurementOperator] /; qmo1["POVMQ"] && ! qmo2["POVMQ"] || ! qmo1["POVMQ"] && qmo2["POVMQ"]:=
+    QuantumTensorProduct[qmo1["POVM"], qmo2["POVM"]]
 
 QuantumTensorProduct[qmo1_QuantumMeasurementOperator, qmo2_QuantumMeasurementOperator] :=
-    QuantumMeasurementOperator[QuantumTensorProduct[qmo1["QuantumOperator"], qmo2["QuantumOperator"]], Union[qmo1["Target"], qmo2["Target"]]]
+    QuantumMeasurementOperator[
+        QuantumTensorProduct[
+            qmo1["QuantumOperator"],
+            QuantumOperator[qmo2["QuantumOperator"], {
+                With[{neg = Select[qmo2["OutputOrder"], NonPositive], pos = Select[qmo2["OutputOrder"], Positive]},
+                    Join[neg - Count[qmo1["OutputOrder"], _ ? NonPositive], pos - Min[pos] + 1 + Max[qmo1["Order"]]]
+                ],
+                qmo2["InputOrder"] - Min[qmo2["InputOrder"]] + 1 + Max[qmo1["Order"]]
+            }]
+        ]["Sort"],
+        Join[qmo1["Target"], qmo2["Target"]]
+    ]
 
 
-QuantumTensorProduct[qm1_QuantumMeasurement, qm2_QuantumMeasurement] := QuantumMeasurement @ QuantumTensorProduct[qm1["State"], qm2["State"]]
+QuantumTensorProduct[qm1_QuantumMeasurement, qm2_QuantumMeasurement] := QuantumMeasurement @ QuantumTensorProduct[qm1["QuantumOperator"], qm2["QuantumOperator"]]
 
 
 QuantumTensorProduct[qo_QuantumOperator, qmo_QuantumMeasurementOperator] := QuantumTensorProduct[QuantumMeasurementOperator[qo], qmo]

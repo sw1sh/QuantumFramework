@@ -264,6 +264,8 @@ QuantumOperator[{qo : _ ? QuantumOperatorQ, multiplicity_Integer ? Positive}, op
 
 QuantumOperator[qc_ ? QuantumCircuitOperatorQ, opts___] := QuantumOperator[qc["QuantumOperator"], opts]
 
+QuantumOperator[q : _ ? QuantumChannelQ | _ ? QuantumMeasurementOperatorQ | _ ? QuantumMeasurementQ, opts___] := QuantumOperator[q["Operator"], opts]
+
 QuantumOperator[x : Except[_ ? QuantumStateQ | _ ? QuantumOperatorQ | _ ? QuantumCircuitOperatorQ], args___] := Enclose @
     ConfirmBy[QuantumOperator[{"Diagonal", If[AtomQ[x], x, HoldForm[x]]}, args], QuantumOperatorQ]
 

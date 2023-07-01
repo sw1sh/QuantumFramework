@@ -60,6 +60,22 @@ QuantumChannelProp[qc_, name : "Dagger" | "Conjugate" | "Dual", args___] := Quan
 
 QuantumChannelProp[qc_, "Shift", n : _Integer ? NonNegative : 1] := QuantumChannel[QuantumOperator[qc["Operator"], qc["Order"] /. k_Integer /; k > 0 :> k + n]]
 
+QuantumChannelProp[qc_, "Bend", autoShift : _Integer ? Positive : Automatic] := With[{shift = Replace[autoShift, Automatic :> Max[qc["Order"]]]},
+    If[ qc["MatrixQ"],
+        QuantumChannel @ QuantumOperator[
+            qc["State"]["Bend"],
+            {
+                With[{neg = Select[qc["OutputOrder"], NonPositive], pos = Select[qc["OutputOrder"], Positive]},
+                    Join[qc["OutputOrder"], neg - Count[qc["OutputOrder"], _ ? NonPositive], pos - Min[pos] + 1 + shift]
+                ],
+                Join[qc["InputOrder"], qc["InputOrder"] - Min[qc["InputOrder"]] + 1 + shift]
+            }
+        ],
+        QuantumTensorProduct[qc, qc["Shift", shift]]
+    ]
+]
+
+
 QuantumChannelProp[qc_, "CircuitDiagram", opts___] :=
     QuantumCircuitOperator[qc]["Diagram", opts]
 

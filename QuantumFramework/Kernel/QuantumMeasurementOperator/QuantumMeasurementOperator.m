@@ -122,6 +122,7 @@ Enclose @ Block[{
     QuantumMeasurementOperator[basis -> If[basis["Dimension"] == 1, {1}, Range[0, basis["Dimension"] - 1]], target]
 ]
 
+QuantumMeasurementOperator[qm_ ? QuantumMeasurementQ, opts___] := QuantumMeasurementOperator[qm["QuantumOperator"], opts]
 
 QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOperatorQ | _ ? QuantumBasisQ], ___], target_ ? targetQ] :=
     Enclose @ With[{qb = ConfirmBy[QuantumBasis[args], QuantumBasisQ]}, QuantumMeasurementOperator[qb, target]]

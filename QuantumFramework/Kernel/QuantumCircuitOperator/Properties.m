@@ -162,15 +162,17 @@ QuantumCircuitOperatorProp[qco_, "OutputOrderQuditMapping"] := Thread[# -> Range
 
 QuantumCircuitOperatorProp[qco_, "InputDimensions"] :=
     (q |-> #["InputDimensions"][[ q /. #["InputOrderQuditMapping"] ]] & @
-        SelectFirst[qco["Operators"], op |-> MemberQ[op["FullInputOrder"], q]]) /@ qco["InputOrder"]
+        SelectFirst[qco["NormalOperators"], op |-> MemberQ[op["FullInputOrder"], q]]) /@ qco["InputOrder"]
 
 QuantumCircuitOperatorProp[qco_, "InputDimension"] := Times @@ qco["InputDimensions"]
 
 QuantumCircuitOperatorProp[qco_, "OutputDimensions"] :=
     (q |-> #["OutputDimensions"][[ q /. #["OutputOrderQuditMapping"] ]] & @
-        SelectFirst[Reverse @ qco["Operators"], op |-> MemberQ[op["FullOutputOrder"], q]]) /@ qco["OutputOrder"]
+        SelectFirst[Reverse @ qco["NormalOperators"], op |-> MemberQ[op["FullOutputOrder"], q]]) /@ qco["OutputOrder"]
 
 QuantumCircuitOperatorProp[qco_, "OutputDimension"] := Times @@ qco["OutputDimensions"]
+
+QuantumCircuitOperatorProp[qco_, "TraceDimensions"] := Extract[qco["OutputDimensions"], Lookup[PositionIndex[qco["OutputOrder"]], qco["TraceOrder"]]]
 
 QuantumCircuitOperatorProp[qco_, "Input"] := If[Length[qco["InputOrder"]] > 0,
     With[{ops = qco["NormalOperators"]},
@@ -216,19 +218,15 @@ QuantumCircuitOperatorProp[qco_, "TargetArity"] := Length @ qco["Target"]
 
 QuantumCircuitOperatorProp[qco_, "Eigenqudits"] := Total[#["Eigenqudits"] & /@ Select[qco["Flatten"]["Operators"], QuantumMeasurementOperatorQ]]
 
-QuantumCircuitOperatorProp[qco_, "TraceOrder"] :=
-    Reverse @ Fold[
-        Which[
-            QuantumMeasurementOperatorQ[#2],
-            {#1[[1]], #1[[2]] - 1},
-            QuantumChannelQ[#2],
-            {Append[#1[[1]], #1[[2]]], #1[[2]] - 1},
-            True,
-            #1
-        ] &,
-        {{}, 0},
-        qco["Flatten"]["Operators"]
-    ][[1]]
+QuantumCircuitOperatorProp[qco_, "TraceOrder"] := Catenate @ MapThread[
+    If[QuantumChannelQ[#1], Select[#2, NonPositive], {}] &,
+    {qco["Flatten"]["Operators"], qco["Flatten"]["NormalOrders"][[All, 1]]}
+]
+
+QuantumCircuitOperatorProp[qco_, "Eigenorder"] := Catenate @ MapThread[
+    If[QuantumMeasurementOperatorQ[#1] || QuantumMeasurementQ[#1], Select[#2, NonPositive], {}] &,
+    {qco["Flatten"]["Operators"], qco["Flatten"]["NormalOrders"][[All, 1]]}
+]
 
 QuantumCircuitOperatorProp[qco_, "TraceQudits"] := Total[#["TraceQudits"] & /@ Select[qco["Flatten"]["Operators"], QuantumChannelQ]]
 
@@ -259,9 +257,16 @@ QuantumCircuitOperatorProp[qco_, "Dagger"] :=
 QuantumCircuitOperatorProp[qco_, prop : "Conjugate" | "Dual"] :=
     QuantumCircuitOperator[#[prop] & /@ qco["Operators"], SuperStar[qco["Label"]]]
 
+QuantumCircuitOperatorProp[qco_, "Bend"] := QuantumCircuitOperator[
+    Map[
+        If[#["MatrixQ"], #["Bend", qco["Max"]], Splice[{#, #["Conjugate"]["Shift", qco["Max"]]}]] &,
+        qco["Operators"]
+    ],
+    qco["Label"]
+]
 
 QuantumCircuitOperatorProp[qco_, "Normal"] :=
-    QuantumCircuitOperator[Which[QuantumMeasurementOperatorQ[#], #["SuperOperator"], QuantumChannelQ[#], #["QuantumOperator"], True, #] & /@ qco["Operators"], qco["Label"]]
+    QuantumCircuitOperator[QuantumOperator /@ qco["Operators"], qco["Label"]]
 
 QuantumCircuitOperatorProp[qco_, "TensorNetwork", opts : OptionsPattern[QuantumTensorNetwork]] := QuantumTensorNetwork[qco["Flatten"], opts]
 

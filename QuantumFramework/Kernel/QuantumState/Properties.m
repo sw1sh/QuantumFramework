@@ -7,7 +7,7 @@ $QuantumStateProperties = {
     "Amplitudes", "Weights", "Probabilities", "Probability", "StateVector", "DensityMatrix",
     "NormalizedState", "NormalizedAmplitudes", "NormalizedStateVector", "NormalizedDensityMatrix",
     "Entropy", "VonNeumannEntropy",
-    "Purity", "Type", "PureStateQ", "MixedStateQ",
+    "Purity", "Type", "PureStateQ", "MixedStateQ", "MatrixQ", "VectorQ", "UnknownQ", "PhysicalQ",
     "Kind", "Scalar",
     "Norm", "TraceNorm", "NormalizedQ",
     "BlochSphericalCoordinates", "BlochCartesianCoordinates",
