@@ -25,6 +25,10 @@ SetAttributes[QuantumOperator, NHoldRest]
 QuantumOperator[arg : _ ? QuantumStateQ, order : {_ ? orderQ, _ ? orderQ}, opts__] :=
     Enclose @ QuantumOperator[ConfirmBy[QuantumState[arg, opts], QuantumStateQ], order]
 
+QuantumOperator[qs_ ? QuantumStateQ, order : {outputOrder_ ? orderQ, inputOrder_ ? orderQ}] /;
+    qs["Qudits"] == Length[outputOrder] + Length[inputOrder] && (qs["OutputQudits"] != Length[outputOrder] || qs["InputQudits"] != Length[inputOrder]) :=
+    QuantumOperator[qs["SplitDual", Length[outputOrder]], order]
+
 QuantumOperator[qs_ ? QuantumStateQ] :=
     QuantumOperator[
         qs,
@@ -64,19 +68,19 @@ QuantumOperator[qs_ ? QuantumStateQ, opts : PatternSequence[Except[{_ ? orderQ, 
 ]
 
 
-QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, order : _ ? autoOrderQ : {1}, args___, opts : OptionsPattern[]] := Block[{
+QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, order : _ ? autoOrderQ : Automatic, args___, opts : OptionsPattern[]] := Block[{
     dimensions = TensorDimensions[tensor],
     outputOrder,
     basis,
     inputDimension, outputDimension
 },
+    basis = QuantumBasis[args];
     outputOrder = Replace[order, {
-        Automatic :> Range[Quotient[Length[dimensions], 2]],
+        Automatic :> Range[Min[basis["OutputQudits"], Length[dimensions]]],
         {o_ ? orderQ, _} :> o,
-        {Automatic, o_ ? orderQ} :> Range[Length[dimensions] - Length[o]]}
+        {Automatic, o_ ? orderQ} :> Range[Max[Length[dimensions] - Length[o], 0]]}
     ];
     {outputDimension, inputDimension} = Times @@@ TakeDrop[dimensions, Length[outputOrder]];
-    basis = QuantumBasis[args];
     If[ basis["OutputDimension"] != outputDimension,
         basis = QuantumBasis[basis, "Output" -> QuditBasis[dimensions[[;; Length[outputOrder]]]]]
     ];

@@ -21,7 +21,7 @@ quantumChannel[qo_ ? QuantumOperatorQ] := QuantumChannel @
             qo["Output"]["Representations"]
     ]
 
-quantumChannel[ops_List, order_ ? orderQ, basisArgs___] := With[{
+quantumChannel[ops_List, order : _ ? orderQ : {1}, basisArgs___] := With[{
     basis = QuantumBasis[basisArgs]
 },
     quantumChannel @ QuantumOperator[
@@ -30,10 +30,10 @@ quantumChannel[ops_List, order_ ? orderQ, basisArgs___] := With[{
             QuantumTensorProduct[
                 QuantumBasis[Length[ops] ^ Length[order]],
                 QuantumBasis[QuantumBasis[basis["Output"], basis["Output"]], Length[order]]
-            ]
+            ],
+            "Label" -> basis["Label"]
         ],
-        {Automatic, order},
-        "Label" -> basis["Label"]
+        {Prepend[order, 0], order}
     ]
 ]
 
