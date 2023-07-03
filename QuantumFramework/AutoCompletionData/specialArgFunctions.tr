@@ -271,6 +271,14 @@
             "EntanglementEntropy",
             "RenyiEntropy",
             "Realignment"
+        },
+        {
+            "Concurrence",
+            "Negativity",
+            "LogNegativity",
+            "EntanglementEntropy",
+            "RenyiEntropy",
+            "Realignment"
         }
     },
     "QuantumDistance" -> {
