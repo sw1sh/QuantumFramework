@@ -36,9 +36,10 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "LogN
     Enclose @ Log2 @ ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]["Transpose", {2}]["TraceNorm"]
 
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "EntanglementEntropy"] :=
-    Enclose @ QuantumPartialTrace[ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &], {1}]["VonNeumannEntropy"]
-
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "EntanglementEntropy"] := Enclose @ With[{bp = Confirm @ qs["Bipartition", biPartition]["Normalized"]},
+    Quantity[Total[-# Log2[#] & @ Select[Confirm @ bp["Probability"], # > 0 &]], "Bits"]
+    (* Enclose @ QuantumPartialTrace[ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &], {1}]["VonNeumannEntropy"] *)
+]
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "RenyiEntanglementEntropy" | "RenyiEntropy"] :=
     QuantumEntanglementMonotone[qs, biPartition, {"RenyiEntanglementEntropy", 1 / 2}]
