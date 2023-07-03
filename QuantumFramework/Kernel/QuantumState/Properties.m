@@ -122,9 +122,13 @@ QuantumStateProp[qs_, "StateVector"] := Module[{result},
 
 QuantumStateProp[qs_, "Scalar" | "Number"] /; qs["Kind"] === "Scalar" := First[Flatten[qs["State"]]]
 
-QuantumStateProp[qs_, "Weights"] := If[qs["PureStateQ"],
+QuantumStateProp[qs_, "Weights"] := Which[
+    qs["PureStateQ"],
     Abs[qs["StateVector"]] ^ 2,
-    Diagonal @ qs["DensityMatrix"]
+    qs["PhysicalQ"],
+    Diagonal @ qs["DensityMatrix"],
+    True,
+    qs["Physical"]["Weights"]
 ]
 
 QuantumStateProp[qs_, "Probabilities"] := Re @ (qs["Weights"] / Total[qs["Weights"]])
@@ -507,8 +511,8 @@ QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := With[{qb = qs["Basis"]
 
 QuantumStateProp[qs_, "Physical"] := If[qs["PhysicalQ"], qs,
 	Block[{d, u},
-		{d, u} = eigensystem[qs["DensityMatrix"], Chop -> True, "Normalize" -> True];
-		d = Normalize[Max[#, 0] & /@ d, Total];
+		{d, u} = eigensystem[qs["NormalizedDensityMatrix"], Chop -> True, "Normalize" -> True];
+		d = Normalize[Max[#, 0] & /@ Re[d], Total];
 		QuantumState[Transpose[u] . DiagonalMatrix[d] . Conjugate[u] // Chop, qs["Basis"]]
     ]
 ]

@@ -137,7 +137,11 @@ eigensystem[matrix_, OptionsPattern[]] := Module[{values, vectors},
         ConfirmBy[
             If[ TrueQ[OptionValue[Chop]],
                 If[ Precision[matrix] === MachinePrecision,
-                    Eigensystem[matrix, ZeroTest -> (Chop[#1] == 0 &)],
+                    Quiet @ Check[
+                        Eigensystem[matrix, ZeroTest -> (Chop[N[#1]] == 0 &)],
+                        Eigensystem[matrix],
+                        Eigensystem::eivec0
+                    ],
                     Eigensystem[Chop @ matrix]
                 ],
                 Eigensystem[matrix]
