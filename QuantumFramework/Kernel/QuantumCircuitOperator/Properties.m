@@ -45,12 +45,12 @@ QuantumCircuitOperatorProp[qco_, "NormalOperators", elements_ : False] := Block[
             QuantumMeasurementOperatorQ[#],
             If[ #["State"]["MatrixStateQ"] && #["InputOrder"] === {},
                 QuantumOperator[
-                    #["POVM"]["State"]["Bend"],
+                    #["Sort"]["POVM"]["State"]["Bend"],
                     ConstantArray[Join[Reverse @ Table[getNext[], #["Eigenqudits"]], Select[#["OutputOrder"], Positive]], 2],
                     "Label" -> "Measurement"
                 ],
                 QuantumOperator[
-                    #["POVM"]["State"],
+                    #["Sort"]["POVM"]["State"],
                     {Join[Reverse @ Table[getNext[], #["Eigenqudits"]], Select[#["OutputOrder"], Positive]], #["InputOrder"]},
                     "Label" -> "Measurement"
                 ]

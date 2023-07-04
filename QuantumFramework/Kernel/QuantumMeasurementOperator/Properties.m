@@ -228,7 +228,7 @@ QuantumMeasurementOperatorProp[qmo_, "QASM"] := StringRiffle[MapIndexed[StringTe
 
 
 QuantumMeasurementOperatorProp[qmo_, "Shift", n : _Integer ? NonNegative : 1] :=
-    QuantumMeasurementOperator[QuantumOperator[qmo, qmo["Order"] /. k_Integer ? Positive :> k + n], qmo["Target"] + n]
+    QuantumMeasurementOperator[QuantumOperator[qmo]["Reorder", qmo["Order"] /. k_Integer ? Positive :> k + n], qmo["Target"] + n]
 
 QuantumMeasurementOperatorProp[qmo_, "Bend", autoShift : _Integer ? Positive : Automatic] := With[{
     shift = Replace[autoShift, Automatic :> Max[qmo["Order"]]],

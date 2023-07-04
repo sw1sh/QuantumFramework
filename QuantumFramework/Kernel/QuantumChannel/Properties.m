@@ -58,7 +58,7 @@ QuantumChannelProp[qc_, "NEvolutionChannel"] := QuantumChannel[
 
 QuantumChannelProp[qc_, name : "Dagger" | "Conjugate" | "Dual", args___] := QuantumChannel[qc["Operator"][name, args]]
 
-QuantumChannelProp[qc_, "Shift", n : _Integer ? NonNegative : 1] := QuantumChannel[QuantumOperator[qc["Operator"], qc["Order"] /. k_Integer /; k > 0 :> k + n]]
+QuantumChannelProp[qc_, "Shift", n : _Integer ? NonNegative : 1] := QuantumChannel[qc["Operator"]["Reorder", qc["Order"] /. k_Integer /; k > 0 :> k + n]]
 
 QuantumChannelProp[qc_, "Bend", autoShift : _Integer ? Positive : Automatic] := With[{shift = Replace[autoShift, Automatic :> Max[qc["Order"]]]},
     If[ qc["MatrixQ"],
