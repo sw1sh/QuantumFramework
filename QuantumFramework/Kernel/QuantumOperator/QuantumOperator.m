@@ -75,6 +75,9 @@ QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, order : _ ? autoOrd
     inputDimension, outputDimension
 },
     basis = QuantumBasis[args];
+    If[ Times @@ dimensions === basis["Dimension"],
+        dimensions = basis["Dimensions"]
+    ];
     outputOrder = Replace[order, {
         Automatic :> Range[Min[basis["OutputQudits"], Length[dimensions]]],
         {o_ ? orderQ, _} :> o,

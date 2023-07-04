@@ -117,7 +117,7 @@ quantumCircuitCompile[qco_QuantumCircuitOperator, OptionsPattern[]] :=
         $Failed
     ]
 
-QuantumCircuitOperatorProp[qco_, "QuantumOperator" | "CircuitOperator" | "Compile", opts : OptionsPattern[quantumCircuitCompile]] := quantumCircuitCompile[qco, opts]
+QuantumCircuitOperatorProp[qco_, "QuantumOperator" | "CircuitOperator" | "Compile", opts : OptionsPattern[quantumCircuitCompile]] := quantumCircuitCompile[qco["Flatten"], opts]
 
 QuantumCircuitOperatorProp[qco_, "Gates"] := Length @ qco["Flatten"]["Operators"]
 

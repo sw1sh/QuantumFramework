@@ -220,7 +220,7 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
         QuantumCircuitOperator[Prepend[qs] @ qco["Operators"]],
         qco
     ];
-    res = TensorNetworkCompile[circuit];
+    res = TensorNetworkCompile[circuit, "Trace" -> True];
     Which[
         QuantumMeasurementOperatorQ[res],
         QuantumMeasurement[res],
@@ -231,6 +231,7 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
     ]
 ]
 
+Options[TensorNetworkCompile] = {"Trace" -> False}
 
 TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ Block[{
     circuit = qco, net, bendQ, transpose, order, res,
@@ -249,7 +250,6 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
         ]
     ];
     net = ConfirmBy[circuit["TensorNetwork", "PrependInitial" -> False], TensorNetworkQ];
-    order = {DeleteElements[order[[1]], traceOrder], order[[2]]};
     transpose = Ordering @ OrderingBy[TensorNetworkFreeIndices[net], Replace[{Superscript[_, x_] :> {0, x}, Subscript[_, x_] :> {1, x}}]];
     res = Confirm @ ContractTensorNetwork[net];
     If[ transpose =!= {},
@@ -259,8 +259,9 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
         SparseArrayFlatten[res],
         circuit["Basis"]
     ];
-    If[ traceOrder =!= {} && ! bendQ,
-        res = QuantumPartialTrace[res, traceOrder - circuit["Min"] + 1]
+    If[ TrueQ[OptionValue["Trace"]] && traceOrder =!= {} && ! bendQ,
+        res = QuantumPartialTrace[res, traceOrder - circuit["Min"] + 1];
+        order = {DeleteElements[order[[1]], traceOrder], order[[2]]};
     ];
     If[ bendQ,
         If[ eigenOrder =!= {},
@@ -271,8 +272,12 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
         res = res["Unbend"]
     ];
 
-    res = If[ eigenOrder =!= {},
+    res = Which[
+        eigenOrder =!= {},
         QuantumMeasurementOperator[QuantumOperator[res, order], qco["Target"]],
+        ! TrueQ[OptionValue["Trace"]] && traceOrder =!= {},
+        QuantumChannel[QuantumOperator[res, order]],
+        True,
         QuantumOperator[res, order]
     ];
     res
