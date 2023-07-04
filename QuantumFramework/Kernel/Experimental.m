@@ -5,6 +5,7 @@ PackageScope["QuantumBeamSearch"]
 PackageScope["QuantumDiagramProcess"]
 
 PackageExport["QuantumCircuitMultiwayGraph"]
+PackageExport["QuantumStateMPS"]
 
 
 
@@ -116,5 +117,39 @@ QuantumDiagramProcess[qco_QuantumCircuitOperator] := With[{
             ] & /@ Range[n]
         ]
     ]
+]
+
+
+QuantumStateMPS[qs_QuantumState] := Block[{
+	decompose = qs["DecomposeWithProbabilities"],
+	dimensions = Catenate[Table @@@ FactorInteger[qs["Dimension"]]],
+	proba, n, rowVector, colVector, matrices
+},
+	n = Length[decompose];
+	proba = Keys[decompose];
+
+	matrices = If[n > 1,
+		rowVector = QuantumOperator[{Table[1, n]}, {{1}, {}}, QuantumBasis[{n}, {}, "Label" -> TraditionalForm[{Table[1, n]}]]];
+		colVector = QuantumOperator[{List /@ proba}, {{}, {1}}, QuantumBasis[{}, {n}, "Label" -> TraditionalForm[{List /@ proba}]]];
+		matrices = MapIndexed[
+			QuantumOperator[
+				Transpose[
+					ReplacePart[ConstantArray[Table[0, #1[[2]]], {n, n}], Thread[{#, #} & /@ Range[n] -> #1[[1]], List, 2]],
+					2 <-> 3
+				],
+				{Prepend[#2 + 1, 1], {1}},
+				QuantumBasis[{n, #1[[2]]}, {n}]
+			] &,
+			Thread[{Transpose @ Map[#["Computational"]["StateVector"] &, Values[decompose], {2}], dimensions}]
+		],
+
+		rowVector = Nothing;
+		colVector = QuantumOperator[{List /@ proba}, {{}, {}}, QuantumBasis[{}, {}, "Label" -> TraditionalForm[{List /@ proba}]]];
+		matrices = MapIndexed[
+			QuantumOperator[{{#1[[1]]}}, {#2, {}}, QuantumBasis[{#1[[2]]}, {}]] &,
+			Thread[{Transpose @ Map[#["Computational"]["StateVector"] &, Values[decompose], {2}], dimensions}]
+		]
+	];
+	QuantumCircuitOperator[{rowVector, Splice @ matrices, colVector}]
 ]
 
