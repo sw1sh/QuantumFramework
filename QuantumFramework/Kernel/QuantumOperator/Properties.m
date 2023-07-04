@@ -116,7 +116,7 @@ QuantumOperatorProp[qo_, "ControlOrder1"] :=
     FirstCase[qo["Label"], Subscript["C", _][control1_, ___] :> control1, {}, {0}]
 
 QuantumOperatorProp[qo_, "ControlOrder0"] :=
-    FirstCase[qo["Label"], Subscript["C", _][_, control0] :> control0, {}, {0}]
+    FirstCase[qo["Label"], Subscript["C", _][_, control0_] :> control0, {}, {0}]
 
 QuantumOperatorProp[qo_, "ControlOrder"] :=
     FirstCase[qo["Label"], Subscript["C", _][control1_, control0_ : {}] :> Join[control1, control0], {}, {0}]
@@ -364,7 +364,34 @@ QuantumOperatorProp[qo_, "OrderedFormula", OptionsPattern["Normalize" -> False]]
     ]
 ]
 
-QuantumOperatorProp[qo_, "Shift", n : _Integer ? NonNegative : 1] := QuantumOperator[qo, qo["Order"] /. k_Integer :> k + n]
+QuantumOperatorProp[qo_, "Reorder", order : {_ ? orderQ | Automatic, _ ? orderQ | Automatic}, controlQ_ : False] := With[{
+    inputRepl =
+        Thread[
+            Take[
+                If[ TrueQ[controlQ],
+                    Join[#, Complement[qo["FullInputOrder"], #]] & @ Join[qo["ControlOrder"], qo["TargetOrder"]],
+                    Take[qo["FullInputOrder"], UpTo[Length[qo["FullInputOrder"]]]]
+                ],
+                UpTo[Length[order[[2]]]]
+            ] ->
+            Take[Replace[order[[2]], Automatic :> qo["FullInputOrder"]], UpTo[Length[qo["FullInputOrder"]]]]
+        ],
+    outputRepl =
+        Thread[
+            Take[qo["FullOutputOrder"], UpTo[Length[order[[1]]]]] ->
+            Take[Replace[order[[1]], Automatic :> qo["FullOutputOrder"]], UpTo[Length[qo["FullOutputOrder"]]]]]
+},
+    QuantumOperator[
+        qo["State"],
+        {qo["FullOutputOrder"] /. outputRepl, qo["FullInputOrder"] /. inputRepl},
+        "Label" -> Replace[qo["Label"],
+            Subscript["C", name_][c1_, c0_] :> Subscript["C", name][c1 /. inputRepl, c0 /. inputRepl]
+        ]
+    ]
+]
+
+QuantumOperatorProp[qo_, "Shift", n : _Integer ? NonNegative : 1] := qo["Reorder", qo["Order"] /. k_Integer :> k + n]
+
 
 
 QuantumOperatorProp[qo_, "UnstackOutput", n_Integer : 1] /; 1 <= n <= qo["OutputQudits"] :=

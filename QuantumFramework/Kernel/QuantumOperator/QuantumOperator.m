@@ -227,25 +227,7 @@ QuantumOperator[qo_ ? QuantumOperatorQ, order : {order1 : _ ? orderQ | Automatic
 ]
 
 
-QuantumOperator[qo_ ? QuantumOperatorQ, order : {_ ? orderQ | Automatic, _ ? orderQ | Automatic}] := With[{
-    inputRepl =
-        Thread[
-            Take[Join[#, Complement[qo["FullInputOrder"], #]] & @ Join[qo["ControlOrder"], qo["TargetOrder"]], UpTo[Length[order[[2]]]]] ->
-            Take[Replace[order[[2]], Automatic -> qo["FullInputOrder"]], UpTo[Length[qo["FullInputOrder"]]]]
-        ],
-    outputRepl =
-        Thread[
-            Take[qo["FullOutputOrder"], UpTo[Length[order[[1]]]]] ->
-            Take[Replace[order[[1]], Automatic -> qo["FullOutputOrder"]], UpTo[Length[qo["FullOutputOrder"]]]]]
-},
-    QuantumOperator[
-        qo["State"],
-        {qo["FullOutputOrder"] /. outputRepl, qo["FullInputOrder"] /. inputRepl},
-        "Label" -> Replace[qo["Label"],
-            Subscript["C", name_][c1_, c0_] :> Subscript["C", name][c1 /. inputRepl, c0 /. inputRepl]
-        ]
-    ]
-]
+QuantumOperator[qo_ ? QuantumOperatorQ, order : {_ ? orderQ | Automatic, _ ? orderQ | Automatic}] := qo["Reorder", order, True]
 
 QuantumOperator[qo_ ? QuantumOperatorQ, order1 : _ ? orderQ | Automatic -> order2 : _ ? orderQ | Automatic, opts___] :=
     QuantumOperator[qo, {order2, order1}, opts]
