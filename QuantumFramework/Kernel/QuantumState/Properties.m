@@ -175,7 +175,7 @@ QuantumStateProp[qs_, "NormalizedAmplitudes"] := Enclose @ With[{amplitudes = qs
 
 QuantumStateProp[qs_, "NormalizedStateVector"] := Normalize @ qs["StateVector"]
 
-QuantumStateProp[qs_, "CanonicalStateVector"] := qs["StateVector"] / First[SparseArray[Chop @ qs["StateVector"]]["ExplicitValues"]]
+QuantumStateProp[qs_, "CanonicalStateVector"] := qs["StateVector"] / First[SparseArray[Chop @ qs["StateVector"]]["ExplicitValues"], 1]
 
 QuantumStateProp[qs_, "NormalizedDensityMatrix"] := Quiet @ Enclose @ Confirm[normalizeMatrix @ qs["DensityMatrix"]]
 
