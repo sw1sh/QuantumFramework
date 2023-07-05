@@ -192,14 +192,21 @@ QuantumOperator[{"GlobalPhase", angle_, dimension : _Integer ? Positive : 1}, op
 
 QuantumOperator[{"Diagonal", x_, dimension : _Integer ? Positive : 2}, opts___] := QuantumOperator[{"Diagonal", x, dimension}, {1}, opts]
 
-QuantumOperator[{"Diagonal", x_, dimension : _Integer ? Positive : 2}, order_ ? orderQ, opts___] := QuantumOperator[
+QuantumOperator[{"Diagonal", x_, dimension : _Integer ? Positive : 2}, order_ ? orderQ, opts___] :=
+    QuantumOperator[{"Diagonal", Table[x, dimension ^ Length[order]], dimension}, order, opts]
+
+QuantumOperator[{"Diagonal", x_List, dimension : _Integer ? Positive : 2}, order_ ? orderQ, opts___] := With[{
+    size = Ceiling[Log[dimension, Length[x]]]
+},
     QuantumOperator[
-        ReplacePart[identityMatrix[dimension ^ Length[order]], {i_, i_} -> x],
-        dimension,
-        "Label" -> OverHat[x]
-    ],
-    order,
-    opts
+        QuantumOperator[
+            DiagonalMatrix[PadRight[x, dimension ^ Max[size, Length[order]]]],
+            dimension,
+            "Label" -> OverHat[x]
+        ],
+        Join[order, Max[order] + Range[Max[size - Length[order], 0]]],
+        opts
+    ]
 ]
 
 
