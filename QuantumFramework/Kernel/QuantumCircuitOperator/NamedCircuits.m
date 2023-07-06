@@ -65,18 +65,19 @@ QuantumCircuitOperator[{"GroverPhaseAmplification" | "GroverPhaseDiffusion",
     QuantumCircuitOperator[{
         Splice[Table[QuantumOperator["H", {q}], {q, xs}]],
         Splice[Table[QuantumOperator["X", {q}], {q, xs}]],
-        QuantumOperator[{"Controlled", op, DeleteCases[xs, Alternatives @@ op["OutputOrder"]]}],
+        QuantumOperator[{"Controlled", op, DeleteElements[xs, op["OutputOrder"]]}],
         Splice[Table[QuantumOperator["X", {q}], {q, xs}]],
         Splice[Table[QuantumOperator["H", {q}], {q, xs}]]
     },
-        opts
+        opts,
+        "GroverDiffusion"
     ]
 ]
 
 QuantumCircuitOperator[{"GroverAmplification0" | "GroverDiffusion0",
     xs : {_Integer ? Positive..},
     gate : _ ? QuantumOperatorQ | Automatic : Automatic
-}, opts___] := Module[{
+}, opts___] := Block[{
     op = If[gate === Automatic, QuantumOperator["NOT", {Max[xs]}], QuantumOperator[gate]], ys
 },
     ys = DeleteCases[xs, Alternatives @@ op["OutputOrder"]];
@@ -94,13 +95,13 @@ QuantumCircuitOperator[{"GroverAmplification0" | "GroverDiffusion0",
 QuantumCircuitOperator[{"GroverPhaseAmplification0" | "GroverPhaseDiffusion0",
     xs : {_Integer ? Positive..},
     gate : _ ? QuantumOperatorQ | Automatic : Automatic
-}, opts___] := Module[{
+}, opts___] := With[{
     op = If[gate === Automatic, QuantumOperator["1", {Max[xs]}], QuantumOperator[gate]]
 },
     QuantumCircuitOperator[
         {
             Splice[Table[QuantumOperator["H", {q}], {q, xs}]],
-            QuantumOperator[{"Controlled0", If[op["Label"] === "1", QuantumOperator["0", {Max[xs]}], - op], DeleteCases[xs, Alternatives @@ op["OutputOrder"]]}],
+            QuantumOperator[{"Controlled0", If[op["Label"] === "1", QuantumOperator["0", op["Order"]], - op], DeleteElements[xs, op["OutputOrder"]]}],
             Splice[Table[QuantumOperator["H", {q}], {q, xs}]]
         },
         opts,
