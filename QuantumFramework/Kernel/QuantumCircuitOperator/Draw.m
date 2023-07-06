@@ -515,7 +515,7 @@ drawWireLabels[wireLabels_, min_, max_, height_, opts : OptionsPattern[]] := Blo
 	labels
 },
 	labels = Replace[wireLabels, {
-		rules : {_Rule...} | _Association :> ReplacePart[Range[min, max], Cases[Normal[rules], HoldPattern[i_Integer /; 1 <= i <= width -> _]]],
+		rules : {_Rule...} | _Association :> ReplacePart[Range[min, max], Cases[Normal[rules], HoldPattern[i_Integer /; min <= i <= max -> _]]],
 		l : Placed[Automatic, _] :> Table[l, max - min + 1],
 		Automatic :> Range[min, max],
 		None -> {}
