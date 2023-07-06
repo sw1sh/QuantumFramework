@@ -21,7 +21,7 @@ $AutoCompletionData = With[{
         "QuantumMeasurementOperator" -> {Join[basisNames, measurementOperatorNames], basisNames},
         "QuantumChannel" -> {channelNames, basisNames},
         "QuantumCircuitOperator" -> {circuitNames},
-        "QuantumEntanglementMonotone" -> {0, entanglementMonotones},
+        "QuantumEntanglementMonotone" -> {0, entanglementMonotones, entanglementMonotones},
         "QuantumDistance" -> {0, 0, distances}
     }
 ]
