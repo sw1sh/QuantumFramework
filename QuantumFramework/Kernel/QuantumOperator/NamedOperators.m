@@ -16,6 +16,7 @@ $QuantumOperatorNames = {
     "Shift", "ShiftPhase", "PhaseSpaceDisplacement", "PhasePoint", "Fano",
     "SUM", "RootNOT",
     "X", "Y", "Z", "PauliX", "PauliY", "PauliZ", "H", "Hadamard",
+    "0", "1",
     "SWAP", "RootSWAP", "CSWAP", "Fredkin",
     "C", "Controlled", "C0", "Controlled0", "CX", "CY", "CZ", "CH", "CT", "CS", "CPHASE", "CNOT",
     "S", "T", "V",
@@ -476,6 +477,10 @@ QuantumOperator[{"PauliZ" | "Z", dimension : _Integer ? Positive}, opts___] := Q
     QuantumOperator[pauliMatrix[3, dimension], dimension, "Label" -> "Z"],
     opts
 ]
+
+QuantumOperator["0", opts___] := QuantumOperator[- "Z", opts, "Label" -> "0"]
+
+QuantumOperator["1", opts___] := QuantumOperator["Z", opts, "Label" -> "1"]
 
 QuantumOperator[{"NOT", dimension : _Integer ? Positive}, opts___] := QuantumOperator[QuantumOperator[{"X", dimension}, "Label" -> "NOT"], opts]
 

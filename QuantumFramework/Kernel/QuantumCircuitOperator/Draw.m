@@ -9,7 +9,7 @@ $DefaultGray = RGBColor[0.537254, 0.537254, 0.537254];
 $GateDefaultBoundaryStyle = {
 	"H" -> RGBColor[0.368417, 0.506779, 0.709798],
 	"T" | "S" -> RGBColor[0.922526, 0.385626, 0.209179],
-	"X" | "Y" | "Z" | "NOT" -> RGBColor[0.880722, 0.611041, 0.142051],
+	"X" | "Y" | "Z" | "NOT" | "0" | "1" -> RGBColor[0.880722, 0.611041, 0.142051],
 	"P"[_] | (Superscript | Power)["P"[_], _] | "PhaseShift"[_] | _Integer -> RGBColor[0.560181, 0.691569, 0.194885],
 	Subscript["R", _][_] -> RGBColor[0.528488, 0.470624, 0.701351],
 	"Measurement" -> RGBColor[0.7367, 0.358, 0.5030],
@@ -18,7 +18,7 @@ $GateDefaultBoundaryStyle = {
 };
 
 $GateDefaultBackgroundStyle = Append[
-	MapAt[Directive[#, Opacity[0.15]] &, Most[$GateDefaultBoundaryStyle], {All, 2}],
+	MapAt[Directive[#, Opacity[0.3]] &, Most[$GateDefaultBoundaryStyle], {All, 2}],
 	_ -> Directive[RGBColor[0.898039, 0.898039, 0.898039], Opacity[.5]]
 ]
 
@@ -154,7 +154,7 @@ drawGate[pos : {vposOut_, vposIn_, hpos_}, label_, opts : OptionsPattern[]] := B
 				}],
 				drawGate[{{#}, hpos}, "1",
 					"GateBoundaryStyle" -> {"1" -> boundaryStyle},
-					"GateBackgroundStyle" -> {"1" -> Directive[backgroundStyle, Opacity[.8]]},
+					"GateBackgroundStyle" -> {"1" -> backgroundStyle},
 					opts
 				] & /@ control1,
 				drawGate[{{#}, hpos}, "0",

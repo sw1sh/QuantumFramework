@@ -117,6 +117,8 @@
             "PauliZ",
             "H",
             "Hadamard",
+            "0",
+            "1",
             "SWAP",
             "RootSWAP",
             "CSWAP",

@@ -60,7 +60,7 @@ QuantumCircuitOperator[{"GroverPhaseAmplification" | "GroverPhaseDiffusion",
     xs : {_Integer ? Positive..},
     gate : _ ? QuantumOperatorQ | Automatic : Automatic
 }, opts___] := With[{
-    op = If[gate === Automatic, QuantumOperator["Z", {Max[xs]}], QuantumOperator[gate]]
+    op = If[gate === Automatic, QuantumOperator["1", {Max[xs]}], QuantumOperator[gate]]
 },
     QuantumCircuitOperator[{
         Splice[Table[QuantumOperator["H", {q}], {q, xs}]],
@@ -95,12 +95,12 @@ QuantumCircuitOperator[{"GroverPhaseAmplification0" | "GroverPhaseDiffusion0",
     xs : {_Integer ? Positive..},
     gate : _ ? QuantumOperatorQ | Automatic : Automatic
 }, opts___] := Module[{
-    op = If[gate === Automatic, QuantumOperator["Z", {Max[xs]}], QuantumOperator[gate]]
+    op = If[gate === Automatic, QuantumOperator["1", {Max[xs]}], QuantumOperator[gate]]
 },
     QuantumCircuitOperator[
         {
             Splice[Table[QuantumOperator["H", {q}], {q, xs}]],
-            QuantumOperator[{"Controlled0", - op, DeleteCases[xs, Alternatives @@ op["OutputOrder"]]}],
+            QuantumOperator[{"Controlled0", If[op["Label"] === "1", QuantumOperator["0", {Max[xs]}], - op], DeleteCases[xs, Alternatives @@ op["OutputOrder"]]}],
             Splice[Table[QuantumOperator["H", {q}], {q, xs}]]
         },
         opts,
@@ -142,13 +142,13 @@ QuantumCircuitOperator[{
     },
     opts___
 ] := Enclose @ Module[{
-    oracle = Confirm @ QuantumCircuitOperator[{If[StringContainsQ[name, "Phase"], "PhaseOracle", "BooleanOracle"], formula, m}], n
+    oracle = Confirm @ QuantumCircuitOperator[{If[StringContainsQ[name, "Phase"], "PhaseOracle", "BooleanOracle"], formula, If[StringContainsQ[name, "Phase"], Nothing, m]}], n
 },
     n = Replace[m, Automatic -> Last @ oracle["OutputOrder"]];
     QuantumCircuitOperator[{
         name,
         oracle,
-        QuantumOperator[Replace[gate, Automatic -> QuantumOperator[If[StringContainsQ[name, "Phase"], "Z", "NOT"], {n}]], {n}]
+        QuantumOperator[Replace[gate, Automatic :> QuantumOperator[If[StringContainsQ[name, "Phase"], "1", "NOT"], {n}]], {n}]
     }, opts]
 ]
 
@@ -175,17 +175,18 @@ QuantumCircuitOperator[{"BooleanOracle",
     n : _Integer | Automatic : Automatic,
     m : _Integer : 0,
     gate_ : "NOT"
-}, opts___] := Enclose @ Module[{
-    vars, order, indices, negIndices, isNegative = False, targetQubits
+}, opts___] := Enclose @ Block[{
+    esopFormula, vars, order, indices, negIndices, isNegative = False, targetQubits
 },
+    esopFormula = BooleanConvert[formula, "ESOP"];
     vars = Replace[varSpec, {
-        Automatic | {__Integer} -> Replace[BooleanVariables[formula], k_Integer :> Array[\[FormalX], k]],
+        Automatic | {__Integer} -> Replace[BooleanVariables[esopFormula], k_Integer :> Array[\[FormalX], k]],
         rules : KeyValuePattern[{_ -> _Integer ? Positive}] :> Keys[rules]
     }];
     order = Replace[varSpec, {rules : KeyValuePattern[{_ -> _Integer ? Positive}] :> Values[rules], Except[{__Integer}] :> Range[Length[vars]]}];
     ConfirmAssert[orderQ[order]];
-    indices = ConfirmMatch[BooleanIndices[formula, vars], indicesPattern];
-    negIndices = ConfirmMatch[BooleanIndices[Not[Replace[formula, bf_BooleanFunction :> bf @@ vars]], vars], indicesPattern];
+    indices = ConfirmMatch[BooleanIndices[esopFormula, vars], indicesPattern];
+    negIndices = ConfirmMatch[BooleanIndices[Not[Replace[esopFormula, bf_BooleanFunction :> bf @@ vars]], vars], indicesPattern];
     If[ Length[negIndices] < Length[indices],
         indices = negIndices;
         isNegative = True;
@@ -199,7 +200,7 @@ QuantumCircuitOperator[{"BooleanOracle",
             If[isNegative, QuantumOperator[gate, targetQubits + m]["Dagger"], Nothing]
         ],
         opts,
-        formula
+        esopFormula
     ]
 ]
 
@@ -209,17 +210,18 @@ QuantumCircuitOperator[{"BooleanOracleR",
     n : _Integer ? NonNegative | Automatic : Automatic,
     m : _Integer ? NonNegative : 0,
     rotationGate : {"YRotation" | "ZRotation", _ ? NumericQ} : {"ZRotation", Pi}
-}, opts___] := Enclose @ Module[{
-    vars, order, indices, negIndices, isNegative = False, l, angles, targetQubit
+}, opts___] := Enclose @ Block[{
+    esopFormula, vars, order, indices, negIndices, isNegative = False, l, angles, targetQubit
 },
+    esopFormula = BooleanConvert[formula, "ESOP"];
     vars = Replace[varSpec, {
-        Automatic | {__Integer} -> Replace[BooleanVariables[formula], k_Integer :> Array[\[FormalX], k]],
+        Automatic | {__Integer} -> Replace[BooleanVariables[esopFormula], k_Integer :> Array[\[FormalX], k]],
         rules : KeyValuePattern[_ -> _Integer ? Positive] :> Keys[rules]
     }];
     order = Replace[varSpec, {rules : KeyValuePattern[{_ -> _Integer ? Positive}] :> Values[rules], Except[{__Integer}] :> Range[Length[vars]]}];
     ConfirmAssert[orderQ[order]];
-    indices = ConfirmMatch[BooleanIndices[formula, vars], indicesPattern];
-    negIndices = ConfirmMatch[BooleanIndices[Not[Replace[formula, bf_BooleanFunction :> bf @@ vars]], vars], indicesPattern];
+    indices = ConfirmMatch[BooleanIndices[esopFormula, vars], indicesPattern];
+    negIndices = ConfirmMatch[BooleanIndices[Not[Replace[esopFormula, bf_BooleanFunction :> bf @@ vars]], vars], indicesPattern];
     If[ Length[negIndices] < Length[indices],
         indices = negIndices;
         isNegative = True;
@@ -233,7 +235,8 @@ QuantumCircuitOperator[{"BooleanOracleR",
             Flatten @ Map[{If[#[[1]] == 0, Nothing, QuantumOperator[{rotationGate[[1]], #[[1]]}, {targetQubit + m}]], QuantumOperator["CNOT", {#[[2]], targetQubit} + m]} &, angles, {2}],
             If[isNegative, QuantumOperator[MapAt[Minus, rotationGate, {2}], {targetQubit + m}], Nothing]
         ],
-        opts
+        opts,
+        esopFormula
     ]
 ]
 
@@ -257,38 +260,34 @@ BooleanGrayAngles[indices : indicesPattern, angle_ : Pi] := KeyValueMap[
 QuantumCircuitOperator[{"PhaseOracle",
     formula_ : BooleanFunction[2 ^ 6, 3],
     defaultVars : _List | Automatic : Automatic,
-    n : _Integer ? NonNegative | Automatic : Automatic,
     m : _Integer ? NonNegative : 0
-}, opts___] := Enclose @ Module[{
-    esop = Confirm[BooleanConvert[formula, "ESOP"]] /. And -> List,
-    vars = Replace[defaultVars, Automatic -> Replace[BooleanVariables[formula], k_Integer :> Array[\[FormalX], k]]],
-    indices,
-    k
+}, opts___] := Enclose @ Block[{
+    esopFormula = Confirm @ BooleanConvert[formula, "ESOP"],
+    esop,
+    vars = Replace[defaultVars, Automatic :> Replace[BooleanVariables[formula], k_Integer :> Array[\[FormalX], k]]],
+    indices
 },
-    k = Replace[n, Automatic -> Length[vars]];
+    esop = esopFormula /. And -> List;
     If[ MatchQ[esop, _Function],
         esop = esop @@ vars
     ];
     esop = Replace[esop, clause : Except[_Xor] :> {clause}]  /. Xor -> List;
     esop = Replace[esop, clause : Except[_List] :> {clause}, {1}];
-	indices = <|0 -> {}, 1 -> {}, PositionIndex @ Lookup[#, vars]|> & /@ Map[If[MatchQ[#, _Not], #[[1]] -> 0, # -> 1] &, esop, {2}];
+	indices = <|0 -> {}, 1 -> {}, KeySelect[Not @* MissingQ] @ PositionIndex @ Lookup[#, vars]|> & /@ Map[If[MatchQ[#, _Not], #[[1]] -> 0, # -> 1] &, esop, {2}];
     QuantumCircuitOperator[
         If[ #[1] === {},
             If[ #[0] === {},
                 QuantumOperator[{"Identity", 2, Max[Length[vars], 1] + m}],
-                QuantumOperator[{"Controlled0", - QuantumOperator["Z"], DeleteCases[k] @ #[0] + m}, {k + m}]
+                QuantumOperator[{"Controlled0", "0", Most[#[0]] + m}, {Last[#[0]] + m}]
             ],
-            If[ !MemberQ[#[0], k],
-                QuantumOperator[{"Controlled", "Z", DeleteCases[k] @ #[1] + m, #[0] + m}, {k + m}],
-                QuantumOperator[{"Controlled", - QuantumOperator["Z"], #[1], m + DeleteCases[k] @ #[0]}, {k + m}]
-            ]
+            QuantumOperator[{"Controlled", "1", Most[#[1]] + m, #[0] + m}, {Last[#[1]] + m}]
         ] & /@ indices,
-        formula,
+        esopFormula,
         opts
     ]
 ]
 
-QuantumCircuitOperator[{"PhaseOracle", formula_ : BooleanFunction[2 ^ 6, 3], vars : KeyValuePattern[_ -> _Integer ? Positive], n : _Integer ? NonNegative : Automatic}, opts___] :=
+QuantumCircuitOperator[{"PhaseOracle", formula_ : BooleanFunction[2 ^ 6, 3], vars : KeyValuePattern[_ -> _Integer ? Positive], n : _Integer ? NonNegative : 0}, opts___] :=
     QuantumCircuitOperator[{"PhaseOracle", formula, Lookup[Reverse /@ Normal @ vars, Range[Max[vars]]], n}, opts]
 
 
