@@ -28,7 +28,7 @@ $QuantumStateProperties = {
     "TensorReverseOutput", "TensorReverseInput",
     "Split", "SplitDual",
     "Bipartition",
-    "Disentangle", "Decompose", "DecomposeWithProbabilities",
+    "Disentangle", "Decompose", "DecomposeWithAmplitudes", "DecomposeWithProbabilities",
     "SchmidtDecompose",
     "Formula", "Simplify", "FullSimplify"
 };
@@ -393,9 +393,11 @@ decompose[qs_, dims_List] := If[PrimeQ[qs["Dimension"]], {1 -> {qs}}, Module[{s 
 
 QuantumStateProp[qs_, "DecomposeWithProbabilities", dims_List] /; qs["PureStateQ"] := SubsetMap[Normalize[#, Total] &, {All, 1}] @ decompose[qs, dims]
 
-QuantumStateProp[qs_, prop : "Decompose" | "DecomposeWithProbabilities"] /; qs["PureStateQ"] := qs[prop, Catenate[Table @@@ FactorInteger[qs["Dimension"]]]]
+QuantumStateProp[qs_, "DecomposeWithAmplitudes", dims_List] /; qs["PureStateQ"] := decompose[qs, dims]
 
-QuantumStateProp[qs_, prop : "Decompose" | "DecomposeWithProbabilities", args___] /; qs["MixedStateQ"] := qs["Bend"][prop, args]
+QuantumStateProp[qs_, prop : "Decompose" | "DecomposeWithProbabilities" | "DecomposeWithAmplitudes"] /; qs["PureStateQ"] := qs[prop, Catenate[Table @@@ FactorInteger[qs["Dimension"]]]]
+
+QuantumStateProp[qs_, prop : "Decompose" | "DecomposeWithProbabilities" | "DecomposeWithAmplitudes", args___] /; qs["MixedStateQ"] := qs["Bend"][prop, args]
 
 
 QuantumStateProp[qs_, "SchmidtDecompose"] := #1 Inactive[CircleTimes] @@ ##2 & @@@
