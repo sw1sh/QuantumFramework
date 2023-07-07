@@ -75,7 +75,7 @@ QuantumCircuitOperatorProp[qco_, "NormalOrders", elements_ : False] := Block[{oc
     Map[
         Which[
             BarrierQ[#],
-            If[elements, Table[circuitElementPosition[#, qco["Min"], qco["Max"]] + qco["Min"] - 1, 2], {{}, {}}],
+            Table[circuitElementPosition[#, qco["Min"], qco["Max"]] + qco["Min"] - 1, 2],
             QuantumMeasurementOperatorQ[#],
             {Join[Reverse @ Table[getNext[], #["Eigenqudits"]], Select[#["OutputOrder"], Positive]], #["InputOrder"]},
             QuantumChannelQ[#],
@@ -84,7 +84,7 @@ QuantumCircuitOperatorProp[qco_, "NormalOrders", elements_ : False] := Block[{oc
             occupied = Complement[Union[occupied, Select[#["OutputOrder"], NonPositive]], Complement[#["InputOrder"], #["OutputOrder"]]];
             #["Order"]
         ] &,
-        qco["FullElements"]
+        qco[If[elements, "FullElements", "Operators"]]
     ]
 ]
 
@@ -219,13 +219,13 @@ QuantumCircuitOperatorProp[qco_, "TargetArity"] := Length @ qco["Target"]
 QuantumCircuitOperatorProp[qco_, "TraceOrder"] := Fold[
     If[QuantumChannelQ[#2[[1]]], Join[#1, Select[#2[[2, 1]], NonPositive]], DeleteElements[#1, #2[[2, 2]]]] &,
     {},
-    Thread[{qco["Flatten"]["Operators"], qco["Flatten"]["NormalOrders"]}]
+    Thread[{qco["Flatten"]["Operators"], qco["Flatten"]["NormalOrders", False]}]
 ]
 
 QuantumCircuitOperatorProp[qco_, "Eigenorder"] := Fold[
     If[QuantumMeasurementOperatorQ[#2[[1]]] || QuantumMeasurementQ[#2[[1]]], Join[#1, Select[#2[[2, 1]], NonPositive]], DeleteElements[#1, #2[[2, 2]]]] &,
     {},
-    Thread[{qco["Flatten"]["Operators"], qco["Flatten"]["NormalOrders"]}]
+    Thread[{qco["Flatten"]["Operators"], qco["Flatten"]["NormalOrders", False]}]
 ]
 
 QuantumCircuitOperatorProp[qco_, "TraceQudits"] := Length[qco["TraceOrder"]]

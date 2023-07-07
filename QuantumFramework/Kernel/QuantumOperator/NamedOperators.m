@@ -66,6 +66,7 @@ FromOperatorShorthand[({name_, args___} | name_) -> order_ ? autoOrderQ] /; Memb
 FromOperatorShorthand[(qc_ ? QuantumChannelQ) -> order_ ? autoOrderQ] := QuantumChannel[qc, order]
 FromOperatorShorthand[lhs_ -> order_ ? autoOrderQ] := QuantumOperator[Unevaluated[lhs], order]
 FromOperatorShorthand[lhs_ -> n_Integer] := FromOperatorShorthand[Unevaluated[lhs -> {n}]]
+FromOperatorShorthand[lhs_ -> n : _Integer | _ ? orderQ -> m : _Integer | _ ? orderQ] := FromOperatorShorthand[Unevaluated[lhs -> {Flatten[{m}], Flatten[{n}]}]]
 FromOperatorShorthand[(lhs_ -> rhs_) -> label : Except[OptionsPattern[]]] := FromOperatorShorthand[Unevaluated[(lhs -> rhs) -> ("Label" -> label)]]
 FromOperatorShorthand[{name_, args___} -> rest_] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, Sequence @@ Developer`ToList[rest]]
 FromOperatorShorthand[{name_, args___} -> rest_] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[{name, args}, Sequence @@ Developer`ToList[rest]]
