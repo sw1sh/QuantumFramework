@@ -341,7 +341,7 @@ QuantumStateProp[qs_, "Bipartition", dim : _Integer | Automatic : Automatic] := 
 
     If[ qs["VectorQ"],
         qs["SchmidtBasis", dim],
-        (qs["Eigenvalues"] . (#["SchmidtBasis", dim]["MatrixState"] & /@ qs["Eigenstates"]))["Computational"]
+        (qs["Eigenvalues"] . (#["SchmidtBasis", dim]["MatrixState"] & /@ qs["Eigenstates"]))
     ]
 ]
 
