@@ -182,7 +182,7 @@ drawGate[pos : {vposOut_, vposIn_, hpos_}, label_, opts : OptionsPattern[]] := B
 		},
 		"I" :> {
 			wireStyle,
-			Line[{{center[[1]] - size / 2, - vposIn[[1]] vGapSize}, {center[[1]] + size / 2, - vposOut[[1]] vGapSize}}]
+			MapThread[Line[{{center[[1]] - size / 2, - #1 vGapSize}, {center[[1]] + size / 2, - #2 vGapSize}}] &, {vposIn, vposOut}]
 		},
 		"Cup" :> {
 			wireStyle,
