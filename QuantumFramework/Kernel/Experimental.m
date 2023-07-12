@@ -120,8 +120,8 @@ QuantumDiagramProcess[qco_QuantumCircuitOperator] := With[{
 ]
 
 
-QuantumStateMPS[qs_QuantumState] := Block[{
-	decompose = qs["DecomposeWithAmplitudes"],
+QuantumStateMPS[qs_QuantumState, m : _Integer | Infinity : Infinity] := Block[{
+	decompose = TakeLargestBy[qs["DecomposeWithAmplitudes"], First, UpTo[m]],
 	dimensions = Catenate[Table @@@ FactorInteger[qs["Dimension"]]],
 	proba, n, rowVector, colVector, matrices
 },
