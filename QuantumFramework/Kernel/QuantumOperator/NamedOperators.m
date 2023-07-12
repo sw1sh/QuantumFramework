@@ -279,6 +279,16 @@ QuantumOperator["CT", opts___] := QuantumOperator[{"Controlled", "T" -> {2}}, op
 QuantumOperator["CS", opts___] := QuantumOperator[{"Controlled", "S" -> {2}}, opts]
 
 
+QuantumOperator[{"C" | "Controlled", args___, ctrl_Integer ? NonNegative, order : _ ? orderQ | Automatic : Automatic}, opts___] := Block[{
+    controlSize, controlOrder
+},
+    controlSize = Max[IntegerLength[ctrl, 2], 1];
+    controlOrder = Replace[order, Automatic :> Range[controlSize]];
+    controlOrder = Join[controlOrder, Max[controlOrder] + Range[Max[controlSize - Length[controlOrder], 0]]];
+    controlSize = Max[controlSize, Length[controlOrder]];
+    QuantumOperator[{"C", args, Splice[controlOrder[[#]] & /@ Lookup[PositionIndex[IntegerDigits[ctrl, 2, controlSize]], {1, 0}, {}]]}, opts]
+]
+
 QuantumOperator[{"C" | "Controlled", qo : Except[_QuantumOperator], control1 : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}}, opts___] :=
     QuantumOperator[{"Controlled", QuantumOperator[qo, opts], control1, control0}]
 
