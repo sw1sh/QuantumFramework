@@ -182,7 +182,7 @@ QuantumCircuitOperator[{"BooleanOracle",
 },
     esopFormula = BooleanConvert[formula, "ESOP"];
     vars = Replace[varSpec, {
-        Automatic | {__Integer} -> Replace[BooleanVariables[esopFormula], k_Integer :> Array[\[FormalX], k]],
+        Automatic | {__Integer} -> Replace[BooleanVariables[formula], k_Integer :> Array[\[FormalX], k]],
         rules : KeyValuePattern[{_ -> _Integer ? Positive}] :> Keys[rules]
     }];
     order = m + Replace[varSpec, {rules : KeyValuePattern[{_ -> _Integer ? Positive}] :> Values[rules], Except[{__Integer}] :> Range[Length[vars]]}];
@@ -220,7 +220,7 @@ QuantumCircuitOperator[{"BooleanOracleR",
 },
     esopFormula = BooleanConvert[formula, "ESOP"];
     vars = Replace[varSpec, {
-        Automatic | {__Integer} -> Replace[BooleanVariables[esopFormula], k_Integer :> Array[\[FormalX], k]],
+        Automatic | {__Integer} -> Replace[BooleanVariables[formula], k_Integer :> Array[\[FormalX], k]],
         rules : KeyValuePattern[_ -> _Integer ? Positive] :> Keys[rules]
     }];
     order = m + Replace[varSpec, {rules : KeyValuePattern[{_ -> _Integer ? Positive}] :> Values[rules], Except[{__Integer}] :> Range[Length[vars]]}];

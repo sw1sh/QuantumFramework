@@ -80,7 +80,7 @@ def make_gate(gate_spec):
     elif name == 'Unitary':
         gate = UnitaryGate(args[0], label=args[1])
     elif name == 'Barrier':
-        gate = Barrier()
+        gate = Barrier(len(order))
     elif name == 'Measure':
         target = order = list(args[0])
         gate = Measure()
@@ -95,7 +95,8 @@ def add_gate(circuit, gate_spec, c):
     if gate.name == 'global_phase':
         order = []
     if len(target) > 0:
-        circuit.append(gate, tuple(order), (c, ))
+        for i, t in enumerate(target):
+            circuit.append(gate, [t], (i + c, ))
     else:
         circuit.append(gate, tuple(order))
     return c + len(target)
@@ -189,6 +190,73 @@ from qiskit.circuit import ParameterExpression
 qc = pickle.loads(<* $pythonBytes *>)
 
 ops = []
+
+def reverse_binary(n, width):
+    b = '{:0{width}b}'.format(n, width=width)
+    return int(b[::-1], 2)
+
+def gate_to_QuantumOperator(gate, order):
+    xs = []
+    if len(gate.params) > 0:
+        for x in gate.params:
+            if isinstance(x, float):
+                xs.append(wl.Wolfram.QuantumFramework.PackageScope.TranscendentalRecognize(x))
+            elif isinstance(x, ParameterExpression):
+                xs.append(wl.ToExpression(str(x)))
+            else:
+                xs.append(x)
+    if gate.name == 'x':
+        return wl.Wolfram.QuantumFramework.QuantumOperator('X', order)
+    elif gate.name == 'y':
+        return wl.Wolfram.QuantumFramework.QuantumOperator('Y', order)
+    elif gate.name == 'z':
+        return wl.Wolfram.QuantumFramework.QuantumOperator('Z', order)
+    elif gate.name == 'h':
+        return wl.Wolfram.QuantumFramework.QuantumOperator('H', order)
+    elif gate.name == 'p':
+        return wl.Wolfram.QuantumFramework.QuantumOperator(['Phase', xs[0]], order)
+    elif gate.name == 'u':
+        return wl.Wolfram.QuantumFramework.QuantumOperator(['U', *xs], order)
+    elif gate.name == 'u1':
+        return wl.Wolfram.QuantumFramework.QuantumOperator(['U1', *xs], order)
+    elif gate.name == 'u2':
+        return wl.Wolfram.QuantumFramework.QuantumOperator(['U2', *xs], order)
+    elif gate.name == 'u3':
+        return wl.Wolfram.QuantumFramework.QuantumOperator(['U3', *xs], order)
+    elif gate.name == 'rx':
+        return wl.Wolfram.QuantumFramework.QuantumOperator(['RX', *xs], order)
+    elif gate.name == 'ry':
+        return wl.Wolfram.QuantumFramework.QuantumOperator(['RY', *xs], order)
+    elif gate.name == 'rz':
+        return wl.Wolfram.QuantumFramework.QuantumOperator(['RZ', *xs], order)
+    elif gate.name == 't':
+        return wl.Wolfram.QuantumFramework.QuantumOperator('T', order)
+    elif gate.name == 'tdg':
+        return wl.Wolfram.QuantumFramework.QuantumOperator('T', order)('Dagger')
+    elif gate.name == 's':
+        return wl.Wolfram.QuantumFramework.QuantumOperator('S', order)
+    elif gate.name == 'sdg':
+        return wl.Wolfram.QuantumFramework.QuantumOperator('S', order)('Dagger')
+    elif gate.name == 'swap':
+        return wl.Wolfram.QuantumFramework.QuantumOperator('SWAP', order)
+    elif gate.name == 'unitary':
+        return wl.Wolfram.QuantumFramework.QuantumOperator(*xs, [order, order], wl.Rule('Label', gate.label))
+    elif gate.name == 'measure':
+        return wl.Wolfram.QuantumFramework.QuantumMeasurementOperator(order)
+    elif gate.name == 'reset':
+        ops.extend([
+            wl.Wolfram.QuantumFramework.QuantumOperator('Discard', order),
+            wl.Wolfram.QuantumFramework.QuantumOperator(wl.Wolfram.QuantumFramework.QuantumState(('Register', len(order)), wl.Rule('Label', wl.Ket(0))), order)
+        ])
+    elif gate.name == 'barrier':
+        return 'Barrier'
+    elif hasattr(gate, 'num_ctrl_qubits'):
+        arg = ['C', gate_to_QuantumOperator(gate.base_gate, order[gate.num_ctrl_qubits:]), reverse_binary(gate.ctrl_state, gate.num_ctrl_qubits), order[:gate.num_ctrl_qubits]]
+        return wl.Wolfram.QuantumFramework.QuantumOperator(arg)
+    else:
+        from qiskit.quantum_info import Operator
+        return wl.Wolfram.QuantumFramework.QuantumOperator(Operator(gate).to_matrix(), [order, order], wl.Rule('Label', gate.label))
+
 for gate, qubits, clbits in qc:
     order = []
     for q in qubits:
@@ -199,94 +267,8 @@ for gate, qubits, clbits in qc:
                 break
             else:
                 size = r.index + 1
-    if len(gate.params) > 0:
-        xs = []
-        for x in gate.params:
-            if isinstance(x, float):
-                xs.append(wl.Wolfram.QuantumFramework.PackageScope.TranscendentalRecognize(x))
-            elif isinstance(x, ParameterExpression):
-                xs.append(wl.ToExpression(str(x)))
-            else:
-                xs.append(x)
-    if gate.name == 'x':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('X', order))
-    elif gate.name == 'y':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('Y', order))
-    elif gate.name == 'z':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('Z', order))
-    elif gate.name == 'h':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('H', order))
-    elif gate.name == 'p':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Phase', xs[0]], order))
-    elif gate.name == 'u':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['U', *xs], order))
-    elif gate.name == 'u1':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['U1', *xs], order))
-    elif gate.name == 'u2':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['U2', *xs], order))
-    elif gate.name == 'u3':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['U3', *xs], order))
-    elif gate.name == 'rx':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['RX', *xs], order))
-    elif gate.name == 'ry':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['RY', *xs], order))
-    elif gate.name == 'rz':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['RZ', *xs], order))
-    elif gate.name == 'cx':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('CNOT', order))
-    elif gate.name == 'cy':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('CY', order))
-    elif gate.name == 'cz':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('CZ', order))
-    elif gate.name == 'crx':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['C', ['R', *xs, 'X']], order))
-    elif gate.name == 'cry':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['C', ['R', *xs, 'Y']], order))
-    elif gate.name == 'crz':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['C', ['R', *xs, 'Z']], order))
-    elif gate.name == 'c    rx_o0':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['C0', ['R', *xs, 'X']], order))
-    elif gate.name == 'cry_o0':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['C0', ['R', *xs, 'Y']], order))
-    elif gate.name == 'crz_o0':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['C0', ['R', *xs, 'Z']], order))
-    elif gate.name == 't':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('T', order))
-    elif gate.name == 'tdg':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('T', order)('Dagger'))
-    elif gate.name == 's':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('S', order))
-    elif gate.name == 'sdg':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('S', order)('Dagger'))
-    elif gate.name == 'ccrx':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Controlled', ['XRotation', *xs], order[:2]], order[2:]))
-    elif gate.name == 'ccrx_o0':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Controlled0', ['XRotation', *xs], order[:2]], order[2:]))
-    elif gate.name == 'ccrx_o1':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Controlled', ['XRotation', *xs], [order[0]], [order[1]]], order[2:]))
-    elif gate.name == 'ccrx_o2':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Controlled', ['XRotation', *xs], [order[1]], [order[0]]], order[2:]))
-    elif gate.name == 'ccx_o2':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Controlled', 'NOT', [order[1]], [order[0]]], order[2:]))
-    elif gate.name == 'ccx':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Controlled', 'NOT', order[:2]], order[2:]))
-    elif gate.name == 'mcx':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(['Controlled', 'NOT', order[:-1]], order[-1:]))
-    elif gate.name == 'swap':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator('SWAP', order))
-    elif gate.name == 'unitary':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(*xs, wl.Rule('Label', gate.label)))
-    elif gate.name == 'measure':
-        ops.append(wl.Wolfram.QuantumFramework.QuantumMeasurementOperator(order))
-    elif gate.name == 'reset':
-        ops.extend([
-            wl.Wolfram.QuantumFramework.QuantumOperator('Discard', order),
-            wl.Wolfram.QuantumFramework.QuantumOperator(wl.Wolfram.QuantumFramework.QuantumState(('Register', len(order)), wl.Rule('Label', wl.Ket(0))), order)
-        ])
-    elif gate.name == 'barrier':
-        ops.append('Barrier')
-    else:
-        ops.append(wl.Wolfram.QuantumFramework.QuantumOperator(gate.to_matrix(), wl.Rule('Label', gate.label)))
+    ops.append(gate_to_QuantumOperator(gate, order))
+
 wl.Wolfram.QuantumFramework.QuantumCircuitOperator(ops)
 "]
 ]

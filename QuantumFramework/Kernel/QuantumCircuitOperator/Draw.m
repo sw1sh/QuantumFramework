@@ -182,7 +182,7 @@ drawGate[pos : {vposOut_, vposIn_, hpos_}, label_, opts : OptionsPattern[]] := B
 		},
 		"I" :> {
 			wireStyle,
-			Line[{{center[[1]] - size / 2, - vposIn[[1]] vGapSize}, {center[[1]] + size / 2, - vposOut[[1]] vGapSize}}]
+			MapThread[Line[{{center[[1]] - size / 2, - #1 vGapSize}, {center[[1]] + size / 2, - #2 vGapSize}}] &, {vposIn, vposOut}]
 		},
 		"Cup" :> {
 			wireStyle,
@@ -567,16 +567,19 @@ drawLabel[label_, height_, pos_, opts : OptionsPattern[]] := With[{vGapSize = Op
 	Text[Style[label, Background -> Transparent, FilterRules[{opts}, Options[Style]], FontFamily -> "Times"], {hGapSize height / 2, - vGapSize (pos - 1 / 2)}]
 ]
 
-Options[drawBarrier] = {"Size" -> .75, "VerticalGapSize" -> 1, "HorizontalGapSize" -> 1, "BarrierStyle" -> Automatic, "WireStyle" -> Automatic, "ShowMeasurementWire" -> True}
+Options[drawBarrier] = {"Size" -> .75, "VerticalGapSize" -> 1, "HorizontalGapSize" -> 1, "BarrierStyle" -> Automatic, "WireStyle" -> Automatic, "ShowExtraQudits" -> False}
 drawBarrier[{vposOut_, vposIn_, hpos_}, OptionsPattern[]] := Block[{
 	vpos = Union[vposOut, vposIn],
 	size = OptionValue["Size"], vGapSize = OptionValue["VerticalGapSize"], hGapSize = OptionValue["HorizontalGapSize"],
-	showMeasurementWireQ = OptionValue["ShowMeasurementWire"],
+	extraQuditsQ = TrueQ[OptionValue["ShowExtraQudits"]],
+	wireStyle = Replace[OptionValue["WireStyle"], Automatic -> Directive[$DefaultGray, Opacity[.3]]],
 	x, y
 },
 	x = hGapSize First[hpos];
-	y = If[showMeasurementWireQ, Select[vpos, Positive], vpos];
+	y = If[extraQuditsQ, vpos, Select[vpos, Positive]];
 	{
+		wireStyle,
+		Map[Line[{{x - size / 2, - # vGapSize}, {x + size / 2, - # vGapSize}}] &, y],
 		Replace[OptionValue["BarrierStyle"], Automatic -> Directive[$DefaultGray, Dashed, Opacity[.8], Thickness[Large]]],
 		Line[Map[{x, #} &, List @@ Interval @@ (vGapSize {- # + 1 / 2, - # - 1 / 2} & /@ y), {2}]]
 	}
@@ -643,7 +646,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 		MapThread[
 			Which[
 				BarrierQ[#1],
-				drawBarrier[#2, "ShowMeasurementWire" -> showMeasurementWireQ, FilterRules[{opts}, Options[drawBarrier]]],
+				drawBarrier[#2, "ShowExtraQudits" -> extraQuditsQ, FilterRules[{opts}, Options[drawBarrier]]],
 				QuantumCircuitOperatorQ[#1],
 				If[ level > 0,
 					Translate[
@@ -725,7 +728,7 @@ circuitWires[circuit_QuantumCircuitOperator] := Block[{
 	width = circuit["Width"],
 	orders
 },
-	orders = circuit["NormalOrders"];
+	orders = circuit["NormalOrders", True];
 	Catenate @ ReplacePart[{-1, _, 2} -> -1] @ FoldPairList[
 		{prev, order} |-> Block[{next, skip, input, output},
 			{next, skip} = prev;
