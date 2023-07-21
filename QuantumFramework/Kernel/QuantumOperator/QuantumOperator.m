@@ -345,7 +345,7 @@ Enclose @ With[{
     ConfirmAssert[ContainsNone[top["OutputOrder"], Complement[bottom["OutputOrder"], top["InputOrder"]]], "Ambiguous output orders for operator composition"];
     ConfirmAssert[ContainsNone[bottom["InputOrder"], Complement[top["InputOrder"], bottom["OutputOrder"]]], "Ambiguous input orders for operator composition"];
 
-    If[ bottom["OutputOrder"] != top["InputOrder"],
+    If[ bottom["FullOutputOrder"] != top["FullInputOrder"],
         Module[{
             (* order = Union[bottom["OutputOrder"], top["InputOrder"]], *)
             order = Join[bottom["FullOutputOrder"], DeleteCases[top["FullInputOrder"], Alternatives @@ bottom["FullOutputOrder"]]],

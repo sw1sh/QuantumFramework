@@ -82,6 +82,8 @@ QuantumStateProp[qs_, "UnknownQ" | "UnknownStateQ"] := qs["StateType"] === "Unkn
 
 QuantumStateProp[qs_, "PhysicalQ"] := ! qs["UnknownQ"]
 
+QuantumStateProp[qs_, "NumericQ"] := ArrayQ[qs["State"], 1 | 2, NumericQ]
+
 
 QuantumStateProp[qs_, "Kind"] := Which[
     qs["InputQudits"] === qs["OutputQudits"] === 0,
@@ -381,7 +383,7 @@ decompose[qs_, {}] := {1 -> {qs}}
 
 decompose[qs_, dims_List] := If[PrimeQ[qs["Dimension"]], {1 -> {qs}}, Module[{s = qs["SchmidtBasis", First[dims]], basis},
     basis = s["Basis"]["Decompose"];
-	SubsetMap[Normalize, {All, 1}] @ MapIndexed[{v, idx} |->
+	MapIndexed[{v, idx} |->
 		With[{decomp = If[Length[basis] == 2, MapAt[decompose[#, {}] &, 1], Identity] @
             MapAt[decompose[#, Rest[dims]] &, -1] @ Map[QuantumState[SparseArray[idx -> 1, #["Dimension"]], #] &, basis]
         },

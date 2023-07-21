@@ -5,7 +5,7 @@ PackageScope["QuantumBeamSearch"]
 PackageScope["QuantumDiagramProcess"]
 
 PackageExport["QuantumCircuitMultiwayGraph"]
-PackageExport["QuantumStateMPS"]
+PackageExport["QuantumMPS"]
 
 
 
@@ -120,36 +120,47 @@ QuantumDiagramProcess[qco_QuantumCircuitOperator] := With[{
 ]
 
 
-QuantumStateMPS[qs_QuantumState, m : _Integer | Infinity : Infinity] := Block[{
-	decompose = TakeLargestBy[qs["DecomposeWithAmplitudes"], First, UpTo[m]],
+Options[QuantumMPS] = {"Ordered" -> False}
+
+QuantumMPS[qs_ ? QuantumStateQ, m : _Integer | Infinity : Infinity, OptionsPattern[]] := Block[{
+	decompose = If[VectorQ[#[[All, 1]], NumericQ], TakeLargestBy[#, First, UpTo[m]], #] & @ qs["DecomposeWithAmplitudes"],
 	dimensions = Catenate[Table @@@ FactorInteger[qs["Dimension"]]],
-	proba, n, rowVector, colVector, matrices
+	proba, n, rowVector, colVector, matrices, result
 },
 	n = Length[decompose];
 	proba = Keys[decompose];
 
 	matrices = If[n > 1,
-		rowVector = QuantumOperator[{Table[1, n]}, {{1}, {}}, QuantumBasis[{n}, {}, "Label" -> TraditionalForm[{Table[1, n]}]]];
-		colVector = QuantumOperator[{List /@ proba}, {{}, {1}}, QuantumBasis[{}, {n}, "Label" -> TraditionalForm[{List /@ proba}]]];
+		colVector = QuantumOperator[{Table[{1}, n]}, {{0}, {}}, QuantumBasis[{n}, {}, "Label" -> TraditionalForm[Bra[{" "}]]]];
+		rowVector = QuantumOperator[{proba}, {{}, {0}}, QuantumBasis[{}, {n}, "Label" -> TraditionalForm[Ket[{" "}]]]];
 		matrices = MapIndexed[
 			QuantumOperator[
 				Transpose[
 					ReplacePart[ConstantArray[Table[0, #1[[2]]], {n, n}], Thread[{#, #} & /@ Range[n] -> #1[[1]], List, 2]],
 					2 <-> 3
 				],
-				{Prepend[#2 + 1, 1], {1}},
+				If[#2[[1]] <= qs["OutputQudits"], {Prepend[#2, 0], {0}}, {{0}, Append[#2, 0]}],
 				QuantumBasis[{n, #1[[2]]}, {n}]
 			] &,
 			Thread[{Transpose @ Map[#["Computational"]["StateVector"] &, Values[decompose], {2}], dimensions}]
 		],
 
-		rowVector = Nothing;
-		colVector = QuantumOperator[{List /@ proba}, {{}, {}}, QuantumBasis[{}, {}, "Label" -> TraditionalForm[{List /@ proba}]]];
+		colVector = Nothing;
+		rowVector = QuantumOperator[{proba}, {{}, {}}, QuantumBasis[{}, {}, "Label" -> TraditionalForm[First[proba]]]];
 		matrices = MapIndexed[
 			QuantumOperator[{{#1[[1]]}}, {#2, {}}, QuantumBasis[{#1[[2]]}, {}]] &,
 			Thread[{Transpose @ Map[#["Computational"]["StateVector"] &, Values[decompose], {2}], dimensions}]
 		]
 	];
-	QuantumCircuitOperator[{rowVector, Splice @ matrices, colVector}]
+	result = QuantumCircuitOperator[{colVector, Splice @ matrices, rowVector}];
+	If[	TrueQ[OptionValue["Ordered"]],
+		result = Reverse["I" -> # -> qs["OutputQudits"] + # & /@ Range[qs["InputQudits"]]] /* result
+	];
+	result
 ]
+
+QuantumMPS[qo_ ? QuantumOperatorQ, m : _Integer | Infinity : Infinity, OptionsPattern[]] :=
+	Reverse[MapIndexed["I" -> #1 -> #2[[1]] + qo["OutputQudits"] &, qo["InputOrder"]]] /*
+	QuantumMPS[qo["State"], m] /*
+	MapIndexed["I" -> #2[[1]] -> #1 &, qo["OutputOrder"]]
 

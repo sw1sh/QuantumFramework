@@ -390,7 +390,7 @@ QuantumOperatorProp[qo_, "Reorder", order : {_ ? orderQ | Automatic, _ ? orderQ 
     ]
 ]
 
-QuantumOperatorProp[qo_, "Shift", n : _Integer ? NonNegative : 1] := qo["Reorder", qo["Order"] /. k_Integer :> k + n]
+QuantumOperatorProp[qo_, "Shift", n : _Integer : 1] := qo["Reorder", qo["Order"] /. k_Integer :> k + n]
 
 
 
