@@ -286,7 +286,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
 ]
 
 
-FromTensorNetwork[net_ /; DirectedGraphQ[net] && AcyclicGraphQ[net]] := Block[{
+FromTensorNetwork[net_ /; DirectedGraphQ[net] && AcyclicGraphQ[net], OptionsPattern[{Method -> "Random"}]] := Block[{
 	vs = Developer`FromPackedArray[TopologicalSort[net]],
 	labels,
 	inputs, outputs, inputOrder, outputOrder,
@@ -330,7 +330,7 @@ FromTensorNetwork[net_ /; DirectedGraphQ[net] && AcyclicGraphQ[net]] := Block[{
 	QuantumCircuitOperator @ MapIndexed[
 		With[{order = {outOrders[[#2[[1]]]], inOrders[[#2[[1]]]]}, label = labels[[#2[[1]]]]},
 			QuantumOperator[
-				Replace[#1, {$Failed :> QuantumState[{"Register", Total[Length /@ order]}], tensor_ :> QuantumState[Flatten[tensor]]}]["Split", Length[order[[1]]]],
+				Replace[#1, {$Failed :> QuantumState[{Switch[OptionValue[Method], "Zero", "Register", _, "RandomPure"] , Total[Length /@ order]}], tensor_ :> QuantumState[Flatten[tensor]]}]["SplitDual", Length[order[[1]]]],
 				order,
 				"Label" -> label
 			]
