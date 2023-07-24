@@ -236,14 +236,20 @@ QuantumOperatorProp[qo_, "SortOutput"] := If[
     ]
 ]
 
+expandLabel[label_] := Replace[label, ct_CircleTimes :> Replace[ct, Superscript[subLabel_, CircleTimes[n_Integer]] :> Splice[ConstantArray[subLabel, n], CircleTimes], {1}]]
+
+collectLabel[label_] := Replace[label, ct_CircleTimes :> CircleTimes @@ SequenceReplace[List @@ ct, xs : {Repeated[x_, {2, Infinity}]} :> Superscript[x, CircleTimes[Length[xs]]]]]
+
+
 QuantumOperatorProp[qo_, "Sort"] := QuantumOperator[
     qo["SortOutput"]["SortInput"],
-    "Label" -> Replace[qo["Label"], {
+    "Label" -> collectLabel @ Replace[expandLabel @ qo["Label"], {
         subLabel_CircleTimes /; Length[subLabel] == qo["Arity"] :> subLabel[[ Ordering[qo["InputOrder"]] ]],
         Subscript["C", subLabel_CircleTimes][controls__] /; Length[subLabel] == qo["TargetArity"] :>
             Subscript["C", subLabel[[ Ordering[qo["TargetOrder"]] ]]][controls],
         Subscript["R", subLabel_CircleTimes][angle_] /; Length[subLabel] == qo["Arity"] :>
-            Subscript["R", subLabel[[ Ordering[qo["InputOrder"]] ]]][angle]
+            Subscript["R", subLabel[[ Ordering[qo["InputOrder"]] ]]][angle],
+        "\[Pi]"[perm__] :> "\[Pi]" @@ {perm}[[Ordering[qo["InputOrder"]]]]
     }]
 ]
 

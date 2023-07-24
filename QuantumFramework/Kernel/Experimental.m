@@ -160,7 +160,11 @@ QuantumMPS[qs_ ? QuantumStateQ, m : _Integer | Infinity : Infinity, OptionsPatte
 ]
 
 QuantumMPS[qo_ ? QuantumOperatorQ, m : _Integer | Infinity : Infinity, OptionsPattern[]] :=
-	Reverse[MapIndexed["I" -> #1 -> #2[[1]] + qo["OutputQudits"] &, qo["InputOrder"]]] /*
+	With[{range = Range[Length[qo["InputOrder"]]]},
+		{{"Permutation", range} -> qo["InputOrder"] -> range + Length[range]}
+	] /*
 	QuantumMPS[qo["State"], m] /*
-	MapIndexed["I" -> #2[[1]] -> #1 &, qo["OutputOrder"]]
+	With[{range = Range[Length[qo["OutputOrder"]]]},
+		{{"Permutation", range} -> range -> qo["OutputOrder"]}
+	]
 

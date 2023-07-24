@@ -273,7 +273,7 @@ drawGate[pos : {vposOut_, vposIn_, hpos_}, label_, opts : OptionsPattern[]] := B
 		}],
 		"\[Pi]"[perm__] :> {
 			wireStyle,
-			MapThread[Line[{{center[[1]] - size / 2, - #1 vGapSize}, {center[[1]] + size / 2, - #2 vGapSize}}] &, {vpos, vpos[[{perm}]]}]
+			MapThread[Line[{{center[[1]] - size / 2, - #1 vGapSize}, {center[[1]] + size / 2, - #2 vGapSize}}] &, {vposIn, vposOut[[{perm}]]}]
 		},
 		"PhaseShift"[n_] | n_Integer /; Length[vpos] == 1 :> {
 			EdgeForm[Replace[label, gateBoundaryStyle]],

@@ -28,7 +28,7 @@ QuantumShortcut[qo_QuantumOperator] := Replace[
     QuantumShortcut[qo["Label"], First[qo["Dimensions"], 1], qo["Order"]],
     {
         _Missing /; qo["Dimensions"] === {2, 2} && MatrixQ[qo["Matrix"], NumericQ] :> QuantumShortcut[qo["ZYZ"]],
-        _Missing :> Labeled[qo["Matrix"], qo["Label"]]
+        _Missing :> {Labeled[qo["Matrix"], qo["Label"]]}
     }
 ]
 
@@ -48,8 +48,10 @@ QuantumShortcut[label_, dim_ : 2, order : {outputOrder : _ ? orderQ, inputOrder 
         Subscript["C", subLabel_][{}, {}] :> QuantumShortcut[subLabel, dim, order],
         Subscript["C", subLabel_][controls__] :> ({"C", #, controls} & /@ Confirm @ QuantumShortcut[subLabel, dim, Complement[Join @@ order, Flatten[{controls}]]]),
         Superscript[subLabel_, CircleTimes[n_Integer]] /; n == Length[inputOrder] :> Catenate @ MapThread[Thread[#1 -> {#2}, List, 1] &, {ConstantArray[Confirm @ QuantumShortcut[subLabel], n], inputOrder}],
-        Superscript[subLabel_, CircleTimes[n_Integer]] :> QuantumShortcut[subLabel, dim, order],
-        CircleTimes[subLabels___] /; Length[{subLabels}] == Length[inputOrder] :> Catenate @ MapThread[Confirm @ QuantumShortcut[#1, dim, {#2}] &, {{subLabels}, inputOrder}],
+        Superscript[subLabel_, _CircleTimes] :> QuantumShortcut[subLabel, dim, order],
+        ct : CircleTimes[___, Superscript[_, CircleTimes[_Integer]], ___] :> QuantumShortcut[Replace[ct, Superscript[subLabel_, CircleTimes[n_Integer]] :> Splice[ConstantArray[subLabel, n], CircleTimes], {1}], dim, order],
+        CircleTimes[subLabels___] /; Length[{subLabels}] == Length[inputOrder] :>
+            Catenate @ MapThread[Confirm @ QuantumShortcut[#1, dim, {#2}] &, {{subLabels}, inputOrder}],
         Subscript["R", subLabel_][angle_] :> {{"R", Sow[Chop @ angle], Confirm @ QuantumShortcut[subLabel, dim, order]}},
         "\[Pi]"[perm__] :> {nameOrder @ {"Permutation", PermutationCycles[{perm}]}},
         OverHat[x_] :> {nameOrder @ {"Diagonal", x}},
