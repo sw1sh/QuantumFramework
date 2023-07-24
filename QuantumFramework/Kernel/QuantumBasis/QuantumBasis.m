@@ -138,7 +138,7 @@ QuantumBasis[qb_ ? QuantumBasisQ, multiplicity_Integer, args___] := QuantumBasis
     args
 ]
 
-QuantumBasis[arg_, multiplicity_Integer ? Positive, args___] := Enclose @ With[{
+QuantumBasis[arg_, multiplicity_Integer ? NonNegative, args___] := Enclose @ With[{
     bases = Table[ConfirmBy[QuantumBasis[arg, args], QuantumBasisQ], multiplicity]
 },
     If[ multiplicity > 0,
@@ -149,7 +149,7 @@ QuantumBasis[arg_, multiplicity_Integer ? Positive, args___] := Enclose @ With[{
             ],
             QuantumTensorProduct[bases]
         ],
-        QuantumBasis[args]
+        QuantumBasis[1, args]
     ]
 ]
 
