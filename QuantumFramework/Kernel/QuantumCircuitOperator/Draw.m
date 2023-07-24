@@ -679,7 +679,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	}
 ]
 
-circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, overlapQ : True | False : False] := With[{
+circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, defaultOverlapQ : True | False : False] := With[{
 	min = Min[1, circuit["Min"]],
 	max = circuit["Max"],
 	width = circuit["Width"]
@@ -689,6 +689,7 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, overlapQ : T
 			pos = circuitElementPosition[#2, min, max],
 			gatePos = #1[[2]],
 			ranges = #1[[3]],
+			overlapQ = defaultOverlapQ || MatchQ[#2["Label"], "I" | "\[Pi]"[___] | "Cap" | "Cup"],
 			shift,
 			overlapShift
 		},
