@@ -17,10 +17,7 @@ QuantumCircuitOperatorQ[QuantumCircuitOperator[data_Association]] /; ! AtomQ[Une
 QuantumCircuitOperatorQ[QuantumCircuitOperator[KeyValuePattern[{"Elements" -> elements_, "Label" -> _}]]] :=
     AllTrue[elements,
         BarrierQ[#] ||
-        QuantumOperatorQ[#] ||
-        QuantumMeasurementOperatorQ[#] ||
-        QuantumChannelQ[#] ||
-        QuantumCircuitOperatorQ[#] &
+        QuantumFrameworkOperatorQ[#] &
     ]
 
 QuantumCircuitOperatorQ[___] := False

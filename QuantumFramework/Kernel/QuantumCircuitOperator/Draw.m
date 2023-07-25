@@ -661,7 +661,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 					],
 					drawGate[#2, labelCounter @ #1["Label"], FilterRules[{opts}, Options[drawGate]]]
 				],
-				QuantumMeasurementOperatorQ[#1],
+				QuantumMeasurementOperatorQ[#1] || QuantumMeasurementQ[#1],
 				drawMeasurement[#2, max, "ShowMeasurementWire" -> showMeasurementWireQ, "ShowExtraQudits" -> extraQuditsQ, "ThickWire" -> #["MatrixQ"], FilterRules[{opts}, Options[drawMeasurement]]],
 				QuantumChannelQ[#1],
 				drawChannel[#2, labelCounter @ #1["Label"], "ShowExtraQudits" -> extraQuditsQ, "ThickWire" -> #["MatrixQ"], FilterRules[{opts}, Options[drawChannel]]],

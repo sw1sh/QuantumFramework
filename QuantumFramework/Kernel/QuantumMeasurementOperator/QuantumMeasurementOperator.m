@@ -21,6 +21,8 @@ QuantumMeasurementOperator[arg_ -> eigenvalues_ ? VectorQ, args___] :=
 QuantumMeasurementOperator[target : _ ? targetQ, args___] :=
     QuantumMeasurementOperator[QuantumBasis[args], target]
 
+QuantumMeasurementOperator[target_Integer, args___] := QuantumMeasurementOperator[{target}, args]
+
 QuantumMeasurementOperator[] := QuantumMeasurementOperator[{1}]
 
 QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target : (_ ? targetQ) : Automatic, args___] := Enclose @ Module[{
@@ -191,7 +193,7 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
     ]
 ]
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[] := qmo[QuantumState[{"Register", qmo["InputDimensions"]}]]
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[] := qmo[QuantumOperator[QuantumState[{"Register", qmo["InputDimensions"]}], {} -> qmo["InputOrder"]]]
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qo_ ? QuantumOperatorQ] := Enclose @ With[{
     op = qmo["SuperOperator"]
