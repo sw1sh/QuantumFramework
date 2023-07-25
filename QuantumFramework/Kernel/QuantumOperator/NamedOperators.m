@@ -204,7 +204,7 @@ QuantumOperator[{"Diagonal", x_List, dimension : _Integer ? Positive : 2}, order
         QuantumOperator[
             DiagonalMatrix[PadRight[x, dimension ^ Max[size, Length[order]]]],
             dimension,
-            "Label" -> OverHat[x]
+            "Label" -> OverHat[If[MatchQ[x, {_}], First[x], x]]
         ],
         Join[order, Max[order] + Range[Max[size - Length[order], 0]]],
         opts

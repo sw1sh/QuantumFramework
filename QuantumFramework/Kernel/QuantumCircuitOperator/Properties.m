@@ -47,12 +47,12 @@ QuantumCircuitOperatorProp[qco_, "NormalOperators", elements_ : False] := Block[
                 QuantumOperator[
                     #["Sort"]["POVM"]["State"]["Bend"],
                     ConstantArray[Join[Reverse @ Table[getNext[], #["Eigenqudits"]], Select[#["OutputOrder"], Positive]], 2],
-                    "Label" -> "Measurement"
+                    "Label" -> (Subscript["Measurement", ##] & @@ #["Target"])
                 ],
                 QuantumOperator[
                     #["Sort"]["POVM"]["State"],
                     {Join[Reverse @ Table[getNext[], #["Eigenqudits"]], Select[#["OutputOrder"], Positive]], #["InputOrder"]},
-                    "Label" -> "Measurement"
+                    "Label" -> (Subscript["Measurement", ##] & @@ #["Target"])
                 ]
             ],
             QuantumChannelQ[#],

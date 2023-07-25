@@ -333,9 +333,17 @@ FromTensorNetwork[net_ /; DirectedGraphQ[net] && AcyclicGraphQ[net], OptionsPatt
 	];
 	labels = KeyValueMap[Replace[#2, {$Failed | Automatic :> #1, Interpretation[_, label_] :> label}] &, AssociationThread[vs, AnnotationValue[{net, vs}, VertexLabels]]];
 	QuantumCircuitOperator @ MapIndexed[
-		With[{order = {outOrders[[#2[[1]]]], inOrders[[#2[[1]]]]}, label = labels[[#2[[1]]]]},
-			QuantumOperator[
-				Replace[#1, {$Failed :> QuantumState[{Switch[OptionValue[Method], "Zero", "Register", _, "RandomPure"] , Total[Length /@ order]}], tensor_ :> QuantumState[Flatten[tensor]]}]["SplitDual", Length[order[[1]]]],
+		Block[{order = {outOrders[[#2[[1]]]], inOrders[[#2[[1]]]]}, label = labels[[#2[[1]]]], tensor},
+            tensor = Replace[#1, {
+                    $Failed :> With[{qubits = Total[Length /@ order]}, Switch[
+                        OptionValue[Method],
+                        "Zero", QuantumState[{"Register", qubits}],
+                        _,  QuantumState[{"RandomPure", qubits}]
+                    ]],
+                    tensor_ :> QuantumState[Flatten[tensor]]}
+                ]["SplitDual", Length[order[[1]]]];
+			Replace[label, {Subscript["Measurement", target___] :> (QuantumMeasurementOperator[#, {target}] &), _ -> Identity}] @  QuantumOperator[
+				tensor,
 				order,
 				"Label" -> label
 			]
