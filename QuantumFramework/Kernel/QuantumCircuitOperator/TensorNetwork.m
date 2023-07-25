@@ -256,9 +256,14 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
     If[ transpose =!= {},
         res = Transpose[res, transpose]
     ];
-    res = QuantumState[
-        SparseArrayFlatten[res],
-        circuit["Basis"]
+    res = With[{basis = circuit["Basis"]},
+        QuantumState[
+            QuantumState[
+                SparseArrayFlatten[res],
+                QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
+            ],
+            circuit["Basis"]
+        ]
     ];
     If[ TrueQ[OptionValue["Trace"]] && traceOrder =!= {} && ! bendQ,
         res = QuantumPartialTrace[res, traceOrder - circuit["Min"] + 1];
