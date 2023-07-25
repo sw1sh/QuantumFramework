@@ -6,6 +6,7 @@ PackageExport["TensorNetworkQ"]
 PackageExport["ContractTensorNetwork"]
 PackageExport["TensorNetworkFreeIndices"]
 
+PackageScope["TensorNetworkIndexDimensions"]
 PackageScope["InitializeTensorNetwork"]
 PackageScope["TensorNetworkApply"]
 PackageScope["TensorNetworkCompile"]
@@ -129,6 +130,11 @@ ContractTensorNetwork[net_Graph ? (TensorNetworkQ[True]), OptionsPattern[]] := S
 
 TensorNetworkFreeIndices[net_Graph ? TensorNetworkQ] :=
     SortBy[Last] @ DeleteCases[Join @@ AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Index"], Alternatives @@ Union @@ EdgeTags[net]]
+
+
+TensorNetworkIndexDimensions[net_Graph ? TensorNetworkQ] :=
+    Catenate @ MapThread[Thread[#2 -> Dimensions[#1]] &, AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, #] & /@ {"Tensor", "Index"}]
+
 
 InitializeTensorNetwork[net_Graph ? TensorNetworkQ, tensor_ ? TensorQ, index_List : Automatic] := Annotate[
     {net, 0},
