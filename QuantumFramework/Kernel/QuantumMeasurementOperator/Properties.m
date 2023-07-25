@@ -53,7 +53,9 @@ QuantumMeasurementOperatorProp[_[_, target_], "Target" | "TargetOrder"] := targe
 
 QuantumMeasurementOperatorProp[qmo_, "Arity" | "Targets"] := Length[qmo["Target"]]
 
-QuantumMeasurementOperatorProp[qmo_, "EigenIndex"] :=
+QuantumMeasurementOperatorProp[qmo_, "Eigenorder"] := Replace[Select[qmo["FullOutputOrder"], NonPositive], {} -> {0}]
+
+QuantumMeasurementOperatorProp[qmo_, "Eigenindex"] :=
     Catenate @ Position[qmo["FullOutputOrder"], _ ? NonPositive, {1}]
 
 QuantumMeasurementOperatorProp[qmo_, "TargetIndex"] :=
@@ -70,7 +72,7 @@ QuantumMeasurementOperatorProp[qmo_, "Eigenqudits"] := Max[qmo["ExtraQudits"], 1
 
 QuantumMeasurementOperatorProp[qmo_, "Eigendimensions"] :=
     qmo["OutputDimensions"][[
-        If[qmo["ExtraQudits"] > 0, qmo["EigenIndex"], qmo["TargetIndex"]]
+        If[qmo["ExtraQudits"] > 0, qmo["Eigenindex"], qmo["TargetIndex"]]
     ]]
 
 QuantumMeasurementOperatorProp[qmo_, "Eigendimension"] := Times @@ qmo["Eigendimensions"]

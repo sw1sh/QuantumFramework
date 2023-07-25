@@ -38,7 +38,7 @@ QuantumChannelProp[qc_, "Properties"] :=
 QuantumChannelProp[_[op_], "Operator" | "QuantumOperator"] := op
 
 
-QuantumChannelProp[qc_, "TraceOrder"] := Take[qc["FullOutputOrder"], qc["OutputQudits"] - qc["InputQudits"]]
+QuantumChannelProp[qc_, "TraceOrder"] := Select[qc["FullOutputOrder"], NonPositive]
 
 QuantumChannelProp[qc_, "TraceQudits"] := Length @ qc["TraceOrder"]
 
