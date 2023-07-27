@@ -718,9 +718,9 @@ BlochPlot[qs_, opts : OptionsPattern[]] := Module[{
         ],
         If[ TrueQ[OptionValue["ShowLabels"]],
             Splice @ {
-                Text[Ket[0], {0, 0, 1.3}],  Text[Ket[1], {0, 0, -1.3}],
-                Text[Ket["R"], {0, 1.3, 0}], Text[Ket["L"], {0, -1.3, 0}],
-                Text[Ket["+"], {1.3, 0, 0}], Text[Ket["-"], {-1.3, 0, 0}]
+                Text[Ket[{0}], {0, 0, 1.3}],  Text[Ket[{1}], {0, 0, -1.3}],
+                Text[Ket[{"R"}], {0, 1.3, 0}], Text[Ket[{"L"}], {0, -1.3, 0}],
+                Text[Ket[{"+"}], {1.3, 0, 0}], Text[Ket[{"-"}], {-1.3, 0, 0}]
             },
             Nothing
         ],
