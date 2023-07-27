@@ -134,9 +134,10 @@ QuantumOperator[matrix_ ? MatrixQ, order : _ ? autoOrderQ, args___, opts : Optio
     newOutputOrder, newInputOrder
 },
     {newOutputOrder, newInputOrder} = Replace[order, {
-        o : Except[{_ ? orderQ | Automatic, _ ? orderQ | Automatic}] :> {op["OutputOrder"], Replace[o, Automatic -> op["InputOrder"]]},
-        {out : _ ? orderQ | Automatic, in : _ ? orderQ | Automatic} :> {Replace[out, Automatic -> op["OutputOrder"]], Replace[in, Automatic -> op["InputOrder"]]},
-        Automatic -> op["Order"]
+        out_ ? orderQ /; Length[out] == op["InputQudits"] :> {out, out},
+        out_ ? orderQ :> {out, op["InputOrder"]},
+        Automatic :> op["Order"],
+        {out : _ ? orderQ | Automatic, in : _ ? orderQ | Automatic} :> {Replace[out, Automatic :> op["OutputOrder"]], Replace[in, Automatic :> op["InputOrder"]]}
     }];
     QuantumOperator[op["State"]["Split", Length[newOutputOrder]], {newOutputOrder, newInputOrder}, opts]
 ]
