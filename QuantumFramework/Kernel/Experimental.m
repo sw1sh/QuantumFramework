@@ -123,8 +123,8 @@ QuantumDiagramProcess[qco_QuantumCircuitOperator] := With[{
 Options[QuantumMPS] = {"Ordered" -> False}
 
 QuantumMPS[qs_ ? QuantumStateQ, m : _Integer | Infinity : Infinity, OptionsPattern[]] := Block[{
-	decompose = If[VectorQ[#[[All, 1]], NumericQ], TakeLargestBy[#, First, UpTo[m]], #] & @ qs["DecomposeWithAmplitudes"],
-	dimensions = Catenate[Table @@@ FactorInteger[qs["Dimension"]]],
+	decompose = If[VectorQ[#[[All, 1]], NumericQ], TakeLargestBy[#, First, UpTo[m]], #] & @ qs["DecomposeWithAmplitudes", qs["Dimensions"]],
+	dimensions = qs["Dimensions"],
 	proba, n, rowVector, colVector, matrices, result
 },
 	n = Length[decompose];
@@ -154,17 +154,17 @@ QuantumMPS[qs_ ? QuantumStateQ, m : _Integer | Infinity : Infinity, OptionsPatte
 	];
 	result = QuantumCircuitOperator[{colVector, Splice @ matrices, rowVector}];
 	If[	TrueQ[OptionValue["Ordered"]],
-		result = Reverse["I" -> # -> qs["OutputQudits"] + # & /@ Range[qs["InputQudits"]]] /* result
+		result = Reverse[MapIndexed[{"I", #1} -> #2 -> qs["OutputQudits"] + #2 &, qs["InputDimensions"]]] /* result
 	];
 	result
 ]
 
 QuantumMPS[qo_ ? QuantumOperatorQ, m : _Integer | Infinity : Infinity, OptionsPattern[]] :=
 	With[{range = Range[Length[qo["InputOrder"]]]},
-		{{"Permutation", range} -> qo["InputOrder"] -> range + Length[range]}
+		{{"Permutation", qo["InputDimensions"], range} -> qo["InputOrder"] -> range + Length[qo["OutputOrder"]]}
 	] /*
 	QuantumMPS[qo["State"], m] /*
 	With[{range = Range[Length[qo["OutputOrder"]]]},
-		{{"Permutation", range} -> range -> qo["OutputOrder"]}
+		{{"Permutation", qo["OutputDimensions"], range} -> range -> qo["OutputOrder"]}
 	]
 

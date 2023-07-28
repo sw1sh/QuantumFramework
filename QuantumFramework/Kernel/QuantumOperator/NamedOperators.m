@@ -566,7 +566,8 @@ QuantumOperator["Permutation", opts___] := QuantumOperator[{"Permutation", 2, Cy
 
 QuantumOperator[{"Permutation", perm_Cycles}, opts___] := QuantumOperator[{"Permutation", 2, perm}, opts]
 
-QuantumOperator[{"Permutation", perm_List}, opts___] := QuantumOperator[{"Permutation", ConstantArray[2, Length[perm]], PermutationCycles[perm]}, opts]
+QuantumOperator[{"Permutation", dims : {_Integer ? Positive..} | Automatic : Automatic, perm_List}, opts___] :=
+    QuantumOperator[{"Permutation", Replace[dims, Automatic :> ConstantArray[2, Length[perm]]], PermutationCycles[perm]}, opts]
 
 QuantumOperator[{"Permutation", dim : _Integer ? Positive, perm_Cycles}, opts___] := QuantumOperator[{"Permutation", Table[dim, Max[PermutationMax[perm], 1]], perm}, opts]
 

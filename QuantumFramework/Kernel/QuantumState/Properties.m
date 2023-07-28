@@ -370,7 +370,7 @@ QuantumStateProp[qs_, "Disentangle"] /; qs["PureStateQ"] := With[{s = qs["Schmid
 
 QuantumStateProp[qs_, "Decompose", {}] := {{qs}}
 
-QuantumStateProp[qs_, "Decompose", dims_List] /; qs["PureStateQ"] := If[PrimeQ[qs["Dimension"]], {{qs}}, Module[{s = qs["SchmidtBasis", First[dims]], basis},
+QuantumStateProp[qs_, "Decompose", dims_List] /; qs["PureStateQ"] := If[Length[dims] == 1, {{qs}}, Module[{s = qs["SchmidtBasis", First[dims]], basis},
     basis = s["Basis"]["Decompose"];
 	MapIndexed[{v, idx} |->
 		Splice[Catenate /@ Tuples[If[Length[basis] == 2, MapAt[#["Decompose", {}] &, 1], Identity] @
@@ -381,7 +381,7 @@ QuantumStateProp[qs_, "Decompose", dims_List] /; qs["PureStateQ"] := If[PrimeQ[q
 
 decompose[qs_, {}] := {1 -> {qs}}
 
-decompose[qs_, dims_List] := If[PrimeQ[qs["Dimension"]], {1 -> {qs}}, Module[{s = qs["SchmidtBasis", First[dims]], basis},
+decompose[qs_, dims_List] := If[Length[dims] == 1, {1 -> {qs}}, Module[{s = qs["SchmidtBasis", First[dims]], basis},
     basis = s["Basis"]["Decompose"];
 	MapIndexed[{v, idx} |->
 		With[{decomp = If[Length[basis] == 2, MapAt[decompose[#, {}] &, 1], Identity] @
