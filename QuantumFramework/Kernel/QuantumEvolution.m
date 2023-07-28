@@ -6,16 +6,19 @@ PackageExport["QuantumEvolve"]
 
 QuantumEvolve::error = "Differential Solver failed to find a solution"
 
+Options[QuantumEvolve] = DeleteDuplicatesBy[First] @ Join[{"AdditionalEquations" -> {}}, Options[NDSolveValue], Options[DSolveValue]]
+
 QuantumEvolve[
     hamiltonian_ ? QuantumOperatorQ,
     defaultState : _ ? QuantumStateQ | Automatic | None : Automatic,
     defaultParameter : _Symbol | {_Symbol, _ ? NumericQ, _ ? NumericQ} | Automatic : Automatic,
-    args___
+    opts : OptionsPattern[]
 ] := Enclose @ Block[{
     state = None,
     matrix,
     parameter, parameterSpec,
-    numericQ, solution
+    numericQ, solution,
+    method
 },
     If[ defaultState =!= None,
         state = Replace[defaultState, Automatic :> QuantumState[{"Register", hamiltonian["InputDimensions"]}]];
@@ -30,7 +33,8 @@ QuantumEvolve[
     ];
     numericQ = MatchQ[defaultParameter, {_Symbol, _ ? NumericQ, _ ? NumericQ}];
     matrix = If[numericQ, Normal, Identity] @ TrigToExp[hamiltonian["Matrix"]];
-    solution = If[numericQ, NDSolveValue, DSolveValue][
+    method = If[numericQ, NDSolveValue, DSolveValue];
+    solution = method[
         {
             \[FormalS]'[parameter] == 1 / I If[
                 defaultState === None || state["VectorQ"],
@@ -39,7 +43,7 @@ QuantumEvolve[
             ],
             \[FormalS][0] == If[numericQ, Normal, Identity] @
                 If[defaultState === None, IdentityMatrix[hamiltonian["InputDimension"], SparseArray], state["State"]]
-        },
+        } ~Join~ Flatten[{OptionValue["AdditionalEquations"]}],
         If[ numericQ,
             \[FormalS],
             Element[
@@ -51,7 +55,7 @@ QuantumEvolve[
             ]
         ],
         If[numericQ, parameterSpec, parameter],
-        args
+        FilterRules[{opts}, Options[method]]
     ];
     If[ MatchQ[solution, _InterpolatingFunction],
         solution =
