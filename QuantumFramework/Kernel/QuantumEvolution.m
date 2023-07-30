@@ -60,7 +60,7 @@ QuantumEvolve[
     If[ MatchQ[solution, _InterpolatingFunction],
         solution =
             Map[
-                Interpolation[Thread[{solution["Grid"], #}], InterpolationOrder -> solution["InterpolationOrder"]][parameter] &,
+                Interpolation[Thread[{solution["Grid"], #}], InterpolationOrder -> 1][parameter] &,
                 Transpose[solution["ValuesOnGrid"], InversePermutation[Cycles[{Range[Length[solution["OutputDimensions"]] + 1]}]]],
                 {-2}
             ]

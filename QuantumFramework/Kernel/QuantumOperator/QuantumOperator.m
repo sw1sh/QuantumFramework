@@ -149,34 +149,36 @@ QuantumOperator[matrix_ ? MatrixQ, args___, opts : OptionsPattern[]] := Module[{
         basis, newOutputQuditBasis, newInputQuditBasis, state},
         {outputs, inputs} = Dimensions[newMatrix];
         basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ, "Invalid basis"];
-        If[ basis["InputDimension"] == 1,
-            basis = QuantumBasis[basis, "Input" -> basis["Output"]["Dual"]]
-        ];
-        outMultiplicity = Quiet @ Log[basis["OutputDimension"], outputs];
-        inMultiplicity = Quiet @ Log[basis["InputDimension"], inputs];
-        If[
-            IntegerQ[outMultiplicity] && IntegerQ[inMultiplicity],
-            (* multiply existing basis *)
-
-            basis = QuantumBasis[basis,
-                "Output" -> QuditBasis[basis["Output"], outMultiplicity],
-                "Input" -> QuditBasis[basis["Input"], inMultiplicity]
-            ],
-
-            (* add one extra qudit *)
-            newOutputQuditBasis = QuantumTensorProduct[basis["Output"], QuditBasis[Ceiling[outputs / basis["OutputDimension"]] /. 1 -> Sequence[]]];
-            newInputQuditBasis = QuantumTensorProduct[basis["Input"], QuditBasis[Ceiling[inputs / basis["InputDimension"]] /. 1 -> Sequence[]]];
-
-            newMatrix = kroneckerProduct[
-                newMatrix,
-                With[{outs = Ceiling[newOutputQuditBasis["Dimension"] / outputs], ins = Ceiling[newInputQuditBasis["Dimension"] / inputs]},
-                    Replace[{} -> {{1}}] @ identityMatrix[Max[outs, ins]][[;; outs, ;; ins]]
-                ]
+        If[ basis["Dimension"] =!= outputs * inputs,
+            If[ basis["InputDimension"] == 1,
+                basis = QuantumBasis[basis, "Input" -> basis["Output"]["Dual"]]
             ];
-            basis = QuantumBasis[basis,
-                "Output" -> newOutputQuditBasis,
-                "Input" -> If[newInputQuditBasis["DualQ"], newInputQuditBasis, newInputQuditBasis["Dual"]]
-            ];
+            outMultiplicity = Quiet @ Log[basis["OutputDimension"], outputs];
+            inMultiplicity = Quiet @ Log[basis["InputDimension"], inputs];
+            If[
+                IntegerQ[outMultiplicity] && IntegerQ[inMultiplicity],
+                (* multiply existing basis *)
+
+                basis = QuantumBasis[basis,
+                    "Output" -> QuditBasis[basis["Output"], outMultiplicity],
+                    "Input" -> QuditBasis[basis["Input"], inMultiplicity]
+                ],
+
+                (* add one extra qudit *)
+                newOutputQuditBasis = QuantumTensorProduct[basis["Output"], QuditBasis[Ceiling[outputs / basis["OutputDimension"]] /. 1 -> Sequence[]]];
+                newInputQuditBasis = QuantumTensorProduct[basis["Input"], QuditBasis[Ceiling[inputs / basis["InputDimension"]] /. 1 -> Sequence[]]];
+
+                newMatrix = kroneckerProduct[
+                    newMatrix,
+                    With[{outs = Ceiling[newOutputQuditBasis["Dimension"] / outputs], ins = Ceiling[newInputQuditBasis["Dimension"] / inputs]},
+                        Replace[{} -> {{1}}] @ identityMatrix[Max[outs, ins]][[;; outs, ;; ins]]
+                    ]
+                ];
+                basis = QuantumBasis[basis,
+                    "Output" -> newOutputQuditBasis,
+                    "Input" -> If[newInputQuditBasis["DualQ"], newInputQuditBasis, newInputQuditBasis["Dual"]]
+                ];
+            ]
         ];
         state = ConfirmBy[
             QuantumState[
@@ -333,6 +335,7 @@ Enclose @ With[{
     ]
 ]
 
+(*
 (qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumOperatorQ] /; qo["Picture"] === op["Picture"] &&
     ! IntersectingQ[qo["InputOrder"], op["OutputOrder"]] &&
     ! IntersectingQ[qo["OutputOrder"], op["OutputOrder"]] && ! IntersectingQ[qo["InputOrder"], op["InputOrder"]] :=
@@ -366,7 +369,38 @@ Enclose @ With[{
     ];
     ConfirmAssert[top["InputDimension"] == bottom["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
     QuantumOperator[ConfirmBy[top["State"] @ bottom["State"], QuantumStateQ], {top["OutputOrder"], bottom["InputOrder"]}]
+] *)
+
+(top_QuantumOperator ? QuantumOperatorQ)[bot_ ? QuantumOperatorQ] /; top["Picture"] === bot["Picture"] := Enclose @ Block[{
+    topOut, topIn, botOut, botIn, out, in, basis
+},
+    topOut = 1 /@ top["FullOutputOrder"];
+    topIn = If[MemberQ[bot["FullOutputOrder"], #], 0, 2][#] & /@ top["FullInputOrder"];
+    botOut = If[MemberQ[top["FullInputOrder"], #], 0, 1][#] & /@ bot["FullOutputOrder"];
+    botIn = 2 /@ bot["FullInputOrder"];
+    out = Join[topOut, Cases[botOut, 1[_]]];
+    in = Join[Cases[topIn, 2[_]], botIn];
+    basis = QuantumBasis[
+        QuantumTensorProduct[top["Output"], bot["Output"]["Extract", Catenate @ Position[botOut, 1[_]]]],
+        QuantumTensorProduct[top["Input"]["Extract", Catenate @ Position[topIn, 2[_]]], bot["Input"]],
+        "Label" -> top["Label"] @* bot["Label"]
+    ];
+    QuantumOperator[
+        QuantumState[
+            SparseArrayFlatten @ Confirm @ Check[
+                EinsteinSummation[
+                    {Join[topOut, topIn], Join[botOut, botIn]} -> Join[out, in],
+                    {top["State"]["Computational"]["Tensor"], bot["State"]["Computational"]["Tensor"]}
+                ],
+                $Failed
+            ],
+            basis
+        ],
+        orderDuplicates /@ Map[First, {out, in}, {2}]
+    ]
 ]
+
+orderDuplicates[xs_List] := Block[{next = Function[{ys, y}, If[MemberQ[ys, y], next[ys, y + 1], y]]}, Fold[Append[#1, next[#1, #2]] &, {}, xs]]
 
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qmo_ ? QuantumMeasurementOperatorQ] /; qo["Picture"] == qmo["Picture"] :=

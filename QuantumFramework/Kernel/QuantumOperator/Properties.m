@@ -145,6 +145,16 @@ QuantumOperatorProp[qo_, "InputOrderQuditMapping"] := Thread[qo["FullInputOrder"
 
 QuantumOperatorProp[qo_, "OutputOrderQuditMapping"] := Thread[qo["FullOutputOrder"] -> Range[qo["OutputQudits"]]]
 
+QuantumOperatorProp[qo_, "OutputOrderDimensions"] := AssociationMap[
+    qo["OutputDimensions"][[Replace[#, qo["OutputOrderQuditMapping"]]]] &,
+    qo["FullOutputOrder"]
+]
+
+QuantumOperatorProp[qo_, "InputOrderDimensions"] := AssociationMap[
+    qo["InputDimensions"][[Replace[#, qo["InputOrderQuditMapping"]]]] &,
+    qo["FullInputOrder"]
+]
+
 
 QuantumOperatorProp[qo_, "SquareQ"] := qo["OutputDimension"] == qo["InputDimension"]
 
@@ -436,17 +446,20 @@ QuantumOperatorProp[qo_, "Transpose"] := With[{qudits = Min[qo["OutputQudits"], 
     qo["Transpose", Thread[{Take[qo["OutputOrder"], qudits], Take[qo["InputOrder"], qudits]}]]
 ]
 
-QuantumOperatorProp[qo_, "Transpose", order : {(List | Rule)[_Integer, _Integer]...}] /;
-    ContainsAll[qo["OutputOrder"], order[[All, 1]]] && ContainsAll[qo["InputOrder"], order[[All, 2]]] :=
-With[{
-    qudits = {
-        order[[All, 1]] /. qo["OutputOrderQuditMapping"],
-        (order[[All, 2]] /. qo["InputOrderQuditMapping"]) + qo["OutputQudits"]
-    }
+QuantumOperatorProp[qo_, "Transpose", order : {(List | Rule)[_Integer, _Integer]...}] := Block[{
+    outputMap = MapAt[1, Rule @@@ order, {All, 2}],
+    inputMap = MapAt[0, Rule @@@ Reverse /@ order, {All, 2}],
+    map, out, in, qudits
 },
+    map = Join[Replace[qo["FullOutputOrder"], Append[outputMap, o_ :> 0[o]], {1}], Replace[qo["FullInputOrder"], Append[inputMap, i_ :> 1[i]], {1}]];
+    {out, in} = {Cases[map, 0[_]], Cases[map, 1[_]]};
+    qudits = Join[
+        Replace[Keys[outputMap], Append[qo["OutputOrderQuditMapping"], _ -> Nothing], {1}],
+        Replace[Keys[inputMap], Append[qo["InputOrderQuditMapping"], _ -> Nothing], {1}] + qo["OutputQudits"]
+    ];
     QuantumOperator[
-        QuantumState[#, #["Basis"]["Dual", Catenate[qudits]]] & @ qo["State"]["Permute", Cycles @ Thread[qudits]],
-        {qo["InputOrder"] /. Rule @@@ Reverse /@ order, qo["OutputOrder"] /. Rule @@@ order}
+        QuantumState[qo["State"], qo["Basis"]["Dual", qudits]]["Permute", FindPermutation[map, Join[out, in]]],
+        Map[First, {out, in}, {2}]
     ]
 ]
 

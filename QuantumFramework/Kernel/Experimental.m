@@ -6,6 +6,7 @@ PackageScope["QuantumDiagramProcess"]
 
 PackageExport["QuantumCircuitMultiwayGraph"]
 PackageExport["QuantumMPS"]
+PackageExport["QuantumMPO"]
 
 
 
@@ -120,7 +121,7 @@ QuantumDiagramProcess[qco_QuantumCircuitOperator] := With[{
 ]
 
 
-Options[QuantumMPS] = {"Ordered" -> False}
+Options[QuantumMPS] = {"Ordered" -> False, "Sides" -> True}
 
 QuantumMPS[qs_ ? QuantumStateQ, m : _Integer | Infinity : Infinity, OptionsPattern[]] := Block[{
 	decompose = If[VectorQ[#[[All, 1]], NumericQ], TakeLargestBy[#, First, UpTo[m]], #] & @ qs["DecomposeWithAmplitudes", qs["Dimensions"]],
@@ -152,19 +153,70 @@ QuantumMPS[qs_ ? QuantumStateQ, m : _Integer | Infinity : Infinity, OptionsPatte
 			Thread[{Transpose @ Map[#["Computational"]["StateVector"] &, Values[decompose], {2}], dimensions}]
 		]
 	];
-	result = QuantumCircuitOperator[{colVector, Splice @ matrices, rowVector}];
+	result = If[TrueQ[OptionValue["Sides"]],
+		QuantumCircuitOperator[{colVector, Splice @ matrices, rowVector}],
+		QuantumCircuitOperator[MapAt[rowVector, -1] @ MapAt[If[colVector === Nothing, #, #[colVector]] &, 1] @ matrices]
+	];
 	If[	TrueQ[OptionValue["Ordered"]],
 		result = Reverse[MapIndexed[{"I", #1} -> #2 -> qs["OutputQudits"] + #2 &, qs["InputDimensions"]]] /* result
 	];
-	result
+	QuantumCircuitOperator[result, "MPS"]
 ]
 
-QuantumMPS[qo_ ? QuantumOperatorQ, m : _Integer | Infinity : Infinity, OptionsPattern[]] :=
+QuantumMPS[qo_ ? QuantumOperatorQ, m : _Integer | Infinity : Infinity, opts : OptionsPattern[]] :=
 	With[{range = Range[Length[qo["InputOrder"]]]},
 		{{"Permutation", qo["InputDimensions"], range} -> qo["InputOrder"] -> range + Length[qo["OutputOrder"]]}
 	] /*
-	QuantumMPS[qo["State"], m] /*
+	QuantumMPS[qo["State"], m, "Ordered" -> False, opts] /*
 	With[{range = Range[Length[qo["OutputOrder"]]]},
 		{{"Permutation", qo["OutputDimensions"], range} -> range -> qo["OutputOrder"]}
 	]
+
+
+Options[QuantumMPO] = {"Ordered" -> True}
+
+QuantumMPO[qo_QuantumOperator, m : _Integer | Infinity : Infinity, OptionsPattern[]] := Block[{
+	mps = QuantumMPS[qo["ReverseInput"]["State"], m, "Sides" -> False],
+	top, bot, split,
+	result
+},
+	{top, bot} = TakeDrop[mps["Operators"], qo["OutputQudits"]];
+	split = Length[top] - Length[bot];
+	bot = #["Transpose", {{0, -1}, {-1, 0}}] & /@ Reverse[bot];
+	result = QuantumCircuitOperator[
+		If[ split > 0,
+			Join[top[[;; split]], MapThread[Construct, {top[[split + 1 ;;]], bot}]],
+			Join[bot[[;; - split]], MapThread[Construct, {top, bot[[- split + 1 ;;]]}]]
+		] //
+		MapAt[QuantumOperator[{"Cap", #["OutputDimensions"][[1]]}, {-1, 0}][#] &, -1] //
+		MapAt[
+			If[
+				ContainsAll[#["OutputOrder"], {-1 ,0}],
+				QuantumOperator[{"Uncurry", Replace[{-1, 0}, #["OutputOrderDimensions"], {1}]}, {-1, 0} -> {0}][#],
+				QuantumOperator[#["State"], {#["OutputOrder"] /. -1 -> 0, #["InputOrder"]}]
+			] &,
+			{;; -2}
+		] //
+		MapAt[
+			If[
+				ContainsAll[#["InputOrder"], {-1 ,0}],
+				#[QuantumOperator[{"Curry", Replace[{-1, 0}, #["InputOrderDimensions"], {1}]}, {0} -> {-1, 0}]],
+				QuantumOperator[#["State"], {#["OutputOrder"], #["InputOrder"] /. -1 -> 0}]
+			] &,
+		 	{2 ;;}
+		] //
+		Map[QuantumOperator[
+			#["State"],
+			{#["OutputOrder"], Replace[#["InputOrder"], i_ /; i > qo["OutputQudits"] :> qo["Qudits"] - i + Max[split, 0] + 1, {1}]},
+			"Label" -> None] &
+		]
+	];
+	If[	TrueQ[OptionValue["Ordered"]],
+		result =
+			{{"Permutation", qo["InputDimensions"]} -> qo["InputOrder"] -> Reverse[Range[Length[qo["InputOrder"]]] + Max[split, 0]]} /*
+			result /*
+			{{"Permutation", qo["OutputDimensions"]} -> Range[Length[qo["OutputOrder"]]] -> qo["OutputOrder"]}
+	];
+	QuantumCircuitOperator[result, "MPO"]
+]
 
