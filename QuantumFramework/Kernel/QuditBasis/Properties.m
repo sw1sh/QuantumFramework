@@ -76,7 +76,9 @@ computationalBasisQ[repr_] := And @@ ResourceFunction["KeyGroupBy"][repr, Last,
     ] &
 ]
 
-QuditBasisProp[qb_, "Elements" | "ReducedElements"] /; computationalBasisQ[qb["Representations"]] := With[{
+QuditBasisProp[qb_, "ComputationalQ"] := computationalBasisQ[qb["Representations"]]
+
+QuditBasisProp[qb_, "Elements" | "ReducedElements"] /; qb["ComputationalQ"] := With[{
     dims = qb["Dimensions"], dim = qb["Dimension"], qudits = qb["Qudits"]
 },
     SparseArray[
