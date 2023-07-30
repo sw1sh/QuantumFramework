@@ -145,6 +145,16 @@ QuantumOperatorProp[qo_, "InputOrderQuditMapping"] := Thread[qo["FullInputOrder"
 
 QuantumOperatorProp[qo_, "OutputOrderQuditMapping"] := Thread[qo["FullOutputOrder"] -> Range[qo["OutputQudits"]]]
 
+QuantumOperatorProp[qo_, "OutputOrderDimensions"] := AssociationMap[
+    qo["OutputDimensions"][[Replace[#, qo["OutputOrderQuditMapping"]]]] &,
+    qo["FullOutputOrder"]
+]
+
+QuantumOperatorProp[qo_, "InputOrderDimensions"] := AssociationMap[
+    qo["InputDimensions"][[Replace[#, qo["InputOrderQuditMapping"]]]] &,
+    qo["FullInputOrder"]
+]
+
 
 QuantumOperatorProp[qo_, "SquareQ"] := qo["OutputDimension"] == qo["InputDimension"]
 
