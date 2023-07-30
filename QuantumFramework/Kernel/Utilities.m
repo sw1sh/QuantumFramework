@@ -18,6 +18,7 @@ PackageScope["identityMatrix"]
 PackageScope["kroneckerProduct"]
 PackageScope["projector"]
 PackageScope["MatrixPartialTrace"]
+PackageScope["EinsteinSummation"]
 PackageScope["blockDiagonalMatrix"]
 PackageScope["eigenvectors"]
 PackageScope["eigensystem"]
@@ -288,3 +289,61 @@ MyBlockDiagonalMatrix[{m1_ ? matrixQ, m2_ ? matrixQ}] := Block[{
 MyBlockDiagonalMatrix[mm : {__ ? matrixQ}] := Fold[MyBlockDiagonalMatrix[{##}] &, mm]
 
 MyBlockDiagonalMatrix[{}] := {{}}
+
+
+
+EinsteinSummation[in_List, arrays_] := Module[{
+	res = isum[in -> Cases[Tally @ Flatten @ in, {_, 1}][[All, 1]], arrays]
+},
+	res /; res =!= $Failed
+]
+
+EinsteinSummation[in_List -> out_, arrays_]:=Module[{
+	res = isum[in -> out,arrays]
+},
+	res /; res =!= $Failed
+]
+
+EinsteinSummation[s_String, arrays_] := EinsteinSummation[
+	Replace[
+		StringSplit[s, "->"],
+		{{in_, out_} :> Characters[StringSplit[in, ","]] -> Characters[out],
+		{in_} :> Characters[StringSplit[in, ","]]}
+	],
+	arrays
+]
+
+isum[in_List -> out_, arrays_List] := Catch @ Module[{
+	indices, contracted, contractions, multiplicity, tensor, transpose
+},
+	If[Length[in] != Length[arrays], Message[EinsteinSummation::length, Length[in], Length[arrays]];
+	Throw[$Failed]];
+	MapThread[
+		If[IntegerQ @ TensorRank[#1] && Length[#1] != TensorRank[#2],
+			Message[EinsteinSummation::shape,#1,#2]; Throw[$Failed]
+		] &,
+		{in,arrays}
+	];
+	indices = Catenate[in];
+	contracted = DeleteElements[indices, 1 -> out];
+	contractions = Flatten[Take[Position[indices, #[[1]]], #[[2]]]] & /@ Tally[contracted];
+	indices = DeleteElements[indices, 1 -> contracted];
+	If[! ContainsAll[indices, out], Message[EinsteinSummation::output]; Throw[$Failed]];
+	tensor = SymbolicTensors`ArrayContract[TensorProduct @@ arrays, contractions];
+	multiplicity = Max @ Merge[{Counts[out], Counts[indices]}, Apply[Ceiling[#1 / #2] &]];
+	If[ multiplicity > 1,
+		indices = Catenate @ ConstantArray[indices, multiplicity];
+		contracted = DeleteElements[indices, 1 -> out];
+		contractions = Flatten[Take[Position[indices, #[[1]]], #[[2]]]] & /@ Tally[contracted];
+		indices = DeleteElements[indices, 1 -> contracted];
+		tensor = SymbolicTensors`ArrayContract[TensorProduct @@ ConstantArray[tensor, multiplicity], contractions];
+	];
+	transpose = FindPermutation[indices, out];
+	If[ArrayQ[tensor], Transpose[tensor, transpose], tensor]
+]
+
+EinsteinSummation::length = "Number of index specifications (`1`) does not match the number of tensors (`2`)";
+EinsteinSummation::shape = "Index specification `1` does not match the tensor rank of `2`";
+(*EinsteinSummation::repeat = "Index specifications `1` are repeated more than twice";*)
+EinsteinSummation::output = "The uncontracted indices can't compose the desired output";
+

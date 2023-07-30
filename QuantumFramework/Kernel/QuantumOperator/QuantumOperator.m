@@ -371,7 +371,7 @@ Enclose @ With[{
     QuantumOperator[ConfirmBy[top["State"] @ bottom["State"], QuantumStateQ], {top["OutputOrder"], bottom["InputOrder"]}]
 ] *)
 
-(top_QuantumOperator ? QuantumOperatorQ)[bot_ ? QuantumOperatorQ] /; top["Picture"] === bot["Picture"] := Block[{
+(top_QuantumOperator ? QuantumOperatorQ)[bot_ ? QuantumOperatorQ] /; top["Picture"] === bot["Picture"] := Enclose @ Block[{
     topOut, topIn, botOut, botIn, out, in, basis
 },
     topOut = 1 /@ top["FullOutputOrder"];
@@ -386,14 +386,21 @@ Enclose @ With[{
         "Label" -> top["Label"] @* bot["Label"]
     ];
     QuantumOperator[
-        ResourceFunction["EinsteinSummation"][
-            {Join[topOut, topIn], Join[botOut, botIn]} -> Join[out, in],
-            {top["State"]["Computational"]["Tensor"], bot["State"]["Computational"]["Tensor"]}
+        QuantumState[
+            SparseArrayFlatten @ Confirm @ Check[
+                EinsteinSummation[
+                    {Join[topOut, topIn], Join[botOut, botIn]} -> Join[out, in],
+                    {top["State"]["Computational"]["Tensor"], bot["State"]["Computational"]["Tensor"]}
+                ],
+                $Failed
+            ],
+            basis
         ],
-        Map[First, {out, in}, {2}],
-        basis
+        orderDuplicates /@ Map[First, {out, in}, {2}]
     ]
 ]
+
+orderDuplicates[xs_List] := Block[{next = Function[{ys, y}, If[MemberQ[ys, y], next[ys, y + 1], y]]}, Fold[Append[#1, next[#1, #2]] &, {}, xs]]
 
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qmo_ ? QuantumMeasurementOperatorQ] /; qo["Picture"] == qmo["Picture"] :=
