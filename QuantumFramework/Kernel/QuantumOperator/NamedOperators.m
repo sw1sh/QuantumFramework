@@ -580,9 +580,9 @@ QuantumOperator[{"Permutation", dims : {_Integer ? Positive..}, perm_Cycles}, op
         opts
     ]
 
-QuantumOperator["Uncurry", opts___] := QuantumOperator[{"Uncurry", {2, 2}}, opts]
+QuantumOperator["Uncurry", opts___] := QuantumOperator[{"Uncurry", 2}, opts]
 
-QuantumOperator[{"Uncurry", dims : {_Integer ? Positive ..}}] := QuantumOperator[{"Uncurry", dims}, {1}, Range[Length[dims]]]
+QuantumOperator[{"Uncurry", dim : _Integer ? Positive ..}, opts___] := QuantumOperator[{"Uncurry", {dim, dim}}, opts]
 
 QuantumOperator[{"Uncurry", dims : {_Integer ? Positive ..}}, opts___] :=
     QuantumOperator[
@@ -590,8 +590,7 @@ QuantumOperator[{"Uncurry", dims : {_Integer ? Positive ..}}, opts___] :=
         opts
     ]
 
-
-QuantumOperator[name : "Curry" | {"Curry", ___}, opts___] := QuantumOperator[name /. "Curry" -> "Uncurry", opts]["ConjugateTranspose"]
+QuantumOperator[name : "Curry" | {"Curry", ___}, opts___] := QuantumOperator[QuantumOperator[name /. "Curry" -> "Uncurry"]["ConjugateTranspose"], opts]
 
 
 QuantumOperator[(name : "XSpider" | "YSpider" | "ZSpider" | "Spider"), opts___] := QuantumOperator[{name}, opts]
