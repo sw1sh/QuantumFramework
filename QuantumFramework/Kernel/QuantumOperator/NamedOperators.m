@@ -564,14 +564,16 @@ QuantumOperator[{"RandomHermitian", args___}, order : (_ ? orderQ) : {1}] := Enc
 
 QuantumOperator["Permutation", opts___] := QuantumOperator[{"Permutation", 2, Cycles[{{1, 2}}]}, opts]
 
-QuantumOperator[{"Permutation", perm_Cycles}, opts___] := QuantumOperator[{"Permutation", 2, perm}, opts]
+QuantumOperator["Permutation", order_ ? orderQ, opts___] := QuantumOperator[{"Permutation", ConstantArray[2, Length[order]]}, order, opts]
 
-QuantumOperator[{"Permutation", dims : {_Integer ? Positive..} | Automatic : Automatic, perm_List}, opts___] :=
-    QuantumOperator[{"Permutation", Replace[dims, Automatic :> ConstantArray[2, Length[perm]]], PermutationCycles[perm]}, opts]
+QuantumOperator["Permutation", {out_ ? orderQ, in_ ? orderQ} | (in_ ? orderQ -> out_ ? orderQ), opts___] /; Length[out] == Length[in] :=
+    QuantumOperator[{"Permutation", ConstantArray[2, Length[out]]}, {out, in}, opts]
 
-QuantumOperator[{"Permutation", dim : _Integer ? Positive, perm_Cycles}, opts___] := QuantumOperator[{"Permutation", Table[dim, Max[PermutationMax[perm], 1]], perm}, opts]
+QuantumOperator[{"Permutation", perm_Cycles : Cycles[{}]}, opts___] := QuantumOperator[{"Permutation", 2, perm}, opts]
 
-QuantumOperator[{"Permutation", dims : {_Integer ? Positive..}, perm_Cycles}, opts___] :=
+QuantumOperator[{"Permutation", dim : _Integer ? Positive, perm_Cycles : Cycles[{}]}, opts___] := QuantumOperator[{"Permutation", Table[dim, Max[PermutationMax[perm], 1]], perm}, opts]
+
+QuantumOperator[{"Permutation", dims : {_Integer ? Positive..}, perm_Cycles : Cycles[{}]}, opts___] :=
     QuantumOperator[
         QuantumState[
             SparseArrayFlatten @ TensorTranspose[ArrayReshape[identityMatrix[Times @@ dims], Join[dims, dims]], perm],
@@ -579,6 +581,10 @@ QuantumOperator[{"Permutation", dims : {_Integer ? Positive..}, perm_Cycles}, op
         ],
         opts
     ]
+
+QuantumOperator[{"Permutation", dims : {_Integer ? Positive..} | Automatic : Automatic, perm_List}, opts___] :=
+    QuantumOperator[{"Permutation", Replace[dims, Automatic :> ConstantArray[2, Length[perm]]], PermutationCycles[perm]}, opts]
+
 
 QuantumOperator["Uncurry", opts___] := QuantumOperator[{"Uncurry", 2}, opts]
 
