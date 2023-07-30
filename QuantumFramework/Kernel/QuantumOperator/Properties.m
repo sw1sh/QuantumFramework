@@ -449,7 +449,7 @@ QuantumOperatorProp[qo_, "Transpose"] := With[{qudits = Min[qo["OutputQudits"], 
 QuantumOperatorProp[qo_, "Transpose", order : {(List | Rule)[_Integer, _Integer]...}] := Block[{
     outputMap = MapAt[1, Rule @@@ order, {All, 2}],
     inputMap = MapAt[0, Rule @@@ Reverse /@ order, {All, 2}],
-    map, out, in
+    map, out, in, qudits
 },
     map = Join[Replace[qo["FullOutputOrder"], Append[outputMap, o_ :> 0[o]], {1}], Replace[qo["FullInputOrder"], Append[inputMap, i_ :> 1[i]], {1}]];
     {out, in} = {Cases[map, 0[_]], Cases[map, 1[_]]};
