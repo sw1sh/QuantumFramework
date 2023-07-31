@@ -597,8 +597,8 @@ QuantumOperatorProp[qo_, "ZYZ"] /; qo["Dimensions"] === {2, 2} := Enclose @ Modu
     {angles, phase} = UnitaryEulerAnglesWithPhase[qo["MatrixRepresentation"]];
     ConfirmAssert[NumericQ[phase] && AllTrue[angles, NumericQ]];
     If[ phase == 0,
-        QuantumOperator[{"U", Splice @ angles}],
-        QuantumCircuitOperator[{QuantumOperator[{"GlobalPhase", phase}], QuantumOperator[{"U", Splice @ angles}]}]
+        QuantumOperator[{"U", Splice @ angles}, qo["Order"]],
+        QuantumCircuitOperator[{QuantumOperator[{"GlobalPhase", phase}], QuantumOperator[{"U", Splice @ angles}, qo["Order"]]}]
     ]
 ]
 
