@@ -9,8 +9,9 @@ PackageScope["QuantumCircuitOperatorToQiskit"]
 
 shortcutToGate = Replace[
     {
-        (name_ -> (order_ ? orderQ)) :> shortcutToGate[name] -> Flatten[{order}],
-        "X" -> "XGate",
+        {"R", angle_, {name_ -> order_ ? orderQ}} :> shortcutToGate[{"R", angle, name}] -> order,
+        (name_ -> (order_ ? orderQ)) :> shortcutToGate[name] -> order,
+        "X" | "NOT" -> "XGate",
         "Y" -> "YGate",
         "Z" -> "ZGate",
         "H" -> "HGate",
@@ -19,20 +20,20 @@ shortcutToGate = Replace[
         "V" -> "SXGate",
         "SWAP" -> "SwapGate",
         {"Diagonal", x_} :> If[ListQ[x], {"Diagonal", NumericArray @ N[x]}, {"GlobalPhaseGate", N[Arg[x]]}],
-        {"U2", a_, b_} :> {"U2Gate", a, b},
-        {"U", a_, b_, c_} :> {"U3Gate", a, b, c},
+        {"U2", a_, b_} :> {"U2Gate", N[a], N[b]},
+        {"U", a_, b_, c_} :> {"U3Gate", N[a], N[b], N[c]},
         {"Permutation", perm_} :> {"PermutationGate", PermutationList[perm] - 1},
         {"GlobalPhase", phase_} :> {"GlobalPhaseGate", N[phase]},
-        {"R", angle_, "X"} :> {"RXGate", angle},
-        {"R", angle_, "Y"} :> {"RYGate", angle},
-        {"R", angle_, "Z"} :> {"RZGate", angle},
-        {"P", phase_} :> {"PhaseGate", phase},
+        {"R", angle_, "X"} :> {"RXGate", N[angle]},
+        {"R", angle_, "Y"} :> {"RYGate", N[angle]},
+        {"R", angle_, "Z"} :> {"RZGate", N[angle]},
+        {"P", phase_} :> {"PhaseGate", N[phase]},
         {"C", name_, controls___} :> {"Control", shortcutToGate[name], controls},
         SuperDagger[name_] :> {"Dagger", shortcutToGate[name]},
         barrier: "Barrier" | "Barrier"[arg_] :> "Barrier",
         Labeled[arr_NumericArray, label_] :> {"Unitary", arr, ToString[label]},
         target_ ? orderQ :> {"Measure", target},
-        shortcut_ :> {"Unitary", NumericArray @ Normal @ N @ QuantumOperator[shortcut]["Matrix"], ToString[shortcut]}
+        shortcut_ :> With[{op = QuantumOperator[shortcut]}, {"Unitary", NumericArray @ Normal @ N @ op["Matrix"], ToString[shortcut], op["Order"]}]
     }
 ]
 
@@ -79,6 +80,8 @@ def make_gate(gate_spec):
         gate = base_gate.adjoint()
     elif name == 'Unitary':
         gate = UnitaryGate(args[0], label=args[1])
+        assert(args[2][0] == args[2][1])
+        order = list(args[2][0])
     elif name == 'Barrier':
         gate = Barrier(len(order))
     elif name == 'Measure':
