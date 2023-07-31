@@ -329,14 +329,14 @@ isum[in_List -> out_, arrays_List] := Catch @ Module[{
 	contractions = Flatten[Take[Position[indices, #[[1]]], #[[2]]]] & /@ Tally[contracted];
 	indices = DeleteElements[indices, 1 -> contracted];
 	If[! ContainsAll[indices, out], Message[EinsteinSummation::output]; Throw[$Failed]];
-	tensor = SymbolicTensors`ArrayContract[TensorProduct @@ arrays, contractions];
+    tensor = Activate @ TensorContract[Inactive[TensorProduct] @@ arrays, contractions];
 	multiplicity = Max @ Merge[{Counts[out], Counts[indices]}, Apply[Ceiling[#1 / #2] &]];
 	If[ multiplicity > 1,
 		indices = Catenate @ ConstantArray[indices, multiplicity];
 		contracted = DeleteElements[indices, 1 -> out];
 		contractions = Flatten[Take[Position[indices, #[[1]]], #[[2]]]] & /@ Tally[contracted];
 		indices = DeleteElements[indices, 1 -> contracted];
-		tensor = SymbolicTensors`ArrayContract[TensorProduct @@ ConstantArray[tensor, multiplicity], contractions];
+		tensor = Activate @ TensorContract[Inactive[TensorProduct] @@ ConstantArray[tensor, multiplicity], contractions];
 	];
 	transpose = FindPermutation[indices, out];
 	If[ArrayQ[tensor], Transpose[tensor, transpose], tensor]
