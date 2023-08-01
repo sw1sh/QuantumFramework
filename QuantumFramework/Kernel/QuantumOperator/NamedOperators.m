@@ -511,7 +511,7 @@ QuantumOperator[{"RootNOT", dimension : _Integer ? Positive}, opts___] := Quantu
 ]
 
 
-QuantumOperator["Hadamard" | "H", order_ ? orderQ, opts___] :=
+QuantumOperator["Hadamard" | "H", order : _ ? orderQ : {1}, opts___] :=
     QuantumOperator[
         HadamardMatrix[2 ^ Length[order], Method -> "BitComplement"],
         {order, order},
