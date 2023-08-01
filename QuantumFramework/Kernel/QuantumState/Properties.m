@@ -46,7 +46,10 @@ QuantumState::failprop = "property `` failed with ``"
 (qs_QuantumState[prop_ ? propQ, args___]) /; QuantumStateQ[qs] := With[{
     result = QuantumStateProp[qs, prop, args]
 },
-    If[TrueQ[$QuantumFrameworkPropCache], QuantumStateProp[qs, prop, args] = result, result] /;
+    If[ TrueQ[$QuantumFrameworkPropCache] && QuantumStateProp[qs, "Basis"]["ParameterArity"] == 0,
+        QuantumStateProp[qs, prop, args] = result,
+        result
+    ] /;
         (!FailureQ[Unevaluated @ result] || Message[QuantumState::failprop, prop, result]) &&
         (!MatchQ[Unevaluated @ result, _QuantumStateProp] || Message[QuantumState::undefprop, prop])
 ]
