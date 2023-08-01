@@ -163,35 +163,8 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
 
 (* composition *)
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qs_ ? QuantumStateQ] := Enclose @ With[{
-    qudits = qmo["Eigenqudits"],
-    op = qmo["SuperOperator"]["SortOutput"]
-},
-    QuantumMeasurement[
-        QuantumOperator[
-            ConfirmBy[
-                QuantumOperator[op,
-                    (* shove away eigen qudits to the left *)
-                    ReplacePart[op["FullOutputOrder"], Thread[List /@ Range[qudits] -> 1 - Reverse @ Range[qudits]]],
-                    op["FullInputOrder"] - Max[Max[op["FullInputOrder"]] - qs["OutputQudits"], 0]
-                ][
-                    "OrderedInput",
-                    Range @ qs["OutputQudits"],
-                    qs["Output"]
-                ]["SortOutput"] @ qs,
-                QuantumStateQ
-            ],
-            {
-                Range[1 - qudits, qs["OutputQudits"]],
-                Range[qs["InputQudits"]]
-            }
-        ],
-        If[ op["OutputQudits"] <= op["InputQudits"],
-            Range[qmo["Eigenqudits"]],
-            qmo["Target"]
-        ]
-    ]
-]
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qs_ ? QuantumStateQ] :=
+    QuantumMeasurement[qmo[QuantumOperator[qs]]["Sort"]]
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[] := qmo[QuantumOperator[QuantumState[{"Register", qmo["InputDimensions"]}], {} -> qmo["InputOrder"]]]
 
