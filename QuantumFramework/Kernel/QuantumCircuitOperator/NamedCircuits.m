@@ -24,7 +24,7 @@ $QuantumCircuitOperatorNames = {
 }
 
 
-QuantumCircuitOperator[{"Graph", HoldPattern[g_Graph : RandomGraph[{5, 8}]], m : _Integer ? NonNegative : 0, gate_ : "CZ"}, opts___] := With[{
+QuantumCircuitOperator[{"Graph", HoldPattern[g_Graph : RandomGraph[{5, 8}]], m : _Integer ? NonNegative : 0, gate_ : {"C", "1"}}, opts___] := With[{
     ig = If[AllTrue[VertexList[g], Internal`PositiveIntegerQ], g, IndexGraph @ g]
 },
     QuantumCircuitOperator[
@@ -188,7 +188,7 @@ QuantumCircuitOperator[{"BooleanOracle",
     order = m + Replace[varSpec, {rules : KeyValuePattern[{_ -> _Integer ? Positive}] :> Values[rules], Except[{__Integer}] :> Range[Length[vars]]}];
     ConfirmAssert[orderQ[order]];
     indices = ConfirmMatch[BooleanIndices[esopFormula, vars], indicesPattern];
-    negIndices = ConfirmMatch[BooleanIndices[Not[Replace[esopFormula, bf_BooleanFunction :> bf @@ vars]], vars], indicesPattern];
+    negIndices = ConfirmMatch[BooleanIndices[BooleanConvert[Not[Replace[formula, bf_BooleanFunction :> bf @@ vars]], "ESOP"], vars], indicesPattern];
     If[ Length[negIndices] < Length[indices],
         indices = negIndices;
         isNegative = True;
@@ -205,7 +205,7 @@ QuantumCircuitOperator[{"BooleanOracle",
             QuantumOperator["I", {#}] & /@ Complement[Range[Max[indices, Length[vars]]], Flatten @ Values[indices]]
         ],
         opts,
-        esopFormula
+        If[MatchQ[formula, _BooleanFunction], esopFormula, formula]
     ]
 ]
 
@@ -226,7 +226,7 @@ QuantumCircuitOperator[{"BooleanOracleR",
     order = m + Replace[varSpec, {rules : KeyValuePattern[{_ -> _Integer ? Positive}] :> Values[rules], Except[{__Integer}] :> Range[Length[vars]]}];
     ConfirmAssert[orderQ[order]];
     indices = ConfirmMatch[BooleanIndices[esopFormula, vars], indicesPattern];
-    negIndices = ConfirmMatch[BooleanIndices[Not[Replace[esopFormula, bf_BooleanFunction :> bf @@ vars]], vars], indicesPattern];
+    negIndices = ConfirmMatch[BooleanIndices[BooleanConvert[Not[Replace[formula, bf_BooleanFunction :> bf @@ vars]], "ESOP"], vars], indicesPattern];
     If[ Length[negIndices] < Length[indices],
         indices = negIndices;
         isNegative = True;
@@ -244,7 +244,7 @@ QuantumCircuitOperator[{"BooleanOracleR",
             QuantumOperator["I", {#}] & /@ Complement[Range[Max[indices, Length[vars]]], Flatten @ Values[indices]]
         ],
         opts,
-        esopFormula
+        If[MatchQ[formula, _BooleanFunction], esopFormula, formula]
     ]
 ]
 
@@ -293,7 +293,7 @@ QuantumCircuitOperator[{"PhaseOracle",
             ] & /@ indices,
             QuantumOperator["I", {#}] & /@ Complement[Range[Max[indices, Length[vars]]], Flatten @ Values[indices]]
         ],
-        esopFormula,
+        If[MatchQ[formula, _BooleanFunction], esopFormula, formula],
         opts
     ]
 ]
