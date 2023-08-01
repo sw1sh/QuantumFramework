@@ -247,29 +247,7 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
 (* composition *)
 
 
-(qs1_QuantumState ? QuantumStateQ)[(qs2_QuantumState ? QuantumStateQ)] /; qs1["Input"] == qs2["Output"] := Module[{
-    state
-},
-    state = Which[
-        qs1["OutputDimension"] * qs2["InputDimension"] == 0,
-        {},
-        qs1["VectorQ"] && qs2["VectorQ"],
-        SparseArrayFlatten[qs1["StateMatrix"] . qs2["StateMatrix"]],
-        True,
-        With[{q1 = If[qs1["VectorQ"], qs1["Double"], qs1], q2 = If[qs2["VectorQ"], qs2["Double"], qs2]},
-            ArrayReshape[
-                q1["StateMatrix"] . q2["StateMatrix"],
-                Table[qs1["OutputDimension"] qs2["InputDimension"], 2]
-            ]
-        ]
-    ];
-    QuantumState[
-        state,
-        "Output" -> qs1["Output"], "Input" -> qs2["Input"],
-        "Label" -> qs1["Label"] @* qs2["Label"],
-        "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
-    ]
-]
+(top_QuantumState ? QuantumStateQ)[(bot_QuantumState ? QuantumStateQ)] := (QuantumOperator[top] @ QuantumOperator[bot])["Sort"]["State"]
 
 
 (qs1_QuantumState ? QuantumStateQ)[(qs2_QuantumState ? QuantumStateQ)] /; qs1["InputDimension"] == qs2["OutputDimension"] := Module[{

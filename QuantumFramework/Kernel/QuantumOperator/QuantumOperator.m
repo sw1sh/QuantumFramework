@@ -311,7 +311,7 @@ QuantumOperator[qo_ ? QuantumOperatorQ,
 
 QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible with this operation"
 
-(qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] /; qo["Picture"] === qo["Picture"] && (
+(qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] /; qo["Picture"] === qs["Picture"] && (
     qs["Picture"] =!= "Heisenberg" || Message[QuantumOperator::incompatiblePictures, qo["Picture"], qs["Picture"]]) :=
 Enclose @ With[{
     order = Range[Max[1, qs["OutputQudits"]]] + Max[0, Max[qo["FullInputOrder"]] - qs["OutputQudits"]]
@@ -335,41 +335,6 @@ Enclose @ With[{
     ]
 ]
 
-(*
-(qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumOperatorQ] /; qo["Picture"] === op["Picture"] &&
-    ! IntersectingQ[qo["InputOrder"], op["OutputOrder"]] &&
-    ! IntersectingQ[qo["OutputOrder"], op["OutputOrder"]] && ! IntersectingQ[qo["InputOrder"], op["InputOrder"]] :=
-    QuantumTensorProduct[qo, op]
-
-(qo_QuantumOperator ? QuantumOperatorQ)[op_ ? QuantumOperatorQ] /; qo["Picture"] === op["Picture"] := Enclose @ Block[{
-    top, bottom
-},
-    top = qo;
-    bottom = op;
-    ConfirmAssert[ContainsNone[top["OutputOrder"], Complement[bottom["OutputOrder"], top["InputOrder"]]], "Ambiguous output orders for operator composition"];
-    ConfirmAssert[ContainsNone[bottom["InputOrder"], Complement[top["InputOrder"], bottom["OutputOrder"]]], "Ambiguous input orders for operator composition"];
-
-    If[ bottom["FullOutputOrder"] != top["FullInputOrder"],
-        Module[{
-            (* order = Union[bottom["OutputOrder"], top["InputOrder"]], *)
-            order = Join[bottom["FullOutputOrder"], DeleteCases[top["FullInputOrder"], Alternatives @@ bottom["FullOutputOrder"]]],
-            basis
-        },
-            basis = If[Length[order] > 0,
-                QuantumTensorProduct @@ ReplaceAll[order,
-                    Join[Thread[bottom["FullOutputOrder"] -> bottom["Output"]["Decompose"]], Thread[top["FullInputOrder"] -> top["Input"]["Dual"]["Decompose"]]]
-                ],
-                QuditBasis[]
-            ];
-            If[ bottom["FullOutputOrder"] != order,
-                bottom = ConfirmBy[bottom["OrderedOutput", order, basis], QuantumOperatorQ]
-            ];
-            top = ConfirmBy[top["OrderedInput", order, basis["Dual"]], QuantumOperatorQ];
-        ]
-    ];
-    ConfirmAssert[top["InputDimension"] == bottom["OutputDimension"], "Applied operator input dimension should be equal to argument operator output dimension"];
-    QuantumOperator[ConfirmBy[top["State"] @ bottom["State"], QuantumStateQ], {top["OutputOrder"], bottom["InputOrder"]}]
-] *)
 
 (top_QuantumOperator ? QuantumOperatorQ)[bot_ ? QuantumOperatorQ] /; top["Picture"] === bot["Picture"] := Enclose @ Block[{
     topOut, topIn, botOut, botIn, out, in, basis, tensor
@@ -383,7 +348,8 @@ Enclose @ With[{
     basis = QuantumBasis[
         QuantumTensorProduct[top["Output"], bot["Output"]["Extract", Catenate @ Position[botOut, 1[_]]]],
         QuantumTensorProduct[top["Input"]["Extract", Catenate @ Position[topIn, 2[_]]], bot["Input"]],
-        "Label" -> top["Label"] @* bot["Label"]
+        "Label" -> top["Label"] @* bot["Label"],
+        "ParameterSpec" -> MergeParameterSpecs[top, bot]
     ];
     tensor = Confirm @ Check[
         If[
