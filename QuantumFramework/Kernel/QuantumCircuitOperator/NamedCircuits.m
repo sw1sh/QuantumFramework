@@ -157,7 +157,7 @@ QuantumCircuitOperator[{
 indicesPattern = {KeyValuePattern[0 | 1 -> {_Integer ? Positive...}]..}
 
 BooleanIndices[formula_, vars : _List] := Enclose @ Module[{
-    esop = Confirm[BooleanConvert[formula, "ESOP"]] /. And -> List,
+    esop = formula /. And -> List,
     indices
 },
     If[ MatchQ[esop, _Function],

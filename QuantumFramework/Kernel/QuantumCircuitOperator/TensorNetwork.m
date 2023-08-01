@@ -112,7 +112,7 @@ FastContractTensorNetwork[net_Graph] := Enclose[
         scalars = Extract[tensors, scalarPositions];
         indices = Delete[indices, scalarPositions];
         tensors = Delete[tensors, scalarPositions];
-        Times @@ scalars * ConfirmQuiet[ResourceFunction["EinsteinSummation"][indices -> TensorNetworkFreeIndices[net], tensors]]
+        Times @@ scalars * ConfirmQuiet[EinsteinSummation[indices -> TensorNetworkFreeIndices[net], tensors]]
     ],
     (ReleaseHold[#["HeldMessageCall"]]; #) &
 ]

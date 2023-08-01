@@ -351,7 +351,7 @@ Enclose @ With[{
         "Label" -> top["Label"] @* bot["Label"],
         "ParameterSpec" -> MergeParameterSpecs[top, bot]
     ];
-    tensor = Confirm @ Check[
+    tensor = ConfirmQuiet[
         If[
             top["VectorQ"] && bot["VectorQ"],
             SparseArrayFlatten @ EinsteinSummation[
@@ -366,8 +366,7 @@ Enclose @ With[{
                 ],
                 Table[basis["Dimension"], 2]
             ]
-        ],
-        $Failed
+        ]
     ];
     QuantumOperator[
         QuantumState[
