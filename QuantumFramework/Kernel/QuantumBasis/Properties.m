@@ -43,7 +43,8 @@ QuantumBasis::undefprop = "QuantumBasis property `` is undefined for this basis"
 (qb_QuantumBasis[prop_ ? propQ, args___]) /; QuantumBasisQ[qb] := With[{
     result = QuantumBasisProp[qb, prop, args]
 },
-    If[ TrueQ[$QuantumFrameworkPropCache] && ! MemberQ[Join[$QuantumBasisDataKeys, {"Meta", "Parameters"}], prop],
+    If[ TrueQ[$QuantumFrameworkPropCache] &&
+        ! MemberQ[Join[$QuantumBasisDataKeys, {"Properties", "Meta", "Parameters"}], prop],
         QuantumBasisProp[qb, prop, args] = result,
         result
     ] /; !FailureQ[Unevaluated @ result] &&

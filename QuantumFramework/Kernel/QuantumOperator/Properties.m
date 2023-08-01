@@ -63,7 +63,9 @@ QuantumOperatorProp[QuantumOperator[_, {outputOrder_, _}], "OutputOrder"] := out
 (qo_QuantumOperator[prop_ ? propQ, args___]) /; QuantumOperatorQ[qo] := With[{
     result = QuantumOperatorProp[qo, prop, args]
     },
-    If[ TrueQ[$QuantumFrameworkPropCache] && QuantumOperatorProp[qo, "Basis"]["ParameterArity"] == 0,
+    If[ TrueQ[$QuantumFrameworkPropCache] &&
+        ! MemberQ[{"Properties", "State", "Basis"}, prop] &&
+        QuantumOperatorProp[qo, "Basis"]["ParameterArity"] == 0,
         QuantumOperatorProp[qo, prop, args] = result,
         result
     ] /;

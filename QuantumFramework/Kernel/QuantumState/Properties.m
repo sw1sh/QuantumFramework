@@ -46,7 +46,9 @@ QuantumState::failprop = "property `` failed with ``"
 (qs_QuantumState[prop_ ? propQ, args___]) /; QuantumStateQ[qs] := With[{
     result = QuantumStateProp[qs, prop, args]
 },
-    If[ TrueQ[$QuantumFrameworkPropCache] && QuantumStateProp[qs, "Basis"]["ParameterArity"] == 0,
+    If[ TrueQ[$QuantumFrameworkPropCache] &&
+        ! MemberQ[{"Properties", "Basis"}, prop] &&
+        QuantumStateProp[qs, "Basis"]["ParameterArity"] == 0,
         QuantumStateProp[qs, prop, args] = result,
         result
     ] /;

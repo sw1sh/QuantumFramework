@@ -32,7 +32,9 @@ QuantumMeasurementOperator::undefprop = "QuantumMeasurementOperator property `` 
 (qmo_QuantumMeasurementOperator[prop_ ? propQ, args___]) /; QuantumMeasurementOperatorQ[qmo] := With[{
     result = QuantumMeasurementOperatorProp[qmo, prop, args]
     },
-    If[ TrueQ[$QuantumFrameworkPropCache] && QuantumMeasurementOperatorProp[qmo, "Basis"]["ParameterArity"] == 0,
+    If[ TrueQ[$QuantumFrameworkPropCache] &&
+        ! MemberQ[{"Properties", "QuantumOperator", "Operator"}, prop] &&
+        QuantumMeasurementOperatorProp[qmo, "Basis"]["ParameterArity"] == 0,
         QuantumMeasurementOperatorProp[qmo, prop, args] = result,
         result
     ] /; !FailureQ[Unevaluated @ result] && (!MatchQ[result, _QuantumMeasurementOperatorProp] || Message[QuantumMeasurementOperator::undefprop, prop])
