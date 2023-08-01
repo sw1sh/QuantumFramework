@@ -96,8 +96,11 @@ QuantumEvolve[
     ]
 ]
 
-MergeInterpolatingFunctions[array_ ? ArrayQ] := Enclose @ Block[{ifs, grid, dims, dim, params, param},
-	ifs = Cases[array, _InterpolatingFunction[_], {ArrayDepth[array], Infinity}, Heads -> True];
+
+MergeInterpolatingFunctions[array_ ? SparseArrayQ] := Enclose @ Block[{pos, values, ifs, grid, dims, dim, params, param},
+    pos = array["ExplicitPositions"];
+    values = array["ExplicitValues"];
+	ifs = Cases[values, _InterpolatingFunction[_], {ArrayDepth[array], Infinity}, Heads -> True];
 	If[Length[ifs] == 0, Return[array]];
     params = First /@ ifs;
     ConfirmAssert[SameQ @@ params];
@@ -108,7 +111,8 @@ MergeInterpolatingFunctions[array_ ? ArrayQ] := Enclose @ Block[{ifs, grid, dims
 	dim = First[dims];
 	ConfirmAssert[dim === {}];
 	grid = Intersection @@ Through[ifs["Grid"]];
-	Interpolation[{#, SparseArray[Normal[array] /. param -> #]} & /@ Catenate[grid], InterpolationOrder -> 1][param]
+	Interpolation[{#, SparseArray[Thread[pos -> (values /. param -> #)], Dimensions[array]]} & /@ Catenate[grid], InterpolationOrder -> 1][param]
 ]
 
+MergeInterpolatingFunctions[array_ ? ArrayQ] := MergeInterpolatingFunctions[SparseArray[array]]
 
