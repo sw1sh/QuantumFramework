@@ -372,7 +372,7 @@ Enclose @ With[{
 ] *)
 
 (top_QuantumOperator ? QuantumOperatorQ)[bot_ ? QuantumOperatorQ] /; top["Picture"] === bot["Picture"] := Enclose @ Block[{
-    topOut, topIn, botOut, botIn, out, in, basis
+    topOut, topIn, botOut, botIn, out, in, basis, tensor
 },
     topOut = 1 /@ top["FullOutputOrder"];
     topIn = If[MemberQ[bot["FullOutputOrder"], #], 0, 2][#] & /@ top["FullInputOrder"];
@@ -385,15 +385,27 @@ Enclose @ With[{
         QuantumTensorProduct[top["Input"]["Extract", Catenate @ Position[topIn, 2[_]]], bot["Input"]],
         "Label" -> top["Label"] @* bot["Label"]
     ];
+    tensor = Confirm @ Check[
+        If[
+            top["VectorQ"] && bot["VectorQ"],
+            SparseArrayFlatten @ EinsteinSummation[
+                {Join[topOut, topIn], Join[botOut, botIn]} -> Join[out, in],
+                {top["StateTensor"], bot["StateTensor"]}
+            ],
+            ArrayReshape[
+                EinsteinSummation[
+                    {Join[topOut, 3 @@@ topOut, topIn, 4 @@@ topIn], Join[botOut, 4 @@@ botOut, botIn, 3 @@@ botIn]} ->
+                        Join[out, in, Join[3 @@@ topOut, 4 @@@ Cases[botOut, 1[_]]], Join[4 @@@ Cases[topIn, 2[_]], 3 @@@ botIn]],
+                    {If[top["VectorQ"], top["Double"], top]["StateTensor"], If[bot["VectorQ"], bot["Double"], bot]["StateTensor"]}
+                ],
+                Table[basis["Dimension"], 2]
+            ]
+        ],
+        $Failed
+    ];
     QuantumOperator[
         QuantumState[
-            SparseArrayFlatten @ Confirm @ Check[
-                EinsteinSummation[
-                    {Join[topOut, topIn], Join[botOut, botIn]} -> Join[out, in],
-                    {top["State"]["Computational"]["Tensor"], bot["State"]["Computational"]["Tensor"]}
-                ],
-                $Failed
-            ],
+            tensor,
             basis
         ],
         orderDuplicates /@ Map[First, {out, in}, {2}]
