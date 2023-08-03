@@ -36,7 +36,7 @@ QuantumEvolve[
         parameterSpec = Replace[defaultParameter, _Symbol :> {parameter, 0, 1}]
     ];
     numericQ = MatchQ[defaultParameter, {_Symbol, _ ? NumericQ, _ ? NumericQ}];
-    matrix = Confirm @ MergeInterpolatingFunctions @ TrigToExp[hamiltonian["Matrix"]];
+    matrix = Normal @ Confirm @ MergeInterpolatingFunctions @ TrigToExp[hamiltonian["Matrix"]];
     method = If[numericQ, NDSolveValue, DSolveValue];
     equations = Join[
         {
@@ -45,8 +45,8 @@ QuantumEvolve[
                 matrix . \[FormalS][parameter],
                 matrix . \[FormalS][parameter] - \[FormalS][parameter] . matrix
             ],
-            \[FormalS][0] == If[numericQ, Normal, Identity] @
-                If[defaultState === None, IdentityMatrix[hamiltonian["InputDimension"], SparseArray], state["State"]]
+            \[FormalS][0] ==
+                If[defaultState === None, IdentityMatrix[hamiltonian["InputDimension"]], Normal @ state["State"]]
         },
         Flatten[{OptionValue["AdditionalEquations"]}]
     ];
