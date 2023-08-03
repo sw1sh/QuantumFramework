@@ -13,7 +13,7 @@ shortcutToGate = Replace[
         (name_ -> (order_ ? orderQ)) :> shortcutToGate[name] -> order,
         "X" | "NOT" -> "XGate",
         "Y" -> "YGate",
-        "Z" -> "ZGate",
+        "Z" | "1" -> "ZGate",
         "H" -> "HGate",
         "S" -> "SGate",
         "T" -> "TGate",
