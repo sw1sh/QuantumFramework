@@ -12,20 +12,36 @@ QuantumEntangledQ[qs_ ? QuantumStateQ, biPartition_ : Automatic, method_String :
     Enclose[ConfirmMatch[QuantumEntanglementMonotone[qs, biPartition, method], _ ? NumericQ] > 0, Indeterminate &]
 
 
+
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition : Except[_String] : Automatic] :=
     QuantumEntanglementMonotone[qs, biPartition, "Concurrence"]
 
 
-QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Concurrence"] := Enclose @ Module[{
-    s, ds, twoQuditPauliY
+y[{j_Integer, k_Integer}, n_Integer] /; 1 <= j < k <= n := SparseArray[{{j, k} -> -I, {k, j} -> I}, {n, n}]
+
+Y[n_] := Y[n] = Catenate @ Table[y[{j, k}, n], {k, 2, n}, {j, k - 1}]
+
+ConcurrenceVector[qs_ ? QuantumStateQ, biPartition_ : Automatic] := Block[{
+	rho = qs["Bipartition", biPartition]["Operator"], d1, d2, y1, y2
 },
-
-    s = ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ];
-    ds = ConfirmBy[s["Dimensions"], Length[#] == 2 &];
-    twoQuditPauliY = QuantumTensorProduct[QuantumOperator[{"Y", ds[[1]]}], QuantumOperator[{"Y", ds[[2]]}]];
-
-    Max[0, Fold[Subtract, SingularValueList[Sqrt[s]["DensityMatrix"] . Sqrt[twoQuditPauliY[s["Conjugate"]]]["DensityMatrix"]]]]
+	{d1, d2} = rho["OutputDimensions"];
+	y1 = Y[d1];
+	y2 = Y[d2];
+	Catenate @ Table[
+		With[{o = QuantumTensorProduct[QuantumOperator[y1[[n]], d1], QuantumOperator[y2[[m]], d2]]},
+			Max[0, Fold[Subtract] @ SingularValueList[(Sqrt[rho] @ Sqrt[o @ rho["Conjugate"] @ o])["Matrix"]]]
+		],
+		{n, (d1 - 1) d1 / 2}, {m, (d2 - 1) d2 / 2}
+	]
 ]
+
+Concurrence[qs_ ? QuantumStateQ, biPartition_ : Automatic] := Norm @ ConcurrenceVector[qs, biPartition]
+
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Concurrence"] :=
+    If[ qs["VectorQ"],
+        Re @ Sqrt[2 (1 - (QuantumPartialTrace[qs["Bipartition", biPartition], {1}] ^ 2)["Norm"])],
+        Concurrence[qs, biPartition]
+    ]
 
 
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Negativity"] :=
