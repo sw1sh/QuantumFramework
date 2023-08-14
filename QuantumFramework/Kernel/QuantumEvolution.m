@@ -62,12 +62,14 @@ QuantumEvolve[
     ];
     param = If[numericQ, parameterSpec, parameter];
     If[TrueQ[OptionValue["ReturnEquations"]], Return[{equations, return, param}]];
+    Unprotect[\[FormalS]];
     solution = method[
         equations,
         return,
         param,
         FilterRules[{opts}, Options[method]]
     ];
+    Protect[\[FormalS]];
     If[ MatchQ[solution, _InterpolatingFunction],
         solution =
             Map[

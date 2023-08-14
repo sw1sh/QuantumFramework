@@ -7,7 +7,7 @@ QuditBasis["Properties"] = {
     "Association", "Names", "Elements",
     "Length", "Size", "Qudits", "Rank",
     "Dimensions", "Shape", "NameRank", "NameTensor",
-    "ElementDimensions", "ElementDimension", "Rank",
+    "ElementDimensions", "ElementDimension",
     "MatrixDimensions", "TensorDimensions",
     "ElementsDimensions",
     "Matrix", "Tensor",
