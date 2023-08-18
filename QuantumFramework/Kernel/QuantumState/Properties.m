@@ -130,9 +130,9 @@ QuantumStateProp[qs_, "StateVector"] := Module[{result},
 QuantumStateProp[qs_, "Scalar" | "Number"] /; qs["Kind"] === "Scalar" := First[Flatten[qs["State"]]]
 
 QuantumStateProp[qs_, "Weights"] := Which[
-    qs["PureStateQ"],
+    qs["PureStateQ"] || qs["VectorQ"] && ! qs["NumericQ"],
     Abs[qs["StateVector"]] ^ 2,
-    qs["PhysicalQ"],
+    qs["PhysicalQ"] || ! qs["NumericQ"],
     Diagonal @ qs["DensityMatrix"],
     True,
     qs["Physical"]["Weights"]
