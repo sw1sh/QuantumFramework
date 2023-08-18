@@ -3,7 +3,7 @@ Package["Wolfram`QuantumFramework`"]
 
 
 $QuantumCircuitOperatorProperties = {
-    "Operators", "Diagram", "Gates", "Orders", "CircuitOperator", "QiskitCircuit", "Label",
+    "Operators", "Diagram", "OperatorCount", "Orders", "CircuitOperator", "QiskitCircuit", "Label",
     "Depth", "Arity", "Width", "TensorNetwork", "Topology"
 };
 
@@ -119,7 +119,7 @@ quantumCircuitCompile[qco_QuantumCircuitOperator, OptionsPattern[]] :=
 
 QuantumCircuitOperatorProp[qco_, "QuantumOperator" | "CircuitOperator" | "Compile", opts : OptionsPattern[quantumCircuitCompile]] := quantumCircuitCompile[qco["Flatten"], opts]
 
-QuantumCircuitOperatorProp[qco_, "Gates"] := Length @ qco["Flatten"]["Operators"]
+QuantumCircuitOperatorProp[qco_, "Gates" | "GateCount" | "OperatorCount"] := Length @ qco["Flatten"]["Operators"]
 
 QuantumCircuitOperatorProp[qco_, "InputOrders"] := qco["NormalOrders"][[All, 2]]
 
