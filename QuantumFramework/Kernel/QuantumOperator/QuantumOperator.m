@@ -314,54 +314,60 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 (qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] /; qo["Picture"] === qs["Picture"] && (
     qs["Picture"] =!= "Heisenberg" || Message[QuantumOperator::incompatiblePictures, qo["Picture"], qs["Picture"]]) :=
 Enclose @ With[{
-    order = Range[Max[1, qs["OutputQudits"]]] + Max[0, Max[qo["FullInputOrder"]] - qs["OutputQudits"]]
+    order = Range[Max[1, qs["OutputQudits"]]] + Max[0, Max[qo["InputOrder"]] - qs["OutputQudits"]]
 },
-    With[{
-        op = ConfirmBy[qo[QuantumOperator[qs, order, Automatic]], QuantumOperatorQ]["Sort"]
-    },
-        Which[
-            Max[1, op["OutputQudits"]] < Length[op["OutputOrder"]],
-            QuantumTensorProduct[
-                QuantumOperator[op, op["FullOrder"]],
-                QuantumOperator[QuantumState[{"UniformSuperposition", Length[op["OutputOrder"]] - op["OutputQudits"]}], Complement[op["OutputOrder"], order]]
-            ]["Sort"]["State"],
-            op["OutputQudits"] > Length[op["OutputOrder"]],
-            With[{order = Complement[Range[op["OutputQudits"]], op["OutputOrder"]]},
-                QuantumOperator["Discard", order, op["OutputDimensions"][[order]]] @ op["State"]
-            ],
-            True,
-            op["State"]
-        ]
-    ]
+    ConfirmBy[qo[QuantumOperator[qs, order, Automatic]], QuantumOperatorQ]["Sort"]["State"]
 ]
 
 
 (top_QuantumOperator ? QuantumOperatorQ)[bot_ ? QuantumOperatorQ] /; top["Picture"] === bot["Picture"] := Enclose @ Block[{
-    topOut, topIn, botOut, botIn, out, in, basis, tensor
+    fullTopOut, fullBotIn, fullTopIn, fullBotOut, topOut, botIn, out, in, basis, tensor
 },
-    topOut = 1 /@ top["FullOutputOrder"];
-    topIn = If[MemberQ[bot["FullOutputOrder"], #], 0, 2][#] & /@ top["FullInputOrder"];
-    botOut = If[MemberQ[top["FullInputOrder"], #], 0, 1][#] & /@ bot["FullOutputOrder"];
-    botIn = 2 /@ bot["FullInputOrder"];
-    out = Join[topOut, Cases[botOut, 1[_]]];
-    in = Join[Cases[topIn, 2[_]], botIn];
-    basis = QuantumBasis[
-        QuantumTensorProduct[top["Output"], bot["Output"]["Extract", Catenate @ Position[botOut, 1[_]]]],
-        QuantumTensorProduct[top["Input"]["Extract", Catenate @ Position[topIn, 2[_]]], bot["Input"]],
-        "Label" -> top["Label"] @* bot["Label"],
-        "ParameterSpec" -> MergeParameterSpecs[top, bot]
+    fullTopOut = 1 /@ top["FullOutputOrder"];
+    fullTopIn = If[MemberQ[bot["OutputOrder"], #], 0, 2][#] & /@ top["FullInputOrder"];
+    fullBotOut = If[MemberQ[top["InputOrder"], #], 0, 1][#] & /@ bot["FullOutputOrder"];
+    fullBotIn = 2 /@ bot["FullInputOrder"];
+    topOut = Join[
+        DeleteElements[fullTopOut, 1 /@ Complement[top["FullOutputOrder"], top["OutputOrder"]]],
+        Cases[2 /@ DeleteElements[top["OutputOrder"], top["FullOutputOrder"]], Alternatives @@ fullBotIn]
+    ];
+    botIn = Join[
+        DeleteElements[fullBotIn, 2 /@ Complement[bot["FullInputOrder"], bot["InputOrder"]]],
+        Cases[1 /@ DeleteElements[bot["InputOrder"], bot["FullInputOrder"]], Alternatives @@ fullTopOut]
+    ];
+    out = Join[topOut, Cases[fullBotOut, 1[_]]];
+    in = Join[Cases[fullTopIn, 2[_]], botIn];
+    With[{
+        outBasis = Join[top["Output"]["Decompose"], bot["Output"]["Decompose"]],
+        inBasis = Join[top["Input"]["Decompose"], bot["Input"]["Decompose"]],
+        outIndex = First /@ PositionIndex[Join[fullTopOut, fullBotOut]],
+        inIndex = First /@ PositionIndex[Join[fullTopIn, fullBotIn]]
+    },
+        basis = QuantumBasis[
+            QuantumBasis[
+                QuantumTensorProduct @ Replace[
+                    Join[out, in], {
+                        i : 1[_] :> outBasis[[outIndex[i]]],
+                        i : 2[_] :> inBasis[[inIndex[i]]]
+                    },
+                    {1}
+                ]
+            ]["Split", Length[out]],
+            "Label" -> top["Label"] @* bot["Label"],
+            "ParameterSpec" -> MergeParameterSpecs[top, bot]
+        ]
     ];
     tensor = ConfirmQuiet[
         If[
             top["VectorQ"] && bot["VectorQ"],
             SparseArrayFlatten @ EinsteinSummation[
-                {Join[topOut, topIn], Join[botOut, botIn]} -> Join[out, in],
+                {Join[fullTopOut, fullTopIn], Join[fullBotOut, fullBotIn]} -> Join[out, in],
                 {top["StateTensor"], bot["StateTensor"]}
             ],
             ArrayReshape[
                 EinsteinSummation[
-                    {Join[topOut, 3 @@@ topOut, topIn, 4 @@@ topIn], Join[botOut, 4 @@@ botOut, botIn, 3 @@@ botIn]} ->
-                        Join[out, in, Join[3 @@@ topOut, 4 @@@ Cases[botOut, 1[_]]], Join[4 @@@ Cases[topIn, 2[_]], 3 @@@ botIn]],
+                    {Join[fullTopOut, 3 @@@ fullTopOut, fullTopIn, 4 @@@ fullTopIn], Join[fullBotOut, 4 @@@ fullBotOut, fullBotIn, 3 @@@ fullBotIn]} ->
+                        Join[out, in, Join[3 @@@ topOut, 4 @@@ Cases[fullBotOut, 1[_]]], Join[4 @@@ Cases[fullTopIn, 2[_]], 3 @@@ botIn]],
                     {If[top["VectorQ"], top["Double"], top]["StateTensor"], If[bot["VectorQ"], bot["Double"], bot]["StateTensor"]}
                 ],
                 Table[basis["Dimension"], 2]
