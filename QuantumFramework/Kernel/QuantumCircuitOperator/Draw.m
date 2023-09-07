@@ -210,7 +210,7 @@ drawGate[pos : {vposOut_, vposIn_, hpos_}, label_, opts : OptionsPattern[]] := B
 				Line[{{center[[1]] - size /2, - i vGapSize}, {center[[1]], - i vGapSize}}],
 				Thickness[Large],
 				Table[
-					Line[{{center[[1]] + j size / 6, - i vGapSize + size / j / 2}, {center[[1]] + j size / 6, - i vGapSize - size / j / 2}}],
+					Line[{{center[[1]] + (j - 1) size / 6, - i vGapSize + size / j / 2}, {center[[1]] + (j - 1) size / 6, - i vGapSize - size / j / 2}}],
 					{j, 3}
 				]
 			},
@@ -604,7 +604,7 @@ Options[circuitDraw] := DeleteDuplicatesBy[First] @ Join[
 	Options[Style]
 ];
 circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
-	numGates = circuit["Gates"],
+	numGates = circuit["GateCount"],
 	order = Union @@ circuit["Order"],
 	freeOrder = circuit["FreeOrder"],
 	level = Max[OptionValue["SubcircuitLevel"]],
