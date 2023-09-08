@@ -643,15 +643,13 @@ QuantumStateProp[qs_, "StateMatrix"] := If[
 ]
 
 
-QuantumStateProp[qs_, "Tensor"] := qs["Computational"]["StateTensor"]
-
 QuantumStateProp[qs_, "Matrix"] := qs["Computational"]["StateMatrix"]
 
 QuantumStateProp[qs_, "VectorRepresentation"] := qs["Computational"]["StateVector"]
 
 QuantumStateProp[qs_, "MatrixRepresentation"] := qs["Computational"]["DensityMatrix"]
 
-QuantumStateProp[qs_, "TensorRepresentation"] := qs["Computational"]["StateTensor"]
+QuantumStateProp[qs_, "Tensor" | "TensorRepresentation"] := qs["Computational"]["StateTensor"]
 
 QuantumStateProp[qs_, "NormalizedMatrixRepresentation"] := normalizeMatrix @ qs["MatrixRepresentation"]
 

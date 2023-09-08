@@ -362,13 +362,13 @@ Enclose @ With[{
             top["VectorQ"] && bot["VectorQ"],
             SparseArrayFlatten @ EinsteinSummation[
                 {Join[fullTopOut, fullTopIn], Join[fullBotOut, fullBotIn]} -> Join[out, in],
-                {top["StateTensor"], bot["StateTensor"]}
+                {top["TensorRepresentation"], bot["TensorRepresentation"]}
             ],
             ArrayReshape[
                 EinsteinSummation[
                     {Join[fullTopOut, 3 @@@ fullTopOut, fullTopIn, 4 @@@ fullTopIn], Join[fullBotOut, 4 @@@ fullBotOut, fullBotIn, 3 @@@ fullBotIn]} ->
                         Join[out, in, Join[3 @@@ topOut, 4 @@@ Cases[fullBotOut, 1[_]]], Join[4 @@@ Cases[fullTopIn, 2[_]], 3 @@@ botIn]],
-                    {If[top["VectorQ"], top["Double"], top]["StateTensor"], If[bot["VectorQ"], bot["Double"], bot]["StateTensor"]}
+                    {If[top["VectorQ"], top["Double"], top]["TensorRepresentation"], If[bot["VectorQ"], bot["Double"], bot]["TensorRepresentation"]}
                 ],
                 Table[basis["Dimension"], 2]
             ]
@@ -376,7 +376,10 @@ Enclose @ With[{
     ];
     QuantumOperator[
         QuantumState[
-            tensor,
+            QuantumState[
+                tensor,
+                QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
+            ],
             basis
         ],
         orderDuplicates /@ Map[First, {out, in}, {2}]
