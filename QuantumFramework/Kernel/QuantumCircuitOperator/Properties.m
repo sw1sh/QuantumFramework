@@ -75,7 +75,7 @@ QuantumCircuitOperatorProp[qco_, "NormalOrders", elements_ : False] := Block[{oc
     Map[
         Which[
             BarrierQ[#],
-            Table[circuitElementPosition[#, qco["Min"], qco["Max"]] + qco["Min"] - 1, 2],
+            {{}, {}},
             QuantumMeasurementOperatorQ[#],
             {Join[Sort @ Map[getNext, #["Eigenorder"]], Select[#["OutputOrder"], Positive]], #["InputOrder"]},
             QuantumChannelQ[#],

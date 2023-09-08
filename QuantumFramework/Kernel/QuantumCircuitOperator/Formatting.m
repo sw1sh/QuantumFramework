@@ -22,10 +22,10 @@ BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
     {{}},
     {
         {
-            BoxForm`SummaryItem[{"Gates: ", qco["Gates"]}]
+            BoxForm`SummaryItem[{"Gates: ", qco["GateCount"]}]
         },
         {
-            BoxForm`SummaryItem[{"Dimension: ", qco["InputDimension"]}]
+            BoxForm`SummaryItem[{"Dimensions: ", qco["InputDimension"] -> qco["OutputDimension"]}]
         },
         {
             BoxForm`SummaryItem[{"Order: ", qco["InputOrder"] -> qco["OutputOrder"]}]
