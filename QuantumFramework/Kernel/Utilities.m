@@ -79,7 +79,7 @@ toTensor[t_ ? TensorQ] := t
 toTensor[t_] := {t}
 
 
-identityMatrix[0] := {{}}
+identityMatrix[0 | {_, 0} | {0, _}] := {{}}
 
 identityMatrix[n_] := IdentityMatrix[n, SparseArray]
 

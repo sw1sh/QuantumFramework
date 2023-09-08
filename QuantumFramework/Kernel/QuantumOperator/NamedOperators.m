@@ -289,6 +289,9 @@ QuantumOperator[{"C" | "Controlled", args___, ctrl_Integer ? NonNegative, order 
     QuantumOperator[{"C", args, Splice[controlOrder[[#]] & /@ Lookup[PositionIndex[IntegerDigits[ctrl, 2, controlSize]], {1, 0}, {}]]}, opts]
 ]
 
+QuantumOperator[{name : "C" | "Controlled" | "C0" | "Controlled0", qmo_ ? QuantumMeasurementOperatorQ, args___}, opts___] :=
+    QuantumOperator[{name, qmo["SuperOperator"], args}, opts]
+
 QuantumOperator[{"C" | "Controlled", qo : Except[_QuantumOperator], control1 : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}}, opts___] :=
     QuantumOperator[{"Controlled", QuantumOperator[qo, opts], control1, control0}]
 
@@ -350,9 +353,9 @@ QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orde
     (*ConfirmAssert[! IntersectingQ[qo["Order"], control], "Target and control qudits shouldn't intersect"];*)
     QuantumOperator[
         blockDiagonalMatrix[{
-            identityMatrix[(2 ^ controls1 - 1) qo["OutputDimension"]],
+            identityMatrix[(2 ^ controls1 - 1) qo["MatrixNameDimensions"]],
             qo["Matrix"],
-            identityMatrix[(2 ^ controls0 - 1) 2 ^ controls1 qo["OutputDimension"]]
+            identityMatrix[(2 ^ controls0 - 1) 2 ^ controls1 qo["MatrixNameDimensions"]]
         }],
         With[{order = Join @@ NestWhile[
                 Apply[
@@ -362,11 +365,11 @@ QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orde
                         {Join[#1, rhs], DeleteElements[#2, lhs]}
                     ] &
                 ],
-                {control, Sort[qo["InputOrder"]]},
+                {control, Sort[#]},
                 Apply[IntersectingQ]
-            ]
+            ] & /@ qo["Order"]
         },
-            {order, order}
+            order
         ],
         QuantumTensorProduct[
             QuantumBasis[QuditBasis[2, controls1], QuditBasis[2, controls1]],

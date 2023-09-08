@@ -161,13 +161,13 @@ QuantumCircuitOperatorProp[qco_, "InputOrderQuditMapping"] := Thread[# -> Range[
 QuantumCircuitOperatorProp[qco_, "OutputOrderQuditMapping"] := Thread[# -> Range[Length[#]]] & @ qco["OutputOrder"]
 
 QuantumCircuitOperatorProp[qco_, "InputDimensions"] :=
-    (q |-> #["InputDimensions"][[ q /. #["InputOrderQuditMapping"] ]] & @
+    (q |-> ResourceFunction["LookupPart"][#["InputDimensions"], q /. #["InputOrderQuditMapping"], 2] & @
         SelectFirst[qco["NormalOperators"], op |-> MemberQ[op["FullInputOrder"], q]]) /@ qco["InputOrder"]
 
 QuantumCircuitOperatorProp[qco_, "InputDimension"] := Times @@ qco["InputDimensions"]
 
 QuantumCircuitOperatorProp[qco_, "OutputDimensions"] :=
-    (q |-> #["OutputDimensions"][[ q /. #["OutputOrderQuditMapping"] ]] & @
+    (q |-> ResourceFunction["LookupPart"][#["OutputDimensions"], q /. #["OutputOrderQuditMapping"], 2] & @
         SelectFirst[Reverse @ qco["NormalOperators"], op |-> MemberQ[op["FullOutputOrder"], q]]) /@ qco["OutputOrder"]
 
 QuantumCircuitOperatorProp[qco_, "OutputDimension"] := Times @@ qco["OutputDimensions"]

@@ -390,10 +390,7 @@ orderDuplicates[xs_List] := Block[{next = Function[{ys, y}, If[MemberQ[ys, y], n
 
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qmo_ ? QuantumMeasurementOperatorQ] /; qo["Picture"] == qmo["Picture"] :=
-    If[ Equal @@ Sort /@ qo["Order"],
-        QuantumMeasurementOperator[qo @ qmo["Operator"], qmo["Target"]],
-        qo @ qmo["Operator"]
-    ]
+    QuantumMeasurementOperator[qo @ qmo["SuperOperator"], qmo["Target"]]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qm_ ? QuantumMeasurementQ] /; qo["Picture"] == qm["Picture"] :=
     If[QuantumMeasurementOperatorQ[#], QuantumMeasurement[#["Sort"]], #] & @ qo[qm["QuantumOperator"]]
@@ -493,18 +490,20 @@ QuantumOperator[obj : _QuantumMeasurementOperator | _QuantumMeasurement | _Quant
     QuantumOperator[qo["State"][ps], qo["Order"]]
 
 
-StackQuantumOperators[ops : {_ ? QuantumOperatorQ ..}, name_ : "E"] := With[{
+StackQuantumOperators[ops : {_ ? QuantumOperatorQ ..}, name_ : "E"] := Block[{
     basis = First[ops]["Basis"],
     order = MapAt[Prepend[#, Min[#] - 1] &, First[ops]["Order"], {1}]
 },
+    basis = QuantumBasis[
+        "Output" -> QuantumTensorProduct[QuditBasis[Subscript[name, #] & /@ Range @ Length @ ops], basis["Output"]],
+        "Input" -> basis["Input"]
+    ];
     QuantumOperator[
         QuantumOperator[
             SparseArray[#["MatrixRepresentation"] & /@ ops],
-            QuantumBasis[
-                QuantumTensorProduct[QuditBasis[Subscript[name, #] & /@ Range @ Length @ ops], basis["Output"]],
-                basis["Input"]
-            ]
+            QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
         ],
-    order
+        order,
+        basis
     ]
 ]
