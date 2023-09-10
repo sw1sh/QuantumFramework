@@ -349,7 +349,7 @@ drawMeasurement[{vpos_, _, hpos_}, max_, opts : OptionsPattern[]] := Block[{
 	corners,
 	center
 },
-	corners = positionCorners[{Select[vpos, Positive], hpos}, size, vGapSize, hGapSize];
+	corners = positionCorners[{Select[vpos, Positive], Table[Max[hpos], 2]}, size, vGapSize, hGapSize];
 	center = Mean[corners];
 	{
 		EdgeForm[If[thickWireQ, Directive[#, Thickness[0.015]] &, Identity] @ OptionValue["MeasurementBoundaryStyle"]],
@@ -567,19 +567,16 @@ drawLabel[label_, height_, pos_, opts : OptionsPattern[]] := With[{vGapSize = Op
 	Text[Style[label, Background -> Transparent, FilterRules[{opts}, Options[Style]], FontFamily -> "Times"], {hGapSize height / 2, - vGapSize (pos - 1 / 2)}]
 ]
 
-Options[drawBarrier] = {"Size" -> .75, "VerticalGapSize" -> 1, "HorizontalGapSize" -> 1, "BarrierStyle" -> Automatic, "WireStyle" -> Automatic, "ShowExtraQudits" -> False}
+Options[drawBarrier] = {"Size" -> .75, "VerticalGapSize" -> 1, "HorizontalGapSize" -> 1, "BarrierStyle" -> Automatic, "ShowExtraQudits" -> False}
 drawBarrier[{vposOut_, vposIn_, hpos_}, OptionsPattern[]] := Block[{
 	vpos = Union[vposOut, vposIn],
 	size = OptionValue["Size"], vGapSize = OptionValue["VerticalGapSize"], hGapSize = OptionValue["HorizontalGapSize"],
 	extraQuditsQ = TrueQ[OptionValue["ShowExtraQudits"]],
-	wireStyle = Replace[OptionValue["WireStyle"], Automatic -> Directive[$DefaultGray, Opacity[.3]]],
 	x, y
 },
 	x = hGapSize First[hpos];
 	y = If[extraQuditsQ, vpos, Select[vpos, Positive]];
 	{
-		wireStyle,
-		Map[Line[{{x - size / 2, - # vGapSize}, {x + size / 2, - # vGapSize}}] &, y],
 		Replace[OptionValue["BarrierStyle"], Automatic -> Directive[$DefaultGray, Dashed, Opacity[.8], Thickness[Large]]],
 		Line[Map[{x, #} &, List @@ Interval @@ (vGapSize {- # + 1 / 2, - # - 1 / 2} & /@ y), {2}]]
 	}
@@ -628,7 +625,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	showMeasurementWireQ = TrueQ[OptionValue["ShowMeasurementWire"]] && ! extraQuditsQ && circuit["Measurements"] > 0;
 	labelCounter = ReplaceAll[None :> (labelCount++; Subscript["U", labelCount])];
 	outlineMin = Which[showMeasurementWireQ, 1, extraQuditsQ, min, emptyWiresQ, 1, True, Min[circuit["Orders"], max]];
-	positions = circuitPositions[circuit, level, MatchQ[OptionValue["GateOverlap"], Automatic | True]];
+	positions = circuitPositions[circuit, level, MatchQ[OptionValue["GateOverlap"], Automatic | True], showMeasurementWireQ || extraQuditsQ];
 	height = Max[0, positions] + 1;
 	wires = circuitWires[circuit];
 	If[ ! emptyWiresQ,
@@ -646,7 +643,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 		MapThread[
 			Which[
 				BarrierQ[#1],
-				drawBarrier[#2, "ShowExtraQudits" -> extraQuditsQ, FilterRules[{opts}, Options[drawBarrier]]],
+				drawBarrier[Append[Table[circuitElementPosition[#1, min, max] + min - 1, 2], #3 + 1], "ShowExtraQudits" -> extraQuditsQ, FilterRules[{opts}, Options[drawBarrier]]],
 				QuantumCircuitOperatorQ[#1],
 				If[ level > 0,
 					Translate[
@@ -655,6 +652,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 							"SubcircuitLevel" -> level - 1,
 							"WireLabels" -> None, "ShowOutline" -> True, "ShowLabel" -> True,
 							"ShowMeasurementWire" -> False, "ShowEmptyWires" -> False, "ShortOuterWires" -> False,
+							"ShowExtraQudits" -> False,
 							opts
 						],
 						{hGapSize Max[#3[[circuitElementPosition[#1, min, max]]]], 0}
@@ -679,7 +677,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	}
 ]
 
-circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, defaultOverlapQ : True | False : False] := With[{
+circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, defaultOverlapQ : True | False : False, showMeasurementWireQ : True | False : True] := With[{
 	min = Min[1, circuit["Min"]],
 	max = circuit["Max"],
 	width = circuit["Width"]
@@ -698,10 +696,10 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, defaultOverl
 			shift = Which[
 				BarrierQ[#2],
 				ReplacePart[ConstantArray[0, width], Thread[pos -> 1]],
-				QuantumMeasurementOperatorQ[#2] || QuantumChannelQ[#2],
+				QuantumMeasurementOperatorQ[#2] && showMeasurementWireQ || QuantumChannelQ[#2],
 				ReplacePart[ConstantArray[0, width], Thread[Range[Max[pos]] -> 1]],
 				level > 0 && QuantumCircuitOperatorQ[#2],
-				ReplacePart[ConstantArray[0, width], Thread[Range @@ MinMax[pos] -> Max[Replace[circuitPositions[#2, level - 1, overlapQ], {{___, {_, o_}} :> o, _ -> 0}]]]],
+				ReplacePart[ConstantArray[0, width], Thread[Range @@ MinMax[pos] -> Max[Replace[circuitPositions[#2, level - 1, overlapQ, False], {{___, {_, o_}} :> o, _ -> 0}]]]],
 				True,
 				ReplacePart[ConstantArray[0, width], Thread[pos -> 1]]
 			];
@@ -709,7 +707,7 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, defaultOverl
 				gatePos = Which[
 					BarrierQ[#2],
 					SubsetMap[With[{x = Max[#]}, overlapShift[x] + ConstantArray[x, Length[pos]]] &, gatePos, List /@ pos],
-					QuantumMeasurementOperatorQ[#2] || QuantumChannelQ[#2],
+					QuantumMeasurementOperatorQ[#2] && showMeasurementWireQ || QuantumChannelQ[#2],
 					SubsetMap[ConstantArray[Max[#], Length[#]] &, gatePos, List /@ Range[Max[pos]]],
 					True,
 					SubsetMap[With[{x = Max[gatePos[[Span @@ MinMax[pos]]]]}, overlapShift[x] + ConstantArray[x, Length[pos]]] &, gatePos, List /@ pos]
