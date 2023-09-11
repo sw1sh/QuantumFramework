@@ -178,9 +178,22 @@ QuantumMeasurementProp[qm_, "MixedOutcomes"] := If[
     QuantumTensorProduct @@@ Tuples[{qm["Outcomes"], #["Dual"] & /@ qm["Outcomes"]}]
 ]
 
+QuantumMeasurementProp[qm_, "NDistribution"] := CategoricalDistribution[
+    qm["Outcomes"],
+    Chop @ N @ Normal @ qm["ProbabilitiesList"]
+]
+
 QuantumMeasurementProp[qm_, "Distribution"] := CategoricalDistribution[
     qm["Outcomes"],
-    Normal @ Chop @ N @ qm["ProbabilitiesList"]
+    FullSimplify @ Normal @ qm["ProbabilitiesList"]
+]
+
+QuantumMeasurementProp[qm_, "NMultivariateDistribution"] := CategoricalDistribution[
+    Thread[Through[qm["Outcomes"]["Name"]] -> Chop @ N @ Normal @ qm["ProbabilitiesList"]]
+]
+
+QuantumMeasurementProp[qm_, "MultivariateDistribution"] := CategoricalDistribution[
+    Thread[Through[qm["Outcomes"]["Name"]] -> FullSimplify @ Normal @ qm["ProbabilitiesList"]]
 ]
 
 QuantumMeasurementProp[qm_, "Probabilities"] := AssociationThread[
