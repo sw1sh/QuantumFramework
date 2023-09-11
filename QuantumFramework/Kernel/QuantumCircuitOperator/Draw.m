@@ -192,9 +192,18 @@ drawGate[pos : {vposOut_, vposIn_, hpos_}, label_, opts : OptionsPattern[]] := B
 			wireStyle,
 			Circle[{center[[1]] - size / 2, center[[2]]}, {vGapSize / 2, (Max[vpos] - Min[vpos]) vGapSize / 2}, {- Pi / 2, Pi / 2}]
 		},
-		(type : "ZSpider" | "XSpider")[phase_] :> {
+		"Curry" :> {
 			wireStyle,
-			FaceForm[Switch[type, "ZSpider", White, "XSpider", LightGray]],
+			Map[Line[{{center[[1]] - size / 2, - vposIn[[1]] vGapSize}, {center[[1]] + size / 2, - # vGapSize}}] &, vposOut]
+		},
+		"Uncurry" :> {
+			wireStyle,
+			Map[Line[{{center[[1]] - size / 2, - # vGapSize}, {center[[1]] + size / 2, - vposOut[[1]] vGapSize}}] &, vposIn]
+		},
+
+		(type : "ZSpider" | "XSpider" | "Spider")[phase_] :> {
+			wireStyle,
+			FaceForm[Switch[type, "ZSpider", White, "XSpider", LightGray, "Spider", Gray]],
 			EdgeForm[wireStyle],
 			Disk[center, size / 3],
 			If[	phase === 0,

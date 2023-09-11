@@ -596,10 +596,11 @@ QuantumOperator[{"Uncurry", dim : _Integer ? Positive ..}, opts___] := QuantumOp
 QuantumOperator[{"Uncurry", dims : {_Integer ? Positive ..}}, opts___] :=
     QuantumOperator[
         QuantumOperator[identityMatrix[Times @@ dims], QuantumBasis[QuditBasis[Times @@ dims], QuditBasis[dims]]],
-        opts
+        opts,
+        "Label" -> "Uncurry"
     ]
 
-QuantumOperator[name : "Curry" | {"Curry", ___}, opts___] := QuantumOperator[QuantumOperator[name /. "Curry" -> "Uncurry"]["ConjugateTranspose"], opts]
+QuantumOperator[name : "Curry" | {"Curry", ___}, opts___] := QuantumOperator[QuantumOperator[name /. "Curry" -> "Uncurry"]["ConjugateTranspose"], opts, "Label" -> "Curry"]
 
 
 QuantumOperator[(name : "XSpider" | "YSpider" | "ZSpider" | "Spider"), opts___] := QuantumOperator[{name}, opts]
@@ -635,7 +636,8 @@ QuantumOperator[{"Spider", basis_ ? QuantumBasisQ, phase_ : 0}, opts___] /;
             ],
             basis
         ],
-        opts
+        opts,
+        "Label" -> "Spider"[phase]
     ]
 ]
 
