@@ -169,24 +169,24 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[] := qmo[QuantumOperator[QuantumState[{"Register", qmo["InputDimensions"]}], {} -> qmo["InputOrder"]]]
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qo_ ? QuantumOperatorQ] := Enclose @ With[{
-    op = qmo["SuperOperator"]["Sort"]
+    top = qmo["SuperOperator"]["Sort"], bot = qo["Sort"]
 },
     QuantumMeasurementOperator[
-        ConfirmBy[QuantumOperator[op, {
+        ConfirmBy[QuantumOperator[top, {
             ReplacePart[
-                op["FullOutputOrder"],
+                top["FullOutputOrder"],
                 Thread[
                     List /@ Range[qmo["Eigenqudits"]] ->
-                    With[{extras = Select[qo["FullOutputOrder"], NonPositive]},
+                    With[{extras = Select[bot["FullOutputOrder"], NonPositive]},
                         Take[Complement[1 - Range[Length[extras] + qmo["Eigenqudits"]], extras], - qmo["Eigenqudits"]]
                     ]
                 ]
             ],
-            op["InputOrder"]
-        }] @ qo, QuantumOperatorQ],
+            top["InputOrder"]
+        }] @ bot, QuantumOperatorQ],
         If[
             qo["OutputQudits"] < qo["InputQudits"] && qo["OutputDimension"] == qo["InputDimension"],
-            Sort @ qo["FullInputOrder"],
+            bot["FullInputOrder"],
             qmo["Target"]
         ]
     ]
