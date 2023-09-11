@@ -254,7 +254,7 @@ QuantumCircuitOperatorProp[qco_, "Shift", n : _Integer : 1] :=
 
 
 QuantumCircuitOperatorProp[qco_, "Dagger"] :=
-    QuantumCircuitOperator[#["Dagger"] & /@ Reverse @ qco["Operators"], simplifyLabel[SuperDagger[qco["Label"]]]]
+    QuantumCircuitOperator[If[BarrierQ[#], #, #["Dagger"]] & /@ Reverse @ qco["NormalOperators", True], simplifyLabel[SuperDagger[qco["Label"]]]]
 
 QuantumCircuitOperatorProp[qco_, prop : "Conjugate" | "Dual"] :=
     QuantumCircuitOperator[#[prop] & /@ qco["Operators"], SuperStar[qco["Label"]]]

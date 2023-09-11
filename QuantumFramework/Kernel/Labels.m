@@ -20,6 +20,8 @@ simplifyLabel[l_] := Replace[l, {
     SuperDagger["U2"[a_, b_]] :> "U2"[Pi - b, Pi - a],
     SuperDagger["U"[a_, b_, c_]] :> "U"[- a, - b, - c],
     SuperDagger["\[Pi]"[args__]] :> "\[Pi]"[args],
+    SuperDagger["Cap"] :> "Cup",
+    SuperDagger["Cup"] :> "Cap",
     SuperDagger[SuperDagger[label_]] :> label
 }]
 

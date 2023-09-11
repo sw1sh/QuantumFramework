@@ -55,16 +55,35 @@ QuantumPartialTrace[qs_QuantumState] := QuantumPartialTrace[qs, Range @ qs["Qudi
 
 
 QuantumPartialTrace[qo_QuantumOperator, qudits : {{_Integer, _Integer} ..}] := With[{
-    outputIdx = AssociationThread[qo["OutputOrder"], Range[qo["OutputQudits"]]],
-    inputIdx  = AssociationThread[qo["InputOrder"], Range[qo["InputQudits"]]]
+    outputIdx = qo["OutputOrderQuditMapping"],
+    inputIdx  = qo["InputOrderQuditMapping"]
 },
     QuantumOperator[
-        QuantumPartialTrace[qo["State"], {outputIdx[#[[1]]], inputIdx[#[[2]]]} & /@ qudits],
+        QuantumPartialTrace[qo["State"], {Lookup[outputIdx, #[[1]]], Lookup[inputIdx, #[[2]]]} & /@ qudits],
         {
-            DeleteCases[qo["FullOutputOrder"], Alternatives @@ qudits[[All, 1]]],
-            DeleteCases[qo["FullInputOrder"], Alternatives @@ qudits[[All, 2]]]
+            DeleteElements[qo["OutputOrder"], qudits[[All, 1]]],
+            DeleteElements[qo["InputOrder"], qudits[[All, 2]]]
         }
     ]
+]
+
+QuantumPartialTrace[qm_ ? QuantumMeasurementQ, qudits_] := QuantumMeasurement[QuantumPartialTrace[qm["State"], qudits]]
+
+QuantumPartialTrace[qc_ ? QuantumCircuitOperatorQ, qudits : {{_Integer, _Integer} ..}] := Enclose @ Block[{
+    outputIdx = qc["OutputOrderQuditMapping"],
+    inputIdx  = qc["InputOrderQuditMapping"],
+    out = qudits[[All, 1]], in = qudits[[All, 2]],
+    min,
+    outDims, inDims
+},
+    ConfirmAssert[ContainsAll[qc["FullOutputOrder"], out] && ContainsAll[qc["FullInputOrder"], in]];
+    outDims = qc["OutputDimensions"][[Lookup[outputIdx, out]]];
+    inDims = qc["InputDimensions"][[Lookup[inputIdx, in]]];
+    ConfirmAssert[outDims == inDims];
+    min = Min[Keys[outputIdx], Keys[inputIdx]];
+    QuantumCircuitOperator[Reverse @ MapIndexed[{"Cup", #1[[2]]} -> {min - #2[[1]], #1[[1]]} &, Thread[{out, outDims}]]] /*
+        qc /*
+    QuantumCircuitOperator[MapIndexed[{"Cap", #1[[2]]} -> {min - #2[[1]], #1[[1]]} &, Thread[{in, inDims}]]]
 ]
 
 
@@ -74,6 +93,4 @@ QuantumPartialTrace[op_ ? QuantumFrameworkOperatorQ, qudits : {{_Integer, _Integ
     ]
 
 QuantumPartialTrace[op_ ? QuantumFrameworkOperatorQ, qudits : {_Integer ..}] := QuantumPartialTrace[op, {#, #} & /@ qudits]
-
-QuantumPartialTrace[qm_ ? QuantumMeasurementQ, qudits_] := QuantumMeasurement[QuantumPartialTrace[qm["State"], qudits]]
 
