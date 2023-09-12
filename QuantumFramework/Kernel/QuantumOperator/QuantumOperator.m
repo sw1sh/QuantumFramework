@@ -320,7 +320,8 @@ Enclose @ With[{
 ]
 
 
-(top_QuantumOperator ? QuantumOperatorQ)[bot_ ? QuantumOperatorQ] /; top["Picture"] === bot["Picture"] := Enclose @ Block[{
+(qo1_QuantumOperator ? QuantumOperatorQ)[qo2_ ? QuantumOperatorQ] /; qo1["Picture"] === qo2["Picture"] := Enclose @ Block[{
+    top = qo1["Sort"], bot = qo2["Sort"],
     fullTopOut, fullBotIn, fullTopIn, fullBotOut, topOut, botIn, out, in, basis, tensor
 },
     fullTopOut = 1 /@ top["FullOutputOrder"];
