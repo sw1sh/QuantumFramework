@@ -301,7 +301,7 @@ QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /;
     mat
 },
     m = qs["Dimension"] / n;
-    mat = If[ qs["PureStateQ"],
+    mat = If[ qs["PureStateQ"] || qs["DegenerateStateQ"],
         ArrayReshape[state["StateVector"], {n, m}],
         ArrayReshape[
             Transpose[ArrayReshape[state["DensityMatrix"], {n, m, n, m}], 2 <-> 3],
@@ -379,8 +379,9 @@ QuantumStateProp[qs_, "Disentangle"] /; qs["PureStateQ"] := With[{s = qs["Schmid
 
 QuantumStateProp[qs_, "Decompose", {}] := {{qs}}
 
-QuantumStateProp[qs_, "Decompose", dims_List] /; qs["PureStateQ"] := If[Length[dims] == 1, {{qs}}, Module[{s = qs["SchmidtBasis", First[dims]], basis},
+QuantumStateProp[qs_, "Decompose", dims_List] /; qs["PureStateQ"] || qs["DegenerateStateQ"] := If[Length[dims] == 1, {{qs}}, Module[{s = qs["SchmidtBasis", First[dims]], basis},
     basis = s["Basis"]["Decompose"];
+    If[s["DegenerateStateQ"], Return[{QuantumState[0, #] & /@ basis}]];
 	MapIndexed[{v, idx} |->
 		Splice[Catenate /@ Tuples[If[Length[basis] == 2, MapAt[#["Decompose", {}] &, 1], Identity] @
             MapAt[#["Decompose", Rest[dims]] &, -1] @ MapIndexed[QuantumState[SparseArray[idx -> If[#2 === {1}, v, 1], #["Dimension"]], #] &, basis]]],
@@ -392,6 +393,7 @@ decompose[qs_, {}] := {1 -> {qs}}
 
 decompose[qs_, dims_List] := If[Length[dims] == 1, {1 -> {qs}}, Module[{s = qs["SchmidtBasis", First[dims]], basis},
     basis = s["Basis"]["Decompose"];
+    If[s["DegenerateStateQ"], Return[{1 -> (QuantumState[0, #] & /@ basis)}]];
 	MapIndexed[{v, idx} |->
 		With[{decomp = If[Length[basis] == 2, MapAt[decompose[#, {}] &, 1], Identity] @
             MapAt[decompose[#, Rest[dims]] &, -1] @ Map[QuantumState[SparseArray[idx -> 1, #["Dimension"]], #] &, basis]
@@ -402,11 +404,11 @@ decompose[qs_, dims_List] := If[Length[dims] == 1, {1 -> {qs}}, Module[{s = qs["
 	]
 ]]
 
-QuantumStateProp[qs_, "DecomposeWithProbabilities", dims_List] /; qs["PureStateQ"] := SubsetMap[Normalize[#, Total] &, {All, 1}] @ decompose[qs, dims]
+QuantumStateProp[qs_, "DecomposeWithProbabilities", dims_List] /; qs["PureStateQ"] || qs["DegenerateStateQ"] := SubsetMap[Normalize[#, Total] &, {All, 1}] @ decompose[qs, dims]
 
-QuantumStateProp[qs_, "DecomposeWithAmplitudes", dims_List] /; qs["PureStateQ"] := decompose[qs, dims]
+QuantumStateProp[qs_, "DecomposeWithAmplitudes", dims_List] /; qs["PureStateQ"] || qs["DegenerateStateQ"] := decompose[qs, dims]
 
-QuantumStateProp[qs_, prop : "Decompose" | "DecomposeWithProbabilities" | "DecomposeWithAmplitudes"] /; qs["PureStateQ"] := qs[prop, Catenate[Table @@@ FactorInteger[qs["Dimension"]]]]
+QuantumStateProp[qs_, prop : "Decompose" | "DecomposeWithProbabilities" | "DecomposeWithAmplitudes"] /; qs["PureStateQ"] || qs["DegenerateStateQ"] := qs[prop, Catenate[Table @@@ FactorInteger[qs["Dimension"]]]]
 
 QuantumStateProp[qs_, prop : "Decompose" | "DecomposeWithProbabilities" | "DecomposeWithAmplitudes", args___] /; qs["MixedStateQ"] := qs["Bend"][prop, args]
 
@@ -476,7 +478,7 @@ QuantumStateProp[qs_, "Purify"] := Sqrt[qs]["Bend"]
 QuantumStateProp[qs_, "Unpurify"] := qs["Unbend"] ^ 2
 
 
-QuantumStateProp[qs_, "Pure"] := If[qs["PureStateQ"], qs, qs["Bend"]]
+QuantumStateProp[qs_, "Pure"] := If[qs["PureStateQ"] || qs["DegenerateStateQ"], qs, qs["Bend"]]
 
 QuantumStateProp[qs_, "Mixed"] := If[qs["MixedStateQ"], qs, qs["Unbend"]]
 

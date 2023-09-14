@@ -145,6 +145,8 @@
             "Spider",
             "ZSpider",
             "XSpider",
+            "Measure",
+            "Encode",
             "Cup",
             "Cap",
             "Switch",
@@ -153,7 +155,8 @@
             "WignerD",
             "JX",
             "JY",
-            "JZ"
+            "JZ",
+            "Double"
         },
         {
             "Computational",

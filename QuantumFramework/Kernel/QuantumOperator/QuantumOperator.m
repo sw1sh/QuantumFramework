@@ -313,14 +313,20 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] /; qo["Picture"] === qs["Picture"] && (
     qs["Picture"] =!= "Heisenberg" || Message[QuantumOperator::incompatiblePictures, qo["Picture"], qs["Picture"]]) :=
-Enclose @ With[{
-    order = Range[Max[1, qs["OutputQudits"]]] + Max[0, Max[qo["InputOrder"]] - qs["OutputQudits"]]
+Enclose @ Block[{
+    order = Range[Max[1, qs["OutputQudits"]]] + Max[0, Max[qo["InputOrder"]] - qs["OutputQudits"]], res
 },
-    ConfirmBy[qo[QuantumOperator[qs, order, Automatic]], QuantumOperatorQ]["Sort"]["State"]
+    res = ConfirmBy[qo[QuantumOperator[qs, order, Automatic]], QuantumOperatorQ]["Sort"]["State"];
+    If[qs["MatrixQ"], res["Unbend"], res]
 ]
 
+(qo1_QuantumOperator ? QuantumOperatorQ)[qo2_ ? QuantumOperatorQ] /; qo1["MatrixQ"] || qo2["MatrixQ"] := With[{
+    shift = Max[qo1["Order"], qo2["Order"]]
+},
+    qo1["Bend", shift] @ qo2["Bend", shift]
+]
 
-(qo1_QuantumOperator ? QuantumOperatorQ)[qo2_ ? QuantumOperatorQ] /; qo1["Picture"] === qo2["Picture"] := Enclose @ Block[{
+(qo1_QuantumOperator ? QuantumOperatorQ)[qo2_ ? QuantumOperatorQ] /; qo1["Picture"] === qo2["Picture"] && qo1["VectorQ"] && qo2["VectorQ"] := Enclose @ Block[{
     top = qo1["Sort"], bot = qo2["Sort"],
     fullTopOut, fullBotIn, fullTopIn, fullBotOut, topOut, botIn, out, in, basis, tensor
 },

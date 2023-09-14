@@ -75,9 +75,7 @@ QuantumMeasurementOperatorProp[qmo_, "ExtraQudits"] := Count[qmo["OutputOrder"],
 QuantumMeasurementOperatorProp[qmo_, "Eigenqudits"] := Max[qmo["ExtraQudits"], 1]
 
 QuantumMeasurementOperatorProp[qmo_, "Eigendimensions"] :=
-    qmo["OutputDimensions"][[
-        If[qmo["ExtraQudits"] > 0, qmo["Eigenindex"], qmo["TargetIndex"]]
-    ]]
+    If[qmo["ExtraQudits"] > 0, qmo["OutputDimensions"][[qmo["Eigenindex"]]], {Times @@ qmo["OutputDimensions"][[qmo["TargetIndex"]]]}]
 
 QuantumMeasurementOperatorProp[qmo_, "Eigendimension"] := Times @@ qmo["Eigendimensions"]
 
@@ -261,6 +259,9 @@ QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | "Sort" | "SortOutput" | 
 
 QuantumMeasurementOperatorProp[qmo_, prop : "Dagger", args___] :=
     qmo["SuperOperator"][prop, args]
+
+QuantumMeasurementOperatorProp[qmo_, prop : "Double", args___] :=
+    QuantumMeasurementOperator[qmo["SuperOperator"][prop, args], qmo["Target"]]
 
 
 QuantumMeasurementOperatorProp[qmo_, args : PatternSequence[prop_String, ___]] /;

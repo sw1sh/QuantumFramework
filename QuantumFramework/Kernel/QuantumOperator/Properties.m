@@ -476,9 +476,21 @@ QuantumOperatorProp[qo_, prop : "Conjugate" | "Dual"] := QuantumOperator[qo["Sta
 
 QuantumOperatorProp[qo_, "Bend", shift : _Integer ? Positive : Automatic] :=
     If[ qo["MatrixQ"],
-        QuantumOperator[qo["State"]["Bend"], Join[#, # - Min[#] + 1 + Replace[shift, Automatic :> Max[qo["Order"]]]] & /@ qo["Order"]],
-        QuantumTensorProduct[qo, qo["Shift", Replace[shift, Automatic :> Max[qo["Order"]]]]]
+        QuantumOperator[qo["State"]["Bend"], Join[#, # + Replace[shift, Automatic :> Max[qo["Order"]] - Min[#] + 1]] & /@ qo["Order"]],
+        QuantumTensorProduct[qo, qo["Conjugate"]["Shift", Replace[shift, Automatic :> Max[qo["Order"]]]]]
     ]
+
+QuantumOperatorProp[qo_, "Double"] := Block[{min, max},
+    {min, max} = MinMax[qo["FullOrder"]];
+    QuantumOperator[
+        QuantumCircuitOperator[{
+            Splice @ MapThread[{"Curry", {#2, #2}} -> {#1} -> {#1, max - min + #1 + 1} &, {qo["FullInputOrder"], qo["InputDimensions"]}],
+            qo, qo["Conjugate"]["Shift", max - min + 1],
+            Splice @ MapThread[{"Uncurry", {#2, #2}} -> {#1, max - min + #1 + 1} -> {#1} &, {qo["FullOutputOrder"], qo["OutputDimensions"]}]
+        }]["CircuitOperator"],
+        "Label" -> Interpretation[Style[qo["Label"], Bold], Evaluate @ qo["Label"]]
+    ]
+]
 
 QuantumOperatorProp[qo_, "TensorReverseInput", order_ ? orderQ] :=
     QuantumOperator[qo["State"]["TensorReverseInput", order /. qo["InputOrderQuditMapping"]], qo["Order"]]
@@ -509,7 +521,7 @@ With[{state = qo["State"]["PrimeBasis"]},
     ]
 ]
 
-QuantumOperatorProp[qo_, "Simplify"] := QuantumOperator[qo["State"]["Simplify"], qo["Order"]]
+QuantumOperatorProp[qo_, prop : "Simplify" | "FullSimplify"] := QuantumOperator[qo["State"][prop], qo["Order"]]
 
 
 (* evolution *)

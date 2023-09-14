@@ -15,7 +15,7 @@ $QuantumOperatorNames = {
     "PhaseShift",
     "Shift", "ShiftPhase", "PhaseSpaceDisplacement", "PhasePoint", "Fano",
     "SUM", "RootNOT",
-    "X", "Y", "Z", "PauliX", "PauliY", "PauliZ", "H", "Hadamard",
+    "X", "Y", "Z", "PauliX", "PauliY", "PauliZ", "H", "Hadamard", "NOT",
     "0", "1",
     "SWAP", "RootSWAP", "CSWAP", "Fredkin",
     "C", "Controlled", "C0", "Controlled0", "CX", "CY", "CZ", "CH", "CT", "CS", "CPHASE", "CNOT",
@@ -23,11 +23,13 @@ $QuantumOperatorNames = {
     "Toffoli", "Deutsch",
     "RandomUnitary", "RandomHermitian",
     "Spider", "ZSpider", "XSpider",
+    "Measure", "Encode",
     "Cup", "Cap",
     "Switch",
     "Discard",
     "Multiplexer",
-    "WignerD", "JX", "JY", "JZ"
+    "WignerD", "JX", "JY", "JZ",
+    "Double"
 }
 
 
@@ -56,20 +58,17 @@ FromOperatorShorthand[f_Symbol[
     With[{qo = QuantumOperator[Unevaluated[op]]}, FromOperatorShorthand[Unevaluated[f[left, qo, right]]]]
 FromOperatorShorthand[op_ ? QuantumFrameworkOperatorQ] := op
 FromOperatorShorthand[order_ ? orderQ] := QuantumMeasurementOperator[order]
-FromOperatorShorthand[name_] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[name]
-FromOperatorShorthand[name_] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[name]
-FromOperatorShorthand[{name_, args___}] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}]
-FromOperatorShorthand[name_ -> order_ ? autoOrderQ] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[name, order]
-FromOperatorShorthand[{name_, args___} -> order_ ? autoOrderQ] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, order]
-FromOperatorShorthand[name_ -> order_ ? autoOrderQ] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[name, order]
-FromOperatorShorthand[({name_, args___} | name_) -> order_ ? autoOrderQ] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[{name, args}, order]
+FromOperatorShorthand[arg : {name_String, ___} | name_String] /; MemberQ[$QuantumStateNames, name] || StringMatchQ[name, ("0" | "1" | "+" | "-" | "L" | "R") ..] :=
+    With[{s = QuantumState[arg]}, QuantumOperator[s, "Label" -> Ket[{s["Label"]}]]]
+FromOperatorShorthand[arg : {name_String, ___} | name_String] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[arg]
+FromOperatorShorthand[arg : {name_String, ___} | name_String] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[arg]
 FromOperatorShorthand[(qc_ ? QuantumChannelQ) -> order_ ? autoOrderQ] := QuantumChannel[qc, order]
-FromOperatorShorthand[lhs_ -> order_ ? autoOrderQ] := QuantumOperator[Unevaluated[lhs], order]
+FromOperatorShorthand[lhs_ -> order_ ? autoOrderQ] := QuantumOperator[FromOperatorShorthand[Unevaluated[lhs]], order]
 FromOperatorShorthand[lhs_ -> n_Integer] := FromOperatorShorthand[Unevaluated[lhs -> {n}]]
 FromOperatorShorthand[lhs_ -> n : _Integer | _ ? orderQ -> m : _Integer | _ ? orderQ] := FromOperatorShorthand[Unevaluated[lhs -> {Flatten[{m}], Flatten[{n}]}]]
 FromOperatorShorthand[(lhs_ -> rhs_) -> label : Except[OptionsPattern[]]] := FromOperatorShorthand[Unevaluated[(lhs -> rhs) -> ("Label" -> label)]]
-FromOperatorShorthand[{name_, args___} -> rest_] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, Sequence @@ Developer`ToList[rest]]
-FromOperatorShorthand[{name_, args___} -> rest_] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[{name, args}, Sequence @@ Developer`ToList[rest]]
+FromOperatorShorthand[{name_String, args___} -> rest_] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, Sequence @@ Developer`ToList[rest]]
+FromOperatorShorthand[{name_String, args___} -> rest_] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[{name, args}, Sequence @@ Developer`ToList[rest]]
 FromOperatorShorthand[lhs_ -> rest_] := QuantumOperator[Unevaluated[lhs], Sequence @@ Developer`ToList[rest]]
 FromOperatorShorthand[args_List] := FromOperatorShorthand /@ args
 FromOperatorShorthand[arg_] := QuantumOperator[arg]
@@ -622,17 +621,18 @@ QuantumOperator[{name : "XSpider" | "YSpider" | "ZSpider", phase_ : 0}, order : 
 
 QuantumOperator["Spider", opts___] := QuantumOperator[{"Spider", QuantumBasis[QuditBasis[2], QuditBasis[2]]}, opts]
 
-QuantumOperator[{"Spider", basis_ ? QuantumBasisQ, phase_ : 0}, opts___] /;
-    Equal @@ basis["Dimensions"] || basis["OutputDimension"] == basis["InputDimension"] == 1 := Block[{
-    phases, dim
+QuantumOperator[{"Spider", args_, phase_ : 0}, opts___] := QuantumOperator[{"Spider", QuantumBasis[args], phase}, opts]
+
+QuantumOperator[{"Spider", basis_ ? QuantumBasisQ, phase_ : 0}, opts___] := Block[{
+    phases, dims = Catenate[Table @@@ FactorInteger[basis["Dimension"]]], dim
 },
-    dim = First[basis["Dimensions"], 2];
+    dim = Max[dims];
     phases = PadRight[Flatten[{phase}], dim];
     QuantumOperator[
         QuantumState[
-            If[ basis["Dimension"] <= 1,
+            If[ dim <= 1,
                 {Exp[I First[phases, 0]]},
-                SparseArrayFlatten @ SparseArray[Thread[Transpose[Table[Range[dim], basis["Qudits"]]] -> Exp[I phases]], basis["Dimensions"]]
+                SparseArrayFlatten @ SparseArray[Thread[Transpose[PadRight[Range[#], dim, #] & /@ dims] -> Exp[I phases]], dims]
             ],
             basis
         ],
@@ -645,6 +645,12 @@ QuantumOperator[{"Spider", basis_ ? QuantumBasisQ, phase_ : 0}, opts___] /;
 QuantumOperator[({name : "XSpider" | "YSpider" | "ZSpider" | "Spider", args___}) | (name : "XSpider" | "YSpider" | "ZSpider" | "Spider"), order : _ ? orderQ : {1}, opts___] :=
     QuantumOperator[{name, args}, {order, order}, opts]
 
+
+QuantumOperator[name : "Measure" | "Encode", opts___] := QuantumOperator[{name}, opts]
+
+QuantumOperator[{"Measure", dim_ : 2}, opts___] := QuantumOperator[{"Spider", QuantumBasis[{dim}, {2 dim}]}, opts]
+
+QuantumOperator[{"Encode", dim_ : 2}, opts___] := QuantumOperator[{"Spider", QuantumBasis[{2 dim}, {dim}]}, opts]
 
 QuantumOperator["Cup" | {"Cup", dim : _Integer ? Positive : 2}, order : _ ? orderQ : {1, 2}, opts___] /; Length[order] == 2 :=
     QuantumOperator[QuantumOperator[{"I", dim}]["SplitDual", 2], {order, {}}, "Label" -> "Cup", opts]
@@ -679,17 +685,9 @@ QuantumPartialTrace[
 ]]
 
 
-QuantumOperator["Discard", order : _ ? orderQ : {1}, args___] := With[{basis = QuantumBasis[args]},
-    QuantumOperator[
-        QuantumState["UniformSuperposition",
-            If[ basis["Qudits"] < Length[order],
-                QuantumBasis[basis, Ceiling[Length[order] / Max[1, basis["Qudits"]]]],
-                basis
-            ]
-        ]["Dagger"],
-        {{}, order},
-        "Label" -> "Discard"
-    ]
+QuantumOperator["Discard" | {"Discard", args___}, order : _ ? orderQ : {1}] := QuantumOperator[{"Spider", QuantumBasis[args]},
+    order -> {},
+    "Label" -> "Discard"
 ]
 
 
@@ -733,11 +731,14 @@ QuantumOperator[{"JY" | "AngularMomentumY", j_}, arg___] := QuantumOperator[jY[j
 QuantumOperator[{"JZ" | "AngularMomentumZ", j_}, arg___] := QuantumOperator[jZ[j], arg, QuantumBasis[2 j + 1]]
 
 
+QuantumOperator[{"Double", args___}, opts___] := QuantumOperator[args, opts]["Double"]
+
 QuantumOperator[chain_String, opts___] := With[{chars = Characters[chain]},
     QuantumOperator[QuantumTensorProduct[MapIndexed[QuantumOperator, chars]], opts] /;
         ContainsOnly[chars, {"I", "X", "Y", "Z", "H", "S", "T", "V", "P"}]
 ]
 
+QuantumOperator[name_String[args___], opts___] := QuantumOperator[{name, args}, opts]
 
 $upperCasesOperatorNames := AssociationThread[ToUpperCase @ $QuantumOperatorNames, $QuantumOperatorNames]
 

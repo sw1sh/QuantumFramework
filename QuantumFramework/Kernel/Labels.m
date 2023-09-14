@@ -22,6 +22,8 @@ simplifyLabel[l_] := Replace[l, {
     SuperDagger["\[Pi]"[args__]] :> "\[Pi]"[args],
     SuperDagger["Cap"] :> "Cup",
     SuperDagger["Cup"] :> "Cap",
+    SuperDagger[Ket[x_]] :> Bra[x],
+    SuperDagger[Bra[x_]] :> Ket[x],
     SuperDagger[SuperDagger[label_]] :> label
 }]
 
