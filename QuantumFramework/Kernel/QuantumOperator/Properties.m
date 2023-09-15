@@ -480,6 +480,12 @@ QuantumOperatorProp[qo_, "Bend", shift : _Integer ? Positive : Automatic] :=
         QuantumTensorProduct[qo, qo["Conjugate"]["Shift", Replace[shift, Automatic :> Max[qo["Order"]]]]]
     ]
 
+QuantumOperatorProp[qo_, "Unbend"] :=
+    If[ qo["MatrixQ"],
+        qo,
+        QuantumOperator[qo["Sort"]["State"]["Unbend"], Take[Sort[#], Length[#] / 2] & /@ qo["Order"]]
+    ]
+
 QuantumOperatorProp[qo_, "Double"] := Block[{min, max},
     {min, max} = MinMax[qo["FullOrder"]];
     QuantumOperator[

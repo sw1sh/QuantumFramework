@@ -244,7 +244,7 @@ QuantumMeasurementOperatorProp[qmo_, "Bend", autoShift : _Integer ? Positive : A
     ]
 ]
 
-QuantumMeasurementOperatorProp[qmo_, prop : "Conjugate" | "Dual"] :=
+QuantumMeasurementOperatorProp[qmo_, prop : "Conjugate" | "Dual" | "Unbend"] :=
     QuantumMeasurementOperator[qmo["SuperOperator"][prop], qmo["Target"]]
 
 

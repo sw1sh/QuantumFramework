@@ -320,13 +320,8 @@ Enclose @ Block[{
     If[qs["MatrixQ"], res["Unbend"], res]
 ]
 
-(qo1_QuantumOperator ? QuantumOperatorQ)[qo2_ ? QuantumOperatorQ] /; qo1["MatrixQ"] || qo2["MatrixQ"] := With[{
-    shift = Max[qo1["Order"], qo2["Order"]]
-},
-    qo1["Bend", shift] @ qo2["Bend", shift]
-]
 
-(qo1_QuantumOperator ? QuantumOperatorQ)[qo2_ ? QuantumOperatorQ] /; qo1["Picture"] === qo2["Picture"] && qo1["VectorQ"] && qo2["VectorQ"] := Enclose @ Block[{
+(qo1_QuantumOperator ? QuantumOperatorQ)[qo2_ ? QuantumOperatorQ] /; qo1["Picture"] === qo2["Picture"] := Enclose @ Block[{
     top = qo1["Sort"], bot = qo2["Sort"],
     fullTopOut, fullBotIn, fullTopIn, fullBotOut, topOut, botIn, out, in, basis, tensor
 },
@@ -375,7 +370,7 @@ Enclose @ Block[{
                 EinsteinSummation[
                     {Join[fullTopOut, 3 @@@ fullTopOut, fullTopIn, 4 @@@ fullTopIn], Join[fullBotOut, 4 @@@ fullBotOut, fullBotIn, 3 @@@ fullBotIn]} ->
                         Join[out, in, Join[3 @@@ topOut, 4 @@@ Cases[fullBotOut, 1[_]]], Join[4 @@@ Cases[fullTopIn, 2[_]], 3 @@@ botIn]],
-                    {If[top["VectorQ"], top["Double"], top]["TensorRepresentation"], If[bot["VectorQ"], bot["Double"], bot]["TensorRepresentation"]}
+                    {If[top["VectorQ"], top["State"]["Double"], top]["TensorRepresentation"], If[bot["VectorQ"], bot["State"]["Double"], bot]["TensorRepresentation"]}
                 ],
                 Table[basis["Dimension"], 2]
             ]
