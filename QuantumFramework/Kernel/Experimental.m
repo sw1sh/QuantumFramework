@@ -5,6 +5,7 @@ PackageScope["QuantumBeamSearch"]
 PackageScope["QuantumDiagramProcess"]
 
 PackageExport["QuantumCircuitMultiwayGraph"]
+PackageExport["QuantumCircuitMultiwayCausalGraph"]
 PackageExport["QuantumMPS"]
 PackageExport["QuantumMPO"]
 
@@ -49,45 +50,130 @@ QuantumBeamSearch[states_List, ops_List, OptionsPattern[]] := Module[{
 ]
 
 
-operatorApply[op_ ? QuantumOperatorQ, states : {_ ? QuantumStateQ ..}] := Enclose @ With[{
+operatorApply[op_ ? QuantumOperatorQ, states : {_ ? QuantumStateQ ...}] := Enclose @ With[{
 	inputOrder = op["FullInputOrder"],
 	outputOrder = op["FullOutputOrder"]
 },
-	ConfirmAssert[1 <= Min[inputOrder] <= Max[inputOrder] <= Length[states]];
-	ConfirmAssert[1 <= Min[outputOrder] <= Max[outputOrder] <= Length[states]];
+	(* ConfirmAssert[1 <= Min[inputOrder] <= Max[inputOrder] <= Length[states]];
+	ConfirmAssert[1 <= Min[outputOrder] <= Max[outputOrder] <= Length[states]]; *)
 	Map[
-		ReplacePart[states, Thread[outputOrder -> #]] &,
-		op["State"][QuantumTensorProduct @@ states[[inputOrder]]]["Decompose"]
+		#[[1]] -> ReplacePart[states, Thread[outputOrder -> #[[2]]]] &,
+		Which[
+			inputOrder === outputOrder === {},
+			{FullSimplify[op["Norm"]] -> {}},
+			inputOrder === {},
+			op["State"]["FullSimplify"]["DecomposeWithAmplitudes", op["OutputDimensions"]],
+			True,
+			op["State"][QuantumTensorProduct @@ states[[inputOrder]]]["FullSimplify"]["DecomposeWithAmplitudes", op["OutputDimensions"]]
+		]
 	]
 ]
 
 QuantumCircuitMultiwayGraph[circuit_, initStates : Except[OptionsPattern[]] : Automatic, opts : OptionsPattern[]] := Enclose @ Block[{
 	index = 0
 },
-	VertexReplace[
-		ResourceFunction["FoldGraph"][
-			List /* Replace[{{pos_, states_}, op_} :> (
-				index++;
-				MapIndexed[
-					With[{newPos = Join[pos, #2]},
-						Labeled[{newPos, #1}, <|
-							"Destroyed" -> op["FullInputOrder"],
-							"Created" -> op["FullOutputOrder"],
-							"Step" -> Length[newPos],
-							"TreePosition" -> newPos,
-							"Index" -> index,
-							"Operator" -> op
-						|>]
-					] &,
-					Confirm @ operatorApply[op, states]
-				]
-			)],
-			{{{}, Replace[initStates, Automatic -> Table[QuantumState["0"], circuit["Arity"]]]}},
-			#["Sort"] & /@ circuit["Flatten"]["Operators"],
-			opts,
-			GraphLayout -> {"LayeredDigraphEmbedding", "Orientation" -> Left}
+	ResourceFunction["FoldGraph"][
+		List /* Replace[{{pos_, states_}, op_} :> Block[{weightedStates = Confirm @ operatorApply[op, states], norm},
+			norm = Total[weightedStates[[All, 1]]];
+			index++;
+			MapIndexed[
+				With[{newPos = Join[pos, #2]},
+					Labeled[{newPos, #1[[1]] ^ (1 / Length[#1[[2]]]) * #1[[2]]}, <|
+						"Input" -> op["FullInputOrder"],
+						"Output" -> op["FullOutputOrder"],
+						"Step" -> Length[newPos],
+						"TreePosition" -> newPos,
+						"Index" -> index,
+						"Probability" -> #1[[1]] / norm,
+						"Operator" -> op
+					|>]
+				] &,
+				weightedStates
+			]
+		]],
+		{{{}, Replace[initStates, Automatic :>
+			(QuantumState["Register", #] & /@ Replace[
+				Union[circuit["OutputOrder"], circuit["FreeOrder"]],
+				Append[_ -> 2] @ Thread[circuit["InputOrder"] -> circuit["InputDimensions"]],
+				{1}
+			])
+		]
+		}},
+		circuit["Flatten"]["NormalOperators"],
+		opts,
+		GraphLayout -> {"LayeredDigraphEmbedding", "Orientation" -> Left}
+	]
+]
+
+GraphSources[graph_] := Pick[VertexList @ graph, VertexInDegree @ graph, 0]
+GraphSinks[graph_] := Pick[VertexList @ graph, VertexOutDegree @ graph, 0]
+
+lineGraph[g_, opts : OptionsPattern[Graph]] := With[{
+    edges = DeleteDuplicates @ Catenate[(v |-> DirectedEdge @@@
+        Tuples[{
+            Cases[EdgeList[g], DirectedEdge[_, Verbatim[v], ___]],
+            Cases[EdgeList[g], DirectedEdge[Verbatim[v], __]]}]) /@ VertexList[g]
+    ]
+},
+    Graph[
+        EdgeList[g], edges,
+        opts
+    ]
+]
+
+Options[QuantumCircuitMultiwayCausalGraph] = Join[{"IncludeInitialEvent" -> False, "IncludeBranchialEdges" -> True}, Options[Graph]];
+
+QuantumCircuitMultiwayCausalGraph[qc_QuantumCircuitOperator, opts___] :=
+	Enclose @ QuantumCircuitMultiwayCausalGraph[ConfirmBy[QuantumCircuitMultiwayGraph[qc], GraphQ], opts]
+
+QuantumCircuitMultiwayCausalGraph[sg_ ? GraphQ, opts : OptionsPattern[]] := Enclose @ Block[{events = EdgeList[sg], cg, branchialEdges},
+	cg = If[Length[events] > 0, TransitiveReductionGraph @ EdgeDelete[
+			TransitiveClosureGraph[lineGraph[sg]],
+			DirectedEdge[DirectedEdge[_, _, tag1_], DirectedEdge[_, _, tag2_]] /;
+				! MatchQ[tag2["TreePosition"], Append[tag1["TreePosition"], ___]] || ! IntersectingQ[tag1["Output"], tag2["Input"]]
 		],
-		{_, states_} :> states
+		Graph[{}, {}]
+	];
+	If[ TrueQ[OptionValue["IncludeInitialEvent"]], cg = EdgeAdd[cg,
+		With[{inits = GraphSources[SimpleGraph[sg]], initEvents = GraphSources[cg]}, Catenate @ Outer[DirectedEdge[
+			DirectedEdge[{{}, {}}, #1, <|
+				"Input" -> {},
+				"Output" -> Range[Length[#1[[2]]]],
+				"Step" -> 0,
+				"TreePosition" -> {},
+				"Index" -> 0,
+				"Probability" -> 1,
+				"Operator" -> QuantumOperator["I", Range[Length[#1[[2]]]]]
+			|>], #2] &, inits, initEvents, 1]]]];
+	If[ TrueQ[OptionValue["IncludeBranchialEdges"]],
+		branchialEdges = Catenate @ Values[
+			UndirectedEdge @@@ SubsetCases[#,
+				{_[_, _, tag1_], _[_, _, tag2_]} /; IntersectingQ[tag1["Input"], tag2["Input"]] || tag1["Input"] == tag2["Input"],
+				Overlaps -> True
+			] & /@
+				GroupBy[
+					VertexList[cg],
+					With[{tp = #[[3]]["TreePosition"]}, tp[[;; Max[0, Length[tp] - 1]]]] &
+				]
+		];
+		cg = EdgeAdd[cg, branchialEdges];
+	];
+	Graph[cg,
+		FilterRules[{opts}, Options[Graph]],
+		VertexShapeFunction -> Function[Inset[Tooltip[Framed[
+			Style[#2[[3]]["Operator"]["Label"], Black],
+			Background -> Directive[Opacity[0.2], Hue[0.14, 0.34, 1]],
+			FrameMargins -> {{2, 2}, {0, 0}},
+			FrameStyle -> Directive[Opacity[0.3], Hue[0.09, 1, 0.91]]
+		], KeyDrop[#2[[3]], "Operator"]], #1, #3]],
+		VertexStyle -> _DirectedEdge -> ResourceFunction["WolframPhysicsProjectStyleData"]["CausalGraph", "VertexStyle"],
+		EdgeStyle -> {
+			_ -> ResourceFunction["WolframPhysicsProjectStyleData"]["StatesGraph", "EdgeStyle"],
+			_UndirectedEdge -> Directive[Thick, Dashed, ResourceFunction["WolframPhysicsProjectStyleData"]["BranchialGraph", "EdgeStyle"]],
+			DirectedEdge[_DirectedEdge, _DirectedEdge] -> ResourceFunction["WolframPhysicsProjectStyleData"]["CausalGraph", "EdgeStyle"]
+		},
+		GraphLayout -> "LayeredDigraphEmbedding",
+		PerformanceGoal -> "Quality", FormatType -> StandardForm, BaseStyle -> Bold
 	]
 ]
 
@@ -96,7 +182,7 @@ QuantumCircuitMultiwayGraph[circuit_, initStates : Except[OptionsPattern[]] : Au
 DiagramProcess := DiagramProcess = ResourceFunction["https://www.wolframcloud.com/obj/murzin.nikolay/DeployedResources/Function/DiagramProcess"]
 
 QuantumDiagramProcess[qco_QuantumCircuitOperator] := With[{
-    ops = qco["Operators"], net = qco["TensorNetwork", "PrependInitial" -> False], n = qco["Gates"]
+    ops = qco["Operators"], net = qco["TensorNetwork", "PrependInitial" -> False], n = qco["GateCount"]
 },
     With[{
         map = GroupBy[EdgeTags[net], #[[2]] &, #[[1, 1]] &],
