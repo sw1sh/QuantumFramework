@@ -494,7 +494,7 @@ QuantumOperatorProp[qo_, "Double"] := Block[{min, max},
             qo, qo["Conjugate"]["Shift", max - min + 1],
             Splice @ MapThread[{"Uncurry", {#2, #2}} -> {#1, max - min + #1 + 1} -> {#1} &, {qo["FullOutputOrder"], qo["OutputDimensions"]}]
         }]["CircuitOperator"],
-        "Label" -> Interpretation[Style[qo["Label"], Bold], Evaluate @ qo["Label"]]
+        "Label" -> With[{label = Replace[qo["Label"], Interpretation[_, label_] :> label]}, Interpretation[Style[label, Bold], label]]
     ]
 ]
 
