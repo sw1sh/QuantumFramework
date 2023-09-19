@@ -648,9 +648,9 @@ QuantumOperator[({name : "XSpider" | "YSpider" | "ZSpider" | "Spider", args___})
 
 QuantumOperator[name : "Measure" | "Encode", opts___] := QuantumOperator[{name}, opts]
 
-QuantumOperator[{"Measure", dim_ : 2}, opts___] := QuantumOperator[{"Spider", QuantumBasis[{dim}, {2 dim}]}, opts]
+QuantumOperator[{"Measure", dim_ : 2}, opts___] := QuantumOperator[{"Spider", QuantumBasis[{dim}, {dim ^ 2}]}, opts]
 
-QuantumOperator[{"Encode", dim_ : 2}, opts___] := QuantumOperator[{"Spider", QuantumBasis[{2 dim}, {dim}]}, opts]
+QuantumOperator[{"Encode", dim_ : 2}, opts___] := QuantumOperator[{"Spider", QuantumBasis[{dim ^ 2}, {dim}]}, opts]
 
 QuantumOperator["Cup" | {"Cup", dim : _Integer ? Positive : 2}, order : _ ? orderQ : {1, 2}, opts___] /; Length[order] == 2 :=
     QuantumOperator[QuantumOperator[{"I", dim}]["SplitDual", 2], {order, {}}, "Label" -> "Cup", opts]

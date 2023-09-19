@@ -19,7 +19,7 @@ $GateDefaultBoundaryStyle = {
 
 $GateDefaultBackgroundStyle = Append[
 	MapAt[Directive[#, Opacity[0.3]] &, Most[$GateDefaultBoundaryStyle], {All, 2}],
-	_ -> Directive[RGBColor[0.898039, 0.898039, 0.898039], Opacity[.5]]
+	_ -> Directive[RGBColor[0.0313725, 0.027451, 0.027451], Opacity[.25]]
 ]
 
 $DefaultFontStyleOptions = {FontFamily -> "Roboto", FontSize -> 11, FontColor -> Black};

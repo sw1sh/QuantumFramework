@@ -188,8 +188,9 @@ QuantumOperatorProp[qo_, "OrderedTensor"] := qo["Ordered"]["Tensor"]
 QuantumOperatorProp[qo_, "OrderedTensorRepresentation"] := qo["Ordered"]["TensorRepresentation"]
 
 
-QuantumOperatorProp[qo_, "MatrixState"] /; qo["OutputDimension"] == qo["InputDimension"] := QuantumState[qo["Matrix"], qo["Output"]]
+QuantumOperatorProp[qo_, "MatrixQuantumState"] /; qo["OutputDimension"] == qo["InputDimension"] := QuantumState[qo["Matrix"], qo["Output"]]
 
+QuantumOperatorProp[qo_, "MatrixState"] := QuantumOperator[qo["State"]["MatrixState"], qo["Order"]]
 
 QuantumOperatorProp[qo_, "PermuteInput", perm_Cycles] := QuantumOperator[
     qo["State"]["PermuteInput", perm],
@@ -494,7 +495,7 @@ QuantumOperatorProp[qo_, "Double"] := Block[{min, max},
             qo, qo["Conjugate"]["Shift", max - min + 1],
             Splice @ MapThread[{"Uncurry", {#2, #2}} -> {#1, max - min + #1 + 1} -> {#1} &, {qo["FullOutputOrder"], qo["OutputDimensions"]}]
         }]["CircuitOperator"],
-        "Label" -> Interpretation[Style[qo["Label"], Bold], Evaluate @ qo["Label"]]
+        "Label" -> With[{label = Replace[qo["Label"], Interpretation[_, label_] :> label]}, Interpretation[Style[label, Bold], label]]
     ]
 ]
 
