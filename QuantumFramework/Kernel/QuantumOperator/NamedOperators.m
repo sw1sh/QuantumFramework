@@ -65,7 +65,7 @@ FromOperatorShorthand[arg : {name_String, ___} | name_String] /; MemberQ[$Quantu
 FromOperatorShorthand[(qc_ ? QuantumChannelQ) -> order_ ? autoOrderQ] := QuantumChannel[qc, order]
 FromOperatorShorthand[lhs_ -> order_ ? autoOrderQ] := QuantumOperator[FromOperatorShorthand[Unevaluated[lhs]], order]
 FromOperatorShorthand[lhs_ -> n_Integer] := FromOperatorShorthand[Unevaluated[lhs -> {n}]]
-FromOperatorShorthand[lhs_ -> n : _Integer | _ ? orderQ -> m : _Integer | _ ? orderQ] := FromOperatorShorthand[Unevaluated[lhs -> {Flatten[{m}], Flatten[{n}]}]]
+FromOperatorShorthand[lhs_ -> n : _Integer | _ ? orderQ -> m : _Integer | _ ? orderQ] := QuantumOperator[lhs, {Flatten[{m}], Flatten[{n}]}]
 FromOperatorShorthand[(lhs_ -> rhs_) -> label : Except[OptionsPattern[]]] := FromOperatorShorthand[Unevaluated[(lhs -> rhs) -> ("Label" -> label)]]
 FromOperatorShorthand[{name_String, args___} -> rest_] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[{name, args}, Sequence @@ Developer`ToList[rest]]
 FromOperatorShorthand[{name_String, args___} -> rest_] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[{name, args}, Sequence @@ Developer`ToList[rest]]
@@ -602,10 +602,8 @@ QuantumOperator[{"Uncurry", dims : {_Integer ? Positive ..}}, opts___] :=
 QuantumOperator[name : "Curry" | {"Curry", ___}, opts___] := QuantumOperator[QuantumOperator[name /. "Curry" -> "Uncurry"]["ConjugateTranspose"], opts, "Label" -> "Curry"]
 
 
-QuantumOperator[(name : "XSpider" | "YSpider" | "ZSpider" | "Spider" | "WSpider"), opts___] := QuantumOperator[{name}, opts]
-
-
-QuantumOperator[{name : "XSpider" | "YSpider" | "ZSpider", phase_ : 0}, order : {outputOrder : _ ? orderQ, inputOrder : _ ? orderQ}, opts___] := QuantumOperator[{
+QuantumOperator[{name : "XSpider" | "YSpider" | "ZSpider", phase_ : 0},
+    order : {outputOrder : _ ? orderQ, inputOrder : _ ? orderQ} | (inputOrder : _ ? orderQ -> outputOrder : _ ? orderQ), opts___] := QuantumOperator[{
         "Spider",
         QuantumBasis[
             QuditBasis[StringTake[name, 1], Length[outputOrder]],
@@ -657,10 +655,15 @@ QuantumOperator[{"WSpider", n_Integer : 2, dim_Integer : 2}, opts___] := Quantum
     "Label" -> "WSpider"
 ]
 
+$Spider = "XSpider" | "YSpider" | "ZSpider" | "Spider" | "WSpider"
 
-QuantumOperator[({name : "XSpider" | "YSpider" | "ZSpider" | "Spider" | "WSpider", args___}) | (name : "XSpider" | "YSpider" | "ZSpider" | "Spider" | "WSpider"), order : _ ? orderQ : {1}, opts___] :=
+QuantumOperator[name : $Spider, opts___] := QuantumOperator[{name}, opts]
+
+QuantumOperator[{name : $Spider, args___}, order : _ ? orderQ, opts___] :=
     QuantumOperator[{name, args}, {order, order}, opts]
 
+QuantumOperator[{name : $Spider, args___}, opts : PatternSequence[] | PatternSequence[Except[_ ? autoOrderQ], ___]] :=
+    QuantumOperator[{name, args}, {{1}, {1}}, opts]
 
 QuantumOperator[name : "Measure" | "Encode", opts___] := QuantumOperator[{name}, opts]
 
