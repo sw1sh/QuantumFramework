@@ -219,6 +219,14 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			Map[With[{p = {center[[1]] - size / 2, - # vGapSize}}, {wireThickness[Replace[#, inDims]], Line[{center + size / 5 Normalize[p - center], p}]}] &, vposIn],
 			Map[With[{p = {center[[1]] + size / 2, - # vGapSize}}, {wireThickness[Replace[#, outDims]], Line[{center + size / 5 Normalize[p - center], p}]}] &, vposOut]
 		},
+		"WSpider" :> {
+			wireStyle,
+			Map[With[{p = {center[[1]] - size / 2, - # vGapSize}}, {wireThickness[Replace[#, inDims]], Line[{center, p}]}] &, vposIn],
+			Map[With[{p = {center[[1]] + size / 2, - # vGapSize}}, {wireThickness[Replace[#, outDims]], Line[{center, p}]}] &, vposOut],
+			FaceForm[Directive[Opacity[1], Black]],
+			EdgeForm[Directive[wireThickness[Max[Values[inDims], Values[outDims]]], wireStyle]],
+			Triangle[{center + size / 4 {1/2, 1}, center + size / 4 {1/2, -1}, center + size / 4 {-1, 0}}]
+		},
 		"Discard" :> {
 			wireStyle,
 			Table[{

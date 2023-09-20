@@ -22,7 +22,7 @@ $QuantumOperatorNames = {
     "S", "T", "V",
     "Toffoli", "Deutsch",
     "RandomUnitary", "RandomHermitian",
-    "Spider", "ZSpider", "XSpider",
+    "Spider", "ZSpider", "XSpider", "WSpider",
     "Measure", "Encode",
     "Cup", "Cap",
     "Switch",
@@ -602,7 +602,7 @@ QuantumOperator[{"Uncurry", dims : {_Integer ? Positive ..}}, opts___] :=
 QuantumOperator[name : "Curry" | {"Curry", ___}, opts___] := QuantumOperator[QuantumOperator[name /. "Curry" -> "Uncurry"]["ConjugateTranspose"], opts, "Label" -> "Curry"]
 
 
-QuantumOperator[(name : "XSpider" | "YSpider" | "ZSpider" | "Spider"), opts___] := QuantumOperator[{name}, opts]
+QuantumOperator[(name : "XSpider" | "YSpider" | "ZSpider" | "Spider" | "WSpider"), opts___] := QuantumOperator[{name}, opts]
 
 
 QuantumOperator[{name : "XSpider" | "YSpider" | "ZSpider", phase_ : 0}, order : {outputOrder : _ ? orderQ, inputOrder : _ ? orderQ}, opts___] := QuantumOperator[{
@@ -627,7 +627,7 @@ QuantumOperator[{"Spider", basis_ ? QuantumBasisQ, phase_ : 0}, opts___] := Bloc
     phases, dims = Catenate[Table @@@ FactorInteger[basis["Dimension"]]], dim
 },
     dim = Max[dims];
-    phases = PadRight[Flatten[{phase}], dim];
+    phases = Prepend[0] @ PadRight[Flatten[{phase}], dim - 1];
     QuantumOperator[
         QuantumState[
             If[ dim <= 1,
@@ -641,8 +641,24 @@ QuantumOperator[{"Spider", basis_ ? QuantumBasisQ, phase_ : 0}, opts___] := Bloc
     ]
 ]
 
+QuantumOperator[{"WSpider", n_Integer : 2, dim_Integer : 2}, opts___] := QuantumOperator[
+    QuantumState[
+        If[ dim <= 1,
+            {1},
+            SparseArrayFlatten @ SparseArray[Thread[
+                Prepend[ConstantArray[1, n + 1]] @
+                    Catenate @ Table[Append[i] @ ReplacePart[ConstantArray[1, n], j -> i], {i, 2, dim}, {j, n}] -> 1],
+                Table[dim, n + 1]
+            ]
+        ],
+        QuantumBasis[Table[dim, n], {dim}]
+    ],
+    opts,
+    "Label" -> "WSpider"
+]
 
-QuantumOperator[({name : "XSpider" | "YSpider" | "ZSpider" | "Spider", args___}) | (name : "XSpider" | "YSpider" | "ZSpider" | "Spider"), order : _ ? orderQ : {1}, opts___] :=
+
+QuantumOperator[({name : "XSpider" | "YSpider" | "ZSpider" | "Spider" | "WSpider", args___}) | (name : "XSpider" | "YSpider" | "ZSpider" | "Spider" | "WSpider"), order : _ ? orderQ : {1}, opts___] :=
     QuantumOperator[{name, args}, {order, order}, opts]
 
 

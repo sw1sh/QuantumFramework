@@ -293,8 +293,8 @@ QuantumCircuitOperator[{"PhaseOracle",
             ] & /@ indices,
             QuantumOperator["I", {#}] & /@ Complement[Range[Max[indices, Length[vars]]], Flatten @ Values[indices]]
         ],
-        If[MatchQ[formula, _BooleanFunction], esopFormula, formula],
-        opts
+        opts,
+        If[MatchQ[formula, _BooleanFunction], esopFormula, formula]
     ]
 ]
 
