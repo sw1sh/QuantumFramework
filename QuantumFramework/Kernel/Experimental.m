@@ -69,8 +69,10 @@ operatorApply[op_ ? QuantumOperatorQ, states : {_ ? QuantumStateQ ...}] := Enclo
 	]
 ]
 
+
+Options[QuantumCircuitMultiwayGraph] = Join[{"Normalize" -> False}, Options[Graph]];
 QuantumCircuitMultiwayGraph[circuit_, initStates : Except[OptionsPattern[]] : Automatic, opts : OptionsPattern[]] := Enclose @ Block[{
-	index = 0
+	index = 0, normalizeQ = TrueQ[OptionValue[QuantumCircuitMultiwayGraph, {opts}, "Normalize"]]
 },
 	ResourceFunction["FoldGraph"][
 		List /* Replace[{{pos_, states_}, op_} :> Block[{weightedStates = Confirm @ operatorApply[op, states], norm},
@@ -78,7 +80,7 @@ QuantumCircuitMultiwayGraph[circuit_, initStates : Except[OptionsPattern[]] : Au
 			index++;
 			MapIndexed[
 				With[{newPos = Join[pos, #2]},
-					Labeled[{newPos, #1[[1]] ^ (1 / Length[#1[[2]]]) * #1[[2]]}, <|
+					Labeled[{newPos, If[normalizeQ, #1[[2]], With[{factor = #1[[1]] ^ (1 / Length[op["FullOutputOrder"]])}, MapAt[factor * # &, #1[[2]], List /@ op["FullOutputOrder"]]]]}, <|
 						"Input" -> op["FullInputOrder"],
 						"Output" -> op["FullOutputOrder"],
 						"Step" -> Length[newPos],
@@ -100,7 +102,7 @@ QuantumCircuitMultiwayGraph[circuit_, initStates : Except[OptionsPattern[]] : Au
 		]
 		}},
 		circuit["Flatten"]["NormalOperators"],
-		opts,
+		FilterRules[{opts}, Options[Graph]],
 		GraphLayout -> {"LayeredDigraphEmbedding", "Orientation" -> Left}
 	]
 ]
