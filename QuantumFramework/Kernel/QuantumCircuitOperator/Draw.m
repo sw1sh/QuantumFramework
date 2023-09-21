@@ -37,6 +37,7 @@ simpleLabel[label_] := Replace[label,
 
 selectNonOverlappingIntervals[l_List] := Fold[If[Length[#1] == 0 || #1[[-1, 2]] < #2[[1]], Append[#1, #2], #1] &, {}, l]
 
+defaultWireThickness[0] := Directive[AbsoluteThickness[0], Opacity[0]]
 defaultWireThickness[dim_] := Directive[AbsoluteThickness[Log2[dim / 4 + 3 / 2]], Opacity[Min[0.3 Log2[dim], 1]]]
 
 Options[drawGate] := DeleteDuplicatesBy[First] @ Join[{

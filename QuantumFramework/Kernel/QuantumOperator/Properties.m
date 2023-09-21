@@ -84,7 +84,7 @@ QuantumOperatorProp[qo_, "MaxArity"] := Max[qo["InputQudits"], qo["Arity"]]
 
 QuantumOperatorProp[qo_, "FullArity"] := Max[qo["InputQudits"], qo["Range"]]
 
-QuantumOperatorProp[qo_, "FullInputOrder"] := If[qo["InputDimension"] > 1,
+QuantumOperatorProp[qo_, "FullInputOrder"] := Which[qo["InputDimension"] > 1,
     Take[
         If[MatchQ[qo["InputOrder"], {___, _ ? NonPositive, ___}], Identity, # - Min[#, 1] + 1 &] @
             If[ Length[qo["InputOrder"]] > 0,
@@ -93,10 +93,13 @@ QuantumOperatorProp[qo_, "FullInputOrder"] := If[qo["InputDimension"] > 1,
             ],
         - qo["InputQudits"]
     ],
+    qo["InputDimension"] == 0,
+    {1},
+    True,
     {}
 ]
 
-QuantumOperatorProp[qo_, "FullOutputOrder"] := If[qo["OutputDimension"] > 1,
+QuantumOperatorProp[qo_, "FullOutputOrder"] := Which[qo["OutputDimension"] > 1,
     Take[
         If[ MatchQ[qo["OutputOrder"], {___, _ ? NonPositive, ___}], Identity, # - Min[#, 1] + 1 &] @
             If[ Length[qo["OutputOrder"]] > 0,
@@ -105,6 +108,9 @@ QuantumOperatorProp[qo_, "FullOutputOrder"] := If[qo["OutputDimension"] > 1,
             ],
         - qo["OutputQudits"]
     ],
+    qo["OutputDimension"] == 0,
+    {1},
+    True,
     {}
 ]
 

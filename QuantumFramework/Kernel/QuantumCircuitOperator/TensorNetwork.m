@@ -35,6 +35,7 @@ TensorNetworkQ[net_Graph, verbose : _ ? BooleanQ : False] := Module[{
      ) &&
     With[{ranks = TensorRank /@ Values[tensors]},
         (And @@ Thread[ranks == Length /@ Values[indices]] && Total[ranks] == CountDistinct[Catenate[Values[indices]]]) ||
+        Total[ranks] == 0 ||
         (If[verbose, Message[TensorNetworkQ::msg3]]; False)
     ] (* &&
     (
@@ -105,14 +106,16 @@ NaiveContractTensorNetwork[net_Graph] := Enclose @ Module[{g, edges},
 ]
 
 FastContractTensorNetwork[net_Graph] := Enclose[
-    Block[{indices, tensors, scalarPositions, scalars},
+    Block[{indices, outIndices, tensors, scalarPositions, scalars},
         indices = AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Index"] /. Rule @@@ EdgeTags[net];
         tensors =  AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Tensor"];
+        outIndices = TensorNetworkFreeIndices[net];
+        If[MemberQ[tensors, {}], Return[ArrayReshape[{}, Append[Table[1, Length[outIndices] - 1], 0]]]];
         scalarPositions = Position[indices, {}, {1}, Heads -> False];
         scalars = Extract[tensors, scalarPositions];
         indices = Delete[indices, scalarPositions];
         tensors = Delete[tensors, scalarPositions];
-        Times @@ scalars * ConfirmQuiet[EinsteinSummation[indices -> TensorNetworkFreeIndices[net], tensors]]
+        Times @@ scalars * ConfirmQuiet[EinsteinSummation[indices -> outIndices, tensors]]
     ],
     (ReleaseHold[#["HeldMessageCall"]]; #) &
 ]

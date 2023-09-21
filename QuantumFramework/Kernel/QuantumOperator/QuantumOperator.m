@@ -67,6 +67,11 @@ QuantumOperator[qs_ ? QuantumStateQ, opts : PatternSequence[Except[{_ ? orderQ, 
     QuantumBasis[qs["Basis"], opts]
 ]
 
+QuantumOperator[qs_ ? QuantumStateQ, {outputOrder_ ? orderQ, inputOrder_}] /; qs["OutputDimension"] == 1 && Length[outputOrder] > 0 :=
+    QuantumOperator[qs, {{}, inputOrder}]
+
+QuantumOperator[qs_ ? QuantumStateQ, {outputOrder_, inputOrder_ ? orderQ}] /; qs["InputDimension"] == 1 && Length[inputOrder] > 0 :=
+    QuantumOperator[qs, {outputOrder, {}}]
 
 QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, order : _ ? autoOrderQ : Automatic, args___, opts : OptionsPattern[]] := Block[{
     dimensions = TensorDimensions[tensor],
@@ -201,6 +206,9 @@ QuantumOperator[n_Integer, args___] := QuantumOperator[{"PhaseShift", n}, args]
 
 QuantumOperator[Labeled[arg_, label_], opts___] := QuantumOperator[arg, opts, "Label" -> label]
 
+QuantumOperator[{}, opts___] := QuantumOperator[QuantumState[{}, 0], opts]
+
+QuantumOperator[arg_List, opts___] := QuantumOperator[QuantumState[Flatten[arg]], opts]
 
 QuantumOperator[arg_, order1 : _ ? orderQ -> order2 : _ ? orderQ, opts___] :=
     QuantumOperator[arg, {order2, order1}, opts]

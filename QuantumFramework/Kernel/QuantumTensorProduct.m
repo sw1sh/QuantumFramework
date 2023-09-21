@@ -3,6 +3,7 @@ Package["Wolfram`QuantumFramework`"]
 PackageExport["QuantumTensorProduct"]
 
 
+QuantumTensorProduct[{}] = QuditBasis[1]
 
 QuantumTensorProduct[args_List] := Fold[QuantumTensorProduct, args]
 

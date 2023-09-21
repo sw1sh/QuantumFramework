@@ -513,12 +513,13 @@ QuantumOperator[{"RootNOT", dimension : _Integer ? Positive}, opts___] := Quantu
 ]
 
 
-QuantumOperator["Hadamard" | "H", order : _ ? orderQ : {1}, opts___] :=
+QuantumOperator["Hadamard" | "H", opts___]  := QuantumOperator[{"H"}, opts]
+
+QuantumOperator[{"Hadamard" | "H", dim : _Integer ? NonNegative : 2}, order : _ ? orderQ : {1}, opts___] :=
     QuantumOperator[
-        HadamardMatrix[2 ^ Length[order], Method -> "BitComplement"],
+        kroneckerProduct @@ Table[Exp[I 2 Pi / dim j k] / Sqrt[dim], Length[order], {j, 0, dim - 1}, {k, 0, dim - 1}],
         {order, order},
-        opts,
-        "Label" -> If[Length[order] > 1, Superscript["H", CircleTimes[Length[order]]], "H"]
+        QuantumBasis[dim, opts, "Label" -> If[Length[order] > 1, Superscript["H", CircleTimes[Length[order]]], "H"]]
     ]
 
 

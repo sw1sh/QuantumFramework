@@ -138,7 +138,7 @@ QuantumStateProp[qs_, "Weights"] := Which[
     qs["Physical"]["Weights"]
 ]
 
-QuantumStateProp[qs_, "Probabilities"] := Re @ (qs["Weights"] / Total[qs["Weights"]])
+QuantumStateProp[qs_, "Probabilities"] := Re @ Normalize[qs["Weights"], Total]
 
 QuantumStateProp[qs_, "ProbabilityAssociation" | "Probability"] := With[{proba = Chop @ SparseArray @ qs["Probabilities"]},
     AssociationThread[
@@ -152,8 +152,10 @@ QuantumStateProp[qs_, "Distribution"] := CategoricalDistribution[qs["Names"], qs
 QuantumStateProp[qs_, "Formula", OptionsPattern[]] /; qs["DegenerateStateQ"] := 0
 
 QuantumStateProp[qs_, "Formula", OptionsPattern["Normalize" -> False]] := With[{s = qs["Pure"]},
-    With[{v = SparseArray @ s[If[TrueQ[OptionValue["Normalize"]], "NormalizedStateVector", "StateVector"]], d = s["InputDimension"]},
-        With[{pos = Catenate @ v["ExplicitPositions"]}, s["Names", Thread[{Quotient[pos - 1, d] + 1, Mod[pos - 1, d] + 1}]]] . v["ExplicitValues"]
+    If[ s["Dimension"] == 0, 0,
+        With[{v = SparseArray @ s[If[TrueQ[OptionValue["Normalize"]], "NormalizedStateVector", "StateVector"]], d = s["InputDimension"]},
+            With[{pos = Catenate @ v["ExplicitPositions"]}, s["Names", Thread[{Quotient[pos - 1, d] + 1, Mod[pos - 1, d] + 1}]]] . v["ExplicitValues"]
+        ]
     ]
 ]
 

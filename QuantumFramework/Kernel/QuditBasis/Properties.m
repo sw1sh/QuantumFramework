@@ -61,7 +61,7 @@ QuditBasisProp[qb_, "Names", pos_ : All] := Enclose @ If[qb["Length"] > 0,
     {}
 ]
 
-QuditBasisProp[qb_, "NameRank" | "Qudits"] := Count[qb["Dimensions"], Except[0]]
+QuditBasisProp[qb_, "NameRank" | "Qudits"] := Length[qb["Dimensions"]]
 
 QuditBasisProp[qb_, "FullNameRank" | "ShapeRank"] := Count[TakeWhile[qb["Shape"], # != 0 &], Except[1]]
 
@@ -200,7 +200,7 @@ QuditBasisProp[qb_, "Canonical"] := QuditBasis @ Which[
     Select[qb["Representations"], Times @@ Dimensions[#] == 1 &, 1]
 ]
 
-QuditBasisProp[qb_, "Split", __] /; qb["Size"] == 0 := {QuditBasis[0], QuditBasis[0]}
+QuditBasisProp[qb_, "Split", __] /; qb["Size"] == 0 := {QuditBasis[0], QuditBasis[]}
 
 QuditBasisProp[qb_, "Split", _Integer] /; qb["Dimension"] == 1 := {QuditBasis[], QuditBasis[]}
 
@@ -244,7 +244,7 @@ QuditBasisProp[qb_, "Take", n_Integer] := Enclose @ First @ ConfirmBy[qb["Split"
 
 QuditBasisProp[qb_, "Drop", n_Integer] := Enclose @ Last @ ConfirmBy[qb["Split", n], ListQ]
 
-QuditBasisProp[qb_, "Decompose"] := NestWhileList[Last[#]["Split", 1] &, {None, qb}, Last[#]["Dimension"] > 1 &][[2 ;;, 1]]
+QuditBasisProp[qb_, "Decompose"] := If[qb["Dimension"] == 0, {qb}, NestWhileList[Last[#]["Split", 1] &, {None, qb}, Last[#]["Dimension"] > 1 &][[2 ;;, 1]]]
 
 QuditBasisProp[qb_, "Delete", n_Integer] := QuantumTensorProduct[qb["Take", n - 1], qb["Drop", n]]
 
