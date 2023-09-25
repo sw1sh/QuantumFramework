@@ -513,12 +513,12 @@ multiplexer[qs_, n_, i_] := Block[{rzy, rzyDagger, qc, multiplexer, multiplexerD
     rzyDagger = Reverse /@ rzy /. {r : "RZ" | "RY", angle_} :> {r, - angle};
     {multiplexer, multiplexerDagger} = {"Multiplexer", Splice[#]} & /@ {rzy, rzyDagger};
     qc = If[i === 0,
-        QuantumCircuitOperator[{multiplexer, {"H", qs["Qudits"]}}],
+        QuantumCircuitOperator[{multiplexer, Splice["H" -> # & /@ Range[qs["Qudits"]]]}],
         QuantumCircuitOperator[{multiplexer, {"Permutation", Cycles[{{n, i}}]}}]
     ];
     Sow[
         If[i === 0,
-            {multiplexerDagger, {"H", qs["Qudits"]}},
+            {multiplexerDagger, Splice["H" -> # & /@ Range[qs["Qudits"]]]},
             {multiplexerDagger, {"Permutation", Cycles[{{n, i}}]}}
         ],
         "Operators"
@@ -533,11 +533,19 @@ stateEvolution[qs_] := With[{n = qs["Qudits"]},
 QuantumCircuitOperator[qs_QuantumState | {"QuantumState", qs_QuantumState}, opts___] /; MatchQ[qs["Dimensions"], {2 ..}] := Block[{
     operators, phases, phase, n = qs["Qudits"]
 },
-    {operators, phases} = Reap[stateEvolution[qs], {"Operators", "Phase"}][[2, All, 1]];
-    phase = Total[phases] / n / 2 ^ n;
+    {operators, phases} = Reap[stateEvolution[qs["Split", n]], {"Operators", "Phase"}][[2, All, 1]];
+    phase = Total[phases] / n / 2 ^ n - I Log[qs["Norm"]];
     operators = Reverse @ Catenate @ operators;
     If[ TrueQ[Chop[phase] != 0],
         AppendTo[operators, {"GlobalPhase", phase}]
+    ];
+    operators = Join["0" -> # & /@ Range[n], operators];
+    If[ qs["InputQudits"] > 0,
+        operators = Join[
+            "I" -> # -> n + # & /@ Range[qs["InputQudits"]],
+            operators,
+            "Cap" -> {qs["OutputQudits"] + #, n + #} & /@ Range[qs["InputQudits"]]
+        ]
     ];
     QuantumCircuitOperator[operators, opts, qs["Label"]]["Flatten"]
 ]

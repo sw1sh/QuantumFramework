@@ -24,6 +24,8 @@ simplifyLabel[l_] := Replace[l, {
     SuperDagger["Cup"] :> "Cap",
     SuperDagger[Ket[x_]] :> Bra[x],
     SuperDagger[Bra[x_]] :> Ket[x],
+    SuperDagger[(name : "XSpider" | "YSpider" | "ZSpider" | "Spider")[phase_]] :> name[-phase],
+    SuperDagger["WSpider"] :> "WSpider",
     SuperDagger[SuperDagger[label_]] :> label
 }]
 

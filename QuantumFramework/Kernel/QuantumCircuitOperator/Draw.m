@@ -226,7 +226,10 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			Map[With[{p = {center[[1]] + size / 2, - # vGapSize}}, {wireThickness[Replace[#, outDims]], Line[{center, p}]}] &, vposOut],
 			FaceForm[Directive[Opacity[1], Black]],
 			EdgeForm[Directive[wireThickness[Max[Values[inDims], Values[outDims]]], wireStyle]],
-			Triangle[{center + size / 4 {1/2, 1}, center + size / 4 {1/2, -1}, center + size / 4 {-1, 0}}]
+			If[	Length[vposIn] < Length[vposOut],
+				Triangle[{center + size / 4 {1/2, 1}, center + size / 4 {1/2, -1}, center + size / 4 {-1, 0}}],
+				Triangle[{center - size / 4 {1/2, 1}, center - size / 4 {1/2, -1}, center - size / 4 {-1, 0}}]
+			]
 		},
 		"Discard" :> {
 			wireStyle,
@@ -303,7 +306,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 		}],
 		"\[Pi]"[perm__] :> {
 			wireStyle,
-			MapThread[{wireThickness[Replace[First[#1], inDims]], Line[{{center[[1]] - size / 2, - #1 vGapSize}, {center[[1]] + size / 2, - #2 vGapSize}}]} &, {vposIn, vposOut[[{perm}]]}]
+			MapThread[{wireThickness[Replace[#1, inDims]], Line[{{center[[1]] - size / 2, - #1 vGapSize}, {center[[1]] + size / 2, - #2 vGapSize}}]} &, {vposIn, vposOut[[{perm}]]}]
 		},
 		"PhaseShift"[n_] | n_Integer /; Length[vpos] == 1 :> {
 			EdgeForm[Replace[label, gateBoundaryStyle]],
