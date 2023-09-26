@@ -477,17 +477,17 @@ QuantumOperator[{"SUM", dimension : _Integer ? Positive}, opts___] := QuantumOpe
 QuantumOperator[name : "X" | "Y" | "Z" | "PauliX" | "PauliY" | "PauliZ" | "NOT", opts___] := QuantumOperator[{name, 2}, opts]
 
 QuantumOperator[{"PauliX" | "X", dimension : _Integer ? Positive}, opts___] := QuantumOperator[
-    QuantumOperator[pauliMatrix[1, dimension], dimension, "Label" -> "X"],
+    QuantumOperator[SparseArray[Table[{n, Mod[n + 1, dimension]} + 1 -> 1, {n, 0, dimension - 1}], {dimension, dimension}], dimension, "Label" -> "X"],
     opts
 ]
 
 QuantumOperator[{"PauliY" | "Y", dimension : _Integer ? Positive}, opts___] := QuantumOperator[
-    QuantumOperator[pauliMatrix[2, dimension], dimension, "Label" -> "Y"],
+    QuantumOperator[- I QuantumOperator[{"Z", dimension}] @ QuantumOperator[{"X", dimension}], "Label" -> "Y"],
     opts
 ]
 
 QuantumOperator[{"PauliZ" | "Z", dimension : _Integer ? Positive}, opts___] := QuantumOperator[
-    QuantumOperator[pauliMatrix[3, dimension], dimension, "Label" -> "Z"],
+    QuantumOperator[SparseArray[Table[{n, n} + 1 -> Exp[2 Pi I n / dimension], {n, 0, dimension - 1}], {dimension, dimension}], dimension, "Label" -> "Z"],
     opts
 ]
 
@@ -650,7 +650,7 @@ QuantumOperator[{"WSpider", n_Integer : 2, dim_Integer : 2}, opts___] := Quantum
                 Table[dim, n + 1]
             ]
         ],
-        QuantumBasis[Table[dim, n], {dim}]
+        QuantumBasis[{dim}, Table[dim, n]]
     ],
     opts,
     "Label" -> "WSpider"
