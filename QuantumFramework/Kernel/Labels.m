@@ -6,7 +6,7 @@ PackageScope["simplifyLabel"]
 
 
 
-simplifyLabel[op_QuantumOperator] := QuantumOperator[op, "Label" -> simplifyLabel[op["Label"]]]
+simplifyLabel[x : _QuantumBasis | _QuantumState | _QuantumOperator] := QuantumOperator[x, "Label" -> simplifyLabel[x["Label"]]]
 
 simplifyLabel[l_] := Replace[l, {
     SuperDagger[label : None | "X" | "Y" | "Z" | "I" | "NOT" | "H" | "SWAP"] :> label,
