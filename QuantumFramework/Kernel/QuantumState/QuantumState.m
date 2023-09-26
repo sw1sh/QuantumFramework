@@ -150,7 +150,6 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ, opts__] :=
 (* equality *)
 
 QuantumState /: Equal[qs : _QuantumState ...] :=
-    Equal @@ (#["Picture"] & /@ {qs}) &&
     Which[
         And @@ (#["PureStateQ"] & /@ {qs}),
         Thread[Equal @@ (Chop @ SetPrecisionNumeric[#["Computational"]["CanonicalStateVector"]] & /@ {qs})],

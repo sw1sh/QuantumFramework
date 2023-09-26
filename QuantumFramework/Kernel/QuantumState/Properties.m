@@ -460,7 +460,7 @@ QuantumStateProp[qs_, "Bend"] := QuantumState[Flatten @ qs["DensityMatrix"], Qua
 QuantumStateProp[qs_, "BendDual"] := QuantumState[Flatten @ qs["DensityMatrix"], QuantumTensorProduct[qs["Basis"], qs["Basis"]["Dual"]]]
 
 
-QuantumStateProp[qs_, "Double"] := QuantumTensorProduct[qs, qs["Dual"]]
+QuantumStateProp[qs_, "Double"] := If[qs["MatrixQ"], qs["Bend"], QuantumTensorProduct[qs, qs["Dual"]]]
 
 
 QuantumStateProp[qs_, "Unbend"] := Enclose @ Which[

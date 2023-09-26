@@ -1,6 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
-PackageScope["QuantumWignerTransform"]
+PackageExport["QuantumWignerTransform"]
+PackageExport["QuantumWeylTransform"]
 
 
 
@@ -14,23 +15,21 @@ QuantumWignerTransform[qb_ ? QuantumBasisQ, opts : OptionsPattern[]] /; qb["Pict
 
 
 QuantumWignerTransform[qs_ ? QuantumStateQ, opts : OptionsPattern[]] /; qs["Picture"] =!= "PhaseSpace" :=
-    QuantumState[qs["Bend"], QuantumWignerTransform[qs["Basis"], opts]]
+    QuantumState[qs["Double"], QuantumWignerTransform[qs["Basis"], opts, "Exact" -> ! qs["NumericQ"]]]
 
 
 QuantumWignerTransform[qo_ ? QuantumOperatorQ, opts : OptionsPattern[]] /; qo["Picture"] =!= "PhaseSpace" :=
-    QuantumOperator[QuantumWignerTransform[qo["State"], opts], qo["Order"]]
+	QuantumOperator[
+		QuantumWignerTransform[qo["State"], opts],
+		qo["Order"]
+	]
 
 
 QuantumWignerTransform[qmo_ ? QuantumMeasurementOperatorQ, opts : OptionsPattern[]] /; qmo["Picture"] =!= "PhaseSpace" :=
     QuantumMeasurementOperator[QuantumWignerTransform[qmo["Operator"], opts], qmo["Target"]]
 
 
-QuantumWignerTransformOperator[qo_ ? QuantumOperatorQ] :=
-	QuantumOperator[
-		#,
-		QuantumBasis[
-			#["Output"]["DimensionSplit", qo["OutputDimensions"]],
-			#["Input"]["DimensionSplit", qo["InputDimensions"]]
-		]
-	] & @ QuantumWignerTransform[qo["Unbend"]]
+QuantumWeylTransform[qs_ ? QuantumStateQ] /;
+	qs["Picture"] === "PhaseSpace" && IntegerQ[Sqrt[qs["OutputDimension"]]] && IntegerQ[Sqrt[qs["InputDimension"]]] :=
+	QuantumState[qs, QuantumBasis[{1, 1} Sqrt[qs["OutputDimension"]], {1, 1} Sqrt[qs["InputDimension"]]]]["Unbend"]
 
