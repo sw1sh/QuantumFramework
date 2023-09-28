@@ -54,16 +54,17 @@ QuditBasis[{name : "X" | "Y" | "Z", dim_Integer : 2}, args___] := QuditBasis[{"P
 QuditBasis[name : "PauliX" | "PauliY" | "PauliZ", args___] := QuditBasis[{name, 2}, args]
 
 QuditBasis[{name : "PauliX" | "PauliY" | "PauliZ", dim_Integer : 2}, args___] := With[{
-    es = eigensystem[pauliMatrix[name /. {"PauliX" -> 1, "PauliY" -> 2, "PauliZ" -> 3}, dim], "Normalize" -> True]
+    es = eigensystem[pauliMatrix[name /. {"PauliX" -> 1, "PauliY" -> 2, "PauliZ" -> 3}, dim], "Normalize" -> False, "Sort" -> True]
 },
     QuditBasis[
         AssociationThread[
-            Subscript["\[Psi]",
+            MapIndexed[
                 Subscript[
                     ToLowerCase @ StringDelete[name, "Pauli"],
-                    If[# > 0, "+" <> ToString[#], ToString[#]] /. {"+1" -> "+", "-1" -> "-"}
-                ]
-            ] & /@ First[es],
+                    Interpretation[If[dim == 2, Replace[#2[[1]], {1 -> "+", 2 -> "\[Minus]"}], #2[[1]] - 1], #]
+                ] &,
+                First[es]
+            ],
             Last[es]
         ],
         args

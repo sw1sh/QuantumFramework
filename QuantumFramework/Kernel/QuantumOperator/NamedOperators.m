@@ -223,7 +223,7 @@ QuantumOperator[{"Shift", shift_Integer, dimension : _Integer ? Positive : 2}, o
 ]
 
 QuantumOperator[{"PhaseSpaceDisplacement", i_Integer, j_Integer, dimension : _Integer ? Positive : 2}, opts___] :=
-    Exp[- 2 Pi I i j / dimension] QuantumOperator[{"Shift", 1, dimension}] ^ i @ QuantumOperator[{"ShiftPhase", dimension}] ^ j
+    Exp[- 2 Pi I i j / dimension] (N[QuantumOperator[{"Shift", 1, dimension}]] ^ i) @ (N[QuantumOperator[{"ShiftPhase", dimension}]] ^ j)
 
 QuantumOperator[{"PhasePoint" | "Fano", i_Integer, j_Integer, dimension : _Integer ? Positive : 2}, opts___] :=
     Sum[Exp[- 2 Pi I (j k - i l)] QuantumOperator[{"PhaseSpaceDisplacement", k, l, dimension}, opts], {k, 0, dimension - 1}, {l, 0, dimension - 1}]
@@ -404,10 +404,7 @@ QuantumOperator["Fourier", opts___] := QuantumOperator[{"Fourier", 2}, opts]
 
 QuantumOperator[{"Fourier", dimension : _Integer ? Positive}, order : (_ ? orderQ) : {1}, opts___] := QuantumOperator[
     QuantumOperator[
-        SparseArray[
-            ({i_, j_} :>  Exp[2 Pi I (i - 1) (j - 1) / (dimension ^ Length[order])] / Sqrt[dimension ^ Length[order]]),
-            {dimension ^ Length[order], dimension ^ Length[order]}
-        ],
+        FourierMatrix[dimension ^ Length[order]],
         dimension,
         Length[order]
     ],
@@ -420,10 +417,7 @@ QuantumOperator["InverseFourier", opts___] := QuantumOperator[{"InverseFourier",
 
 QuantumOperator[{"InverseFourier", dimension : _Integer ? Positive}, order : (_ ? orderQ) : {1}, opts___] := QuantumOperator[
     QuantumOperator[
-        SparseArray[
-            ({i_, j_} :> Exp[-2 Pi I (i - 1) (j - 1) / (dimension ^ Length[order])] / Sqrt[dimension ^ Length[order]]),
-            {dimension ^ Length[order], dimension ^ Length[order]}
-        ],
+        ConjugateTranspose[FourierMatrix[dimension ^ Length[order]]],
         dimension,
         Length[order]
     ],
@@ -477,17 +471,17 @@ QuantumOperator[{"SUM", dimension : _Integer ? Positive}, opts___] := QuantumOpe
 QuantumOperator[name : "X" | "Y" | "Z" | "PauliX" | "PauliY" | "PauliZ" | "NOT", opts___] := QuantumOperator[{name, 2}, opts]
 
 QuantumOperator[{"PauliX" | "X", dimension : _Integer ? Positive}, opts___] := QuantumOperator[
-    QuantumOperator[SparseArray[Table[{n, Mod[n + 1, dimension]} + 1 -> 1, {n, 0, dimension - 1}], {dimension, dimension}], dimension, "Label" -> "X"],
+    QuantumOperator[pauliMatrix[1, dimension], dimension, "Label" -> "X"],
     opts
 ]
 
 QuantumOperator[{"PauliY" | "Y", dimension : _Integer ? Positive}, opts___] := QuantumOperator[
-    QuantumOperator[- I QuantumOperator[{"Z", dimension}] @ QuantumOperator[{"X", dimension}], "Label" -> "Y"],
+    QuantumOperator[pauliMatrix[2, dimension], dimension, "Label" -> "Y"],
     opts
 ]
 
 QuantumOperator[{"PauliZ" | "Z", dimension : _Integer ? Positive}, opts___] := QuantumOperator[
-    QuantumOperator[SparseArray[Table[{n, n} + 1 -> Exp[2 Pi I n / dimension], {n, 0, dimension - 1}], {dimension, dimension}], dimension, "Label" -> "Z"],
+    QuantumOperator[pauliMatrix[3, dimension], dimension, "Label" -> "Z"],
     opts
 ]
 
@@ -517,9 +511,10 @@ QuantumOperator["Hadamard" | "H", opts___]  := QuantumOperator[{"H"}, opts]
 
 QuantumOperator[{"Hadamard" | "H", dim : _Integer ? NonNegative : 2}, order : _ ? orderQ : {1}, opts___] :=
     QuantumOperator[
-        kroneckerProduct @@ Table[Exp[I 2 Pi / dim j k] / Sqrt[dim], Length[order], {j, 0, dim - 1}, {k, 0, dim - 1}],
-        {order, order},
-        QuantumBasis[dim, opts, "Label" -> If[Length[order] > 1, Superscript["H", CircleTimes[Length[order]]], "H"]]
+        {"Fourier", dim},
+        order,
+        opts,
+        "Label" -> If[Length[order] > 1, Superscript["H", CircleTimes[Length[order]]], "H"]
     ]
 
 
@@ -646,7 +641,7 @@ QuantumOperator[{"WSpider", n_Integer : 2, dim_Integer : 2}, opts___] := Quantum
             {1},
             SparseArrayFlatten @ SparseArray[Thread[
                 Prepend[ConstantArray[1, n + 1]] @
-                    Catenate @ Table[Append[i] @ ReplacePart[ConstantArray[1, n], j -> i], {i, 2, dim}, {j, n}] -> 1],
+                    Catenate @ Table[Prepend[i] @ ReplacePart[ConstantArray[1, n], j -> i], {i, 2, dim}, {j, n}] -> 1],
                 Table[dim, n + 1]
             ]
         ],

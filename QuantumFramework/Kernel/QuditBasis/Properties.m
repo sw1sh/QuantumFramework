@@ -158,6 +158,13 @@ QuditBasisProp[qb_, "Matrix"] := ArrayReshape[qb["Tensor"], qb["MatrixDimensions
 QuditBasisProp[qb_, "ReducedMatrix"] := ArrayReshape[qb["ReducedTensor"], qb["MatrixDimensions"]]
 
 
+QuditBasisProp[qb_, "Projectors"] := Block[{x = qb["Elements"], y},
+    {m, n} = qb["MatrixDimensions"];
+    y = ArrayReshape[x, {n, m}];
+    ArrayReshape[KroneckerProduct[y, Conjugate[y]][[;; ;; n + 1]], {n, m, m}]
+]
+
+
 QuditBasisProp[qb_, "Dual"] := QuditBasis @ KeyMap[MapAt[#["Dual"] &, 1], qb["Representations"]]
 
 QuditBasisProp[qb_, "Dual", qudits : {_Integer...}] := With[{index = Lookup[MapIndexed[First[#2] -> #1 &, qb["Index"]], qudits, Nothing]},

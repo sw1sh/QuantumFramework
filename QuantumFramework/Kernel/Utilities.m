@@ -23,6 +23,8 @@ PackageScope["blockDiagonalMatrix"]
 PackageScope["eigenvectors"]
 PackageScope["eigensystem"]
 PackageScope["pauliMatrix"]
+PackageScope["spinMatrix"]
+PackageScope["fanoMatrix"]
 
 PackageScope["toggleSwap"]
 PackageScope["toggleShift"]
@@ -126,7 +128,7 @@ eigenvectors[matrix_, OptionsPattern[]] := Map[
         ],
         Eigenvectors[matrix] &
     ][[
-        If[TrueQ[OptionValue["Sort"]], Ordering[Eigenvalues[matrix]], All]
+        If[TrueQ[OptionValue["Sort"]], OrderingBy[Eigenvalues[matrix], {Abs[#], Mod[Arg[#], 2 Pi]} &], All]
     ]]
 ]
 
@@ -134,7 +136,7 @@ eigenvectors[matrix_, OptionsPattern[]] := Map[
 Options[eigensystem] = {"Sort" -> False, "Normalize" -> False, Chop -> False}
 
 eigensystem[matrix_, OptionsPattern[]] := Module[{values, vectors},
-    {values, vectors} = Enclose[
+    {values, vectors} = FullSimplify @ Enclose[
         ConfirmBy[
             If[ TrueQ[OptionValue[Chop]],
                 If[ Precision[matrix] === MachinePrecision,
@@ -151,7 +153,7 @@ eigensystem[matrix_, OptionsPattern[]] := Module[{values, vectors},
         ],
         Eigensystem[matrix] &
     ];
-    If[ TrueQ[OptionValue["Sort"]], With[{ordering = Ordering[values]}, values = values[[ordering]]; vectors = vectors[[ordering]]]];
+    If[ TrueQ[OptionValue["Sort"]], With[{ordering = OrderingBy[values, {Abs[#], Mod[Arg[#], 2 Pi]} &]}, values = values[[ordering]]; vectors = vectors[[ordering]]]];
     If[ TrueQ[OptionValue["Normalize"]], vectors = Normalize /@ vectors];
 
     {values, vectors}
@@ -162,7 +164,9 @@ pauliMatrix[n_] := pauliMatrix[n, 2]
 
 pauliMatrix[0, dimension_] := identityMatrix[dimension]
 
-pauliMatrix[1, dimension_] := With[{
+pauliMatrix[1, dimension_] := SparseArray[Table[{n, Mod[n + 1, dimension]} + 1 -> 1, {n, 0, dimension - 1}], {dimension, dimension}]
+
+spinMatrix[1, dimension_] := With[{
     s = (dimension - 1) / 2
 },
     SparseArray[
@@ -171,7 +175,9 @@ pauliMatrix[1, dimension_] := With[{
     ]
 ]
 
-pauliMatrix[2, dimension_] := With[{
+pauliMatrix[2, dimension_] := - I pauliMatrix[3, dimension] . pauliMatrix[1, dimension]
+
+spinMatrix[2, dimension_] := With[{
     s = (dimension - 1) / 2
 },
     SparseArray[
@@ -180,7 +186,9 @@ pauliMatrix[2, dimension_] := With[{
     ]
 ]
 
-pauliMatrix[3, dimension_] := With[{
+pauliMatrix[3, dimension_] := SparseArray[Table[{n, n} + 1 -> Exp[2 Pi I n / dimension], {n, 0, dimension - 1}], {dimension, dimension}]
+
+spinMatrix[3, dimension_] := With[{
     s = (dimension - 1) / 2
 },
     SparseArray[
@@ -188,6 +196,13 @@ pauliMatrix[3, dimension_] := With[{
         {dimension, dimension}
     ]
 ]
+
+fanoMatrix[d_, q_, p_, x_ : Automatic, z_ : Automatic] :=
+    FullSimplify @
+    Exp[I Pi p q / d] / (2 d) *
+        MatrixPower[Replace[z, Automatic :> pauliMatrix[3, d]], q] .
+            MatrixPower[FourierMatrix[d], 2] .
+                MatrixPower[Replace[x, Automatic :> pauliMatrix[1, d]], - p]
 
 
 (* optimization *)
@@ -220,7 +235,7 @@ SparseArrayFlatten[x_ ? NumericQ] := x
 SparseArrayFlatten[array_] := Flatten[array]
 
 
-SparsePseudoInverse[matrix_] := SparseArray @ If[SquareMatrixQ[matrix], Inverse[matrix], PseudoInverse[matrix]]
+SparsePseudoInverse[matrix_] := SparseArray @ If[SquareMatrixQ[matrix], Quiet @ Check[Inverse[matrix], PseudoInverse[matrix]], PseudoInverse[matrix]]
 
 
 SetPrecisionNumeric[x_ /; NumericQ[x] || ArrayQ[x, _, NumericQ]] := SetPrecision[x, $MachinePrecision - 3]

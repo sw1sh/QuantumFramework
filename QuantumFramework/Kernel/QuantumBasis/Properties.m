@@ -202,11 +202,7 @@ QuantumBasisProp[qb_, "MatrixRepresentation" | "Matrix"] := KroneckerProduct[qb[
 QuantumBasisProp[qb_, "ReducedMatrix"] := KroneckerProduct[qb["Output"]["ReducedMatrix"], qb["Input"]["ReducedMatrix"]]
 
 
-QuantumBasisProp[qb_, "Projectors"] := Module[{x = qb["Elements"], y},
-    {m, n} = qb["MatrixDimensions"];
-    y = ArrayReshape[x, {n, m}];
-    ArrayReshape[KroneckerProduct[y, Conjugate[y]][[;; ;; n + 1]], {n, m, m}]
-]
+QuantumBasisProp[qb_, "Projectors"] := projector @* Flatten /@ qb["Elements"]
 
 QuantumBasisProp[qb_, "NormalizedProjectors"] := normalizeMatrix @* projector @* Flatten /@ qb["Elements"]
 
