@@ -5,9 +5,10 @@ PackageExport["QuantumWeylTransform"]
 
 
 
-Options[QuantumWignerTransform] = {"Exact" -> True}
+Options[QuantumWignerTransform] = {"Exact" -> False}
 
-QuantumWignerTransform[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := QuditBasis[{"Wigner", qb, opts}]
+QuantumWignerTransform[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := Chop @ QuditBasis[{"Wigner", qb, opts}]
+
 
 
 QuantumWignerTransform[qb_ ? QuantumBasisQ, opts : OptionsPattern[]] /; qb["Picture"] =!= "PhaseSpace" :=
@@ -15,7 +16,7 @@ QuantumWignerTransform[qb_ ? QuantumBasisQ, opts : OptionsPattern[]] /; qb["Pict
 
 
 QuantumWignerTransform[qs_ ? QuantumStateQ, opts : OptionsPattern[]] /; qs["Picture"] =!= "PhaseSpace" :=
-    QuantumState[qs["Double"], QuantumWignerTransform[qs["Basis"], opts, "Exact" -> ! qs["NumericQ"]]]
+    Chop @ QuantumState[qs["Double"], QuantumWignerTransform[qs["Basis"], opts, "Exact" -> ! qs["NumericQ"]]]
 
 
 QuantumWignerTransform[qo_ ? QuantumOperatorQ, opts : OptionsPattern[]] /; qo["Picture"] =!= "PhaseSpace" :=
