@@ -197,3 +197,11 @@ MergeParameterSpecs[objs___] := Enclose @ Block[{specs = Catenate[ConfirmBy[#["P
     KeyValueMap[Prepend[#2, #1] &, GroupBy[specs, First, {Min[#[[All, 2]]], Max[#[[All, 3]]]} & ]]
 ]
 
+
+(* simplify *)
+
+Simplify[qb_QuantumBasis] ^:= qb["Simplify"]
+
+FullSimplify[qb_QuantumBasis] ^:= qb["FullSimplify"]
+
+Chop[qb_QuantumBasis] ^:= qb["Chop"]

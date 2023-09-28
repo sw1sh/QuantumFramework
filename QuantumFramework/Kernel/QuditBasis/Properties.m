@@ -285,3 +285,5 @@ QuditBasisProp[qb_, prop : "DimensionSplit" | "DimensionSplitDual", splits : {_[
 
 QuditBasisProp[qb_, prop : "DimensionSplit" | "DimensionSplitDual", splits : {_Integer ? Positive ..}] := qb[prop, Thread[{Range[Length[splits]], splits}]]
 
+
+QuditBasisProp[qb_, prop : "Simplify" | "FullSimplify" | "Chop"] := QuditBasis @ Map[Symbol[prop], qb["Representations"]]

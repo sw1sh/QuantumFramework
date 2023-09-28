@@ -228,6 +228,15 @@ QuantumState /: D[qs : _QuantumState, args___] := QuantumState[D[qs["State"], ar
 SuperDagger[qs_QuantumState] ^:= qs["Dagger"]
 
 
+(* simplify *)
+
+Simplify[qs_QuantumState] ^:= qs["Simplify"]
+
+FullSimplify[qs_QuantumState] ^:= qs["FullSimplify"]
+
+Chop[qs_QuantumState] ^:= qs["Chop"]
+
+
 (* join *)
 
 QuantumState[qs_QuantumState ? QuantumStateQ] := qs

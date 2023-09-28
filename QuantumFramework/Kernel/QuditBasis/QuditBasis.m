@@ -132,6 +132,15 @@ QuditBasis /: Plus[qb__QuditBasis ? QuditBasisQ] := Module[{
 ]
 
 
+(* simplify *)
+
+Simplify[qb_QuditBasis] ^:= qb["Simplify"]
+
+FullSimplify[qb_QuditBasis] ^:= qb["FullSimplify"]
+
+Chop[qb_QuditBasis] ^:= qb["Chop"]
+
+
 (* formatting *)
 
 QuditBasis /: MakeBoxes[qb_QuditBasis ? QuditBasisQ, format : TraditionalForm] := With[{boxes = ToBoxes[Normal /@ qb["Association"], format]},

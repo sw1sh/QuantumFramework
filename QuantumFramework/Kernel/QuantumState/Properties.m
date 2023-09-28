@@ -159,7 +159,7 @@ QuantumStateProp[qs_, "Formula", OptionsPattern["Normalize" -> False]] := With[{
     ]
 ]
 
-QuantumStateProp[qs_, prop : "Simplify" | "FullSimplify"] := QuantumState[Map[Symbol[prop], qs["State"], {If[qs["VectorQ"], 1, 2]}], qs["Basis"]]
+QuantumStateProp[qs_, prop : "Simplify" | "FullSimplify" | "Chop"] := QuantumState[Map[Symbol[prop], qs["State"], {If[qs["VectorQ"], 1, 2]}], qs["Basis"]]
 
 
 (* normalization *)

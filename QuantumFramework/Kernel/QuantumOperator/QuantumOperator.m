@@ -474,6 +474,14 @@ QuantumOperator /: D[op : _QuantumOperator, args___] := QuantumOperator[D[op["St
 SuperDagger[qo_QuantumOperator] ^:= qo["Dagger"]
 
 
+(* simplify *)
+
+Simplify[qo_QuantumOperator] ^:= qo["Simplify"]
+
+FullSimplify[qo_QuantumOperator] ^:= qo["FullSimplify"]
+
+Chop[qo_QuantumOperator] ^:= qo["Chop"]
+
 (* join *)
 
 QuantumOperator[qo_ ? QuantumOperatorQ] := qo
