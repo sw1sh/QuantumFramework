@@ -154,25 +154,6 @@ QuditBasis["Dirac", args___] := Module[{
 ]
 
 
-
-Options[WignerBasis] = {"Exact" -> False}
-
-WignerBasis[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := WignerBasis[qb, opts] = Block[{d = qb["Dimension"], a, x, z},
-    If[d == 1, Return[qb]];
-    a = DiagonalMatrix[Exp[I 2 Pi Range[0, d - 1] / d]];
-    z = qb["Matrix"] . a . PseudoInverse[qb["Matrix"]];
-    If[ ! TrueQ[OptionValue["Exact"]], z = N[z]];
-    x = FourierMatrix[d] . z . ConjugateTranspose[FourierMatrix[d]];
-    QuditBasis @
-        AssociationThread[
-            Subscript["W", Row[#]] & /@ Tuples[Range[0, d - 1], 2],
-            Chop @ FullSimplify @ Catenate @ If[ OddQ[d],
-                Table[fanoMatrix[d, q, 2 d - p, x, z], {p, 0, 2 d - 1, 2}, {q, 0, 2 d - 1, 2}],
-                Table[fanoMatrix[d, q, 2 d - p, x, z], {p, 0, d - 1}, {q, 0, d - 1}]
-            ]
-        ]
-]
-
 QuditBasis["Wigner", args___] := QuditBasis[{"Wigner", 2}, args]
 
 QuditBasis[{"Wigner", qb_QuditBasis /; QuditBasisQ[qb], opts : OptionsPattern[WignerBasis]}, args___] :=
