@@ -23,7 +23,7 @@ $QuantumOperatorNames = {
     "Toffoli", "Deutsch",
     "RandomUnitary", "RandomHermitian",
     "Spider", "ZSpider", "XSpider", "WSpider",
-    "Measure", "Encode",
+    "Measure", "Encode", "Copy",
     "Cup", "Cap",
     "Switch",
     "Discard",
@@ -661,11 +661,13 @@ QuantumOperator[{name : $Spider, args___}, order : _ ? orderQ, opts___] :=
 QuantumOperator[{name : $Spider, args___}, opts : PatternSequence[] | PatternSequence[Except[_ ? autoOrderQ], ___]] :=
     QuantumOperator[{name, args}, {{1}, {1}}, opts]
 
-QuantumOperator[name : "Measure" | "Encode", opts___] := QuantumOperator[{name}, opts]
+QuantumOperator[name : "Measure" | "Encode" | "Copy", opts___] := QuantumOperator[{name}, opts]
 
 QuantumOperator[{"Measure", dim_ : 2}, opts___] := QuantumOperator[{"Spider", QuantumBasis[{dim}, {dim ^ 2}]}, opts]
 
 QuantumOperator[{"Encode", dim_ : 2}, opts___] := QuantumOperator[{"Spider", QuantumBasis[{dim ^ 2}, {dim}]}, opts]
+
+QuantumOperator[{"Copy", dim_ : 2}, opts___] := QuantumOperator[{"Spider", QuantumBasis[{dim, dim}, {dim}]}, opts]
 
 QuantumOperator["Cup" | {"Cup", dim : _Integer ? Positive : 2}, order : _ ? orderQ : {1, 2}, opts___] /; Length[order] == 2 :=
     QuantumOperator[QuantumOperator[{"I", dim}]["SplitDual", 2], {order, {}}, "Label" -> "Cup", opts]
