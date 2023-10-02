@@ -113,7 +113,7 @@ MergeInterpolatingFunctions[array_ ? SparseArrayQ] := Enclose @ Block[{pos, valu
 	dim = First[dims];
 	ConfirmAssert[dim === {}];
 	grid = Intersection @@ Through[ifs["Grid"]];
-	Interpolation[{#, SparseArray[Thread[pos -> (values /. param -> #)], Dimensions[array]]} & /@ Catenate[grid], InterpolationOrder -> 1][param]
+	Interpolation[{#, Normal @ SparseArray[Thread[pos -> (values /. param -> #)], Dimensions[array]]} & /@ Catenate[grid], InterpolationOrder -> 1][param]
 ]
 
 MergeInterpolatingFunctions[array_ ? ArrayQ] := MergeInterpolatingFunctions[SparseArray[array]]
