@@ -58,7 +58,9 @@ FromOperatorShorthand[f_Symbol[
     With[{qo = QuantumOperator[Unevaluated[op]]}, FromOperatorShorthand[Unevaluated[f[left, qo, right]]]]
 FromOperatorShorthand[op_ ? QuantumFrameworkOperatorQ] := op
 FromOperatorShorthand[order_ ? orderQ] := QuantumMeasurementOperator[order]
-FromOperatorShorthand[arg : {name_String, ___} | name_String] /; MemberQ[$QuantumStateNames, name] || StringMatchQ[name, ("0" | "1" | "+" | "-" | "L" | "R") ..] :=
+FromOperatorShorthand[arg : {name_String, ___} | name_String] /; MemberQ[$QuantumStateNames, name] :=
+    With[{s = QuantumState[arg]}, QuantumOperator[s, "Label" -> Ket[{s["Label"]}]]]
+FromOperatorShorthand[arg : name_String] /; MemberQ[$QuantumStateNames, name] || StringMatchQ[name, ("0" | "1" | "+" | "-" | "L" | "R") ..] :=
     With[{s = QuantumState[arg]}, QuantumOperator[s, "Label" -> Ket[{s["Label"]}]]]
 FromOperatorShorthand[arg : {name_String, ___} | name_String] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[arg]
 FromOperatorShorthand[arg : {name_String, ___} | name_String] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[arg]
