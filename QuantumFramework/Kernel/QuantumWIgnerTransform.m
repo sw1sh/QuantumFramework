@@ -19,7 +19,7 @@ WignerBasis[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := wignerBasis[qb, opts]
         AssociationThread[
             Subscript["W", Row[#]] & /@ Tuples[Range[0, d - 1], 2],
             Chop @ FullSimplify @ Catenate @ If[ OddQ[d],
-                Table[fanoMatrix[d, q + 1, p + 1, x, z], {p, 0, 2 d - 1, 2}, {q, 0, 2 d - 1, 2}],
+                normalizeMatrix /@ Table[fanoMatrix[d, q + 1, p + 1, x, z], {p, 0, 2 d - 1, 2}, {q, 0, 2 d - 1, 2}],
                 Replace[OptionValue["EvenDimensionMethod"], {
                     1 :> Table[fanoMatrix[d, q, p, x, z], {p, 0, d - 1}, {q, 0, d - 1}],
 					2 :> Table[fanoMatrix[d, q, p, x, z], {p, Join[Range[0, d - 2, 2], Range[1, d - 1, 2]]}, {q, Join[Range[0, d - 2, 2], Range[1, d - 1, 2]]}],
