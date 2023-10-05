@@ -313,7 +313,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			FaceForm[Replace[label, gateBackgroundStyle]],
 			Disk[center, size / 2],
 			If[connectorsQ, {FaceForm[Directive[$DefaultGray, Opacity[1]]], Disk[#, size / 32] & /@ {{center[[1]] - size / 2, - vGapSize #}, {center[[1]] + size / 2, - vGapSize #}} & /@ vpos}, Nothing],
-			If[gateLabelsQ, Rotate[Text[Style[Superscript[If[TrueQ[Negative[n]], -Pi, Pi], InputForm[2 ^ (1 - Abs[n])]], labelStyleOpts], center], rotateLabel], Nothing]
+			If[gateLabelsQ, Rotate[Text[Style[Row[{If[TrueQ[Negative[n]], "-", ""], InputForm[2 ^ (1 - Abs[n])]}], labelStyleOpts], center], rotateLabel], Nothing]
 		},
 		subLabels_CircleTimes :> With[{
 			labels = Catenate @ Replace[List @@ subLabels, {Superscript[subSubLabel_, CircleTimes[n_Integer]] :> Table[subSubLabel, n], subSubLabel_ :> {subSubLabel}}, {1}]
