@@ -16,6 +16,7 @@ $QuantumCircuitOperatorNames = {
     "BernsteinVaziraniOracle", "BernsteinVazirani",
     "Fourier", "InverseFourier",
     "PhaseEstimation",
+    "Number", "PhaseNumber",
     "Controlled",
     "Trotterization",
     "Magic",
@@ -356,13 +357,26 @@ QuantumCircuitOperator[{"BernsteinVazirani", secret : {(0 | 1) ...} | (secret_St
     }]
 ]
 
-QuantumCircuitOperator[{"Adder", n_Integer ? Positive, m : _Integer ? NonNegative : 0}, opts___] := QuantumCircuitOperator[
-    Table[
-        Splice[QuantumOperator[{"Controlled", {"PhaseShift", #}, {# + i - 1 + m}}, {n + i + m}] & /@ Range[n - i + 1]],
-        {i, n}
-    ],
-    opts,
-	"ADD"
+
+QuantumCircuitOperator[{"Number",  n : _Integer ? NonNegative : 0, qubits : _Integer | Automatic : Automatic}, opts___] := Block[{
+    qs = Replace[qubits, Automatic :> Ceiling[Max[Log2[n], 0]]], bits
+},
+    bits = IntegerDigits[n, 2, qs];
+    QuantumCircuitOperator[MapIndexed[If[#1 == 1, "X", "I"] -> #2 &, bits], opts, n]
+]
+
+QuantumCircuitOperator[{"PhaseNumber", n : _Integer ? NonNegative : 0, qubits : _Integer | Automatic : Automatic, h : True | False : True}, opts___] := Block[{
+    qs = Replace[qubits, Automatic :> Ceiling[Max[Log2[n], 0]]], bits
+},
+    bits = IntegerDigits[n, 2, qs];
+	QuantumCircuitOperator[
+        Join[
+            If[h, Thread["H" -> Range[qs]], {}],
+            Catenate @ Table[Map["PhaseShift"[#] -> q &, Catenate @ Position[bits[[- q ;;]], 1, {1}, Heads -> False]], {q, qs}]
+        ],
+        opts,
+        n
+    ]
 ]
 
 QuantumCircuitOperator[name : "Fourier" | "InverseFourier", opts___] := QuantumCircuitOperator[{name, 2}, opts]
