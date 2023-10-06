@@ -326,7 +326,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 				];
 				With[{index = First /@ PositionIndex[vpos]}, {
 					Map[drawGate[{{#}, hpos}, dims, labels[[index[#1]]], opts] &, vpos],
-					drawControlWires[#, {labels[[index[#[[1]]]]], labels[[index[#[[1]]]]]}] & /@ Partition[Sort[vpos], 2, 1]
+					Dashed, drawControlWires[#, {labels[[index[#[[1]]]]], labels[[index[#[[1]]]]]}] & /@ Partition[Sort[vpos], 2, 1]
 				}]
 			} /; Length[labels] == Length[vpos]
 		],
@@ -334,7 +334,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			boundaryStyle = Replace[subLabel, gateBoundaryStyle];
 			If[thickWireQ, boundaryStyle = Directive[boundaryStyle, AbsoluteThickness[3]]];
 			Map[drawGate[{{#1}, hpos}, dims, subLabel, opts] &, vpos],
-			drawControlWires[#, {subLabel, subLabel}] & /@ Partition[Sort[vpos], 2, 1]
+			Dashed, drawControlWires[#, {subLabel, subLabel}] & /@ Partition[Sort[vpos], 2, 1]
 		},
 		subLabel : "GlobalPhase"[subSubLabel_] | (subSubLabel_ /; AnyTrue[hpos, LessThan[0]]) :> {
 			EdgeForm[Replace[subLabel, gateBoundaryStyle]],
