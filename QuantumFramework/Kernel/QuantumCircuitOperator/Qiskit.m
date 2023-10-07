@@ -28,12 +28,13 @@ shortcutToGate = Replace[
         {"R", angle_, "Y"} :> {"RYGate", N[angle]},
         {"R", angle_, "Z"} :> {"RZGate", N[angle]},
         {"P", phase_} :> {"PhaseGate", N[phase]},
+        {"PhaseShift", k_} :> {"PhaseGate", N[Sign[k] 2 Pi / 2 ^ Abs[k]]},
         {"C", name_, controls___} :> {"Control", shortcutToGate[name], controls},
         SuperDagger[name_] :> {"Dagger", shortcutToGate[name]},
         barrier: "Barrier" | "Barrier"[arg_] :> "Barrier",
-        Labeled[arr_NumericArray, label_] :> {"Unitary", arr, ToString[label]},
+        Labeled[arr_ /; ArrayQ[arr] || NumericArrayQ[arr] -> order_, label_] :> {"Unitary", NumericArray[Normal @ N @ arr, "ComplexReal32"], ToString[label], order},
         target_ ? orderQ :> {"Measure", target},
-        shortcut_ :> With[{op = QuantumOperator[shortcut]}, {"Unitary", NumericArray @ Normal @ N @ op["Matrix"], ToString[shortcut], op["Order"]}]
+        shortcut_ :> With[{op = QuantumOperator[shortcut]}, {"Unitary", NumericArray[Normal @ N @ op["Matrix"], "ComplexReal32"], ToString[shortcut], op["Order"]}]
     }
 ]
 
