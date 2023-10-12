@@ -376,11 +376,12 @@ else:
      ]
 ]
 
-Options[qiskitApply] = Join[{"Shots" -> 1024}, Options[qiskitInitBackend]]
+Options[qiskitApply] = Join[{"Shots" -> 1024, "FireOpal" -> False}, Options[qiskitInitBackend]]
 
 qiskitApply[qc_QiskitCircuit, qs_QuantumState, opts : OptionsPattern[]] := Enclose @ Block[{
     $state = NumericArray @ N @ qs["Reverse"]["StateVector"],
     $shots = OptionValue["Shots"],
+    $fireOpal = TrueQ[OptionValue["FireOpal"]],
     result
 },
     ConfirmAssert[qs["InputDimensions"] == {}];
@@ -408,15 +409,31 @@ try:
 except:
     pass
 
-result = backend.run(circuit, shots = <* $shots *>).result()
-
-if isinstance(provider, AWSBraketProvider):
-    result = result.get_counts()
+if <* $fireOpal *>:
+    import fireopal
+    qasm = circuit.qasm()
+    credentials = {'token': provider._account.token, 'group': 'open', 'hub': 'ibm-q', 'project': 'main', 'provider': 'ibmq'}
+    validate_results = fireopal.validate(
+        circuits=[qasm], credentials=credentials, backend_name=backend.name
+    )
+    assert(validate_results['results'] == [])
+    result = fireopal.execute(
+        circuits=[qasm],
+        shot_count=<* $shots *>,
+        credentials=credentials,
+        backend_name=backend.name,
+    )['results'][0]
+    result = {k[::-1]: v for k, v in result.items()}
 else:
-    if qc.num_clbits > 0:
-        result = result.get_counts(circuit)
+    result = backend.run(circuit, shots = <* $shots *>).result()
+
+    if isinstance(provider, AWSBraketProvider):
+        result = result.get_counts()
     else:
-        result = result.get_statevector().data
+        if qc.num_clbits > 0:
+            result = result.get_counts(circuit)
+        else:
+            result = result.get_statevector().data
 result
 "];
     Which[

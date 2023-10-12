@@ -6,7 +6,7 @@ PackageScope["PythonEvaluate"]
 
 
 
-$PythonPackages = {"wolframclient", "qiskit", "matplotlib", "pylatexenc", "qiskit-ibm-provider", "qiskit-braket-provider"}
+$PythonPackages = {"wolframclient", "qiskit", "matplotlib", "pylatexenc", "qiskit-ibm-provider", "qiskit-braket-provider", "fire-opal"}
 
 confirmPython[session_] := confirmPython[session] = AllTrue[$PythonPackages, ResourceFunction["PythonPackageInstalledQ"][session, #] &] &&
     ExternalEvaluate[session, "import qiskit\nfrom qiskit import QuantumCircuit"] === Null
