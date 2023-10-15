@@ -226,7 +226,7 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
     circuit, res
 },
     circuit = If[ qs["Qudits"] > 0,
-        QuantumCircuitOperator[Prepend[qs] @ qco["Operators"]],
+        {qs -> qco["InputOrder"]} /* QuantumCircuitOperator[qco["Operators"]],
         qco
     ];
     res = TensorNetworkCompile[circuit, "Trace" -> True];
