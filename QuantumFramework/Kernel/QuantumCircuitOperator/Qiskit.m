@@ -2,6 +2,7 @@ Package["Wolfram`QuantumFramework`"]
 
 PackageExport["QiskitCircuit"]
 PackageExport["ImportQASMCircuit"]
+PackageExport["ImportQPY"]
 
 PackageScope["QuantumCircuitOperatorToQiskit"]
 
@@ -504,6 +505,18 @@ qc = transpile(qc, backend)
 bytes = BytesIO()
 qpy.dump(qc, bytes)
 zlib.compress(bytes.getvalue())
+"]
+]
+
+ImportQPY[qpy_ByteArray] := Block[{$qpy = qpy}, PythonEvaluate[Context[$qpy], "
+from qiskit import qpy
+import zlib
+from io import BytesIO
+from wolframclient.language import wl
+import pickle
+
+qcs = qpy.load(BytesIO(zlib.decompress(<* $qpy *>)))
+[wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(qc)) for qc in qcs]
 "]
 ]
 
