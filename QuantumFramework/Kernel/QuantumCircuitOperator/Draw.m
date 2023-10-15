@@ -79,7 +79,8 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 	boundaryStyle,
 	drawControlWires,
 	wireStyle = Replace[OptionValue["WireStyle"], Automatic -> Directive[CapForm[None], $DefaultGray, Opacity[.3]]],
-	wireThickness = If[TrueQ[OptionValue["DimensionWires"]], defaultWireThickness, AbsoluteThickness[1] &]
+	wireThickness = If[TrueQ[OptionValue["DimensionWires"]], defaultWireThickness, AbsoluteThickness[1] &],
+	gate
 },
 	vpos = Union[vposOut, vposIn];
 	vposIndex = PositionIndex[Developer`ToList[vpos]];
@@ -95,7 +96,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			{center[[1]], - vGapSize #1[[2]] + size Switch[#2[[2]], "NOT", 1 / 5, "SWAP", 0, "1" | "0", 1 / 8, _, 1 / 2]}
 		}]
 	}];
-	Replace[Replace[label, Interpretation[_, l_] :> l], {
+	gate = Replace[Replace[label, Interpretation[_, l_] :> l], {
 		_ /; gateShapeFunction =!= None -> gateShapeFunction[center, label, hGapSize hpos, - vGapSize vpos],
 		Subscript["C", subLabel_][control1_, control0_] :> Block[{
 			target = DeleteCases[vpos, Alternatives @@ Join[control1, control0]],
@@ -349,7 +350,8 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			If[connectorsQ, {FaceForm[Directive[$DefaultGray, Opacity[1]]], Disk[#, size / 32] & /@ Join[{center[[1]] + size / 2, - vGapSize #} & /@ vposOut, {center[[1]] - size / 2, - vGapSize #} & /@ vposIn]}, Nothing],
 			If[gateLabelsQ, Rotate[Text[Style[Replace[label, OptionValue["GateLabels"]], labelStyleOpts], center], rotateLabel], Nothing]
 		}
-	}]
+	}];
+	Tooltip[gate, label]
 ]
 
 Options[drawMeasurement] = Join[{
@@ -474,7 +476,8 @@ Options[drawWires] = {"Size" -> .75,
 	"VerticalGapSize" -> 1, "HorizontalGapSize" -> 1,
 	"ShortOuterWires" -> True, "ShowWireEndpoints" -> False,
 	"WireStyle" -> Automatic,
-	"DimensionWires" -> True
+	"DimensionWires" -> True,
+	"ShowWireDimensions" -> False
 };
 drawWires[wires_List, OptionsPattern[]] := With[{
 	size = OptionValue["Size"],
@@ -500,6 +503,7 @@ drawWires[wires_List, OptionsPattern[]] := With[{
 				]},
 			{
 				wireThickness[#3],
+				If[TrueQ[OptionValue["ShowWireDimensions"]], Text[#3, Mean[points]], Nothing],
 				Line[points],
 				If[endpointsQ, {Opacity[1], PointSize[Scaled[0.003]], Point /@ points} , Nothing]
 	 		}
