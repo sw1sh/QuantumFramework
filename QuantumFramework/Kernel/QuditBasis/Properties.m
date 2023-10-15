@@ -52,10 +52,38 @@ QuditBasisProp[qb_, "Names"] := If[qb["Length"] > 0,
 ]
 
 QuditBasisProp[qb_, "Names", pos_ : All] := Enclose @ If[qb["Length"] > 0,
-    With[{values = Values @ KeySort @ ResourceFunction["KeyGroupBy"][qb["Representations"], Last, Keys[normalRepresentations[#]][[All, 1]] &]},
+    With[{names = Values @ KeySort @ ResourceFunction["KeyGroupBy"][qb["Representations"], Last, Keys[normalRepresentations[#]][[All, 1]] &]},
         QuantumTensorProduct @* Map[QuditName] /@ If[ pos === All,
-            Tuples[values],
-            MapThread[ConfirmMatch[Part[##], _QuditName] &, {values, #}] & /@ (IntegerDigits[Flatten[pos] - 1, MixedRadix[Length /@ values], Length[values]] + 1)
+            Tuples[names],
+            Partition[
+                Extract[
+                    names,
+                    Catenate @ MapIndexed[{#2[[2]], #1} &, IntegerDigits[Flatten[pos] - 1, MixedRadix[Length /@ names], Length[names]] + 1, {2}]
+                ],
+                Length[names]
+            ]
+        ]
+    ],
+    {}
+]
+
+
+QuditBasisProp[qb_, "Graphs", pos_ : All] := Enclose @ If[qb["Length"] > 0,
+    With[{values = Values @ KeySort @ ResourceFunction["KeyGroupBy"][qb["Representations"], Last, Values]},
+        If[Length[{##}] > 1, GraphDisjointUnion[##], #] & @@@ Map[
+            AdjacencyGraph,
+            If[ pos === All,
+                Tuples[Map[QuditAdjacencyMatrix, values, {2}]],
+                Partition[
+                    Extract[
+                        values,
+                        Catenate @ MapIndexed[{#2[[2]], #1} &, IntegerDigits[Flatten[pos] - 1, MixedRadix[Length /@ values], Length[values]] + 1, {2}],
+                        QuditAdjacencyMatrix
+                    ],
+                    Length[values]
+                ]
+            ],
+            {2}
         ]
     ],
     {}

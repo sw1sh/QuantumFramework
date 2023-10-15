@@ -87,6 +87,10 @@ QuantumBasisProp[qb_, "ElementNames" | "Names", pos : {{_Integer ..} ...}] :=
 QuantumBasisProp[qb_, "ElementNames" | "Names", outPos : {_Integer ..} : All, inPos : {_Integer ..} : All] :=
     QuantumTensorProduct @@@ Tuples[{qb["OutputElementNames", outPos], qb["InputElementNames", inPos]}]
 
+QuantumBasisProp[qb_, "GraphRules", p : {{_Integer ..} ...} : All] := With[{pos = Replace[p, All :> Tuples[{Range[qb["OutputSize"]], Range[qb["InputSize"]]}]]},
+    MapThread[Rule, {qb["Input"]["Graphs", pos[[All, 2]]], qb["Output"]["Graphs", pos[[All, 1]]]}]
+]
+
 QuantumBasisProp[qb_, "Elements"] := ArrayReshape[
     If[ qb["InputRank"] > 0, Transpose[#, FindPermutation[Join[{1, qb["OutputRank"] + 2}, Range[qb["OutputRank"]] + 1]]], {#}] & @
         TensorProduct[qb["OutputElements"], qb["InputElements"]],

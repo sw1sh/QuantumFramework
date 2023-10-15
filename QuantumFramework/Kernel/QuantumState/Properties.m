@@ -110,6 +110,13 @@ QuantumStateProp[qs_, "Amplitudes"] := Module[{s = qs["Pure"], result},
     result /; !FailureQ[result]
 ]
 
+QuantumStateProp[qs_, "Amplitude"] := With[{v = qs["Pure"]["StateVector"]},
+    AssociationThread[
+        qs["Names", QuotientRemainder[Catenate @ v["ExplicitPositions"] - 1, qs["InputDimension"]] + 1],
+        v["ExplicitValues"]
+    ]
+]
+
 QuantumStateProp[qs_, "StateVector"] := Module[{result},
     result = Enclose @ Which[
         qs["StateType"] === "Vector",
@@ -156,6 +163,17 @@ QuantumStateProp[qs_, "Formula", OptionsPattern["Normalize" -> False]] := With[{
         With[{v = SparseArray @ s[If[TrueQ[OptionValue["Normalize"]], "NormalizedStateVector", "StateVector"]], d = s["InputDimension"]},
             With[{pos = Catenate @ v["ExplicitPositions"]}, s["Names", Thread[{Quotient[pos - 1, d] + 1, Mod[pos - 1, d] + 1}]]] . v["ExplicitValues"]
         ]
+    ]
+]
+
+QuantumStateProp[qs_, "GraphRule"] := Block[{v = qs["Pure"]["StateVector"], pos},
+    pos = QuotientRemainder[Catenate @ v["ExplicitPositions"] - 1, qs["InputDimension"]] + 1;
+    MapThread[
+        #2[[1]] -> GraphProduct[#1, #2[[2]]] &,
+        {
+            AdjacencyGraph @* QuditAdjacencyMatrix /@ (Sqrt[v["ExplicitLength"]] v["ExplicitValues"]),
+            qs["Basis"]["GraphRules", pos]
+        }
     ]
 ]
 
@@ -516,7 +534,7 @@ QuantumStateProp[qs_, "Discard", qudits : {_Integer...}] /; ContainsOnly[qudits,
 
 QuantumStateProp[qs_, "Dual", args___] := QuantumState[Conjugate[qs["State"]], qs["Basis"]["Dual", args]]
 
-QuantumStateProp[qs_, "Conjugate"] := QuantumState[Conjugate[qs["State"]], qs["Basis"]]
+QuantumStateProp[qs_, "Conjugate"] := QuantumState[Conjugate[qs["State"]], qs["Basis"], "Label" -> SuperStar[qs["Label"]]]
 
 
 QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := With[{qb = qs["Basis"]["ConjugateTranspose"]},

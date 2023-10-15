@@ -35,6 +35,8 @@ PackageScope["SparsePseudoInverse"]
 PackageScope["SetPrecisionNumeric"]
 PackageScope["TranscendentalRecognize"]
 
+PackageScope["QuditAdjacencyMatrix"]
+
 PackageScope["$QuantumFrameworkProfile"]
 PackageScope["profile"]
 
@@ -361,4 +363,10 @@ EinsteinSummation::length = "Number of index specifications (`1`) does not match
 EinsteinSummation::shape = "Index specification `1` does not match the tensor rank of `2`";
 (*EinsteinSummation::repeat = "Index specifications `1` are repeated more than twice";*)
 EinsteinSummation::output = "The uncontracted indices can't compose the desired output";
+
+
+QuditAdjacencyMatrix[x_, d_ : Automatic] := {{Abs[Normalize[x]] Mod[Arg[x], 2 Pi] / (Pi / (2 Replace[d, Automatic -> 2]))}}
+QuditAdjacencyMatrix[xs_ ? VectorQ, dim_ : Automatic] := With[{d = Replace[dim, Automatic :> Length[xs]]},
+	Abs[xs] DiagonalMatrix[Mod[Arg[xs], 2 Pi] / (Pi / (2 d)) + 1] + If[d > 1, SparseArray[Band[{2, 1}] -> 1, {d, d}], 0]
+]
 
