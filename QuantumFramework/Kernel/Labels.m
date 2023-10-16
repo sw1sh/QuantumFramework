@@ -8,25 +8,30 @@ PackageScope["simplifyLabel"]
 
 simplifyLabel[x : _QuantumBasis | _QuantumState | _QuantumOperator] := QuantumOperator[x, "Label" -> simplifyLabel[x["Label"]]]
 
+conj = SuperDagger | SuperStar
+
 simplifyLabel[l_] := Replace[l, {
-    SuperDagger[label : None | "X" | "Y" | "Z" | "I" | "NOT" | "H" | "SWAP"] :> label,
-    SuperDagger[Superscript[label_, p_CircleTimes]] :> Superscript[simplifyLabel[SuperDagger[label]], p],
-    SuperDagger[t_CircleTimes] :> simplifyLabel @* SuperDagger /@ t,
+    _CircleTimes :> Map[simplifyLabel, l],
+    conj[label : None | "X" | "Y" | "Z" | "I" | "NOT" | "H" | "SWAP" | "Cap" | "Cup"] :> label,
+    SuperStar[label: "S" | "T"] :> SuperDagger[label],
+    (h : conj)[Superscript[label_, p_CircleTimes]] :> Superscript[simplifyLabel[h[label]], p],
+    (h : conj)[t_CircleTimes] :> simplifyLabel @* h /@ t,
     SuperDagger[c_Composition] :> simplifyLabel @* SuperDagger /@ Reverse[c],
-    SuperDagger[Subscript["C", x_][rest__]] :> Subscript["C", simplifyLabel[SuperDagger[x]]][rest],
-    SuperDagger[Subscript["R", args__][a_]] :> Subscript["R", args][- a],
-    SuperDagger[(r : Subscript["R", _] | "P")[angle_]] :> r[- angle],
-    SuperDagger["PhaseShift"[n_] | n_Integer] :> "PhaseShift"[-n],
+    SuperStar[c_Composition] :> simplifyLabel @* SuperStar /@ c,
+    (h : conj)[Subscript["C", x_][rest__]] :> Subscript["C", simplifyLabel[h[x]]][rest],
+    conj[Subscript["R", args__][a_]] :> Subscript["R", args][- a],
+    conj[(r : Subscript["R", _] | "P")[angle_]] :> r[- angle],
+    conj["PhaseShift"[n_] | n_Integer] :> "PhaseShift"[-n],
     SuperDagger["U2"[a_, b_]] :> "U2"[Pi - b, Pi - a],
-    SuperDagger["U"[a_, b_, c_]] :> "U"[- a, - b, - c],
-    SuperDagger["\[Pi]"[args__]] :> "\[Pi]"[args],
-    SuperDagger["Cap"] :> "Cup",
-    SuperDagger["Cup"] :> "Cap",
+    SuperStar["U2"[a_, b_]] :> "U2"[- a, - b],
+    SuperDagger["U"[a_, b_, c_]] :> "U"[- a, - c, - b],
+    SuperStar["U"[a_, b_, c_]] :> "U"[a, - b, - c],
+    conj["\[Pi]"[args__]] :> "\[Pi]"[args],
     SuperDagger[Ket[x_]] :> Bra[x],
     SuperDagger[Bra[x_]] :> Ket[x],
-    SuperDagger[(name : "XSpider" | "YSpider" | "ZSpider" | "Spider")[phase_]] :> name[-phase],
-    SuperDagger["WSpider"] :> "WSpider",
-    SuperDagger[SuperDagger[label_]] :> label
+    conj[(name : "XSpider" | "YSpider" | "ZSpider" | "Spider")[phase_]] :> name[-phase],
+    conj["WSpider"] :> "WSpider",
+    (h : conj)[(h : conj)[label_]] :> simplifyLabel[label]
 }]
 
 
