@@ -86,11 +86,14 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
         QuESTApply[qco, qs],
         "Qiskit",
         qco["Qiskit"][qs],
+        "Stabilizer",
+        PauliStabilizerApply[qco, qs],
         _,
         $Failed
     ]
 
 QuantumCircuitOperator::dim = "Circuit expecting dimensions `1`, but the state has dimensions `2`."
+QuantumCircuitOperator::fail = "Circuit evaluation resulted in a failure: ``."
 
 quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[]] :=
     (Message[QuantumCircuitOperator::dim, qco["InputDimensions"], qs["OutputDimensions"]]; $Failed)
@@ -102,11 +105,14 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
         If[# === {}, qs, QuantumTensorProduct[qs, QuantumState[{"Register", #}]]] & @ ConstantArray[2, Max[0, Length[qco["FullInputOrder"]] - qs["OutputQudits"]]],
         opts
     ]},
-        result /; ! FailureQ[result]
+        result /; ! FailureQ[result] || Message[QuantumCircuitOperator::fail, result]
     ]
 
-(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[quantumCircuitApply]] :=
-    qco[QuantumState[{"Register", ReplacePart[ConstantArray[2, qco["Arity"]], Thread[qco["InputOrder"] - qco["Min"] + 1 -> qco["InputDimensions"]]]}], opts]
+(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[quantumCircuitApply]] := If[
+    OptionValue[{opts}, Method] === "Stabilizer",
+    PauliStabilizerApply[qco, Automatic],
+    qco[QuantumState[{"Register", ReplacePart[ConstantArray[2, qco["Arity"]], Thread[qco["InputOrder"] - Min[qco["InputOrder"]] + 1 -> qco["InputDimensions"]]]}], opts]
+]
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qm_QuantumMeasurement, opts : OptionsPattern[]] :=
     QuantumMeasurement[qco[qm["QuantumOperator"]]["QuantumOperator", opts]]
