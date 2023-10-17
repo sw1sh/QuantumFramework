@@ -9,6 +9,7 @@ $AutoCompletionData = With[{
     measurementOperatorNames = $QuantumMeasurementOperatorNames,
     channelNames = $QuantumChannelNames,
     circuitNames =$QuantumCircuitOperatorNames,
+    stabilizerNames =$PauliStabilizerNames,
 
     entanglementMonotones = $QuantumEntanglementMonotones,
     distances = $QuantumDistances
@@ -22,7 +23,8 @@ $AutoCompletionData = With[{
         "QuantumChannel" -> {channelNames, basisNames},
         "QuantumCircuitOperator" -> {circuitNames},
         "QuantumEntanglementMonotone" -> {0, entanglementMonotones, entanglementMonotones},
-        "QuantumDistance" -> {0, 0, distances}
+        "QuantumDistance" -> {0, 0, distances},
+        "PauliStabilizer" -> {stabilizerNames}
     }
 ]
 

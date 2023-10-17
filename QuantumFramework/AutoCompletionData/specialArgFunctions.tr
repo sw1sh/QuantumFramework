@@ -303,5 +303,7 @@
             "HilbertSchmidt",
             "Bloch"
         }
-    }
+    },
+    "PauliStabilizer" -> { { "5QubitCode", "5QubitCode1", "9QubitCode", \
+"9QubitCode1" } }
 }

@@ -32,6 +32,7 @@ PauliStabilizerTableau[v_ ? ArrayQ, n_Integer ? Positive] :=
 	]
 
 PauliStabilizer[qs_QuantumState] := PauliStabilizer @ PauliStabilizerTableau[qs["Computational"]["StateVector"], qs["Qudits"]]
+(* PauliStabilizer[qs_QuantumState] := PauliStabilizer[QuantumOperator[Transpose @ qs["Eigenvectors"]]] *)
 
 PauliStabilizer[data : KeyValuePattern[{"Phase" -> phase_}]] := PauliStabilizer[<|KeyDrop[data, "Phase"], "Signs" -> 1 - 2 phase|>]
 PauliStabilizer[data : KeyValuePattern[{"Matrix" -> mat_}]] := PauliStabilizer[<|KeyDrop[data, "Matrix"], "Tableau" -> Transpose[ArrayReshape[mat, {Length[mat], 2, Length[mat] / 2}], {3, 1, 2}]|>]
@@ -63,14 +64,14 @@ PauliRow[mat_ ? MatrixQ, n_Integer ? Positive] := Enclose @ Block[{xint, xbits, 
 
 QuantumOperatorTableau[qo_QuantumOperator] /; qo["InputQudits"] == qo["OutputQudits"] := Enclose @ With[{n = qo["InputQudits"]},
 	Join[
-		Confirm @ PauliRow[(qo @ QuantumOperator["X" -> #] @ qo["Dagger"])["Matrix"], n] & /@ Reverse[qo["InputOrder"]],
-		Confirm @ PauliRow[(qo @ QuantumOperator["Z" -> #] @ qo["Dagger"])["Matrix"], n] & /@ Reverse[qo["InputOrder"]]
+		Confirm @ PauliRow[(qo @ QuantumOperator["X" -> #] @ qo["Dagger"])["Matrix"], n] & /@ Sort[qo["InputOrder"]],
+		Confirm @ PauliRow[(qo @ QuantumOperator["Z" -> #] @ qo["Dagger"])["Matrix"], n] & /@ Sort[qo["InputOrder"]]
 	]
 ]
 FromFullTableau[t_] := PauliStabilizer[<|"Signs" -> 1 - 2 t[[All, -1]], "Tableau" -> Transpose[ArrayReshape[t[[All, ;; -2]], {Length[t], 2, Length[t] / 2}], {3, 1, 2}]|>]
 
 
-PauliStabilizer[qo_QuantumOperator, n : _Integer : 1] /; qo["OutputOrder"] == qo["InputOrder"] := With[{max = Max[n, qo["InputOrder"]]},
+PauliStabilizer[qo_QuantumOperator, n : _Integer : 1] /; Sort[qo["OutputOrder"]] == Sort[qo["InputOrder"]] := With[{max = Max[n, qo["InputOrder"]]},
 	Enclose @ FromFullTableau[
 		Confirm @ QuantumOperatorTableau[qo["Sort"]["Computational"]]
 	]["PadRight", max]["Permute", Join[Sort[qo["InputOrder"]], Complement[Range[max], qo["InputOrder"]]]]
@@ -145,6 +146,7 @@ ps_PauliStabilizer["X"] := ps["Tableau"][[1]]
 ps_PauliStabilizer["Z"] := ps["Tableau"][[2]]
 
 ps_PauliStabilizer["Matrix"] := ArrayReshape[Transpose[ps["Tableau"], {2, 3, 1}], 2 {ps["GeneratorCount"], ps["Qubits"]}]
+ps_PauliStabilizer["p"] := With[{n = ps["Qudits"]}, Diagonal[ps["Matrix"] . PadLeft[identityMatrix[n], {-2 n, 2 n}] . Transpose[ps["Matrix"]]]]
 
 ps_PauliStabilizer["H", j_Integer] := With[{t = ps["Tableau"]},
 	PauliStabilizer[<|
@@ -167,10 +169,11 @@ ps_PauliStabilizer["CNOT" | "CX", j_Integer, k_Integer] := With[{t = ps["Tableau
 		}]
 	|>]
 ]
+ps_PauliStabilizer["CZ", j_Integer, k_Integer] := ps["H", k]["CNOT", j, k]["H", k]
 
 ps_PauliStabilizer["Permute", perm_] := PauliStabilizer[<|
 	"Signs" -> ps["Signs"],
-	"Tableau" -> (Permute[#, perm] & /@ ps["Tableau"])
+	"Tableau" -> With[{n = ps["Qudits"]}, Map[Map[Catenate[Permute[#, perm] & /@ Partition[#, n]] &, Permute[#, perm]] &, ps["Tableau"]]]
 |>]
 
 ps_PauliStabilizer["PadRight", n_] := QuantumTensorProduct[ps, PauliStabilizer[Max[n - ps["Qubits"], 0]]]
@@ -232,6 +235,8 @@ ps_PauliStabilizer["State"] := QuantumState @ Normalize @ Total @ NullSpace[
 	]
 ]
 
+ps_PauliStabilizer["Operator"] := QuantumOperator[Transpose @ ps["State"]["Eigenvectors", "Normalize" -> True]]
+
 
 (* quantum composition *)
 
@@ -243,30 +248,10 @@ phaseLookup := phaseLookup = SparseArray[
 	{2, 2, 2, 2}
 ]
 
-(*
-		ifacts = np.sum(second.x & second.z, axis=1, dtype=int)
-
-        x1, z1 = first.x.astype(np.uint8), first.z.astype(np.uint8)
-        lookup = cls._compose_lookup()
-
-        # The loop is over 2*n_qubits entries, and the entire loop is cubic in the number of qubits.
-        for k, row2 in enumerate(second.symplectic_matrix):
-            x1_select = x1[row2]
-            z1_select = z1[row2]
-            x1_accum = np.logical_xor.accumulate(x1_select, axis=0).astype(np.uint8)
-            z1_accum = np.logical_xor.accumulate(z1_select, axis=0).astype(np.uint8)
-            indexer = (x1_select[1:], z1_select[1:], x1_accum[:-1], z1_accum[:-1])
-            ifacts[k] += np.sum(lookup[indexer])
-        p = np.mod(ifacts, 4) // 2
-
-        phase = (
-            (np.matmul(second.symplectic_matrix, first.phase, dtype=int) + second.phase + p) % 2
-        ).astype(bool)
-*)
 
 left_PauliStabilizer[right_PauliStabilizer] := Enclose @ Block[{n = Max[left["Qudits"], right["Qudits"]], first, second, ifacts, x1, z1, p},
-	second = left["PadRight", n];
-	first = right["PadRight", n];
+	second = right["PadRight", n];
+	first = left["PadRight", n];
 	{x1, z1} = Transpose /@ first["Tableau"];
 	ifacts = Total[BitAnd[second["X"], second["Z"]]] + Map[
 		With[{x1s = Pick[x1, #, 1], z1s = Pick[z1, #, 1]},
@@ -307,7 +292,7 @@ QuantumTensorProduct[a_PauliStabilizer, b_PauliStabilizer] :=
 	]
 
 PauliStabilizerApply[qco_QuantumCircuitOperator, qs : _QuantumState | _PauliStabilizer : Automatic] := Fold[
-	#1[Replace[#2, {"C", "NOT" | "X" -> t_, c_, _} :> "CNOT" -> Join[c, t]]] &,
+	#1[Replace[#2, {"C", gate : "NOT" | "X" | "Z" -> t_, c_, _} :> "C" <> gate -> Join[c, t]]] &,
 	Replace[qs, {Automatic :> PauliStabilizer[qco["Arity"]], s_QuantumState :> PauliStabilizer[s]}],
 	QuantumShortcut[qco]
 ]
@@ -348,7 +333,7 @@ TableauForm[signs_, tableau_, stab_ : True] := With[{
 
 
 ps_PauliStabilizer["PauliForm" | "Generators" | "Stabilizers", n_ : Infinity] := PauliForm[ps, n]
-ps_PauliStabilizer["Destabilizers", n_ : Infinity] := PauliForm[ps, n, ]
+ps_PauliStabilizer["Destabilizers", n_ : Infinity] := PauliForm[ps, n]
 ps_PauliStabilizer["StabilizerTableauForm", n_ : Infinity] := TableauForm[ps, n]
 ps_PauliStabilizer["TableauForm", n_ : Infinity] := TableauForm[Take[ps["Signs"], UpTo[n]], Map[Take[#, UpTo[n]] &, ps["Tableau"], {2}], False]
 
