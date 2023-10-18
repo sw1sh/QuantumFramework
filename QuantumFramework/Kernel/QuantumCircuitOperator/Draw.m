@@ -503,7 +503,7 @@ drawWires[wires_List, OptionsPattern[]] := With[{
 				]},
 			{
 				wireThickness[#3],
-				If[TrueQ[OptionValue["ShowWireDimensions"]], Text[#3, Mean[points]], Nothing],
+				If[TrueQ[OptionValue["ShowWireDimensions"]], Text[Style[#3, Opacity[1]], Mean[points], {0, -1}], Nothing],
 				Line[points],
 				If[endpointsQ, {Opacity[1], PointSize[Scaled[0.003]], Point /@ points} , Nothing]
 	 		}
