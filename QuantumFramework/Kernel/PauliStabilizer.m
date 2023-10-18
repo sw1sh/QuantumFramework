@@ -124,6 +124,48 @@ PauliStabilizer[] := PauliStabilizer[1]
 PauliStabilizer[shortcut : _String | (_String -> _ ? orderQ | _Integer) | _List] := PauliStabilizer[QuantumCircuitOperator[shortcut]]
 
 
+(* random *)
+
+SampleMallows[n_] := Block[{h = ConstantArray[0, n], perm = ConstantArray[0, n], indices = Range[n]},
+	Do[
+		Block[{m = n - i, eps, r, index, k},
+			eps = 4 ^ (- m);
+			r = RandomReal[];
+			index = - Ceiling[Log2[r + (1 - r) eps]];
+			h[[i + 1]] = Boole[index < m];
+			k = If[index < m, index, 2 m - index - 1];
+			perm[[i + 1]] = indices[[k + 1]];
+			indices = Drop[indices, {Mod[k, Length[indices]] + 1}]
+		],
+		{i, 0, n - 1}];
+	{h, perm}
+]
+
+fillTril[n_, symmetric_ : False] := If[symmetric, SymmetrizedArray[# + UpperTriangularize[Transpose[#], 1]], LowerTriangularMatrix[# + IdentityMatrix[n]]] & @
+	LowerTriangularize[RandomInteger[1, {n, n}], If[symmetric, 0, -1]]
+
+RandomClifford[n_] := Block[{h, perm, gamma1, delta1, gamma2, delta2, zero, prod1, prod2, inv1, inv2, table1, table2, table, indices},
+	{h, perm} = SampleMallows[n];
+	gamma1 = fillTril[n, True];
+	gamma2 = fillTril[n, True];
+	delta1 = fillTril[n];
+	delta2 = fillTril[n];
+	zero = ConstantArray[0, {n, n}];
+	prod1 = Mod[gamma1 . delta1, 2];
+	prod2 = Mod[gamma2 . delta2, 2];
+	inv1 = Transpose[Inverse[delta1]];
+	inv2 = Transpose[Inverse[delta2]];
+	table1 = Join[Join[delta1, zero, 2], Join[prod1, inv1, 2]];
+	table2 = Join[Join[delta2, zero, 2], Join[prod2, inv2, 2]];
+	table = table2[[Join[perm, perm + n]]];
+	indices = Pick[Range[n], h, 1];
+	table[[Join[indices, indices + n]]] = table[[Join[indices + n, indices]]];
+	PauliStabilizer[<|"Matrix" -> Mod[table1 . table, 2], "Phase" -> RandomInteger[1, 2n]|>]
+]
+
+PauliStabilizer["Random", n_Integer ? Positive] := RandomClifford[n]
+
+
 (* properties & methods *)
 
 PauliStabilizer[assoc_Association][prop_String] /; KeyExistsQ[assoc, prop] := assoc[prop]
@@ -148,6 +190,8 @@ ps_PauliStabilizer["Z"] := ps["Tableau"][[2]]
 ps_PauliStabilizer["Matrix"] := ArrayReshape[Transpose[ps["Tableau"], {2, 3, 1}], 2 {ps["GeneratorCount"], ps["Qubits"]}]
 ps_PauliStabilizer["p"] := With[{n = ps["Qudits"]}, Diagonal[ps["Matrix"] . PadLeft[identityMatrix[n], {-2 n, 2 n}] . Transpose[ps["Matrix"]]]]
 
+ps_PauliStabilizer["TableauPhase"] := Join[ps["Matrix"], ArrayReshape[ps["Phase"], {2 ps["GeneratorCount"], 1}], 2]
+
 ps_PauliStabilizer["H", j_Integer] := With[{t = ps["Tableau"]},
 	PauliStabilizer[<|
 		"Signs" -> MapIndexed[If[t[[1, j, #2[[1]]]] == t[[2, j, #2[[1]]]] == 1, - #, #] &, ps["Signs"]],
@@ -169,12 +213,25 @@ ps_PauliStabilizer["CNOT" | "CX", j_Integer, k_Integer] := With[{t = ps["Tableau
 		}]
 	|>]
 ]
+ps_PauliStabilizer["X", j_Integer] := PauliStabilizer[<|"Phase" -> BitXor[ps["Phase"], ps["Z"][[j]]], "Tableau" -> ps["Tableau"]|>]
+ps_PauliStabilizer["Y", j_Integer] := PauliStabilizer[<|"Phase" -> BitXor[ps["Phase"], ps["X"][[j]], ps["Z"][[j]]], "Tableau" -> ps["Tableau"]|>]
+ps_PauliStabilizer["Z", j_Integer] := PauliStabilizer[<|"Phase" -> BitXor[ps["Phase"], ps["X"][[j]]], "Tableau" -> ps["Tableau"]|>]
 ps_PauliStabilizer["CZ", j_Integer, k_Integer] := ps["H", k]["CNOT", j, k]["H", k]
+ps_PauliStabilizer["SWAP", j_Integer, k_Integer] := ps["PermuteQudits", Cycles[{{j, k}}]]
 
-ps_PauliStabilizer["Permute", perm_] := PauliStabilizer[<|
-	"Signs" -> ps["Signs"],
-	"Tableau" -> With[{n = ps["Qudits"]}, Map[Map[Catenate[Permute[#, perm] & /@ Partition[#, n]] &, Permute[#, perm]] &, ps["Tableau"]]]
-|>]
+ps_PauliStabilizer["Permute", perm_] := With[{n = ps["Qudits"]},
+	PauliStabilizer[<|
+		"Signs" -> Catenate[Permute[#, perm] & /@ Partition[ps["Signs"], n]],
+		"Tableau" -> Map[Map[Catenate[Permute[#, perm] & /@ Partition[#, n]] &, Permute[#, perm]] &, ps["Tableau"]]
+	|>]
+]
+
+ps_PauliStabilizer["PermuteQudits", perm_] := With[{n = ps["Qudits"]},
+	PauliStabilizer[<|
+		"Signs" -> ps["Signs"],
+		"Tableau" -> Map[Permute[#, perm] &, ps["Tableau"]]
+	|>]
+]
 
 ps_PauliStabilizer["PadRight", n_] := QuantumTensorProduct[ps, PauliStabilizer[Max[n - ps["Qubits"], 0]]]
 ps_PauliStabilizer["PadLeft", n_] := QuantumTensorProduct[PauliStabilizer[Max[n - ps["Qubits"], 0]], ps]
@@ -226,7 +283,7 @@ ps_PauliStabilizer[qudits : {___Integer}] := ps["M", qudits]
 ps_PauliStabilizer[] := ps["M", Range[ps["Qudits"]]]
 
 
-ps_PauliStabilizer["State"] := QuantumState @ Normalize @ Total @ NullSpace[
+ps_PauliStabilizer["State" | "QuantumSttate"] := QuantumState @ Normalize @ Total @ NullSpace[
 	Total @ MapThread[(IdentityMatrix[Length[#2]] - #1 #2) &, {
 		ps["StabilizerSigns"],
 		kroneckerProduct @@@
@@ -235,7 +292,38 @@ ps_PauliStabilizer["State"] := QuantumState @ Normalize @ Total @ NullSpace[
 	]
 ]
 
-ps_PauliStabilizer["Operator"] := QuantumOperator[Transpose @ ps["State"]["Eigenvectors", "Normalize" -> True]]
+ps_PauliStabilizer["Circuit" | "QuantumCircuit" | "QuantumCircuitOperator"] := Block[{
+	clifford = ps, n = ps["Qudits"], gates = {},
+	destabX, destabZ, stabX, stabZ, destabP, stabP,
+	append, setQubitX1, setRowX0, setRowZ0
+},
+	destabX[q_] := Thread[clifford["DestabilizerX"][[All, q]] == 1];
+	destabZ[q_] := Thread[clifford["DestabilizerZ"][[All, q]] == 1];
+	stabX[q_] := Thread[clifford["StabilizerX"][[All, q]] == 1];
+	stabZ[q_] := Thread[clifford["StabilizerZ"][[All, q]] == 1];
+	destabP[q_] := clifford["Phase"][[q]] == 1;
+	stabP[q_] := clifford["Phase"][[n + q]] == 1;
+	append[gate_] := (clifford = clifford[gate]; AppendTo[gates, gate]);
+	setQubitX1[q_] := Catch @ With[{x := destabX[q], z := destabZ[q]},
+		If[x[[q]], Throw[0]];
+		Do[If[x[[i]], append["SWAP" -> {i, q}]; Throw[0]], {i, q + 1, n}];
+		Do[If[z[[i]], append["H" -> i]; If[i != q, append["SWAP" -> {i, q}]]; Throw[0]], {i, q, n}]
+	];
+	setRowX0[q_] := With[{x := destabX[q], z := destabZ[q]},
+		Do[If[x[[i]], append["CNOT" -> {q, i}]], {i, q + 1, n}];
+		If[Or @@ z[[q ;;]], If[! z[[q]], append["S" -> q]]; Do[If[z[[i]], append["CNOT" -> {i, q}]], {i, q + 1, n}]; append["S" -> q]]
+	];
+	setRowZ0[q_] := With[{x := stabX[q], z := stabZ[q]},
+		If[Or @@ z[[q + 1 ;;]], Do[If[z[[i]], append["CNOT" -> {i, q}]], {i, q + 1, n}]];
+		If[Or @@ x[[q ;;]], append["H" -> q]; Do[If[x[[i]], append["CNOT" -> {q, i}]], {i, q + 1, n}]; If[z[[q]], append["S" -> q]]; append["H" -> q]]
+	];
+	Do[setQubitX1[q]; setRowX0[q]; setRowZ0[q]; AppendTo[gates, "Barrier"], {q, n}];
+	Do[If[destabP[q], append["Z" -> q]]; If[stabP[q], append["X" -> q]], {q, n}];
+	gates = FixedPoint[SequenceReplace[{g_, g_} -> Nothing], gates];
+	QuantumCircuitOperator[gates]["Dagger"]
+]
+
+ps_PauliStabilizer["Operator" | "QuantumOperator"] := ps["Circuit"]["QuantumOperator"]
 
 
 (* quantum composition *)
