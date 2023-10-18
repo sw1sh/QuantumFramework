@@ -4,7 +4,7 @@ Package["Wolfram`QuantumFramework`"]
 
 $QuantumStateProperties = {
     "StateType", "State", "Basis",
-    "Amplitudes", "Weights", "Probabilities", "Probability", "StateVector", "DensityMatrix",
+    "Amplitudes", "Amplitude", "Weights", "Probabilities", "Probability", "StateVector", "DensityMatrix",
     "NormalizedState", "NormalizedAmplitudes", "NormalizedStateVector", "NormalizedDensityMatrix",
     "Entropy", "VonNeumannEntropy",
     "Purity", "Type", "PureStateQ", "MixedStateQ", "MatrixQ", "VectorQ", "UnknownQ", "PhysicalQ",
@@ -158,10 +158,23 @@ QuantumStateProp[qs_, "Distribution"] := CategoricalDistribution[qs["Names"], qs
 
 QuantumStateProp[qs_, "Formula", OptionsPattern[]] /; qs["DegenerateStateQ"] := 0
 
-QuantumStateProp[qs_, "Formula", OptionsPattern["Normalize" -> False]] := With[{s = qs["Pure"]},
+QuantumStateProp[qs_, "Formula", OptionsPattern["Normalize" -> False]] := RawBoxes @ With[{s = qs["Pure"]},
     If[ s["Dimension"] == 0, 0,
         With[{v = SparseArray @ s[If[TrueQ[OptionValue["Normalize"]], "NormalizedStateVector", "StateVector"]], d = s["InputDimension"]},
-            With[{pos = Catenate @ v["ExplicitPositions"]}, s["Names", Thread[{Quotient[pos - 1, d] + 1, Mod[pos - 1, d] + 1}]]] . v["ExplicitValues"]
+            RowBox @ MapThread[
+                With[{coef = Replace[Parenthesize[#2, StandardForm, Plus], {
+                    RowBox[{"-", "1"}] -> "-",
+                    "1" :> If[#3 > 1, "+", Nothing],
+                    x : Except[RowBox[{"-", __}]] :> If[#3 > 1, Splice[{"+", x}], x]
+                }]},
+                    RowBox[{coef, ToBoxes[#1, StandardForm]}]
+                ] &,
+                {
+                    With[{pos = Catenate @ v["ExplicitPositions"]}, s["Names", Thread[{Quotient[pos - 1, d] + 1, Mod[pos - 1, d] + 1}]]],
+                    v["ExplicitValues"],
+                    Range[v["ExplicitLength"]]
+                }
+            ]
         ]
     ]
 ]
