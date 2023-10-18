@@ -198,9 +198,15 @@ ps_PauliStabilizer["H", j_Integer] := With[{t = ps["Tableau"]},
 		"Tableau" -> ReplacePart[t, Thread[{{1, j}, {2, j}} -> Extract[t, {{2, j}, {1, j}}]]]
 	|>]
 ]
-ps_PauliStabilizer["P" | "S", j_Integer] := With[{t = ps["Tableau"]},
+ps_PauliStabilizer["S", j_Integer] := With[{t = ps["Tableau"]},
 	PauliStabilizer[<|
 		"Signs" -> MapIndexed[If[t[[1, j, #2[[1]]]] == t[[2, j, #2[[1]]]] == 1, - #, #] &, ps["Signs"]],
+		"Tableau" -> ReplacePart[t, {2, j} -> MapThread[BitXor, Extract[ps["Tableau"], {{1, j}, {2, j}}]]]
+	|>]
+]
+ps_PauliStabilizer[SuperDagger["S"], j_Integer] := With[{t = ps["Tableau"]},
+	PauliStabilizer[<|
+		"Signs" -> MapIndexed[If[t[[1, j, #2[[1]]]] == 1 - t[[2, j, #2[[1]]]] == 1, - #, #] &, ps["Signs"]],
 		"Tableau" -> ReplacePart[t, {2, j} -> MapThread[BitXor, Extract[ps["Tableau"], {{1, j}, {2, j}}]]]
 	|>]
 ]
@@ -317,7 +323,7 @@ ps_PauliStabilizer["Circuit" | "QuantumCircuit" | "QuantumCircuitOperator"] := B
 		If[Or @@ z[[q + 1 ;;]], Do[If[z[[i]], append["CNOT" -> {i, q}]], {i, q + 1, n}]];
 		If[Or @@ x[[q ;;]], append["H" -> q]; Do[If[x[[i]], append["CNOT" -> {q, i}]], {i, q + 1, n}]; If[z[[q]], append["S" -> q]]; append["H" -> q]]
 	];
-	Do[setQubitX1[q]; setRowX0[q]; setRowZ0[q]; AppendTo[gates, "Barrier"], {q, n}];
+	Do[setQubitX1[q]; setRowX0[q]; setRowZ0[q], {q, n}];
 	Do[If[destabP[q], append["Z" -> q]]; If[stabP[q], append["X" -> q]], {q, n}];
 	gates = FixedPoint[SequenceReplace[{g_, g_} -> Nothing], gates];
 	QuantumCircuitOperator[gates]["Dagger"]
@@ -344,7 +350,7 @@ left_PauliStabilizer[right_PauliStabilizer] := Enclose @ Block[{n = Max[left["Qu
 	ifacts = Total[BitAnd[second["X"], second["Z"]]] + Map[
 		With[{x1s = Pick[x1, #, 1], z1s = Pick[z1, #, 1]},
 			Total @ Extract[phaseLookup,
-				Join @@@ Tuples[Position[Flatten[#], 1, {1}, Heads -> False] & /@ {Rest[x1s], Rest[z1s], Most @ FoldList[BitXor, x1s], Most @ FoldList[BitXor, z1s]}]
+				Thread[Flatten[#] + 1 & /@ {Rest[x1s], Rest[z1s], Most @ FoldList[BitXor, x1s], Most @ FoldList[BitXor, z1s]}]
 			]
 		] &,
 		second["Matrix"]
