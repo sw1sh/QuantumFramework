@@ -70,7 +70,7 @@ QuantumShortcut[label_, dim_ : 2, order : {outputOrder : _ ? orderQ, inputOrder 
         (subLabel : "GlobalPhase")[params___] :> {{subLabel, params}},
         subLabel : "X" | "Y" | "Z" | "I" | "NOT" | "Cap" | "Cup" :> {nameOrder @ If[dim === 2, subLabel, {subLabel, dim}]},
         Times[x_ ? NumericQ, subLabel_] :> QuantumShortcut[Composition[OverHat[x], subLabel], dim, order],
-        SuperDagger[subLabel_] :> nameOrder @* SuperDagger /@ Confirm @ QuantumShortcut[subLabel, dim, order],
+        (h : SuperDagger | SuperStar)[subLabel_] :> MapAt[h, Confirm @ QuantumShortcut[subLabel, dim, order], {All, 1}],
         name_ /; MemberQ[$QuantumOperatorNames, name] :> {nameOrder[name]},
         barrier_ ? BarrierQ :> {barrier},
         _ :> Missing[label]
