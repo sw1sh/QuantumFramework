@@ -12,7 +12,7 @@ $QuantumCircuitOperatorNames = {
     "BooleanOracleR",
     "Grover", "GroverPhase",
     "Grover0", "GroverPhase0",
-    "Bell", "Toffoli",
+    "Bell", "Toffoli", "Fredkin",
     "BernsteinVaziraniOracle", "BernsteinVazirani",
     "Fourier", "InverseFourier",
     "PhaseEstimation",
@@ -304,34 +304,27 @@ QuantumCircuitOperator[{"PhaseOracle", formula_ : BooleanFunction[2 ^ 6, 3], var
 
 
 
-QuantumCircuitOperator["Bell", opts___]  :=
-    QuantumCircuitOperator[{QuantumOperator["H"], QuantumOperator["CNOT"]}, opts, "Bell"]
+QuantumCircuitOperator[name : "Bell" | "Toffoli" | "Fredkin", opts___] := QuantumCircuitOperator[{name}, opts]
 
+QuantumCircuitOperator[{"Bell", n : _Integer : 0}, opts___]  :=
+    QuantumCircuitOperator[{"H", "CNOT"}, opts, "Bell"]["Shift", n]
 
-QuantumCircuitOperator["Toffoli", opts___] := QuantumCircuitOperator[{"Toffoli"}, opts]
-
-QuantumCircuitOperator[{"Toffoli", n : _Integer ? NonNegative : 0}, opts___] := QuantumCircuitOperator[
+QuantumCircuitOperator[{"Toffoli", n : _Integer : 0}, opts___] := QuantumCircuitOperator[
     {
-        QuantumOperator["H", {n + 3}],
-        QuantumOperator["CNOT", {n + 2, n + 3}],
-        QuantumOperator["T", {n + 3}]["Dagger"],
-        QuantumOperator["CNOT", {n + 1, n + 3}],
-        QuantumOperator["T", {n + 3}],
-        QuantumOperator["CNOT", {n + 2, n + 3}],
-        QuantumOperator["T", {n + 3}]["Dagger"],
-        QuantumOperator["CNOT", {n + 1, n + 3}],
-        QuantumOperator["T", {n + 2}]["Dagger"],
-        QuantumOperator["T", {n + 3}],
-        QuantumOperator["H", {n + 3}],
-        QuantumOperator["CNOT", {n + 1, n + 2}],
-        QuantumOperator["T", {n + 2}]["Dagger"],
-        QuantumOperator["CNOT", {n + 1, n + 2}],
-        QuantumOperator["T", {n + 1}],
-        QuantumOperator["S", {n + 2}]
+        "H" -> 3, SuperDagger["T"] -> 3, "CNOT" -> {2, 3}, "CNOT" -> {1, 3}, "T" -> 3, "CNOT" -> {2, 3}, SuperDagger["T"] -> 3, "CNOT" -> {1, 3},
+        SuperDagger["T"] -> 2, "T" -> 3, "H" -> 3, "CNOT" -> {1, 2}, SuperDagger["T"] -> 2,  "CNOT" -> {1, 2}, "T" -> 1, "S" -> 2
     },
     opts,
     "Toffoli"
-]
+]["Shift", n]
+
+QuantumCircuitOperator[{"Fredkin", n : _Integer : 0}, opts___] := QuantumCircuitOperator[{
+        "CNOT" -> {3, 2}, "H" -> 3, "T" -> 1, "T" -> 2, "T" -> 3, "CNOT" -> {2, 1}, "CNOT" -> {3, 2}, "CNOT" -> {1, 3}, SuperDagger["T"] -> 2, "CNOT" -> {1, 2},
+        SuperDagger["T"] -> 1, SuperDagger["T"] -> 2, "T" -> 3, "CNOT" -> {3, 2}, "CNOT" -> {1, 3}, "H" -> 3, "CNOT" -> {2, 1}, "CNOT" -> {3, 2}
+    },
+    opts,
+    "Fredkin"
+]["Shift", n]
 
 QuantumCircuitOperator[{"BernsteinVaziraniOracle", secret : {(0 | 1) ...} : {1, 0, 1}, m : _Integer ? NonNegative : 0}, opts___] := With[{n = Length[secret]},
     QuantumCircuitOperator[

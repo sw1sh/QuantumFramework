@@ -258,6 +258,7 @@
             "GroverPhase0",
             "Bell",
             "Toffoli",
+            "Fredkin",
             "BernsteinVaziraniOracle",
             "BernsteinVazirani",
             "Fourier",
@@ -305,5 +306,5 @@
         }
     },
     "PauliStabilizer" -> { { "5QubitCode", "5QubitCode1", "9QubitCode", \
-"9QubitCode1" } }
+"9QubitCode1", "Random" } }
 }
