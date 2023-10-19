@@ -165,3 +165,5 @@ QuditBasis[{"Wigner", basisArgs___, opts : OptionsPattern[]}, args___] := QuditB
 QuditBasis[nameArg_ ? nameQ, args___] /; ! FreeQ[nameArg, _String ? (StringContainsQ["Basis"])] :=
     QuditBasis[nameArg /. name_String :> StringDelete[name, "Basis"], args]
 
+QuditBasis[name_String[args___], opts___] := QuditBasis[{name, args}, opts]
+

@@ -657,7 +657,8 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	emptyWiresQ = TrueQ[OptionValue["ShowEmptyWires"]],
 	dimensionWiresQ = TrueQ[OptionValue["DimensionWires"]],
 	showMeasurementWireQ,
-	extraQuditsQ = TrueQ[OptionValue["ShowExtraQudits"]] || AnyTrue[Through[Select[circuit["Operators"], Not @* QuantumChannelQ]["Order"]], NonPositive, 3],
+	orders = Through[Select[circuit["Operators"], ! (QuantumChannelQ[#] || QuantumCircuitOperatorQ[#]) &]["Order"]],
+	extraQuditsQ,
 	labelCount = 0,
 	labelCounter,
 	gateLabelsQ = TrueQ[OptionValue["ShowGateLabels"]],
@@ -666,9 +667,10 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	outlineMin,
 	scalarPos = 1
 },
+	extraQuditsQ = TrueQ[OptionValue["ShowExtraQudits"]] || AnyTrue[orders, NonPositive, 3];
 	showMeasurementWireQ = TrueQ[OptionValue["ShowMeasurementWire"]] && ! extraQuditsQ && circuit["Measurements"] > 0;
 	labelCounter = ReplaceAll[None :> (labelCount++; Subscript["U", labelCount])];
-	outlineMin = Which[showMeasurementWireQ, 1, extraQuditsQ, min, emptyWiresQ, 1, True, Min[circuit["Orders"], max]];
+	outlineMin = Which[showMeasurementWireQ, 1, extraQuditsQ, min, emptyWiresQ, 1, True, Min[Min[orders, 1], max]];
 	positions = circuitPositions[circuit, level, MatchQ[OptionValue["GateOverlap"], Automatic | True], showMeasurementWireQ || extraQuditsQ];
 	height = Max[0, positions] + 1;
 	wires = circuitWires[circuit];

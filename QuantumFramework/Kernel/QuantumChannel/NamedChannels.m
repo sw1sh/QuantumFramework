@@ -92,4 +92,8 @@ QuantumChannel[{"ResetError", p0_ : .25, p1_ : .25}, args___] :=
 
 QuantumChannel[name_String, args___] := QuantumChannel[{name}, args]
 
+QuantumChannel[name_String[args___], opts___] := QuantumChannel[{name, args}, opts]
+
+QuantumChannel[name_ -> order_, opts___] := QuantumChannel[name, Flatten[{order}], opts]
+
 

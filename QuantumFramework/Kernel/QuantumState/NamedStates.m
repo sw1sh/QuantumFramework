@@ -204,3 +204,5 @@ QuantumState[{"Dicke", k_}, args___] /; VectorQ[k, IntegerQ[#] && NonNegative[#]
 
 QuantumState[SuperDagger[arg_], opts___] := QuantumState[arg, opts]["Dagger"]
 
+QuantumState[name_String[args___], opts___] := QuantumState[{name, args}, opts]
+

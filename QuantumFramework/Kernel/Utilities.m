@@ -53,7 +53,7 @@ basisMultiplicity[dim_, size_] := Quiet[Replace[Ceiling @ Log[size, dim], Except
 
 (* test functions *)
 
-nameQ[name_] := MatchQ[name, _String | {_String, ___}]
+nameQ[name_] := MatchQ[name, _String | {_String, ___} | _String[___]]
 
 propQ[prop_] := MatchQ[prop, _String | {_String, ___} | (_String -> _)]
 
