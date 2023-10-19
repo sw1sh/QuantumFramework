@@ -6,12 +6,15 @@ PackageScope[$PauliStabilizerNames]
 
 
 
-$PauliStabilizerNames = {"5QubitCode", "5QubitCode1", "9QubitCode", "9QubitCode1"}
+$PauliStabilizerNames = {"5QubitCode", "5QubitCode1", "9QubitCode", "9QubitCode1", "Random"}
 
 
 PauliTableauQ[t_] := ArrayQ[t, 3, MatchQ[0 | 1]] && MatchQ[Dimensions[t], {2, n_, m_}]
 PauliStabilizerQ[PauliStabilizer[KeyValuePattern[{"Signs" -> signs : {(-1 | 1) ...}, "Tableau" -> tableau_ ? PauliTableauQ}] /; Length[signs] == Dimensions[tableau][[3]]]] := True
 PauliStabilizerQ[_] := False
+
+
+_PauliStabilizer["Properties"] = {"Qubits", "Generators", "Matrix", "Phase", "TableauForm", "State", "Operator", "Circuit"}
 
 
 (* constructors *)
@@ -77,7 +80,10 @@ PauliStabilizer[qo_QuantumOperator, n : _Integer : 1] /; Sort[qo["OutputOrder"]]
 	]["PadRight", max]["Permute", Join[Sort[qo["InputOrder"]], Complement[Range[max], qo["InputOrder"]]]]
 ]
 
-PauliStabilizer[qco_QuantumCircuitOperator] := Fold[ReverseApplied[Construct], PauliStabilizer[#, qco["Max"]] & /@ qco["NormalOperators"]]
+PauliStabilizer[qco_QuantumCircuitOperator] := Fold[Collect[#1 /. ps_PauliStabilizer :> #2[ps], _PauliStabilizer, Simplify] &,
+	PauliStabilizer[qco["Max"]],
+	Replace[PauliStabilizer[#, qco["Max"]], _ ? FailureQ :> #] & /@ qco["NormalOperators"]
+]
 
 PauliStabilizer[basis_ /; ArrayQ[basis, 3, MatchQ[0 | 1 | -1]] && MatchQ[Dimensions[basis], {2, n_, m_}]] :=
 	Enclose @ PauliStabilizer[Confirm @ Replace[Union @@ #, {{0, 1} | {1} -> 1, {-1, 0} | {-1} -> -1, _ -> $Failed}] & /@ Transpose[basis, {3, 2, 1}], Abs[basis]]
@@ -163,7 +169,7 @@ RandomClifford[n_] := Block[{h, perm, gamma1, delta1, gamma2, delta2, zero, prod
 	PauliStabilizer[<|"Matrix" -> Mod[table1 . table, 2], "Phase" -> RandomInteger[1, 2n]|>]
 ]
 
-PauliStabilizer["Random", n_Integer ? Positive] := RandomClifford[n]
+PauliStabilizer["Random", n : _Integer ? Positive : 5] := RandomClifford[n]
 
 
 (* properties & methods *)
@@ -239,6 +245,19 @@ ps_PauliStabilizer["PermuteQudits", perm_] := With[{n = ps["Qudits"]},
 	|>]
 ]
 
+ps_PauliStabilizer["Dagger" | "Inverse"] := Block[{mat},
+	PauliStabilizer @ <|
+		"Phase" -> BitXor[
+			ps["Phase"],
+			ps[PauliStabilizer[<|
+				"Matrix" -> (mat = Inverse[ps["Matrix"], Modulus -> 2]),
+				"Signs" -> ps["Signs"]
+			|>]]["Phase"]
+		],
+		"Matrix" -> mat
+	|>
+]
+
 ps_PauliStabilizer["PadRight", n_] := QuantumTensorProduct[ps, PauliStabilizer[Max[n - ps["Qubits"], 0]]]
 ps_PauliStabilizer["PadLeft", n_] := QuantumTensorProduct[PauliStabilizer[Max[n - ps["Qubits"], 0]], ps]
 
@@ -281,7 +300,16 @@ ps_PauliStabilizer["Measure" | "M", qudits : {___Integer}] := Enclose @ If[qudit
 	Join @@ KeyValueMap[{k, v} |-> KeyMap[Prepend[k]] @ Confirm @ v["M", Rest[qudits]], Confirm @ ps["M", First[qudits]]]
 ]
 
-ps_PauliStabilizer[op_String -> order_] := ps[op, Sequence @@ Flatten[{order}]]
+ps_PauliStabilizer["V", j_Integer] := PauliStabilizer[{"-Y"}, {"X"}]["PadLeft", j] @ ps
+ps_PauliStabilizer[SuperDagger["V"], j_Integer] := PauliStabilizer[{"Y"}, {"X"}]["PadLeft", j] @ ps
+
+ps_PauliStabilizer["P"[phase_], j_Integer] := With[{c = Exp[I phase / 2]},
+	(1 + c) / 2 ps + (1 - c) / 2 ps["Z", j]
+]
+ps_PauliStabilizer["T", j_Integer] := ps["P"[Pi / 2], j]
+ps_PauliStabilizer[SuperDagger["T"], j_Integer] := ps["P"[- Pi / 2], j]
+
+ps_PauliStabilizer[op_ -> order_] := ps[op, Sequence @@ Flatten[{order}]]
 
 ps_PauliStabilizer["Measure" | "M", qudits___Integer] := ps["M", {qudits}]
 ps_PauliStabilizer[qudits__Integer] := ps["M", {qudits}]
@@ -329,7 +357,7 @@ ps_PauliStabilizer["Circuit" | "QuantumCircuit" | "QuantumCircuitOperator"] := B
 	QuantumCircuitOperator[gates]["Dagger"]
 ]
 
-ps_PauliStabilizer["Operator" | "QuantumOperator"] := ps["Circuit"]["QuantumOperator"]
+ps_PauliStabilizer["Operator" | "QuantumOperator"] := QuantumOperator["I", Range[ps["Qudits"]]] @ ps["Circuit"]["QuantumOperator"]
 
 
 (* quantum composition *)
@@ -361,11 +389,6 @@ left_PauliStabilizer[right_PauliStabilizer] := Enclose @ Block[{n = Max[left["Qu
 		"Matrix" -> Mod[second["Matrix"] . first["Matrix"], 2]
 	|>]
 ]
-
-ps_PauliStabilizer["SymplecticMatrix"] := With[{n = ps["Qudits"]},
-	ps["Matrix"] . Reverse[BlockDiagonalMatrix[{- IdentityMatrix[n], IdentityMatrix[n]}]]
-]
-
 
 QuantumTensorProduct[a_PauliStabilizer, b_PauliStabilizer] :=
 	PauliStabilizer[<|
@@ -427,7 +450,10 @@ TableauForm[signs_, tableau_, stab_ : True] := With[{
 
 
 ps_PauliStabilizer["PauliForm" | "Generators" | "Stabilizers", n_ : Infinity] := PauliForm[ps, n]
-ps_PauliStabilizer["Destabilizers", n_ : Infinity] := PauliForm[ps, n]
+ps_PauliStabilizer["Destabilizers", n_ : Infinity] := PauliForm[ps, n, False]
+ps_PauliStabilizer["PauliStrings", n_ : Infinity] := Join[ps["Stabilizers", n], ps["Destabilizers", n]]
+ps_PauliStabilizer["PauliSymbols", n_ : Infinity] := If[StringStartsQ[#, "-"], - StringDrop[#, 1], #] & /@ Join[ps["Stabilizers", n], ps["Destabilizers", n]]
+
 ps_PauliStabilizer["StabilizerTableauForm", n_ : Infinity] := TableauForm[ps, n]
 ps_PauliStabilizer["TableauForm", n_ : Infinity] := TableauForm[Take[ps["Signs"], UpTo[n]], Map[Take[#, UpTo[n]] &, ps["Tableau"], {2}], False]
 
