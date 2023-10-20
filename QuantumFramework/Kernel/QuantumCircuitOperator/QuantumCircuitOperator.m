@@ -4,7 +4,6 @@ PackageExport["QuantumCircuitOperator"]
 
 PackageScope["QuantumCircuitOperatorQ"]
 PackageScope["BarrierQ"]
-PackageScope["circuitElementPosition"]
 PackageScope["FromCircuitOperatorShorthand"]
 
 
@@ -21,11 +20,6 @@ QuantumCircuitOperatorQ[QuantumCircuitOperator[KeyValuePattern[{"Elements" -> el
     ]
 
 QuantumCircuitOperatorQ[___] := False
-
-circuitElementPosition["Barrier", from_, to_] := Range[to - from + 1]
-circuitElementPosition["Barrier"[order_ ? orderQ], from_, to_] := Select[order, Between[{from, to}]] - from + 1
-circuitElementPosition["Barrier"[span : Span[_Integer, _Integer | All]], from_, to_] := Range @@ (Replace[List @@ span, {x_Integer :> Clip[x, {from ,to}], All -> to}, {1}] - from + 1)
-circuitElementPosition[op_, from_, _] := Union @@ op["Order"] - from + 1
 
 
 (* constructors *)
@@ -153,11 +147,17 @@ Part[qco_QuantumCircuitOperator, part_] ^:= QuantumCircuitOperator[qco["Elements
 QuantumCircuitOperator[qc_ ? QuantumCircuitOperatorQ, order_ ? orderQ] := With[{
     repl = Thread[qc["InputOrder"] -> Take[Join[order, Drop[qc["InputOrder"], UpTo[Length[order]]]], UpTo[Length[qc["InputOrder"]]]]]
 },
+    QuantumCircuitOperator[qc, {qc["OutputOrder"] /. repl, order}]
+]
+
+QuantumCircuitOperator[qc_ ? QuantumCircuitOperatorQ, {outOrder_ ? orderQ, inOrder_ ? orderQ}] := With[{
+    outRepl = Thread[qc["OutputOrder"] -> Take[Join[outOrder, Drop[qc["OutputOrder"], UpTo[Length[outOrder]]]], UpTo[Length[qc["OutputOrder"]]]]],
+    inRepl = Thread[qc["InputOrder"] -> Take[Join[inOrder, Drop[qc["InputOrder"], UpTo[Length[inOrder]]]], UpTo[Length[qc["InputOrder"]]]]]
+},
     QuantumCircuitOperator[
         Which[
-            BarrierQ[#], # /. repl,
-            QuantumCircuitOperatorQ[#], QuantumCircuitOperator[#, order],
-            True, Head[#][#, #["Order"] /. repl]
+            BarrierQ[#], # /. inRepl,
+            True, Head[#][#, {#["OutputOrder"] /. outRepl, #["InputOrder"] /. inRepl}]
         ] & /@ qc["Elements"],
         qc["Label"]
     ]

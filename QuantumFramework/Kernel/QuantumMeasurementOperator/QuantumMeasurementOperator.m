@@ -133,6 +133,12 @@ QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOpe
 
 (* mutation *)
 
+QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, order : _ ? autoOrderQ, args___] := With[{
+    op = QuantumOperator[qmo["QuantumOperator"], order]
+},
+    QuantumMeasurementOperator[op, Replace[qmo["Target"], Thread[qmo["InputOrder"] -> op["InputOrder"]], {1}], args]
+]
+
 QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args : PatternSequence[Except[_ ? targetQ], ___]] :=
     QuantumMeasurementOperator[QuantumOperator[qmo["Operator"], args], qmo["Target"]]
 

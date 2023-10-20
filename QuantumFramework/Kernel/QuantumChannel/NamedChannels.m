@@ -10,8 +10,8 @@ $QuantumChannelNames = {
     "PhaseDamping", "ResetError"
 }
 
-quantumChannel[qo_ ? QuantumOperatorQ] := QuantumChannel @
-    QuantumOperator[
+quantumChannel[qo_ ? QuantumOperatorQ] := Enclose @ QuantumChannel @
+    Confirm @ QuantumOperator[
         qo,
         {
             Prepend[qo["InputOrder"], Last[Complement[Range[Min[1, qo["InputOrder"]] - 1, 0], Select[qo["InputOrder"], NonPositive]], 0]],
@@ -21,10 +21,10 @@ quantumChannel[qo_ ? QuantumOperatorQ] := QuantumChannel @
             qo["Output"]["Representations"]
     ]
 
-quantumChannel[ops_List, order : _ ? orderQ : {1}, basisArgs___] := With[{
+quantumChannel[ops_List, order : _ ? orderQ : {1}, basisArgs___] := Enclose @ With[{
     basis = QuantumBasis[basisArgs]
 },
-    quantumChannel @ QuantumOperator[
+    quantumChannel @ Confirm @ QuantumOperator[
         QuantumState[
             Flatten[kroneckerProduct @@@ Tuples[ops, Length[order]]],
             QuantumTensorProduct[

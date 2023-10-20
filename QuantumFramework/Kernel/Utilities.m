@@ -65,7 +65,7 @@ orderQ[order_] := VectorQ[order, IntegerQ] && DuplicateFreeQ[order]
 
 autoOrderQ[order_] := MatchQ[order, _ ? orderQ | Automatic | {_ ? orderQ | Automatic, _ ? orderQ | Automatic}]
 
-targetQ[target_] := VectorQ[target, IntegerQ]
+targetQ[target_] := VectorQ[target, IntegerQ] && AllTrue[target, Positive]
 
 measurementReprQ[state_] := TensorQ[state] && MemberQ[{2, 3}, TensorRank[state]]
 
