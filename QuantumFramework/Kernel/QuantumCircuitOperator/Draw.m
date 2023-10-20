@@ -682,7 +682,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 				QuantumMeasurementOperatorQ[#1] || QuantumMeasurementQ[#1],
 				drawMeasurement[#2, #1["Eigendimensions"], max, "ShowMeasurementWire" -> showMeasurementWireQ, "ShowExtraQudits" -> extraQuditsQ, "ThickWire" -> #["MatrixQ"], FilterRules[{opts}, Options[drawMeasurement]]],
 				QuantumChannelQ[#1],
-				drawMeasurement[#2, {#1["InputDimension"]}, max, "ShowMeasurementWire" -> False,
+				drawMeasurement[#2, #1["TraceDimensions"], max, "ShowMeasurementWire" -> False,
 					"MeasurementBackgroundStyle" -> Replace["Channel", $GateDefaultBackgroundStyle], "MeasurementBoundaryStyle" -> Directive[Dotted, Replace["Channel", $GateDefaultBoundaryStyle]],
 					"ShowExtraQudits" -> extraQuditsQ, "ThickWire" -> #["MatrixQ"], "Label" -> #1["Label"], "RotateGateLabel" -> False,
 					FilterRules[{opts}, Options[drawMeasurement]]

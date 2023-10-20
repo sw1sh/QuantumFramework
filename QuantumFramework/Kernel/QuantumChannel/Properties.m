@@ -5,7 +5,7 @@ Package["Wolfram`QuantumFramework`"]
 $QuantumChannelProperties = {
     "QuantumOperator",
     "Operator",
-    "TraceOrder", "TraceQudits",
+    "TraceOrder", "TraceQudits", "TraceDimensions",
     "Trace",
     "TracePreservingQ"
 };
@@ -43,6 +43,8 @@ QuantumChannelProp[_[op_], "Operator" | "QuantumOperator"] := op
 
 
 QuantumChannelProp[qc_, "TraceOrder"] := Select[qc["FullOutputOrder"], NonPositive]
+
+QuantumChannelProp[qc_, "TraceDimensions"] := MapThread[If[Positive[#1], Nothing, #2] &, {qc["FullOutputOrder"], qc["OutputDimensions"]}]
 
 QuantumChannelProp[qc_, "TraceQudits"] := Length @ qc["TraceOrder"]
 
