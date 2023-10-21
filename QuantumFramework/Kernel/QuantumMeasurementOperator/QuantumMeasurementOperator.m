@@ -85,7 +85,7 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target : _ ? targetQ, args__]
 QuantumMeasurementOperator[tensor_ ? TensorQ /; TensorRank[tensor] == 3, target : (_ ? targetQ) : {1}, args___] :=
     QuantumMeasurementOperator[
         With[{op = QuantumOperator[MatrixFunction[Sqrt, #] & /@ tensor, args, "Label" -> "Eigen"]},
-            QuantumOperator[op, {Prepend[# - Min[#] + 1 & @ Drop[op["OutputOrder"], 1], 0], op["InputOrder"]}]
+            QuantumOperator[op["State"], {Prepend[#, 0], #} & @ Join[target, Drop[Drop[Union @@ op["Order"], Length[target]], 1]]]
         ],
         target
     ]
@@ -103,7 +103,7 @@ QuantumMeasurementOperator[ops : {_ ? QuantumOperatorQ..}, target : (_ ? targetQ
     And @@ (#["InputDimension"] == #["OutputDimension"] & /@ ops) :=
     QuantumMeasurementOperator[
         With[{op = StackQuantumOperators[Sqrt /@ ops]},
-            QuantumOperator[op, {Prepend[If[Equal @@ Through[ops["OutputOrder"]], Identity, # - Min[#] + 1 &] @ Drop[op["OutputOrder"], 1], 0], op["InputOrder"]}, args]
+            QuantumOperator[op["State"], {Prepend[#, 0], #} & @ Join[target, Drop[Drop[Union @@ op["Order"], Length[target]], 1]], args]
         ],
         target
     ]
@@ -172,7 +172,7 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qs_ ? QuantumStateQ] :=
     QuantumMeasurement[qmo[QuantumOperator[qs]]["Sort"]]
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[] := qmo[QuantumOperator[QuantumState[{"Register", qmo["InputDimensions"]}], {} -> qmo["InputOrder"]]]
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[] := QuantumMeasurement @ qmo[QuantumOperator[QuantumState[{"Register", qmo["InputDimensions"]}], {} -> qmo["InputOrder"]]]
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qo_ ? QuantumOperatorQ] := Enclose @ With[{
     top = qmo["SuperOperator"]["Sort"], bot = qo["Sort"]
