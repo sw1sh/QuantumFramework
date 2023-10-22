@@ -243,7 +243,7 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
 Options[TensorNetworkCompile] = {"Trace" -> False}
 
 TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ Block[{
-    circuit = qco, net, bendQ, transpose, order, res,
+    circuit = qco["Computational"], net, bendQ, transpose, order, res,
     traceOrder, eigenOrder
 },
     traceOrder = circuit["TraceOrder"];
@@ -267,11 +267,8 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
     ];
     res = With[{basis = circuit["Basis"]},
         QuantumState[
-            QuantumState[
-                SparseArrayFlatten[res],
-                QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
-            ],
-            circuit["Basis"]
+            SparseArrayFlatten[res],
+            QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
         ]
     ];
     If[ TrueQ[OptionValue["Trace"]] && traceOrder =!= {} && ! bendQ,
@@ -287,7 +284,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
         ];
         res = res["Unbend"]
     ];
-
+    res = QuantumState[res, qco["Basis"]];
     res = Which[
         eigenOrder =!= {},
         QuantumMeasurementOperator[QuantumOperator[res, order], qco["Target"]],

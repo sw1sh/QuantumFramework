@@ -514,8 +514,7 @@ QuantumOperator["Hadamard" | "H", opts___]  := QuantumOperator[{"H"}, opts]
 
 QuantumOperator[{"Hadamard" | "H", dim : _Integer ? NonNegative : 2}, order : _ ? orderQ : {1}, opts___] :=
     QuantumOperator[
-        {"Fourier", dim},
-        order,
+        {"Fourier", dim} -> order,
         opts,
         "Label" -> If[Length[order] > 1, Superscript["H", CircleTimes[Length[order]]], "H"]
     ]

@@ -166,13 +166,13 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
 
         qmo["Operator"],
 
-        tracedOperator = QuantumPartialTrace[
+        tracedOperator = FullSimplify @ QuantumPartialTrace[
             qmo,
             If[qmo["POVMQ"], {# + qmo["OutputQudits"] - qmo["InputQudits"], #} & /@ trace, trace]
         ];
 
-        {eigenvalues, eigenvectors} = profile["Eigensystem"] @ tracedOperator["Eigensystem", "Sort" -> True];
-        projectors = tracedOperator["Projectors", "Sort" -> True];
+        {eigenvalues, eigenvectors} = profile["Eigensystem"] @ FullSimplify @ tracedOperator["Eigensystem", "Sort" -> True];
+        projectors = FullSimplify /@ Normal /@ tracedOperator["Projectors", "Sort" -> True];
 
         eigenBasis = QuditBasis[
             MapIndexed[
@@ -215,14 +215,14 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
         ];
 
         (* permute and set order *)
-        QuantumOperator[
+        FullSimplify @ QuantumOperator[
             operator[
                 "PermuteOutput", InversePermutation @ FindPermutation[Prepend[1 + Join[traceQudits, qmo["Target"] - Min[qmo["InputOrder"]] + 1], 1]]
             ][
                 "PermuteInput", InversePermutation @ FindPermutation[Join[traceQudits, qmo["Target"] - Min[qmo["InputOrder"]] + 1]]
             ],
             {Prepend[Sort @ qmo["OutputOrder"], 0], Sort @ qmo["InputOrder"]}
-        ]["Simplify"]
+        ]
     ]
 ]
 
@@ -254,7 +254,7 @@ QuantumMeasurementOperatorProp[qmo_, "CircuitDiagram", opts___] :=
 
 (* operator properties *)
 
-QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | "Sort" | "SortOutput" | "SortInput" | "Computational" | "Simplify", args___] :=
+QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | "Sort" | "SortOutput" | "SortInput" | "Computational" | "Simplify" | "FullSimplify", args___] :=
     QuantumMeasurementOperator[qmo["QuantumOperator"][prop, args], qmo["Target"]]
 
 QuantumMeasurementOperatorProp[qmo_, prop : "Dagger", args___] :=

@@ -368,7 +368,7 @@ Enclose @ Block[{
             "ParameterSpec" -> MergeParameterSpecs[top, bot]
         ]
     ];
-    tensor = ConfirmQuiet[
+    tensor = ConfirmBy[
         If[
             top["VectorQ"] && bot["VectorQ"],
             SparseArrayFlatten @ EinsteinSummation[
@@ -379,11 +379,12 @@ Enclose @ Block[{
                 EinsteinSummation[
                     {Join[fullTopOut, 3 @@@ fullTopOut, fullTopIn, 4 @@@ fullTopIn], Join[fullBotOut, 4 @@@ fullBotOut, fullBotIn, 3 @@@ fullBotIn]} ->
                         Join[out, in, Join[3 @@@ topOut, 4 @@@ Cases[fullBotOut, 1[_]]], Join[4 @@@ Cases[fullTopIn, 2[_]], 3 @@@ botIn]],
-                    {If[top["VectorQ"], top["State"]["Double"], top]["TensorRepresentation"], If[bot["VectorQ"], bot["State"]["Double"], bot]["TensorRepresentation"]}
+                    {If[top["VectorQ"], top["Computational"]["State"]["Double"], top]["TensorRepresentation"], If[bot["VectorQ"], bot["Computational"]["State"]["Double"], bot]["TensorRepresentation"]}
                 ],
                 Table[basis["Dimension"], 2]
             ]
-        ]
+        ],
+        TensorQ
     ];
     QuantumOperator[
         QuantumState[
