@@ -623,7 +623,7 @@ QuantumOperator[{"Spider", args_, phase_ : 0}, opts___] := QuantumOperator[{"Spi
 QuantumOperator[{"Spider", basis_ ? QuantumBasisQ, phase_ : 0}, opts___] := Block[{
     phases, dims = Catenate[Table @@@ Catenate[FactorInteger[#] & /@ basis["Dimensions"]]], dim
 },
-    dim = Max[dims];
+    dim = Max[dims, 1];
     phases = Prepend[0] @ PadRight[Flatten[{phase}], dim - 1];
     QuantumOperator[
         QuantumState[
