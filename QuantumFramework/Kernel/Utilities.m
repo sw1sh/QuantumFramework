@@ -156,7 +156,7 @@ eigensystem[matrix_, OptionsPattern[]] := Module[{values, vectors},
         Eigensystem[matrix] &
     ];
     If[ TrueQ[OptionValue["Sort"]], With[{ordering = OrderingBy[values, {Abs[#], Mod[Arg[#], 2 Pi]} &]}, values = values[[ordering]]; vectors = vectors[[ordering]]]];
-    If[ TrueQ[OptionValue["Normalize"]], vectors = Normalize /@ vectors];
+    If[ TrueQ[OptionValue["Normalize"]], vectors = Normalize[If[First[#] != 0, # / First[#], #]] & /@ vectors];
 
     {values, vectors}
 ]

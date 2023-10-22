@@ -40,11 +40,11 @@ QuantumState[s_String /; StringMatchQ[s, DigitCharacter..], dim : (_Integer ? Po
 
 QuantumState["Plus" | "+", args___] := QuantumState[Normalize @ {1, 1}, args, "Label" -> "+"]
 
-QuantumState["Minus" | "-", args___] := QuantumState[Normalize @ {-1, 1}, args, "Label" -> "-"]
+QuantumState["Minus" | "-", args___] := QuantumState[Normalize @ {1, -1}, args, "Label" -> "-"]
 
-QuantumState["Left" | "L", args___] := QuantumState[Normalize @ {I, 1}, args, "Label" -> "L"]
+QuantumState["Left" | "L" | "-i", args___] := QuantumState[Normalize @ {1, -I}, args, "Label" -> "L"]
 
-QuantumState["Right" | "R", args___] := QuantumState[Normalize @ {-I, 1}, args, "Label" -> "R"]
+QuantumState["Right" | "R" | "+i", args___] := QuantumState[Normalize @ {1, I}, args, "Label" -> "R"]
 
 QuantumState[s_String /; StringMatchQ[s, ("0" | "1" | "+" | "-" | "L" | "R") ..], args___] :=
     QuantumState[QuantumTensorProduct[QuantumState /@ Characters[s]], args]
