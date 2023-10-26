@@ -164,15 +164,19 @@ TensorNetworkIndexGraph[net_Graph ? (TensorNetworkQ[True]), opts : OptionsPatter
 Options[QuantumTensorNetwork] = Join[{"PrependInitial" -> True}, Options[Graph]]
 
 QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
-    width, min, ops, orders, vertices, edges, tensors
+    width, min, ops, orders, arity, vertices, edges, tensors
 },
 	ConfirmAssert[AllTrue[qc["Operators"], #["Order"] === #["FullOrder"] &]];
     width = qc["Width"];
     min = qc["Min"];
     ops = Through[qc["NormalOperators"]["Computational"]];
-    PrependTo[ops, QuantumOperator[QuantumState[{1}, PadLeft[qc["InputDimensions"], qc["Arity"], 2], "Label" -> "Initial"], qc["InputOrder"]]];
+    arity = qc["Arity"];
+    MapThread[
+        PrependTo[ops, QuantumOperator[QuantumState[{1}, #2, "Label" -> "0"], {#1}]] &,
+        {qc["InputOrder"], PadLeft[qc["InputDimensions"], arity, 2]}
+    ];
 	orders = #["Order"] & /@ ops;
-    vertices = Range[Length[ops]] - 1;
+    vertices = Range[Length[ops]] - arity;
 	edges = Catenate @ FoldPairList[
 		{nprev, order} |-> Block[{output, input, n, prev, next, indices},
             {n, prev} = nprev;
@@ -183,12 +187,12 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
             indices = {Superscript[prev[[# - min + 1]], #], Subscript[next[[# - min + 1]], #]} & /@ input;
 			{Thread[DirectedEdge[prev[[ input - min + 1 ]], next[[ input - min + 1]], indices]], {n, next}}
 		],
-		{0, Table[0, width]},
-		Rest @ orders
+		{1 - arity, Table[1 - arity, width]},
+		Rest[orders]
 	];
 	tensors = #["Tensor"] & /@ ops;
 	ConfirmBy[
-        If[TrueQ[OptionValue["PrependInitial"]] && qc["Arity"] > 0, Identity, VertexDelete[#, 0] &] @ Graph[
+        If[TrueQ[OptionValue["PrependInitial"]] && qc["Arity"] > 0, Identity, VertexDelete[#, _ ? NonPositive] &] @ Graph[
             vertices,
             edges,
             FilterRules[{opts}, Options[Graph]],
