@@ -106,8 +106,8 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			index = First /@ PositionIndex[target];
 			{
 				Replace[subLabel, {
-					subSubLabels_CircleTimes :> With[{
-						labels = Catenate @ Replace[List @@ subSubLabels, {Superscript[subSubLabel_, CircleTimes[n_Integer]] :> Table[subSubLabel, n], subSubLabel_ :> {subSubLabel}}, {1}]
+					subSubLabels : _CircleTimes | _Composition :> With[{
+						labels = labelList[subSubLabels]
 					},
 						{
 							With[{boundaryStyles = Replace[labels, gateBoundaryStyle, {1}]},
@@ -116,7 +116,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 									boundaryStyle = First[boundaryStyles];
 								]
 							];
-							MapThread[drawGate[{{#}, hpos}, dims, labels[[index[#]]], opts] &, target],
+							Map[drawGate[{{#}, hpos}, dims, labels[[index[#]]], opts] &, target],
 							drawControlWires[#, {If[MemberQ[target, #[[1]]], labels[[index[#[[1]]]]], "1"], If[MemberQ[target, #[[2]]], labels[[index[#[[2]]]]], "1"]}] & /@ Partition[Sort[vpos], 2, 1]
 						} /; Length[labels] == Length[target]
 					],
@@ -624,7 +624,6 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	level = Max[OptionValue["SubcircuitLevel"]],
 	hGapSize = OptionValue["HorizontalGapSize"],
 	height,
-	labels = #["Label"] & /@ circuit["Operators"],
 	positions,
 	gatePositions,
 	wires,
@@ -709,9 +708,9 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 
 
 
-circuitElementPosition["Barrier", from_, to_] := Range[to - from + 1]
-circuitElementPosition["Barrier"[order_ ? orderQ], from_, to_] := Select[order, Between[{from, to}]] - from + 1
-circuitElementPosition["Barrier"[span : Span[_Integer, _Integer | All]], from_, to_] := Range @@ (Replace[List @@ span, {x_Integer :> Clip[x, {from ,to}], All -> to}, {1}] - from + 1)
+circuitElementPosition["Barrier", from_, to_, ___] := Range[to - from + 1]
+circuitElementPosition["Barrier"[order_ ? orderQ], from_, to_, ___] := Select[order, Between[{from, to}]] - from + 1
+circuitElementPosition["Barrier"[span : Span[_Integer, _Integer | All]], from_, to_, ___] := Range @@ (Replace[List @@ span, {x_Integer :> Clip[x, {from ,to}], All -> to}, {1}] - from + 1)
 circuitElementPosition[order_List, from_, _] := Union[Flatten[order]] - from + 1
 circuitElementPosition[op_, from_, to_] := circuitElementPosition[op["Order"], from, to]
 circuitElementPosition[op_, from_, to_, showExtraQuditsQ_] := With[{order = op["Order"]},

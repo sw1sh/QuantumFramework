@@ -350,13 +350,14 @@ QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ /; qo["ControlOrder"
 QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}}, opts___] := Enclose @ With[{
     controls1 = Length[control1],
     controls0 = Length[control0],
-    control = Join[control0, control1]
+    control = Join[control0, control1],
+    op = qo["Sort"]
 },
     (*ConfirmAssert[! IntersectingQ[qo["Order"], control], "Target and control qudits shouldn't intersect"];*)
     QuantumOperator[
         blockDiagonalMatrix[{
             identityMatrix[(2 ^ controls1 - 1) qo["MatrixNameDimensions"]],
-            qo["Matrix"],
+            op["Matrix"],
             identityMatrix[(2 ^ controls0 - 1) 2 ^ controls1 qo["MatrixNameDimensions"]]
         }],
         With[{order = Join @@ NestWhile[
@@ -367,19 +368,19 @@ QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orde
                         {Join[#1, rhs], DeleteElements[#2, lhs]}
                     ] &
                 ],
-                {control, Sort[#]},
+                {control, #},
                 Apply[IntersectingQ]
-            ] & /@ qo["Order"]
+            ] & /@ op["Order"]
         },
             order
         ],
         QuantumTensorProduct[
             QuantumBasis[QuditBasis[2, controls1], QuditBasis[2, controls1]],
             QuantumBasis[QuditBasis[2, controls0], QuditBasis[2, controls0]],
-            qo["Basis"]
+            op["Basis"]
         ],
         opts,
-        "Label" -> Subscript["C", qo["Label"]][control1, control0]
+        "Label" -> Subscript["C", op["Label"]][control1, control0]
     ]
 ]
 

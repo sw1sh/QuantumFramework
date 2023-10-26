@@ -64,10 +64,12 @@ QuantumCircuitOperatorProp[qco_, "NormalOperators", elements_ : False] :=
             QuantumChannel[#, #2],
             QuantumCircuitOperatorQ[#],
             QuantumCircuitOperator[#["Normal"], #2],
+            QuantumOperatorQ[#],
+            #["Reorder", #2, False],
             True,
-            QuantumOperator[#, #2]
+            #
         ] &,
-        {qco[If[elements, "FullElements", "Operators"]], qco["NormalOrders", elements]}
+        {#[If[elements, "FullElements", "Operators"]], #["NormalOrders", elements]} & @ qco["Sort"]
     ]
 
 

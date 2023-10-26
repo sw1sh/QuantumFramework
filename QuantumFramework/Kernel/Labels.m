@@ -3,6 +3,10 @@ Package["Wolfram`QuantumFramework`"]
 PackageExport["QuantumShortcut"]
 
 PackageScope["simplifyLabel"]
+PackageScope["expandLabel"]
+PackageScope["collectLabel"]
+PackageScope["labelList"]
+PackageScope["sortLabel"]
 
 
 
@@ -34,6 +38,23 @@ simplifyLabel[l_] := Replace[l, {
     (h : conj)[(h : conj)[label_]] :> simplifyLabel[label]
 }]
 
+expandLabel[label_CircleTimes] := Flatten[expandLabel /@ label, Infinity, CircleTimes]
+expandLabel[Superscript[subLabel_, CircleTimes[n_Integer]]] := CircleTimes @@ ConstantArray[expandLabel[subLabel], n]
+expandLabel[label_] := label
+
+collectLabel[label_] := Replace[label, ct_CircleTimes :> CircleTimes @@ SequenceReplace[List @@ ct, xs : {Repeated[x_, {2, Infinity}]} :> Superscript[x, CircleTimes[Length[xs]]]]]
+
+labelList[label_] := Replace[
+    expandLabel[label], {
+        ct_CircleTimes :> Catenate[labelList /@ List @@ ct],
+        c_Composition :>  Catenate[labelList /@ List @@ c],
+        l_ :> {l}
+    }
+]
+
+sortLabel[label_, order_] := With[{subLabels = labelList[label]},
+    If[Length[subLabels] == Length[order], CircleTimes @@ subLabels[[Ordering[order]]], label]
+]
 
 QuantumShortcut[qo_QuantumOperator] := Replace[
     QuantumShortcut[qo["Label"], First[qo["Dimensions"], 1], qo["Order"]],
