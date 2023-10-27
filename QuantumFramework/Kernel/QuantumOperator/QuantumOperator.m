@@ -418,6 +418,15 @@ expandQuditBasis[qb_QuditBasis, order1_ ? orderQ, order2_ ? orderQ, defaultDim_I
 
 matrixFunction[f_, mat_] := Enclose[Quiet @ ConfirmBy[MatrixFunction[f, mat, Method -> "Jordan"], MatrixQ], MatrixFunction[f, mat] &]
 
+QuantumOperator /: HoldPattern[Plus[x : Except[_QuantumOperator], qo_QuantumOperator]] /; NumericQ[Unevaluated[x]] := With[{op = qo["Sort"]},
+    QuantumOperator[
+        Plus[DiagonalMatrix[ConstantArray[x, Min[op["MatrixNameDimensions"]], SparseArray], 0, op["MatrixNameDimensions"]], op["Matrix"]],
+        op["Order"],
+        op["Basis"],
+        "Label" -> x + op["Label"]
+    ]
+]
+
 QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator] ...] /; MemberQ[Attributes[f], NumericFunction] := With[{op = qo["Sort"]},
     Enclose @ QuantumOperator[
         ConfirmBy[
