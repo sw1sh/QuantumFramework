@@ -42,33 +42,33 @@ PauliStabilizer[data : KeyValuePattern[{"Matrix" -> mat_}]] := PauliStabilizer[<
 PauliStabilizer[data : KeyValuePattern[{"Tableau" -> t_}]] /; ! KeyExistsQ[data, "Signs"] := PauliStabilizer[<|"Signs" -> ConstantArray[1, Dimensions[t][[3]]], "Tableau" -> t|>]
 
 firstIndex[row_] := Replace[FirstPosition[Normal[row], x_ /; Abs[x] == 1, {1}, Heads -> False], {i_} :> i - 1]
-bitvector[x_, n_] := Reverse @ IntegerDigits[x, 2, n]
+bitvector[x_, n_, d_ : 2] := Reverse @ IntegerDigits[x, d, n]
 
-PauliRow[mat_ ? MatrixQ, n_Integer ? Positive] := Enclose @ Block[{xint, xbits, zbits, entries, positivePhase, phase, coef},
+PauliRow[mat_ ? MatrixQ, n_Integer ? Positive, d : _Integer ? Positive : 2] := Enclose @ Block[{xint, xbits, zbits, entries, positivePhase, phase, coef},
 	xint = Confirm @ firstIndex[mat[[1]]];
-	xbits = bitvector[xint, n];
+	xbits = bitvector[xint, n, d];
 	entries = MapIndexed[
 		With[{i = #2[[1]] - 1, index = Confirm @ firstIndex[#1]},
-			ConfirmAssert[index == BitXor[xint, i] && MemberQ[{1, -1, I, -I}, #1[[index + 1]]]];
+			ConfirmAssert[bitvector[index, n, d] == Mod[xbits + bitvector[i, n, d], d] && MemberQ[Table[Exp[I a 2 Pi], {a, 0, 1 - 1 / 2 / d, 1 / 2 / d}], #1[[index + 1]]]];
 			#1[[index + 1]]
 		] &,
 		mat
 	];
 
-	zbits = Confirm @ Replace[entries[[2 ^ # + 1]] / entries[[1]], {1 -> 0, -1 -> 1, _ -> Missing[]}] & /@ Range[0, n - 1];
-	positivePhase = (-I) ^ Inner[BitAnd, xbits, zbits];
+	zbits = Confirm @ Replace[entries[[d ^ # + 1]] / entries[[1]], {1 -> 0, -1 -> 1, _ -> Missing[]}] & /@ Range[0, n - 1];
+	positivePhase = (-I) ^ Inner[Mod[#1 #2, d] &, xbits, zbits];
 	phase = Confirm @ Which[positivePhase == entries[[1]], 0, positivePhase == - entries[[1]], 1, True, Missing[]];
 	coef = ((-1) ^ phase) positivePhase;
-	ConfirmAssert[entries == Flatten[coef kroneckerProduct @@ Replace[Reverse[zbits], {1 -> {1, -1}, 0 -> {1, 1}}, {1}]]];
+	ConfirmAssert[entries == Flatten[coef kroneckerProduct @@ Replace[Reverse[zbits], {1 -> Diagonal[pauliMatrix[3, d]], 0 -> ConstantArray[1, d]}, {1}]]];
 
 	(* Reverse bit convention *)
 	Join[Reverse[xbits], Reverse[zbits], {phase}]
 ]
 
-QuantumOperatorTableau[qo_QuantumOperator] /; qo["InputQudits"] == qo["OutputQudits"] := Enclose @ With[{n = qo["InputQudits"]},
+QuantumOperatorTableau[qo_QuantumOperator] /; qo["InputQudits"] == qo["OutputQudits"] && Equal @@ qo["Dimensions"] := Enclose @ With[{n = qo["InputQudits"], d = First @ qo["Dimensions"]},
 	Join[
-		Confirm @ PauliRow[(qo @ QuantumOperator["X" -> #] @ qo["Dagger"])["Matrix"], n] & /@ Sort[qo["InputOrder"]],
-		Confirm @ PauliRow[(qo @ QuantumOperator["Z" -> #] @ qo["Dagger"])["Matrix"], n] & /@ Sort[qo["InputOrder"]]
+		Confirm @ PauliRow[(qo @ QuantumOperator[{"X", d} -> #] @ qo["Dagger"])["Matrix"], n, d] & /@ Sort[qo["InputOrder"]],
+		Confirm @ PauliRow[(qo @ QuantumOperator[{"Z", d} -> #] @ qo["Dagger"])["Matrix"], n, d] & /@ Sort[qo["InputOrder"]]
 	]
 ]
 FromFullTableau[t_] := PauliStabilizer[<|"Signs" -> 1 - 2 t[[All, -1]], "Tableau" -> Transpose[ArrayReshape[t[[All, ;; -2]], {Length[t], 2, Length[t] / 2}], {3, 1, 2}]|>]
@@ -417,6 +417,8 @@ PauliStabilizerApply[qco_QuantumCircuitOperator, qs : _QuantumState | _PauliStab
 qo_QuantumOperator[ps_PauliStabilizer] ^:= PauliStabilizerApply[QuantumCircuitOperator[qo], ps]
 qmo_QuantumMeasurementOperator[ps_PauliStabilizer] ^:= PauliStabilizerApply[QuantumCircuitOperator[qmo], ps]
 QuantumState[ps_PauliStabilizer] ^:= ps["State"]
+QuantumCircuitOperator[ps_PauliStabilizer] := ps["Circuit"]
+QuantumOperator[ps_PauliStabilizer] := ps["Circuit"]["QuantumOperator"]
 
 
 (* forms *)
