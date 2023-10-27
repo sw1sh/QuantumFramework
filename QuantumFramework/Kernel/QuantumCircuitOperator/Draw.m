@@ -246,7 +246,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 				{i, vposIn}
 			]
 		},
-		"1" :> {
+		"1" /; vposIn === vposOut :> {
 			wireStyle,
 			wireThickness[Replace[First[vposIn], inDims]],
 			Line[{center - {size / 2, 0}, center - {size / 8, 0}}],
@@ -255,7 +255,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			FaceForm[Replace["1", gateBackgroundStyle]],
 			Disk[center, size / 8]
 		},
-		"0" :> {
+		"0" /; vposIn === vposOut :> {
 			wireStyle,
 			wireThickness[Replace[First[vposIn], inDims]],
 			Line[{center - {size / 2, 0}, center - {size / 8, 0}}],

@@ -74,10 +74,10 @@ QuantumState[{"BasisState", basisElement_List : {1}}, dimension : (_Integer ? Po
 ]
 
 
-QuantumState[{"Register", subsystemCount : _Integer ? Positive, state : _Integer ? NonNegative : 0}, dimension : (_Integer ? Positive), args___] :=
-    QuantumState[SparseArray[{{state + 1} -> 1}, {dimension ^ subsystemCount}], Table[dimension, Max[subsystemCount, 1]], "Label" -> state, args]
+QuantumState[{"Register", subsystemCount : _Integer ? Positive : 1, state : _Integer ? NonNegative : 0}, dimension : (_Integer ? Positive), args___] :=
+    QuantumState[SparseArray[{{state + 1} -> 1}, {dimension ^ subsystemCount}], Table[dimension, Max[subsystemCount, 1]], args, "Label" -> state]
 
-QuantumState[{"Register", subsystemCount: _Integer ? Positive, state : _Integer ? NonNegative : 0}, args___] :=
+QuantumState[{"Register", subsystemCount: _Integer ? Positive : 1, state : _Integer ? NonNegative : 0}, args___] :=
     QuantumState[SparseArray[{{state + 1} -> 1}, {2 ^ subsystemCount}], args, "Label" -> state]
 
 QuantumState[{"Register", 0, ___}, args___] := QuantumState[1, 1, args]
@@ -205,4 +205,6 @@ QuantumState[{"Dicke", k_}, args___] /; VectorQ[k, IntegerQ[#] && NonNegative[#]
 QuantumState[SuperDagger[arg_], opts___] := QuantumState[arg, opts]["Dagger"]
 
 QuantumState[name_String[args___], opts___] := QuantumState[{name, args}, opts]
+
+QuantumState[name_String, opts___] := QuantumState[{name}, opts]
 

@@ -96,7 +96,8 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qs_ ? QuantumStateQ, opts : OptionsPattern[quantumCircuitApply]] :=
     With[{result = quantumCircuitApply[
         qco /* QuantumCircuitOperator["I" -> # & /@ qco["FreeOrder"]],
-        If[# === {}, qs, QuantumTensorProduct[qs, QuantumState[{"Register", #}]]] & @ ConstantArray[2, Max[0, Length[qco["FullInputOrder"]] - qs["OutputQudits"]]],
+        If[# === {}, qs, QuantumTensorProduct[qs, QuantumState[{"Register", #}]]] & @
+            ConstantArray[2, Max[0, Length[qco["FullInputOrder"]] - qs["OutputQudits"]]],
         opts
     ]},
         result /; ! FailureQ[result] || Message[QuantumCircuitOperator::fail, result]
@@ -105,7 +106,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[quantumCircuitApply]] := If[
     OptionValue[{opts}, Method] === "Stabilizer",
     PauliStabilizerApply[qco, Automatic],
-    qco[QuantumState[{"Register", ReplacePart[ConstantArray[2, qco["Arity"]], Thread[qco["InputOrder"] - Min[qco["InputOrder"]] + 1 -> qco["InputDimensions"]]]}], opts]
+    (QuantumCircuitOperator[MapThread[QuantumState["Register", #2, "Label" -> Ket[{"0"}]] -> {#1} &, {qco["InputOrder"], qco["InputDimensions"]}]] /* qco)[QuantumState[1, 1]]
 ]
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qm_QuantumMeasurement, opts : OptionsPattern[]] :=

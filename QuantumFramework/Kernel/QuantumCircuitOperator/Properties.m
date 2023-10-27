@@ -66,6 +66,8 @@ QuantumCircuitOperatorProp[qco_, "NormalOperators", elements_ : False] :=
             QuantumCircuitOperator[#["Normal"], #2],
             QuantumOperatorQ[#],
             #["Reorder", #2, False],
+            QuantumStateQ[#],
+            QuantumOperator[#, #2],
             True,
             #
         ] &,
