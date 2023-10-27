@@ -42,7 +42,10 @@ expandLabel[label_CircleTimes] := Flatten[expandLabel /@ label, Infinity, Circle
 expandLabel[Superscript[subLabel_, CircleTimes[n_Integer]]] := CircleTimes @@ ConstantArray[expandLabel[subLabel], n]
 expandLabel[label_] := label
 
-collectLabel[label_] := Replace[label, ct_CircleTimes :> CircleTimes @@ SequenceReplace[List @@ ct, xs : {Repeated[x_, {2, Infinity}]} :> Superscript[x, CircleTimes[Length[xs]]]]]
+collectLabel[label_] := Replace[label, {
+    CircleTimes[x_] :> x,
+    ct_CircleTimes :> CircleTimes @@ SequenceReplace[List @@ ct, xs : {Repeated[x_, {2, Infinity}]} :> Superscript[x, CircleTimes[Length[xs]]]]
+}]
 
 labelList[label_] := Replace[
     expandLabel[label], {
