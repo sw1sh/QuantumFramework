@@ -5,6 +5,7 @@ PackageExport["FromTensorNetwork"]
 PackageExport["TensorNetworkQ"]
 PackageExport["ContractTensorNetwork"]
 PackageExport["TensorNetworkFreeIndices"]
+PackageExport["TensorNetworkAdd"]
 
 PackageScope["TensorNetworkIndexDimensions"]
 PackageScope["InitializeTensorNetwork"]
@@ -132,7 +133,7 @@ ContractTensorNetwork[net_Graph ? (TensorNetworkQ[True]), OptionsPattern[]] := S
 
 
 TensorNetworkFreeIndices[net_Graph ? TensorNetworkQ] :=
-    SortBy[Last] @ DeleteCases[Join @@ AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Index"], Alternatives @@ Union @@ EdgeTags[net]]
+    SortBy[Replace[{Superscript[_, x_] :> {0, x}, Subscript[_, x_] :> {1, x}}]] @ DeleteCases[Join @@ AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Index"], Alternatives @@ Union @@ EdgeTags[net]]
 
 
 TensorNetworkIndexDimensions[net_Graph ? TensorNetworkQ] :=
@@ -140,16 +141,50 @@ TensorNetworkIndexDimensions[net_Graph ? TensorNetworkQ] :=
 
 
 InitializeTensorNetwork[net_Graph ? TensorNetworkQ, tensor_ ? TensorQ, index_List : Automatic] := Annotate[
-    {net, 0},
+    {
+        EdgeAdd[
+            VertexDelete[net, _ ? NonPositive],
+            MapIndexed[
+                Replace[#1, DirectedEdge[_, i_, {_, to_}] :> DirectedEdge[0, i, {Superscript[0, #2[[1]]], to}]] &,
+                EdgeList[net, DirectedEdge[_ ? NonPositive, __]]
+            ]
+        ],
+        0
+    },
     {
         "Tensor" -> tensor,
-        "Index" -> Replace[index, Automatic :> With[{
-                oldIndex = AnnotationValue[{net, 0}, "Index"]
-            },
-                Join[oldIndex, Take[Subscript @@@ oldIndex, UpTo[Max[0, TensorRank[tensor] - Length[oldIndex]]]]]
-            ]
-        ]
+        "Index" -> Replace[index, Automatic :> (Superscript[0, #] & /@ Range[TensorRank[tensor]])],
+        VertexLabels -> "Initial"
     }
+]
+
+TensorNetworkAdd[net_Graph ? TensorNetworkQ, tensor_ ? TensorQ, index : _List | Automatic : Automatic] := TensorNetworkAdd[net, Labeled[tensor, None], index]
+
+TensorNetworkAdd[net_Graph ? TensorNetworkQ, Labeled[tensor_ ? TensorQ, label_ : None], autoIndex : _List | Automatic : Automatic] := Enclose @ With[{
+    newVertex = Max[VertexList[net]] + 1,
+    toIndex = Replace[autoIndex, Automatic :> Take[SortBy[TensorNetworkFreeIndices[net], Replace[{Superscript[_, x_] :> {1, x}, Subscript[_, x_] :> {0, x}}]], UpTo[TensorRank[tensor]]]]
+},
+{
+    index = Join[
+        Superscript[newVertex, #] & /@ Range[Length[toIndex]],
+        Subscript[newVertex, #] & /@ Range[TensorRank[tensor] - Length[toIndex]]
+    ]
+},
+    ConfirmAssert[TensorRank[tensor] == Length[index]];
+    Annotate[
+        {
+            EdgeAdd[
+                net,
+                MapThread[DirectedEdge[newVertex, First[#2], {#1, #2}] &, {Take[index, UpTo[Length[toIndex]]], toIndex}]
+            ],
+            newVertex
+        },
+        {
+            "Tensor" -> tensor,
+            "Index" -> index,
+            VertexLabels -> label
+        }
+    ]
 ]
 
 VertexCompleteGraph[vs_List] := With[{n = Length[vs]}, AdjacencyGraph[vs, SparseArray[Band[{1, 1}] -> 0, {n, n}, 1]]]
@@ -247,7 +282,7 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
 Options[TensorNetworkCompile] = {}
 
 TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ Block[{
-    circuit = qco["Computational"], net, bendQ, transpose, order, res,
+    circuit = qco["Computational"], net, bendQ, order, res,
     traceOrder, eigenOrder, basis = qco["Basis"]
 },
     traceOrder = circuit["TraceOrder"];
@@ -263,11 +298,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
         ]
     ];
     net = ConfirmBy[circuit["TensorNetwork", "PrependInitial" -> False], TensorNetworkQ];
-    transpose = Ordering @ OrderingBy[TensorNetworkFreeIndices[net], Replace[{Superscript[_, x_] :> {0, x}, Subscript[_, x_] :> {1, x}}]];
     res = Confirm @ ContractTensorNetwork[net];
-    If[ transpose =!= {},
-        res = Transpose[res, transpose]
-    ];
     res = With[{basis = circuit["Basis"]},
         QuantumState[
             SparseArrayFlatten[res],
@@ -276,9 +307,9 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
     ];
     If[ traceOrder =!= {},
         If[ bendQ,
-            basis = QuantumPartialTrace[basis, traceOrder - Min[traceOrder] + 1],
+            basis = QuantumPartialTrace[basis, traceOrder - qco["Min"] + 1],
 
-            res = QuantumPartialTrace[res, traceOrder - circuit["Min"] + 1]
+            res = QuantumPartialTrace[res, traceOrder - qco["Min"] + 1]
         ];
         order = {DeleteElements[order[[1]], traceOrder], order[[2]]};
     ];
