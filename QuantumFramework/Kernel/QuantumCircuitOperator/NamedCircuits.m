@@ -311,8 +311,8 @@ QuantumCircuitOperator[{"Bell", n : _Integer : 0}, opts___]  :=
 
 QuantumCircuitOperator[{"Toffoli", n : _Integer : 0}, opts___] := QuantumCircuitOperator[
     {
-        "H" -> 3, SuperDagger["T"] -> 3, "CNOT" -> {2, 3}, "CNOT" -> {1, 3}, "T" -> 3, "CNOT" -> {2, 3}, SuperDagger["T"] -> 3, "CNOT" -> {1, 3},
-        SuperDagger["T"] -> 2, "T" -> 3, "H" -> 3, "CNOT" -> {1, 2}, SuperDagger["T"] -> 2,  "CNOT" -> {1, 2}, "T" -> 1, "S" -> 2
+        "H" -> 3, "CNOT" -> {2, 3}, SuperDagger["T"] -> 3, "CNOT" -> {1, 3}, "T" -> 3, "CNOT" -> {2, 3}, SuperDagger["T"] -> 3, "CNOT" -> {1, 3},
+        "T" -> 2, "T" -> 3, "H" -> 3, "CNOT" -> {1, 2},  "T" -> 1, SuperDagger["T"] -> 2, "CNOT" -> {1, 2}
     },
     opts,
     "Toffoli"
