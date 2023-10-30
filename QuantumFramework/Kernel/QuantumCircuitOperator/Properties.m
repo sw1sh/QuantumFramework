@@ -63,7 +63,7 @@ QuantumCircuitOperatorProp[qco_, "NormalOperators", elements_ : False] :=
             QuantumChannelQ[#],
             QuantumChannel[#, #2],
             QuantumCircuitOperatorQ[#],
-            QuantumCircuitOperator[#["Normal"], #2],
+            #["Normal"],
             QuantumOperatorQ[#],
             #["Reorder", #2, False],
             QuantumStateQ[#],
@@ -256,7 +256,7 @@ QuantumCircuitOperatorProp[qco_, "Flatten", n : _Integer ? NonNegative | Infinit
         qco["Label"]
     ]
 
-QuantumCircuitOperatorProp[qco_, "Sort"] := QuantumCircuitOperator[#["Sort"] & /@ qco["Operators"]]
+QuantumCircuitOperatorProp[qco_, "Sort"] := QuantumCircuitOperator[If[BarrierQ[#], #, #["Sort"]] & /@ qco["Elements"], qco["Label"]]
 
 
 QuantumCircuitOperatorProp[qco_, "Shift", n : _Integer : 1] :=
@@ -275,7 +275,7 @@ QuantumCircuitOperatorProp[qco_, prop : "Simplify" | "FullSimplify" | "Computati
 
 QuantumCircuitOperatorProp[qco_, "Bend"] := QuantumCircuitOperator[
     Map[
-        If[#["MatrixQ"], #["Bend", qco["Max"]], Splice[{#, #["Conjugate"]["Shift", qco["Max"]]}]] &,
+        If[#["MatrixQ"], #["Bend", qco["Max"]], Splice[{#, #["Conjugate"]["Shift", qco["Max"] - Max[qco["TraceOrder"], qco["Eigenorder"]]]}]] &,
         qco["Operators"]
     ],
     qco["Label"]
