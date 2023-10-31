@@ -65,9 +65,19 @@ QuantumEvolve[
     param = If[numericQ, parameterSpec, parameter];
     If[TrueQ[OptionValue["ReturnEquations"]], Return[{equations, return, param}]];
 
-    (* hide sparse arrays over delayed definitions, initial condition is always dense *)
+    (* hide sparse arrays over delayed definitions and inject numeric paratemer, initial condition is always dense *)
     Module[{frhs},
-        frhs[s_ ? ArrayQ, t_] := Evaluate[rhs /. {\[FormalS][_] -> s, f_InterpolatingFunction[_] :> f[t]}];
+        Block[{s, t},
+            With[{
+                def = rhs /. {
+                    \[FormalS][_] -> s,
+                    f_InterpolatingFunction[_] :> f[t],
+                    parameter -> t
+                }
+            },
+                SetDelayed @@ Hold[frhs[s_ ? ArrayQ, t_], Unevaluated[def] /. sa_SparseArray ? SparseArrayQ :> Map[ReplaceAll[parameter -> t], sa, {-1}]]
+            ]
+        ];
         equations = Join[
             {
                 \[FormalS]'[parameter] == frhs[\[FormalS][parameter], parameter],
