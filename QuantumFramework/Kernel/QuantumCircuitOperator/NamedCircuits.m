@@ -483,7 +483,7 @@ QuantumCircuitOperator[{"Trotterization", opArgs_ : {"X", "Y", "Z"}, args___}, o
     ]
 ]
 
-QuantumCircuitOperator["Magic", opts___] := QuantumCircuitOperator[{"S" -> {1, 2}, "H" -> {2}, "CNOT" -> {2, 1}}, opts]
+QuantumCircuitOperator["Magic", opts___] := QuantumCircuitOperator[{"S" -> 1, "S" -> 2, "H" -> 2, "CNOT" -> {2, 1}}, opts]
 
 
 QuantumCircuitOperator[{"Multiplexer"| "Multiplexor"}, opts___] := QuantumCircuitOperator[{"Multiplexer", "X", "Y", "Z"}, opts]
