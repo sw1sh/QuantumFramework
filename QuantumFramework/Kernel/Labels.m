@@ -65,7 +65,7 @@ sortLabel[label_, order_] := collectLabel @ With[{subLabels = labelList[label]},
 QuantumShortcut[qo_QuantumOperator] := Replace[
     QuantumShortcut[qo["Label"], First[qo["Dimensions"], 1], qo["Order"]],
     {
-        _Missing /; qo["Dimensions"] === {2, 2} && MatrixQ[qo["Matrix"], NumericQ] :> QuantumShortcut[qo["ZYZ"]],
+        _Missing /; qo["Dimensions"] === {2, 2} && MatrixQ[qo["Matrix"], NumericQ] && MatchQ[qo["Order"], {{_}, {_}}] :> QuantumShortcut[qo["ZYZ"]],
         _Missing :> {Labeled[qo["Matrix"] -> qo["Order"], qo["Label"]]}
     }
 ]
