@@ -87,8 +87,16 @@ QuantumOperator[arg_, inputOrder : _ ? orderQ | Automatic -> outputOrder : _ ? o
 QuantumOperator["Identity" | "I", order : _ ? orderQ | Automatic, opts___] :=
     QuantumOperator[{"Identity", Table[2, If[order === Automatic, 1, Length[order]]]}, order, opts]
 
-QuantumOperator[{"Identity" | "I", dims : {_Integer ? Positive ..}}, args___] := QuantumOperator[
+QuantumOperator["Identity" | "I", order : {outOrder : _ ? orderQ | Automatic, inOrder : _ ? orderQ | Automatic}, opts___] :=
+    QuantumOperator[{"Identity", Table[2, If[outOrder === Automatic, 1, Length[outOrder]]], Table[2, If[inOrder === Automatic, 1, Length[inOrder]]]}, order, opts]
+
+QuantumOperator[{"Identity" | "I", dims : {_Integer ? Positive ...}}, args___] := QuantumOperator[
     QuantumState[SparseArrayFlatten @ identityMatrix[Times @@ dims], QuantumBasis[QuditBasis[dims], QuditBasis[dims], "Label" -> "I"]],
+    args
+]
+
+QuantumOperator[{"Identity" | "I", outDims : {_Integer ? Positive ...}, inDims : {_Integer ? Positive ...}}, args___] := Enclose @ QuantumOperator[
+    QuantumState[SparseArrayFlatten @ identityMatrix[ConfirmBy[Sqrt[Times @@ Join[outDims, inDims]], IntegerQ]], QuantumBasis[QuditBasis[outDims], QuditBasis[inDims], "Label" -> "I"]],
     args
 ]
 
@@ -97,8 +105,15 @@ QuantumOperator[{"Identity" | "I", qb_ ? QuditBasisQ}, args___] := QuantumOperat
     "Output" -> qb, "Input" -> qb["Dual"]
 ]
 
+QuantumOperator[{"Identity" | "I", qb_ ? QuantumBasisQ}, args___] :=
+    QuantumOperator[{"Identity", qb["OutputDimensions"], qb["InputDimensions"]}, args]
+
 QuantumOperator[{"Identity" | "I", params__}, opts___] :=
-    Enclose @ QuantumOperator[{"Identity", ConfirmBy[QuditBasis[params], QuditBasisQ]}, opts]
+    Enclose @ QuantumOperator[{"Identity", ConfirmBy[QuantumBasis[params], QuantumBasisQ]}, opts]
+
+QuantumOperator[{"Identity" | "I", dim_Integer ? Positive}, opts___] :=
+    Enclose @ QuantumOperator[{"Identity", {dim}}, opts]
+
 
 
 QuantumOperator[name : "XRotation" | "YRotation" | "ZRotation" | "RX" | "RY" | "RZ", opts___] :=  QuantumOperator[{name, Pi / 2}, opts]
