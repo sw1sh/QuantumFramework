@@ -127,8 +127,6 @@ PauliStabilizer["9QubitCode1"] := PauliStabilizer[{"ZZIIIIIII", "IZZIIIIII", "II
 
 PauliStabilizer[] := PauliStabilizer[1]
 
-PauliStabilizer[shortcut : _String | (_String -> _ ? orderQ | _Integer) | _List] := PauliStabilizer[QuantumCircuitOperator[shortcut]]
-
 
 (* random *)
 
@@ -170,6 +168,9 @@ RandomClifford[n_] := Block[{h, perm, gamma1, delta1, gamma2, delta2, zero, prod
 ]
 
 PauliStabilizer["Random", n : _Integer ? Positive : 5] := RandomClifford[n]
+
+
+PauliStabilizer[shortcut : _String | (_String -> _ ? orderQ | _Integer) | _List] := PauliStabilizer[QuantumCircuitOperator[shortcut]]
 
 
 (* properties & methods *)
