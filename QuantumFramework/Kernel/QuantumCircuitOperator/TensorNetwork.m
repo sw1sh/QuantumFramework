@@ -166,7 +166,7 @@ TensorNetworkAdd[net_Graph ? TensorNetworkQ, Labeled[tensor_ ? TensorQ, label_ :
 },
 {
     index = Join[
-        Superscript[newVertex, #] & /@ Range[Length[toIndex]],
+        Replace[toIndex, {Superscript[_, q_] :> Subscript[newVertex, q], Subscript[_, q_] :> Superscript[newVertex, q]}, {1}],
         Subscript[newVertex, #] & /@ Range[TensorRank[tensor] - Length[toIndex]]
     ]
 },
@@ -175,7 +175,10 @@ TensorNetworkAdd[net_Graph ? TensorNetworkQ, Labeled[tensor_ ? TensorQ, label_ :
         {
             EdgeAdd[
                 net,
-                MapThread[DirectedEdge[newVertex, First[#2], {#1, #2}] &, {Take[index, UpTo[Length[toIndex]]], toIndex}]
+                MapThread[
+                    If[MatchQ[#1, _Superscript], DirectedEdge[newVertex, First[#2], {#1, #2}], DirectedEdge[First[#2], newVertex, {#2, #1}]] &,
+                    {Take[index, UpTo[Length[toIndex]]], toIndex}
+                ]
             ],
             newVertex
         },
@@ -393,4 +396,37 @@ FromTensorNetwork[net_ /; DirectedGraphQ[net] && AcyclicGraphQ[net], OptionsPatt
 		AnnotationValue[{net, vs}, "Tensor"]
 	]
 ]
+
+FromTensorNetwork[net_ /; DirectedGraphQ[net], opts : OptionsPattern[{Method -> "Random"}]] :=
+    Enclose @ FromTensorNetwork[Confirm @ RemoveTensorNetworkCycles[net], opts]
+
+
+RemoveTensorNetworkCycles[inputNet_ ? TensorNetworkQ, opts : OptionsPattern[Graph]] := Enclose @ Block[{cycles = FindCycle[net, Infinity, All], net = inputNet, id, q, edge, cup, cap, cupIndex, capIndex, dim},
+	id = Max[VertexList[net]] + 1;
+	q = Min[EdgeTags[net][[All, All, 2]]] - 1;
+
+	Do[
+		edge = cycle[[-1]];
+		cup = id++;
+		cap = id++;
+		net = EdgeDelete[net, edge];
+		net = VertexAdd[net, {cap, cup}];
+		cupIndex = {Superscript[cup, q], Superscript[cup, edge[[3, 2, 2]]]};
+		capIndex = {Subscript[cap, q], Subscript[cap, edge[[3, 1, 2]]]};
+		net = EdgeAdd[net, {
+			DirectedEdge[cup, cap, {cupIndex[[1]], capIndex[[1]]}],
+			DirectedEdge[cup, edge[[2]], {cupIndex[[2]], edge[[3, 2]]}],
+			DirectedEdge[edge[[1]], cap, {edge[[3, 1]], capIndex[[2]]}]
+		}];
+		dim = Dimensions[AnnotationValue[{net, edge[[1]]}, "Tensor"]][[ Confirm @ Lookup[PositionIndex[AnnotationValue[{net, edge[[1]]}, "Index"]], edge[[3, 1]], $Failed, First] ]];
+
+		net = Annotate[{net, cup}, {"Index" -> cupIndex, "Tensor" -> QuantumOperator["Cup"[dim]]["Tensor"], VertexLabels -> "Cup"}];
+		net = Annotate[{net, cap}, {"Index" -> capIndex, "Tensor" -> QuantumOperator["Cap"[dim]]["Tensor"], VertexLabels -> "Cap"}];
+
+		,
+		{cycle, cycles}
+	];
+	Graph[net, opts]
+]
+
 
