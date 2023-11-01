@@ -275,7 +275,7 @@ QuantumCircuitOperatorProp[qco_, prop : "Simplify" | "FullSimplify" | "Computati
 
 QuantumCircuitOperatorProp[qco_, "Bend"] := QuantumCircuitOperator[
     Map[
-        If[#["MatrixQ"], #["Bend", qco["Max"]], Splice[{#, #["Conjugate"]["Shift", qco["Max"] - Max[qco["TraceOrder"], qco["Eigenorder"]]]}]] &,
+        If[#["MatrixQ"], #["Bend", qco["Max"]], Splice[{#, #["Conjugate"]["Shift", qco["Max"] - Max[qco["TraceOrder"], qco["Eigenorder"], 0]]}]] &,
         qco["Operators"]
     ],
     qco["Label"]
