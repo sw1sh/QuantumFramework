@@ -37,7 +37,8 @@ QuantumEvolve[
         parameterSpec = Replace[defaultParameter, _Symbol :> {parameter, 0, 1}]
     ];
     numericQ = MatchQ[defaultParameter, {_Symbol, _ ? NumericQ, _ ? NumericQ}];
-    matrix = Confirm @ MergeInterpolatingFunctions[hamiltonian["Matrix"] / I];
+    (* TrigToExp helps with some examples *)
+    matrix = TrigToExp @ Confirm @ MergeInterpolatingFunctions[hamiltonian["Matrix"] / I];
     method = If[numericQ, NDSolveValue, DSolveValue];
     rhs = If[
         defaultState === None || state["VectorQ"],
@@ -66,27 +67,29 @@ QuantumEvolve[
     If[TrueQ[OptionValue["ReturnEquations"]], Return[{equations, return, param}]];
 
     (* hide sparse arrays over delayed definitions and inject numeric paratemer, initial condition is always dense *)
-    Module[{frhs},
-        Block[{s, t},
-            With[{
-                def = rhs /. {
-                    \[FormalS][_] -> s,
-                    f_InterpolatingFunction[_] :> f[t],
-                    parameter -> t
-                }
-            },
-                SetDelayed @@ Hold[frhs[s_ ? ArrayQ, t_], Unevaluated[def] /. sa_SparseArray ? SparseArrayQ :> Map[ReplaceAll[parameter -> t], sa, {-1}]]
+    If[ numericQ,
+        Module[{frhs},
+            Block[{s, t},
+                With[{
+                    def = rhs /. {
+                        \[FormalS][_] -> s,
+                        f_InterpolatingFunction[_] :> f[t],
+                        parameter -> t
+                    }
+                },
+                    SetDelayed @@ Hold[frhs[s_ ? ArrayQ, t_], Unevaluated[def] /. sa_SparseArray ? SparseArrayQ :> Map[ReplaceAll[parameter -> t], sa, {-1}]]
+                ]
+            ];
+            equations = Join[
+                {
+                    \[FormalS]'[parameter] == frhs[\[FormalS][parameter], parameter],
+                    \[FormalS][0] == Normal[init]
+                },
+                Flatten[{OptionValue["AdditionalEquations"]}]
             ]
-        ];
-        equations = Join[
-            {
-                \[FormalS]'[parameter] == frhs[\[FormalS][parameter], parameter],
-                \[FormalS][0] == Normal[init]
-            },
-            Flatten[{OptionValue["AdditionalEquations"]}]
-        ]
+        ],
+        equations = equations /. sa_SparseArray ? SparseArrayQ :> Normal[sa]
     ];
-
     Unprotect[\[FormalS]];
     solution = method[
         equations,
