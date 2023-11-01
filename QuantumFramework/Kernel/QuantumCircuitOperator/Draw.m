@@ -309,7 +309,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			wireStyle,
 			MapThread[{wireThickness[Replace[#1, inDims]], Line[{{center[[1]] - size / 2, - #1 vGapSize}, {center[[1]] + size / 2, - #2 vGapSize}}]} &, {vposIn, vposOut[[{perm}]]}]
 		},
-		"PhaseShift"[n_] | n_Integer /; Length[vpos] == 1 :> {
+		"PhaseShift"[n_] /; Length[vpos] == 1 :> {
 			EdgeForm[Replace[label, gateBoundaryStyle]],
 			FaceForm[Replace[label, gateBackgroundStyle]],
 			Disk[center, size / 2],

@@ -3,12 +3,7 @@ Package["Wolfram`QuantumFramework`"]
 
 
 QuantumCircuitOperator /: MakeBoxes[qco_QuantumCircuitOperator, TraditionalForm] /; QuantumCircuitOperatorQ[qco] :=
-    With[{diagram = TooltipBox[
-            ToBoxes[qco["Diagram"], StandardForm],
-            ToBoxes[
-                Row[{"QuantumCircuitOperator: ", <|"Depth" -> qco["Depth"], "Width" -> qco["Width"]|>}]
-            ]]
-    },
+    With[{diagram = ToBoxes[qco["Diagram"], StandardForm]},
         InterpretationBox[diagram, qco]
     ]
 
@@ -22,7 +17,8 @@ BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
     {{}},
     {
         {
-            BoxForm`SummaryItem[{"Gates: ", qco["GateCount"]}]
+            BoxForm`SummaryItem[{"Gates: ", qco["GateCount"]}],
+            BoxForm`SummaryItem[{"Depth: ", qco["Depth"]}]
         },
         {
             BoxForm`SummaryItem[{"Dimensions: ", qco["InputDimension"] -> qco["OutputDimension"]}]
@@ -31,7 +27,7 @@ BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
             BoxForm`SummaryItem[{"Order: ", qco["InputOrder"] -> qco["OutputOrder"]}]
         },
         {
-            BoxForm`SummaryItem[{"Target: ", qco["Target"]}]
+            BoxForm`SummaryItem[{"Measurement Target: ", qco["Target"]}]
         }
     },
     format
