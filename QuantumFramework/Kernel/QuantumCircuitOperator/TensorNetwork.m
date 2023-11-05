@@ -4,6 +4,8 @@ PackageExport["TensorNetworkIndexGraph"]
 PackageExport["FromTensorNetwork"]
 PackageExport["TensorNetworkQ"]
 PackageExport["ContractTensorNetwork"]
+PackageExport["TensorNetworkIndices"]
+PackageExport["TensorNetworkTensors"]
 PackageExport["TensorNetworkFreeIndices"]
 PackageExport["TensorNetworkAdd"]
 PackageExport["RemoveTensorNetworkCycles"]
@@ -109,8 +111,8 @@ NaiveContractTensorNetwork[net_Graph] := Enclose @ Module[{g, edges},
 
 FastContractTensorNetwork[net_Graph] := Enclose[
     Block[{indices, outIndices, tensors, scalarPositions, scalars},
-        indices = AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Index"] /. Rule @@@ EdgeTags[net];
-        tensors =  AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Tensor"];
+        indices = TensorNetworkIndices[net] /. Rule @@@ EdgeTags[net];
+        tensors =  TensorNetworkTensors[net];
         outIndices = TensorNetworkFreeIndices[net];
         If[MemberQ[tensors, {}], Return[ArrayReshape[{}, Append[Table[1, Length[outIndices] - 1], 0]]]];
         scalarPositions = Position[indices, {}, {1}, Heads -> False];
@@ -133,12 +135,17 @@ ContractTensorNetwork[net_Graph ? (TensorNetworkQ[True]), OptionsPattern[]] := S
 ]
 
 
+TensorNetworkIndices[net_Graph ? TensorNetworkQ] := AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Index"]
+
+TensorNetworkTensors[net_Graph ? TensorNetworkQ] := AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Tensor"]
+
+
 TensorNetworkFreeIndices[net_Graph ? TensorNetworkQ] :=
-    SortBy[Replace[{Superscript[_, x_] :> {0, x}, Subscript[_, x_] :> {1, x}}]] @ DeleteCases[Join @@ AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Index"], Alternatives @@ Union @@ EdgeTags[net]]
+    SortBy[Replace[{Superscript[_, x_] :> {0, x}, Subscript[_, x_] :> {1, x}}]] @ DeleteCases[Join @@ TensorNetworkIndices[net], Alternatives @@ Union @@ EdgeTags[net]]
 
 
 TensorNetworkIndexDimensions[net_Graph ? TensorNetworkQ] :=
-    Catenate @ MapThread[Thread[#2 -> Dimensions[#1]] &, AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, #] & /@ {"Tensor", "Index"}]
+    Catenate @ MapThread[Thread[#2 -> Dimensions[#1]] &, {TensorNetworkTensors[net], TensorNetworkIndices[net]}]
 
 
 InitializeTensorNetwork[net_Graph ? TensorNetworkQ, tensor_ ? TensorQ, index_List : Automatic] := Annotate[
@@ -195,12 +202,12 @@ VertexCompleteGraph[vs_List] := With[{n = Length[vs]}, AdjacencyGraph[vs, Sparse
 
 TensorNetworkIndexGraph[net_Graph ? (TensorNetworkQ[True]), opts : OptionsPattern[Graph]] := GraphUnion[
     DirectedEdge @@@ EdgeTags[net],
-    Sequence @@ (VertexCompleteGraph /@ AnnotationValue[{net, Developer`FromPackedArray[VertexList[net]]}, "Index"]),
+    Sequence @@ (VertexCompleteGraph /@ TensorNetworkIndices[net]),
     opts,
     VertexLabels -> Automatic
 ]
 
-Options[QuantumTensorNetwork] = Join[{"PrependInitial" -> True}, Options[Graph]]
+Options[QuantumTensorNetwork] = Join[{"PrependInitial" -> True, "Computational" -> True}, Options[Graph]]
 
 QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
     width, min, ops, orders, arity, vertices, edges, tensors
@@ -208,7 +215,8 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
 	ConfirmAssert[AllTrue[qc["Operators"], #["Order"] === #["FullOrder"] &]];
     width = qc["Width"];
     min = qc["Min"];
-    ops = Through[qc["NormalOperators"]["Computational"]];
+    ops = qc["NormalOperators"];
+    If[TrueQ[OptionValue["Computational"]], ops = Through[ops["Computational"]]];
     arity = qc["Arity"];
     MapThread[
         PrependTo[ops, QuantumOperator[QuantumState[{1}, #2, "Label" -> "0"], {#1}]] &,
