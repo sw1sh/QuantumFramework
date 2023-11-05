@@ -89,6 +89,8 @@ QuantumStateProp[qs_, "PhysicalQ"] := ! qs["UnknownQ"]
 
 QuantumStateProp[qs_, "NumericQ"] := ArrayQ[qs["State"], 1 | 2, NumericQ]
 
+QuantumStateProp[qs_, "NumberQ"] := ArrayQ[qs["State"], 1 | 2, MachineNumberQ]
+
 
 QuantumStateProp[qs_, "Kind"] := Which[
     qs["InputQudits"] === qs["OutputQudits"] === 0,
@@ -233,10 +235,12 @@ QuantumStateProp[qs_, "DensityMatrix"] /; qs["StateType"] === "Matrix" := qs["St
 
 QuantumStateProp[qs_, "DensityTensor"] := ArrayReshape[qs["DensityMatrix"], Join[qs["Dimensions"], qs["Dimensions"]]]
 
+QuantumStateProp[qs_, "DensityVector"] := SparseArrayFlatten[Transpose[ArrayReshape[qs["DensityMatrix"], Join[#, #] & @ qs["MatrixNameDimensions"]], {1, 3, 2, 4}]]
+
 QuantumStateProp[qs_, "Projector"] := QuantumState[Flatten @ qs["DensityMatrix"],
     QuantumBasis[qs["Basis"],
-        "Output" -> QuantumTensorProduct[qs["Output"], qs["Input"]],
-        "Input" -> QuantumTensorProduct[qs["Output"]["Dual"], qs["Input"]["Dual"]]]
+        "Output" -> QuantumTensorProduct[qs["Output"], qs["Input"]["Dual"]],
+        "Input" -> QuantumTensorProduct[qs["Output"]["Dual"], qs["Input"]]]
 ]
 
 QuantumStateProp[qs_, "NormalizedProjector"] := QuantumState[Flatten @ qs["NormalizedDensityMatrix"], QuantumBasis[qs["Basis"], "Input" -> qs["Output"]["Dual"]]]
@@ -486,24 +490,30 @@ QuantumStateProp[qs_, "Normalized" | "NormalizedState" | "Normalize"] :=
     QuantumState[If[qs["StateType"] === "Vector", qs["NormalizedStateVector"], qs["NormalizedDensityMatrix"]], qs["Basis"]]
 
 
-QuantumStateProp[qs_, "Bend"] := QuantumState[Flatten @ qs["DensityMatrix"], QuantumTensorProduct[qs["Basis"], qs["Basis"]], "Label" -> simplifyLabel[CircleTimes[qs["Label"], SuperStar[qs["Label"]]]]]
+QuantumStateProp[qs_, "Bend"] := QuantumState[qs["DensityVector"], QuantumTensorProduct[qs["Basis"], qs["Basis"]], "Label" -> simplifyLabel[CircleTimes[qs["Label"], SuperStar[qs["Label"]]]]]
 
-QuantumStateProp[qs_, "BendDual"] := QuantumState[Flatten @ qs["DensityMatrix"], QuantumTensorProduct[qs["Basis"], qs["Basis"]["Dual"]], "Label" -> simplifyLabel[CircleTimes[qs["Label"], SuperStar[qs["Label"]]]]]
+QuantumStateProp[qs_, "BendDual"] := QuantumState[qs["DensityVector"], QuantumTensorProduct[qs["Basis"], qs["Basis"]["Dual"]], "Label" -> simplifyLabel[CircleTimes[qs["Label"], SuperStar[qs["Label"]]]]]
 
 
 QuantumStateProp[qs_, "Double"] := If[qs["MatrixQ"], qs["Bend"], QuantumTensorProduct[qs, qs["Dual"]]]
 
 
-QuantumStateProp[qs_, "Unbend"] := Enclose @ Which[
-    qs["PureStateQ"] && IntegerQ[Sqrt[qs["Dimension"]]],
-    With[{dimension = Sqrt[qs["Dimension"]]},
+QuantumStateProp[qs_, "Unbend"] := Enclose @ With[{out = Sqrt[qs["OutputDimension"]], in = Sqrt[qs["InputDimension"]]},
+    If[
+        qs["PureStateQ"] && IntegerQ[out] && IntegerQ[in],
         QuantumState[
-            ArrayReshape[qs["StateVector"], Table[dimension, 2]],
-            QuantumBasis @ ConfirmBy[qs["QuditBasis"]["TakeDimension", dimension], QuditBasisQ]
-        ]
-    ],
-    True,
-    qs
+            ArrayReshape[
+                Transpose[ArrayReshape[qs["StateVector"], {out, out, in, in}], {1, 3, 2, 4}],
+                Table[out * in, 2]
+            ],
+            QuantumBasis[
+                "Output" -> ConfirmBy[qs["Output"]["TakeDimension", out], QuditBasisQ],
+                "Input" -> ConfirmBy[qs["Input"]["TakeDimension", in], QuditBasisQ],
+                qs["Basis"]["Meta"]
+            ]
+        ],
+        qs
+    ]
 ]
 
 QuantumStateProp[qs_, "Purify"] := Sqrt[qs]["Bend"]

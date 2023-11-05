@@ -1,6 +1,6 @@
 Package["Wolfram`QuantumFramework`"]
 
-PackageScope["symbolicTensorQ"]
+PackageScope["SymbolicQ"]
 PackageScope["basisMultiplicity"]
 PackageScope["nameQ"]
 PackageScope["propQ"]
@@ -45,8 +45,7 @@ PackageScope["profile"]
 
 (* *)
 
-symbolicTensorQ[a_] := MatchQ[a, _Symbol] || TensorQ[a] && AnyTrue[Level[a, {-1}], MatchQ[_Symbol]]
-
+SymbolicQ[expr_] := ! FreeQ[expr, sym_Symbol ? Developer`SymbolQ /; ! MemberQ[{Rational, Complex}, sym] && ! MemberQ[Attributes[sym], NumericFunction | Constant]]
 
 basisMultiplicity[dim_, size_] := Quiet[Replace[Ceiling @ Log[size, dim], Except[_Integer ? Positive] -> 1], {Divide::indet, Power::infy}]
 

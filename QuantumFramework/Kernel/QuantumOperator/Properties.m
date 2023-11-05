@@ -196,7 +196,7 @@ QuantumOperatorProp[qo_, "OrderedTensorRepresentation"] := qo["Ordered"]["Tensor
 
 QuantumOperatorProp[qo_, "MatrixQuantumState"] /; qo["OutputDimension"] == qo["InputDimension"] := QuantumState[qo["Matrix"], qo["Output"]]
 
-QuantumOperatorProp[qo_, "MatrixState"] := QuantumOperator[qo["State"]["MatrixState"], qo["Order"]]
+QuantumOperatorProp[qo_, prop : "MatrixState" | "VectorState"] := QuantumOperator[qo["State"][prop], qo["Order"]]
 
 QuantumOperatorProp[qo_, "PermuteInput", perm_Cycles] := QuantumOperator[
     qo["State"]["PermuteInput", perm],
@@ -507,7 +507,9 @@ QuantumOperatorProp[qo_, "TensorReverseInput", order_ ? orderQ] :=
 QuantumOperatorProp[qo_, "TensorReverseOutput", order_ ? orderQ] :=
     QuantumOperator[qo["State"]["TensorReverseOutput", order /. qo["OutputOrderQuditMapping"]], qo["Order"]]
 
-QuantumOperatorProp[qo_, "TraceNorm"] := qo["Unbend"]["TraceNorm"]
+QuantumOperatorProp[qo_, "Tr" | "Trace" | "TraceNorm" | "Norm"] := Tr[qo["Matrix"]]
+
+QuantumOperatorProp[qo_, "Normalize"] := qo / Abs[qo["Norm"]]
 
 QuantumOperatorProp[qo_, "PrimeBasis", outputQudit : _Integer | Automatic : Automatic, inputQudit : _Integer | Automatic : Automatic, opts___] :=
 With[{state = qo["State"]["PrimeBasis"]},
