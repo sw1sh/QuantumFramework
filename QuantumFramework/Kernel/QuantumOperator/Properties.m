@@ -489,16 +489,28 @@ QuantumOperatorProp[qo_, "Unbend"] :=
         QuantumOperator[qo["Sort"]["State"]["Unbend"], Take[Sort[#], Length[#] / 2] & /@ qo["Order"]]
     ]
 
-QuantumOperatorProp[qo_, "Double"] := Block[{min, max},
-    {min, max} = MinMax[qo["FullOrder"]];
+QuantumOperatorProp[qo_, "Double"] := With[{state = qo["State"]["Double"]},
     QuantumOperator[
-        QuantumCircuitOperator[{
-            Splice @ MapThread[{"Curry", {#2, #2}} -> {#1} -> {#1, max - min + #1 + 1} &, {qo["FullInputOrder"], qo["InputDimensions"]}],
-            qo, qo["Conjugate"]["Shift", max - min + 1],
-            Splice @ MapThread[{"Uncurry", {#2, #2}} -> {#1, max - min + #1 + 1} -> {#1} &, {qo["FullOutputOrder"], qo["OutputDimensions"]}]
-        }]["CircuitOperator"],
-        "Label" -> With[{label = Replace[qo["Label"], Interpretation[_, label_] :> label]}, Interpretation[Style[label, Bold], label]]
+        QuantumState[
+            state["State"],
+            QuantumBasis[
+                "Output" -> QuantumTensorProduct[Times @@@ Partition[state["Output"]["Decompose"], 2]],
+                "Input" -> QuantumTensorProduct[Times @@@ Partition[state["Input"]["Decompose"], 2]],
+                "Label" -> With[{label = Replace[qo["Label"], Interpretation[_, label_] :> label]}, Interpretation[Style[label, Bold], label]],
+                state["Basis"]["Meta"]
+            ]
+        ],
+        qo["Order"]
     ]
+]
+
+QuantumOperatorProp[qo_, "Undouble"] := Enclose @ QuantumOperator[
+    QuantumState[qo["State"], QuantumBasis[
+        Splice[{#, #}] & /@ ConfirmBy[Sqrt[qo["OutputDimensions"]], AllTrue[IntegerQ]],
+        Splice[{#, #}] & /@ ConfirmBy[Sqrt[qo["InputDimensions"]], AllTrue[IntegerQ]],
+        "Label" -> Replace[qo["Label"], Interpretation[_, label_] :> label]
+    ]]["Undouble"],
+    qo["Order"]
 ]
 
 QuantumOperatorProp[qo_, "TensorReverseInput", order_ ? orderQ] :=

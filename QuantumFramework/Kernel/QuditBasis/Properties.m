@@ -11,7 +11,7 @@ QuditBasis["Properties"] = {
     "MatrixDimensions", "TensorDimensions",
     "ElementsDimensions",
     "Matrix", "Tensor",
-    "Dual", "Reverse"
+    "Dual", "Conjugate", "Reverse"
 }
 
 
@@ -195,11 +195,18 @@ QuditBasisProp[qb_, "Projectors"] := Block[{x = qb["Elements"], y},
 
 QuditBasisProp[qb_, "Dual"] := QuditBasis @ KeyMap[MapAt[#["Dual"] &, 1], qb["Representations"]]
 
-QuditBasisProp[qb_, "Dual", qudits : {_Integer...}] := With[{index = Lookup[MapIndexed[First[#2] -> #1 &, qb["Index"]], qudits, Nothing]},
+QuditBasisProp[qb_, "Dual", qudits : {___Integer}] := With[{index = Lookup[MapIndexed[First[#2] -> #1 &, qb["Index"]], qudits, Nothing]},
     QuditBasis @ KeyMap[If[MemberQ[index, #[[2]]], MapAt[#["Dual"] &, #, 1], #] &, qb["Representations"]]
 ]
 
 QuditBasisProp[qb_, "DualQ"] := AllTrue[Keys[qb["Canonical"]["Representations"]][[All, 1]], #["DualQ"] &]
+
+
+QuditBasisProp[qb_, "Conjugate"] := QuditBasis[Conjugate /@ qb["Representations"]]
+
+QuditBasisProp[qb_, "Conjugate", qudits : {___Integer}] := With[{index = Lookup[MapIndexed[First[#2] -> #1 &, qb["Index"]], qudits, Nothing]},
+    QuditBasis @ Association @ KeyValueMap[#1 -> If[MemberQ[index, #1[[2]]], Conjugate[#2], #2] &, qb["Representations"]]
+]
 
 
 QuditBasisProp[qb_, "SortedQ"] := OrderedQ[Last /@ Keys @ qb["Representations"]]

@@ -160,6 +160,8 @@ QuantumStateProp[qs_, "Distribution"] := CategoricalDistribution[qs["Names"], qs
 
 QuantumStateProp[qs_, "Formula", OptionsPattern[]] /; qs["DegenerateStateQ"] := 0
 
+MinusBoxQ[boxes_] := MatchQ[boxes, RowBox[{"-" | _ ? MinusBoxQ, __}]]
+
 QuantumStateProp[qs_, "Formula", OptionsPattern["Normalize" -> False]] := RawBoxes @ With[{s = qs["Pure"]},
     If[ s["Dimension"] == 0, 0,
         With[{v = SparseArray @ s[If[TrueQ[OptionValue["Normalize"]], "NormalizedStateVector", "StateVector"]], d = s["InputDimension"]},
@@ -167,7 +169,7 @@ QuantumStateProp[qs_, "Formula", OptionsPattern["Normalize" -> False]] := RawBox
                 With[{coef = Replace[Parenthesize[#2, StandardForm, Plus], {
                     RowBox[{"-", "1"}] -> "-",
                     "1" :> If[#3 > 1, "+", Nothing],
-                    x : Except[RowBox[{"-", __}]] :> If[#3 > 1, Splice[{"+", x}], x]
+                    x : Except[_ ? MinusBoxQ] :> If[#3 > 1, Splice[{"+", x}], x]
                 }]},
                     RowBox[{coef, ToBoxes[#1, StandardForm]}]
                 ] &,
@@ -219,6 +221,8 @@ QuantumStateProp[qs_, "NormalizedStateVector"] := Normalize @ qs["StateVector"]
 
 QuantumStateProp[qs_, "CanonicalStateVector"] := qs["StateVector"] / First[SparseArray[Chop @ qs["StateVector"]]["ExplicitValues"], 1]
 
+QuantumStateProp[qs_, "CanonicalState"] := If[qs["PureStateQ"], QuantumState[qs["CanonicalStateVector"], qs["Basis"]], qs]
+
 QuantumStateProp[qs_, "NormalizedDensityMatrix"] := Quiet @ Enclose @ Confirm[normalizeMatrix @ qs["DensityMatrix"]]
 
 QuantumStateProp[qs_, "Operator", args___] := QuantumOperator[qs["Projector"], args]
@@ -235,7 +239,9 @@ QuantumStateProp[qs_, "DensityMatrix"] /; qs["StateType"] === "Matrix" := qs["St
 
 QuantumStateProp[qs_, "DensityTensor"] := ArrayReshape[qs["DensityMatrix"], Join[qs["Dimensions"], qs["Dimensions"]]]
 
-QuantumStateProp[qs_, "DensityVector"] := SparseArrayFlatten[Transpose[ArrayReshape[qs["DensityMatrix"], Join[#, #] & @ qs["MatrixNameDimensions"]], {1, 3, 2, 4}]]
+QuantumStateProp[qs_, "DensityMatrixTensor"] := ArrayReshape[qs["DensityMatrix"], Join[#, #] & @ qs["MatrixNameDimensions"]]
+
+QuantumStateProp[qs_, "DensityVector"] := SparseArrayFlatten @ Transpose[qs["DensityMatrixTensor"], 2 <-> 3]
 
 QuantumStateProp[qs_, "Projector"] := QuantumState[Flatten @ qs["DensityMatrix"],
     QuantumBasis[qs["Basis"],
@@ -495,15 +501,16 @@ QuantumStateProp[qs_, "Bend"] := QuantumState[qs["DensityVector"], QuantumTensor
 QuantumStateProp[qs_, "BendDual"] := QuantumState[qs["DensityVector"], QuantumTensorProduct[qs["Basis"], qs["Basis"]["Dual"]], "Label" -> simplifyLabel[CircleTimes[qs["Label"], SuperStar[qs["Label"]]]]]
 
 
-QuantumStateProp[qs_, "Double"] := If[qs["MatrixQ"], qs["Bend"], QuantumTensorProduct[qs, qs["Dual"]]]
-
+QuantumStateProp[qs_, "Double"] := With[{out = qs["OutputQudits"], in = qs["InputQudits"]},
+    qs["Bend"]["PermuteOutput", FindPermutation @ Riffle[Range[out], Range[out + 1, 2 out]]]["PermuteInput", FindPermutation @ Riffle[Range[in], Range[in + 1, 2 in]]]
+]
 
 QuantumStateProp[qs_, "Unbend"] := Enclose @ With[{out = Sqrt[qs["OutputDimension"]], in = Sqrt[qs["InputDimension"]]},
     If[
         qs["PureStateQ"] && IntegerQ[out] && IntegerQ[in],
         QuantumState[
             ArrayReshape[
-                Transpose[ArrayReshape[qs["StateVector"], {out, out, in, in}], {1, 3, 2, 4}],
+                Transpose[ArrayReshape[qs["StateVector"], {out, out, in, in}], 2 <-> 3],
                 Table[out * in, 2]
             ],
             QuantumBasis[
@@ -516,6 +523,10 @@ QuantumStateProp[qs_, "Unbend"] := Enclose @ With[{out = Sqrt[qs["OutputDimensio
     ]
 ]
 
+QuantumStateProp[qs_, "Undouble"] := Enclose @ With[{out = ConfirmBy[qs["OutputQudits"] / 2, IntegerQ], in = ConfirmBy[qs["InputQudits"] / 2, IntegerQ]},
+    qs["PermuteOutput", PermutationCycles @ Riffle[Range[out], Range[out + 1, 2 out]]]["PermuteInput", PermutationCycles @ Riffle[Range[in], Range[in + 1, 2 in]]]["Unbend"]
+]
+
 QuantumStateProp[qs_, "Purify"] := Sqrt[qs]["Bend"]
 
 QuantumStateProp[qs_, "Unpurify"] := qs["Unbend"] ^ 2
@@ -526,12 +537,12 @@ QuantumStateProp[qs_, "Pure"] := If[qs["PureStateQ"] || qs["DegenerateStateQ"], 
 QuantumStateProp[qs_, "Mixed"] := If[qs["MixedStateQ"], qs, qs["Unbend"]]
 
 
-QuantumStateProp[qs_, "VectorState"] := If[qs["StateType"] === "Vector", qs, QuantumState[qs["StateVector"], qs["Basis"]]]
+QuantumStateProp[qs_, "VectorState"] := If[qs["VectorQ"], qs, QuantumState[qs["StateVector"], qs["Basis"]]]
 
-QuantumStateProp[qs_, "MatrixState"] := If[qs["StateType"] === "Matrix", qs, QuantumState[qs["DensityMatrix"], qs["Basis"]]]
+QuantumStateProp[qs_, "MatrixState"] := If[qs["MatrixQ"], qs, QuantumState[qs["DensityMatrix"], qs["Basis"]]]
 
 QuantumStateProp[qs_, "Transpose"] := With[{qb = qs["Basis"]["Transpose"]},
-    QuantumState[If[qs["StateType"] === "Vector", Flatten, ArrayReshape[#, qb["MatrixDimensions"]] &] @ Transpose[qs["StateMatrix"]], qb]
+    QuantumState[If[qs["VectorQ"], SparseArrayFlatten @ Transpose[qs["StateMatrix"]], ArrayReshape[Transpose[qs["DensityMatrixTensor"], {2, 1, 4, 3}], qb["MatrixNameDimensions"] ^ 2]], qb]
 ]
 
 QuantumStateProp[qs_, "Transpose", qudits : {_Integer...}] := QuantumState[
@@ -555,17 +566,13 @@ QuantumStateProp[qs_, "Trace", qudits : {_Integer...}] := QuantumPartialTrace[qs
 QuantumStateProp[qs_, "Discard", qudits : {_Integer...}] /; ContainsOnly[qudits, Range[qs["OutputQudits"]]] :=
     QuantumOperator["Discard", qudits, qs["OutputDimensions"][[qudits]]][qs]
 
-QuantumStateProp[qs_, "Dual", args___] := QuantumState[Conjugate[qs["State"]], qs["Basis"]["Dual", args]]
+QuantumStateProp[qs_, "Dual"] := QuantumState[Conjugate[qs["State"]], qs["Basis"]["Dual"]]
 
-QuantumStateProp[qs_, "Conjugate"] := QuantumState[Conjugate[qs["State"]], qs["Basis"], "Label" -> simplifyLabel[SuperStar[qs["Label"]]]]
+QuantumStateProp[qs_, "Conjugate"] := QuantumState[Conjugate[qs["State"]], qs["Basis"]]
 
+QuantumStateProp[qs_, "Dual" | "Conjugate", args__] := QuantumState[qs["State"], qs["Basis"]["Conjugate", args]]
 
-QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := With[{qb = qs["Basis"]["ConjugateTranspose"]},
-    QuantumState[
-        If[qs["VectorQ"], Flatten @ Conjugate @ qs["Transpose"]["State"], ConjugateTranspose @ qs["State"]],
-        qb
-    ]
-]
+QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := QuantumState[qs["Conjugate"]["Transpose"], "Label" -> simplifyLabel[SuperDagger[qs["Label"]]]]
 
 QuantumStateProp[qs_, "Physical"] := If[qs["PhysicalQ"], qs,
 	Block[{d, u},
@@ -678,11 +685,7 @@ QuantumStateProp[qs_, "StateMatrix"] := If[
     qs["VectorQ"],
     ArrayReshape[qs["StateVector"], qs["MatrixNameDimensions"]],
     ArrayReshape[
-        Transpose[qs["StateTensor"], FindPermutation[
-            With[{input = Join[Range[qs["OutputQudits"]], qs["Qudits"] + Range[qs["OutputQudits"]]]},
-                Join[input, Complement[Range[2 qs["Qudits"]], input]]
-            ]
-        ]],
+        Transpose[ArrayReshape[qs["StateTensor"], Join[#, #] & @ qs["MatrixNameDimensions"]], 2 <-> 3],
         qs["MatrixNameDimensions"] ^ 2
     ]
 ]

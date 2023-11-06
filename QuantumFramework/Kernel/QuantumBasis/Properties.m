@@ -220,18 +220,18 @@ QuantumBasisProp[qb_, "PureMaps" | "PureOperators"] :=
         {i, qb["OutputDimension"]}, {j, qb["InputDimension"]}
     ]
 
-QuantumBasisProp[qb_, "Dual", out : {_Integer...}, in : {_Integer...}] :=
-    QuantumBasis[qb, "Output" -> qb["Output"]["Dual", out], "Input" -> qb["Input"]["Dual", in]]
+QuantumBasisProp[qb_, prop : "Dual" | "Conjugate", out : {___Integer}, in : {___Integer}] :=
+    QuantumBasis[qb, "Output" -> qb["Output"][prop, out], "Input" -> qb["Input"][prop, in], "Label" -> simplifyLabel[SuperStar[qb["Label"]]]]
 
-QuantumBasisProp[qb_, "Dual", qudits : {_Integer...}] :=
-    qb["Dual", Sequence @@ (MapAt[# - qb["OutputQudits"] &, 2] @ PadRight[GatherBy[qudits, LessEqualThan[qb["OutputQudits"]]], 2, {{}}])]
+QuantumBasisProp[qb_, prop: "Dual" | "Conjugate", qudits : {___Integer}] :=
+    qb[prop, Sequence @@ (MapAt[# - qb["OutputQudits"] &, 2] @ PadRight[GatherBy[qudits, LessEqualThan[qb["OutputQudits"]]], 2, {{}}])]
 
-QuantumBasisProp[qb_, "Dual"] := qb["Dual", Range[qb["Qudits"]]]
+QuantumBasisProp[qb_, prop : "Dual" | "Conjugate"] := qb[prop, Range[qb["Qudits"]]]
 
 
 QuantumBasisProp[qb_, "Transpose"] := QuantumBasis[qb,
-    "Input" -> qb["Output"], "Output" -> qb["Input"],
-    "Label" -> Superscript[qb["Label"], "T"]
+    "Input" -> qb["Output"]["Dual"], "Output" -> qb["Input"]["Dual"],
+    "Label" -> simplifyLabel[Superscript[qb["Label"], "T"]]
 ]
 
 QuantumBasisProp[qb_, "Permute", perm_Cycles] :=
@@ -263,7 +263,7 @@ QuantumBasisProp[qb_, "SplitDual", _] := qb["SplitDual", qb["Qudits"]]
 
 
 QuantumBasisProp[qb_, "Dagger" | "ConjugateTranspose"] := QuantumBasis[qb,
-    "Input" -> qb["Output"]["Dual"], "Output" -> qb["Input"]["Dual"],
+    "Input" -> qb["Output"]["Dual"]["Conjugate"], "Output" -> qb["Input"]["Dual"]["Conjugate"],
     "Label" -> simplifyLabel[SuperDagger[qb["Label"]]]
 ]
 

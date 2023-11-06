@@ -113,13 +113,13 @@ QuantumCircuitOperatorProp[qco_, "Icon", opts : OptionsPattern[Options[CircuitDr
 
 Options[quantumCircuitCompile] = {Method -> Automatic}
 
-quantumCircuitCompile[qco_QuantumCircuitOperator, OptionsPattern[]] :=
+quantumCircuitCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] :=
     Switch[
         OptionValue[Method],
         "Schrodinger" | "Schroedinger" | "Schrödinger",
         Fold[ReverseApplied[Construct], qco["Flatten"]["Operators"]],
         Automatic | "TensorNetwork",
-        TensorNetworkCompile[qco],
+        TensorNetworkCompile[qco, FilterRules[{opts}, Options[TensorNetworkCompile]]],
         "QuEST",
         QuESTCompile[qco],
         "Qiskit",
@@ -204,7 +204,10 @@ QuantumCircuitOperatorProp[qco_, "Output"] := If[Length[qco["OutputOrder"]] > 0,
     QuditBasis[]
 ]
 
-QuantumCircuitOperatorProp[qco_, "Basis"] := QuantumBasis["Output" -> qco["Output"], "Input" -> qco["Input"]]
+QuantumCircuitOperatorProp[qco_, "Basis"] := QuantumBasis[
+    "Output" -> qco["Output"], "Input" -> qco["Input"],
+    "Picture" -> First @ Commonest[Through[qco["NormalOperators"]["Picture"]]]
+]
 
 QuantumCircuitOperatorProp[qco_, "Measurements"] := Count[qco["Flatten"]["Operators"], _ ? QuantumMeasurementOperatorQ]
 

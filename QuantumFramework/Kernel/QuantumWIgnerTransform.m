@@ -7,7 +7,7 @@ PackageScope[WignerBasis]
 
 
 
-Options[WignerBasis] = {"Exact" -> True, "EvenDimensionMethod" -> 2, "Decompose" -> False}
+Options[WignerBasis] = {"Exact" -> True, "EvenDimensionMethod" -> 2, "Decompose" -> True}
 
 WignerBasis[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := wignerBasis[qb, opts] = Block[{d, a, x, z},
     If[TrueQ[OptionValue["Decompose"]], Return[QuantumTensorProduct[WignerBasis[#, "Decompose" -> False, opts] & /@ qb["Decompose"]]]];
@@ -37,7 +37,7 @@ Options[QuantumWignerTransform] = Options[WignerBasis]
 
 QuantumWignerTransform[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := Chop @ QuditBasis[{"Wigner", qb, opts}]
 
-QuantumWignerTransform[qb_ ? QuantumBasisQ, opts : OptionsPattern[]] /; qb["Picture"] =!= "PhaseSpace" :=
+QuantumWignerTransform[qb_ ? QuantumBasisQ, opts : OptionsPattern[]] :=
     Enclose @ QuantumBasis[
         ConfirmBy[QuantumWignerTransform[qb["Output"], opts], QuditBasisQ],
         ConfirmBy[QuantumWignerTransform[qb["Input"], opts], QuditBasisQ],
@@ -45,50 +45,52 @@ QuantumWignerTransform[qb_ ? QuantumBasisQ, opts : OptionsPattern[]] /; qb["Pict
     ]
 
 
-QuantumWignerTransform[qs_ ? QuantumStateQ, opts : OptionsPattern[]] /; qs["Picture"] =!= "PhaseSpace" :=
+QuantumWignerTransform[qs_ ? QuantumStateQ, opts : OptionsPattern[]] :=
     Enclose @ Chop @ Simplify @ QuantumState[
         ConfirmBy[qs["Double"], QuantumStateQ],
         ConfirmBy[QuantumWignerTransform[qs["Basis"], opts, "Exact" -> ! qs["NumberQ"]], QuantumBasisQ]
     ]
 
 
-QuantumWignerTransform[qo_ ? QuantumOperatorQ, opts : OptionsPattern[]] /; qo["Picture"] =!= "PhaseSpace" :=
+QuantumWignerTransform[qo_ ? QuantumOperatorQ, opts : OptionsPattern[]] :=
 	Enclose @ QuantumOperator[
 		ConfirmBy[QuantumWignerTransform[qo["State"], opts], QuantumStateQ],
 		qo["Order"]
 	]
 
-QuantumWignerTransform[qc_ ? QuantumChannelQ, opts : OptionsPattern[]] /; qc["Picture"] =!= "PhaseSpace" :=
+QuantumWignerTransform[qc_ ? QuantumChannelQ, opts : OptionsPattern[]] :=
     Enclose @ QuantumChannel[ConfirmBy[QuantumWignerTransform[qc["QuantumOperator"], opts], QuantumOperatorQ]]
 
 QuantumWignerTransform[qmo_ ? QuantumMeasurementOperatorQ, opts : OptionsPattern[]] /; qmo["Picture"] =!= "PhaseSpace" :=
     Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumWignerTransform[qmo["Operator"], opts], QuantumOperatorQ], qmo["Target"]]
 
 QuantumWignerTransform[qco_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]] :=
-    Enclose @ QuantumCircuitOperator[If[BarrierQ[#], #, Confirm @ QuantumWignerTransform[#, opts, "Decompose" -> True]] & /@ qco["Elements"], qco["Label"]]
+    Enclose @ QuantumCircuitOperator[If[BarrierQ[#], #, Confirm @ QuantumWignerTransform[#, opts]] & /@ qco["Elements"], qco["Label"]]
 
 
 
-QuantumWeylTransform[qb_ ? QuditBasisQ] := Enclose @ QuditBasis[Catenate[{#, #} & /@ ConfirmBy[Sqrt[qb["Dimensions"]], AllTrue[IntegerQ]]]]
+QuantumWeylTransform[qb_ ? QuditBasisQ, _ : False] := Enclose @ QuditBasis[ConfirmBy[Sqrt[qb["Dimensions"]], AllTrue[IntegerQ]]]
 
-QuantumWeylTransform[qb_ ? QuantumBasisQ] /; qb["Picture"] === "PhaseSpace" :=
+QuantumWeylTransform[qb_ ? QuditBasisQ, True] := Enclose @ QuditBasis[Catenate[{#, #} & /@ ConfirmBy[Sqrt[qb["Dimensions"]], AllTrue[IntegerQ]]]]
+
+QuantumWeylTransform[qb_ ? QuantumBasisQ, double_ : False] :=
     Enclose @ QuantumBasis[
-        ConfirmBy[QuantumWeylTransform[qb["Output"]], QuditBasisQ],
-        ConfirmBy[QuantumWeylTransform[qb["Input"]], QuditBasisQ],
+        ConfirmBy[QuantumWeylTransform[qb["Output"], double], QuditBasisQ],
+        ConfirmBy[QuantumWeylTransform[qb["Input"], double], QuditBasisQ],
         "Picture" -> "Schrodinger", qb["Meta"]
     ]
 
-QuantumWeylTransform[qs_ ? QuantumStateQ] /; qs["Picture"] === "PhaseSpace" :=
-	Enclose @ QuantumState[qs, ConfirmBy[QuantumWeylTransform[qs["Basis"]], QuantumBasisQ]]["Unbend"]
+QuantumWeylTransform[qs_ ? QuantumStateQ] := QuantumState[qs, QuantumWeylTransform[qs["Basis"], True]]["Undouble"]
 
-QuantumWeylTransform[qo_ ? QuantumOperatorQ] /; qo["Picture"] === "PhaseSpace" :=
-    Enclose @ QuantumOperator[ConfirmBy[QuantumWeylTransform[qo["State"]], QuantumStateQ]["VectorState"], qo["Order"]]
+QuantumWeylTransform[qo_ ? QuantumOperatorQ] :=
+    Enclose @ QuantumOperator[
+        ConfirmBy[QuantumWeylTransform[qo["State"]], QuantumStateQ],
+        qo["Order"]
+    ]
 
-QuantumWeylTransform[qc_ ? QuantumChannelQ] /;
-    qc["Picture"] === "PhaseSpace" := Enclose @ QuantumChannel[ConfirmBy[QuantumWeylTransform[qc["QuantumOperator"]], QuantumOperatorQ]]
+QuantumWeylTransform[qc_ ? QuantumChannelQ] := Enclose @ QuantumChannel[ConfirmBy[QuantumWeylTransform[qc["QuantumOperator"]], QuantumOperatorQ]]
 
-QuantumWeylTransform[qmo_ ? QuantumMeasurementOperatorQ] /;
-	qmo["Picture"] === "PhaseSpace" := Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumWeylTransform[qmo["QuantumOperator"]], QuantumOperatorQ], qmo["Target"]]
+QuantumWeylTransform[qmo_ ? QuantumMeasurementOperatorQ] := Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumWeylTransform[qmo["QuantumOperator"]], QuantumOperatorQ], qmo["Target"]]
 
 QuantumWeylTransform[qco_ ? QuantumCircuitOperatorQ] :=
     Enclose @ QuantumCircuitOperator[If[BarrierQ[#], #, Confirm @ QuantumWeylTransform[#]] & /@ qco["Elements"], qco["Label"]]
