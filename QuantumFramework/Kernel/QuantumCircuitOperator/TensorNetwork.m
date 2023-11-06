@@ -1,5 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageImport["Cotengra`"]
+
 PackageExport["TensorNetworkIndexGraph"]
 PackageExport["FromTensorNetwork"]
 PackageExport["TensorNetworkQ"]
@@ -9,6 +11,8 @@ PackageExport["TensorNetworkTensors"]
 PackageExport["TensorNetworkFreeIndices"]
 PackageExport["TensorNetworkAdd"]
 PackageExport["RemoveTensorNetworkCycles"]
+PackageExport["TensorNetworkCotractionPath"]
+PackageExport["TensorNetworkContractPath"]
 
 PackageScope["TensorNetworkIndexDimensions"]
 PackageScope["InitializeTensorNetwork"]
@@ -468,4 +472,72 @@ RemoveTensorNetworkCycles[inputNet_ ? DirectedGraphQ, opts : OptionsPattern[Grap
 	Graph[net, opts]
 ]
 
+
+
+Options[TensorNetworkCotractionPath] = {"ReturnParameters" -> False, "Optimal" -> False}
+
+TensorNetworkCotractionPath[net_ ? TensorNetworkQ, OptionsPattern[]] := Enclose @ Block[{
+	tensors, indices, pairs, freeIndices, normalIndices, input, output, dimensions
+},
+	tensors = TensorNetworkTensors[net];
+    indices = TensorNetworkIndices[net];
+	pairs = EdgeTags[net];
+	freeIndices = TensorNetworkFreeIndices[net];
+	dimensions = AssociationThread[Catenate[indices], Catenate[Dimensions /@ tensors]];
+	ConfirmAssert[AllTrue[Partition[Lookup[dimensions, Catenate[pairs]], 2], Apply[Equal]]];
+	pairs = Rule @@@ pairs;
+	dimensions = KeyMap[Replace[pairs], dimensions];
+	indices = Replace[indices, pairs, {2}];
+	normalIndices = Thread[# -> ToString /@ Range[Length[#]]] & [Union @@ indices];
+	input = Replace[indices, normalIndices, {2}];
+	output = Replace[freeIndices, normalIndices, {1}];
+	dimensions = KeyMap[Replace[normalIndices], dimensions];
+	If[TrueQ[OptionValue["ReturnParameters"]], Return[{input, output, dimensions}]];
+	If[ TrueQ[OptionValue["Optimal"]],
+        OptimalPath[input, output, dimensions, "size"],
+        GreedyPath[input, output, dimensions]
+    ]
+]
+
+
+einsum[{i_, j_} -> k_, a_, b_] := Block[{c = Complement[Join[i, j], k], adim = Dimensions[a], bdim = Dimensions[b], al, br, ac, bc, ad, bd},
+	ac = Catenate @ Lookup[PositionIndex[i], c];
+	bc = Catenate @ Lookup[PositionIndex[j], c];
+	al = Complement[Range[Length[i]], ac];
+	br = Complement[Range[Length[j]], bc];
+	ad = Times @@ adim[[ac]];
+	bd = Times @@ bdim[[bc]];
+	Transpose[
+		ArrayReshape[
+			ArrayReshape[Transpose[a, FindPermutation[Join[al, ac]]], {Times @@ adim / ad, ad}] . ArrayReshape[Transpose[b, FindPermutation[Join[bc, br]]], {bd, Times @@ bdim / bd}],
+			Join[adim[[al]], bdim[[br]]]
+		],
+		FindPermutation[Join[i[[al]], j[[br]]], k]
+	]
+]
+
+TensorNetworkContractPath[net_ ? TensorNetworkQ, path_] := Enclose @ Block[{tensors, indices, freeIndices},
+    tensors = TensorNetworkTensors[net];
+    indices = TensorNetworkIndices[net];
+    freeIndices = TensorNetworkFreeIndices[net];
+    indices = Replace[indices, Rule @@@ EdgeTags[net], {2}];
+    Do[
+		Replace[p, {
+			{i_} :> (
+				{tensors, indices} = Append[Delete[#, {i}], #[[i]]] & /@ {tensors, indices}
+			),
+			{i_, j_} :> Block[{out, tensor},
+				out = SymmetricDifference @@ Extract[indices, {{i}, {j}}];
+                tensor = EinsteinSummation[indices[[{i, j}]] -> out, {tensors[[i]], tensors[[j]]}];
+				(* tensor = einsum[indices[[{i, j}]] -> out, tensors[[i]], tensors[[j]]]; *)
+				tensors = Append[Delete[tensors, {{i}, {j}}], tensor];
+				indices = Append[Delete[indices, {{i}, {j}}], out]
+			]
+		}],
+		{p, path}
+	];
+	ConfirmAssert[Length[tensors] == Length[indices] == 1];
+	ConfirmAssert[ContainsAll[indices[[1]], freeIndices]];
+	Transpose[tensors[[1]], FindPermutation[indices[[1]], freeIndices]]
+]
 

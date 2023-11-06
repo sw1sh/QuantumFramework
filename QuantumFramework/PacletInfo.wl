@@ -45,8 +45,10 @@ PacletObject[
       {"Documentation", "Language" -> "English"},
       {"AutoCompletionData", "Root" -> "AutoCompletionData"},
       {"FrontEnd"},
-      (* {"IBMQ"}, *)
-      {"Asset", "Root" -> "Assets", "Assets" -> {{"IBMQ.paclet", "ServiceConnection_IBMQ-0.0.1.paclet"}}}
+      {"Asset", "Root" -> "Assets", "Assets" -> {
+        {"IBMQ.paclet", "ServiceConnection_IBMQ-0.0.1.paclet"},
+        {"Cotengra.paclet", "Cotengra-0.1.paclet"}
+      }}
     }
   |>
 ]
