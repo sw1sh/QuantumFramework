@@ -13,6 +13,7 @@ PackageExport["TensorNetworkAdd"]
 PackageExport["RemoveTensorNetworkCycles"]
 PackageExport["TensorNetworkCotractionPath"]
 PackageExport["TensorNetworkContractPath"]
+PackageExport["TensorNetworkNetGraph"]
 
 PackageScope["TensorNetworkIndexDimensions"]
 PackageScope["InitializeTensorNetwork"]
@@ -539,5 +540,83 @@ TensorNetworkContractPath[net_ ? TensorNetworkQ, path_] := Enclose @ Block[{tens
 	ConfirmAssert[Length[tensors] == Length[indices] == 1];
 	ConfirmAssert[ContainsAll[indices[[1]], freeIndices]];
 	Transpose[tensors[[1]], FindPermutation[indices[[1]], freeIndices]]
+]
+
+
+TensorNetworkNetGraph[net_ ? TensorNetworkQ] := TensorNetworkNetGraph[net, TensorNetworkCotractionPath[net]]
+
+TensorNetworkNetGraph[net_ ? TensorNetworkQ, path_] := Enclose @ Block[{tensors, indices, freeIndices, g, tensorQueue, addEinsumLayer, n},
+    tensors = NumericArray[N[#]] & /@ TensorNetworkTensors[net];
+    indices = TensorNetworkIndices[net];
+    freeIndices = TensorNetworkFreeIndices[net];
+    indices = Replace[indices, Rule @@@ EdgeTags[net], {2}];
+    n = Length[tensors];
+    g = NetGraph[NetArrayLayer["Array" -> #] & /@ tensors, # -> NetPort["T" <> ToString[#]] & /@ Range[n]];
+    tensorQueue = "T" <> ToString[#] & /@ Range[n];
+    addEinsumLayer[{i_, j_} -> k_, a_, b_] :=
+		With[{
+			c = Complement[Join[i, j], k],
+			adim = Flatten[{NetExtract[g, a]}],
+			bdim = Flatten[{NetExtract[g, b]}]
+	    },
+		With[{
+			ac = Catenate @ Lookup[PositionIndex[i], c],
+			bc = Catenate @ Lookup[PositionIndex[j], c]
+		},
+		With[{
+			al = Complement[Range[Length[i]], ac],
+			br = Complement[Range[Length[j]], bc],
+			ad = Times @@ adim[[ac]],
+			bd = Times @@ bdim[[bc]]
+		},
+		With[{
+			reshapea = {Times @@ adim / ad, ad},
+			reshapeb = {bd, Times @@ bdim / bd},
+			perma = PermutationList @ FindPermutation[Join[al, ac]],
+			permb = PermutationList @ FindPermutation[Join[bc, br]],
+			reshape = Join[adim[[al]], bdim[[br]]],
+			perm = PermutationList @ FindPermutation[Join[i[[al]], j[[br]]], k]
+		},
+		n++;
+		g = Confirm @ NetGraph[
+			{
+				g,
+				Confirm @ NetGraph[<|
+                    (*ToString[n] -> FunctionLayer[Apply[
+                        Transpose[
+                            ArrayReshape[
+                                ArrayReshape[Transpose[#1, perma], reshapea] . ArrayReshape[Transpose[#2, permb], reshapeb],
+                                reshape
+                            ],
+                            perm
+                        ] &
+                    ]]*)
+					"a" -> NetChain[{If[perma === {}, Nothing, TransposeLayer[perma]], ReshapeLayer[reshapea]}],
+					"b" -> NetChain[{If[permb === {}, Nothing, TransposeLayer[permb]], ReshapeLayer[reshapeb]}],
+					"dot" -> DotLayer[],
+					"post" -> NetChain[{ReshapeLayer[reshape], If[perm === {}, Nothing, TransposeLayer[perm]]}]
+				|>, {NetPort[a] -> "a", NetPort[b] -> "b", {"a", "b"} -> "dot" -> "post" -> NetPort["T" <> ToString[n]]}]
+			},
+			{NetPort[{1, a}] -> NetPort[{2, a}], NetPort[{1, b}] -> NetPort[{2, b}]}
+		];
+	]]]];
+    Do[
+		Replace[p, {
+			{i_} :> (
+				{tensorQueue, indices} = Append[Delete[#, {i}], #[[i]]] & /@ {tensorQueue, indices}
+			),
+			{i_, j_} :> With[{out = SymmetricDifference @@ Extract[indices, {{i}, {j}}]},
+				addEinsumLayer[indices[[{i, j}]] -> out, tensorQueue[[i]], tensorQueue[[j]]];
+				tensorQueue = Append[Delete[tensorQueue, {{i}, {j}}], "T" <> ToString[n]];
+				indices = Append[Delete[indices, {{i}, {j}}], out];
+			]
+		}],
+		{p, path}
+	];
+	ConfirmAssert[Length[tensorQueue] == Length[indices] == 1];
+	ConfirmAssert[ContainsAll[indices[[1]], freeIndices]];
+	With[{perm = PermutationList @ FindPermutation[indices[[1]], freeIndices]},
+		NetFlatten @ If[perm === {}, g, NetAppend[g, TransposeLayer[perm]]]
+	]
 ]
 
