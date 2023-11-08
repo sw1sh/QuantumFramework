@@ -165,7 +165,7 @@ pauliMatrix[n_] := pauliMatrix[n, 2]
 
 pauliMatrix[0, dimension_] := identityMatrix[dimension]
 
-pauliMatrix[1, dimension_] := SparseArray[Table[{n, Mod[n + 1, dimension]} + 1 -> 1, {n, 0, dimension - 1}], {dimension, dimension}]
+pauliMatrix[1, dimension_] := SparseArray[Table[{n, Mod[n - 1, dimension]} + 1 -> 1, {n, 0, dimension - 1}], {dimension, dimension}]
 
 spinMatrix[1, dimension_] := With[{
     s = (dimension - 1) / 2
