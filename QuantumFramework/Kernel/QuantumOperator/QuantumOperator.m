@@ -319,8 +319,7 @@ QuantumOperator[qo_ ? QuantumOperatorQ,
 
 QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible with this operation"
 
-(qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] /; qo["Picture"] === qs["Picture"] && (
-    qs["Picture"] =!= "Heisenberg" || Message[QuantumOperator::incompatiblePictures, qo["Picture"], qs["Picture"]]) :=
+(qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] :=
 Enclose @ Block[{
     order = Range[Max[1, qs["OutputQudits"]]] + Max[0, Max[qo["InputOrder"]] - qs["OutputQudits"]], res
 },
@@ -329,7 +328,7 @@ Enclose @ Block[{
 ]
 
 
-(qo1_QuantumOperator ? QuantumOperatorQ)[qo2_ ? QuantumOperatorQ] /; qo1["Picture"] === qo2["Picture"] := Enclose @ Block[{
+(qo1_QuantumOperator ? QuantumOperatorQ)[qo2_ ? QuantumOperatorQ] := Enclose @ Block[{
     top = qo1["Sort"], bot = qo2["Sort"],
     fullTopOut, fullBotIn, fullTopIn, fullBotOut, topOut, botIn, out, in, basis, tensor
 },
