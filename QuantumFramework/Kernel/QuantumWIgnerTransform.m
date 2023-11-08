@@ -21,8 +21,8 @@ WignerBasis[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := Block[{d, a, x, z},
         AssociationThread[
             Subscript["W", Row[#]] & /@ Tuples[Range[0, d - 1], 2],
             Chop @ FullSimplify @ Catenate[If[ OddQ[d],
-                Table[fanoMatrix[d, q, - p, x, z], {p, 0, 2 d - 1, 2}, {q, 0, 2 d - 1, 2}],
-                Table[2 fanoMatrix[d, p, q, x, z], {p, 0, d - 1}, {q, 0, - d + 1, - 1}]
+                Table[fanoMatrix[d, 2 p, 2 q, x, z], {p, 0, d - 1}, {q, 0, d - 1}],
+                Table[2 fanoMatrix[d, p, q, x, z], {p, 0, d - 1}, {q, 0, d - 1}]
             ]]
         ]
 ]
