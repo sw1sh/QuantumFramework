@@ -78,8 +78,8 @@ def make_gate(gate_spec):
         if base_gate.name != 'global_phase':
             order = order + base_order
     elif name == 'Dagger':
-        base_gate, base_order = make_gate(args[0])
-        gate = base_gate.adjoint()
+        base_gate = make_gate(args[0])[0]
+        gate = base_gate.inverse()
     elif name == 'Unitary':
         gate = UnitaryGate(args[0], label=args[1])
         assert(args[2][0] == args[2][1])

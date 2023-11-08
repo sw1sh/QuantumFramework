@@ -62,6 +62,10 @@ FromOperatorShorthand[arg : {name_String, ___} | name_String[___] | name_String]
     With[{s = QuantumState[arg]}, QuantumOperator[s, "Label" -> Ket[{s["Label"]}]]]
 FromOperatorShorthand[arg : name_String] /; MemberQ[$QuantumStateNames, name] || StringMatchQ[name, ("0" | "1" | "+" | "-" | "L" | "R") ..] :=
     With[{s = QuantumState[arg]}, QuantumOperator[s, "Label" -> Ket[{s["Label"]}]]]
+FromOperatorShorthand[SuperDagger[arg : {name_String, ___} | name_String[___] | name_String]] /; MemberQ[$QuantumStateNames, name] :=
+    FromOperatorShorthand[arg]["Dagger"]
+FromOperatorShorthand[SuperDagger[arg : name_String]] /; MemberQ[$QuantumStateNames, name] || StringMatchQ[name, ("0" | "1" | "+" | "-" | "L" | "R") ..] :=
+    FromOperatorShorthand[arg]["Dagger"]
 FromOperatorShorthand[arg : {name_String, ___} | name_String[___] | name_String] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[arg]
 FromOperatorShorthand[arg : {name_String, ___} | name_String[___] | name_String] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[arg]
 FromOperatorShorthand[arg : {name_String, ___} | name_String[___] | name_String -> order_] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[arg, Flatten[{order}]]

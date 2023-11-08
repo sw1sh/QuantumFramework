@@ -351,7 +351,9 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
 ]
 
 
-FromTensorNetwork[net_ /; DirectedGraphQ[net] && AcyclicGraphQ[net], OptionsPattern[{Method -> "Random"}]] := Enclose @ Block[{
+Options[FromTensorNetwork] = {Method -> "Random"}
+
+FromTensorNetwork[net_ /; DirectedGraphQ[net] && AcyclicGraphQ[net], OptionsPattern[]] := Enclose @ Block[{
 	vs = Developer`FromPackedArray[TopologicalSort[net]],
 	labels,
 	inputs, outputs, inputOrder, outputOrder,
@@ -412,8 +414,10 @@ FromTensorNetwork[net_ /; DirectedGraphQ[net] && AcyclicGraphQ[net], OptionsPatt
 	]
 ]
 
-FromTensorNetwork[net_ /; DirectedGraphQ[net], opts : OptionsPattern[{Method -> "Random"}]] :=
+FromTensorNetwork[net_ ? DirectedGraphQ, opts : OptionsPattern[]] :=
     Enclose @ FromTensorNetwork[Confirm @ RemoveTensorNetworkCycles[net], opts]
+
+FromTensorNetwork[net_ ? GraphQ, opts : OptionsPattern[]] := FromTensorNetwork[DirectedGraph[net, "Acyclic"], opts]
 
 
 RemoveTensorNetworkCycles[inputNet_ ? DirectedGraphQ, opts : OptionsPattern[Graph]] := Enclose @ Block[{
