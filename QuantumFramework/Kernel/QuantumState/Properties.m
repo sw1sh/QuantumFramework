@@ -158,6 +158,19 @@ QuantumStateProp[qs_, "ProbabilityAssociation" | "Probability"] := With[{proba =
 
 QuantumStateProp[qs_, "Distribution"] := CategoricalDistribution[qs["Names"], qs["Probabilities"]]
 
+QuantumStateProp[qs_, "QuasiProbability", opts___] := With[{s = QuantumState[qs, qs["Dimension"]]},
+    If[ EvenQ[qs["Dimension"]],
+        With[{w = Partition[QuantumWignerTransform[s, opts]["StateVector"], qs["Dimension"]], dim = {1, 1} qs["Dimension"]},
+            Join[
+                Join[w, w SparseArray[{i_, _} :> (-1) ^ Mod[i + 1, 2], dim], 2],
+                Join[w SparseArray[{_, j_} :> (-1) ^ Mod[j + 1, 2], dim], w SparseArray[{i_, j_} :> (-1) ^ Mod[i + j, 2], dim], 2]
+            ]
+        ],
+        Partition[QuantumWignerTransform[s, opts]["StateVector"], qs["Dimension"]]
+    ]
+]
+
+
 QuantumStateProp[qs_, "Formula", OptionsPattern[]] /; qs["DegenerateStateQ"] := 0
 
 MinusBoxQ[boxes_] := MatchQ[boxes, RowBox[{"-" | _ ? MinusBoxQ, __}]]
