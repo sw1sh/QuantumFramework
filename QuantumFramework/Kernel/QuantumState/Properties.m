@@ -158,7 +158,7 @@ QuantumStateProp[qs_, "ProbabilityAssociation" | "Probability"] := With[{proba =
 
 QuantumStateProp[qs_, "Distribution"] := CategoricalDistribution[qs["Names"], qs["Probabilities"]]
 
-QuantumStateProp[qs_, "QuasiProbability"] /; qs["Picture"] === "PhaseSpace" := Enclose @ With[{d = ConfirmBy[Sqrt[qs["Dimension"]], IntegerQ]},
+QuantumStateProp[qs_, "PhaseSpace"] /; qs["Picture"] === "PhaseSpace" := Enclose @ With[{d = ConfirmBy[Sqrt[qs["Dimension"]], IntegerQ]},
     If[ EvenQ[d],
         With[{w = Partition[qs["StateVector"], d]},
             Join[
@@ -170,7 +170,9 @@ QuantumStateProp[qs_, "QuasiProbability"] /; qs["Picture"] === "PhaseSpace" := E
     ]
 ]
 
-QuantumStateProp[qs_, "QuasiProbability", opts___] := QuantumWignerTransform[QuantumState[qs, {qs["OutputDimension"]}, {qs["InputDimension"]}], opts]["QuasiProbability"]
+QuantumStateProp[qs_, "PhaseSpace", opts___] := QuantumWignerTransform[qs, opts]["PhaseSpace"]
+
+QuantumStateProp[qs_, "QuasiProbability", opts___] := QuantumWignerTransform[QuantumState[qs, {qs["OutputDimension"]}, {qs["InputDimension"]}], opts]["PhaseSpace"]
 
 
 QuantumStateProp[qs_, "Formula", OptionsPattern[]] /; qs["DegenerateStateQ"] := 0
