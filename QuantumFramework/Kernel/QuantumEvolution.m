@@ -45,6 +45,7 @@ QuantumEvolve[
         matrix . \[FormalS][parameter],
         matrix . \[FormalS][parameter] - \[FormalS][parameter] . matrix
     ];
+    state = QuantumState[state, QuantumBasis[hamiltonian["Input"], state["Input"]]];
     init = If[defaultState === None, IdentityMatrix[hamiltonian["InputDimension"], SparseArray], state["State"]];
     equations = Join[
         {
