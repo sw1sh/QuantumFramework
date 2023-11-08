@@ -87,7 +87,7 @@ identityMatrix[0 | {_, 0} | {0, _}] := {{}}
 identityMatrix[n_] := IdentityMatrix[n, SparseArray]
 
 
-normalizeMatrix[matrix_] := Enclose[ConfirmQuiet[matrix / Tr[matrix], Power::infy]] (*SparseArray[{i_, i_} -> 1 / Tr[matrix], Dimensions[matrix], 1]*)
+normalizeMatrix[matrix_] := With[{tr = Tr[matrix]}, If[tr == 0, matrix, matrix / tr]]
 
 
 kroneckerProduct[ts___] := Fold[If[ArrayQ[#1] && ArrayQ[#2], KroneckerProduct[##], Times[##]] &, {ts}]
@@ -200,7 +200,7 @@ spinMatrix[3, dimension_] := With[{
 
 fanoMatrix[d_, q_, p_, x_ : Automatic, z_ : Automatic] :=
     FullSimplify @
-    Exp[I Pi p q / d] / (2 d) *
+    Exp[I Pi p q / d] *
         MatrixPower[Replace[z, Automatic :> pauliMatrix[3, d]], q] .
             MatrixPower[FourierMatrix[d], 2] .
                 MatrixPower[Replace[x, Automatic :> pauliMatrix[1, d]], - p]
