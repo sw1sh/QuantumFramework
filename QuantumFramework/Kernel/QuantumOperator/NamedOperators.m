@@ -13,9 +13,9 @@ $QuantumOperatorNames = {
     "XRotation", "YRotation", "ZRotation", "U", "Phase", "P", "RX", "RY", "RZ", "R",
     "Diagonal", "GlobalPhase",
     "PhaseShift",
-    "Shift", "ShiftPhase", "PhaseSpaceDisplacement", "PhasePoint", "Fano",
     "SUM", "RootNOT",
-    "X", "Y", "Z", "PauliX", "PauliY", "PauliZ", "H", "Hadamard", "NOT",
+    "X", "Y", "Z", "PauliX", "PauliY", "PauliZ", "Shift", "ShiftPhase",
+    "H", "Hadamard", "NOT",
     "0", "1",
     "SWAP", "RootSWAP", "CSWAP", "Fredkin",
     "C", "Controlled", "C0", "Controlled0", "CX", "CY", "CZ", "CH", "CT", "CS", "CPHASE", "CNOT",
@@ -183,16 +183,6 @@ QuantumOperator[{"Phase" | "P" | "U1", angle_, dimension : _Integer ? Positive :
     opts
 ]
 
-QuantumOperator["ShiftPhase", opts___] := QuantumOperator[{"ShiftPhase", 2}, opts]
-
-QuantumOperator[{"ShiftPhase", dimension : _Integer ? Positive : 2}, opts___] := QuantumOperator[
-    QuantumOperator[
-        SparseArray[{{i_, i_} :> Exp[2 Pi I (i - 1) / dimension]}, {dimension, dimension}],
-        dimension,
-        "Label" -> "ShiftPhase"
-    ],
-    opts
-]
 
 QuantumOperator["PhaseShift", opts___] := QuantumOperator[{"PhaseShift", 1}, opts]
 
@@ -233,29 +223,11 @@ QuantumOperator[{"Diagonal", x_List, dimension : _Integer ? Positive : 2}, order
 ]
 
 
-QuantumOperator["Shift", opts___] := QuantumOperator[{"Shift", 1, 2}, opts]
-
-QuantumOperator[{"Shift", shift_Integer, dimension : _Integer ? Positive : 2}, opts___] := QuantumOperator[
-    QuantumOperator[
-        SparseArray[{{i_, j_} /; Mod[i - j - shift, dimension] == 0 -> 1}, {dimension, dimension}],
-        dimension,
-        "Label" -> "Shift"[shift]
-    ],
-    opts
-]
-
-QuantumOperator[{"PhaseSpaceDisplacement", i_Integer, j_Integer, dimension : _Integer ? Positive : 2}, opts___] :=
-    Exp[- 2 Pi I i j / dimension] (N[QuantumOperator[{"Shift", 1, dimension}]] ^ i) @ (N[QuantumOperator[{"ShiftPhase", dimension}]] ^ j)
-
-QuantumOperator[{"PhasePoint" | "Fano", i_Integer, j_Integer, dimension : _Integer ? Positive : 2}, opts___] :=
-    Sum[Exp[- 2 Pi I (j k - i l)] QuantumOperator[{"PhaseSpaceDisplacement", k, l, dimension}, opts], {k, 0, dimension - 1}, {l, 0, dimension - 1}]
-
-
 QuantumOperator["S", opts___] := QuantumOperator[QuantumOperator[{"Phase", Pi / 2}, "Label" -> "S"], opts]
 
 QuantumOperator["T", opts___] := QuantumOperator[QuantumOperator[{"Phase", Pi / 4}, "Label" -> "T"], opts]
 
-QuantumOperator[name : "V" | "SX", opts___] := QuantumOperator[QuantumOperator[Sqrt[QuantumOperator["X"]], "Label" -> "V"], opts]
+QuantumOperator["V" | "SX", opts___] := QuantumOperator[QuantumOperator[Sqrt[QuantumOperator["X"]], "Label" -> "V"], opts]
 
 
 QuantumOperator["CNOT", opts___] := QuantumOperator[{"CNOT", 2}, opts]
@@ -493,7 +465,7 @@ QuantumOperator[{"SUM", dimension : _Integer ? Positive}, opts___] := QuantumOpe
 
 QuantumOperator[name : "X" | "Y" | "Z" | "PauliX" | "PauliY" | "PauliZ" | "NOT", opts___] := QuantumOperator[{name, 2}, opts]
 
-QuantumOperator[{"PauliX" | "X", dimension : _Integer ? Positive}, opts___] := QuantumOperator[
+QuantumOperator[{"PauliX" | "X" | "Shift", dimension : _Integer ? Positive}, opts___] := QuantumOperator[
     QuantumOperator[pauliMatrix[1, dimension], dimension, "Label" -> "X"],
     opts
 ]
@@ -503,7 +475,7 @@ QuantumOperator[{"PauliY" | "Y", dimension : _Integer ? Positive}, opts___] := Q
     opts
 ]
 
-QuantumOperator[{"PauliZ" | "Z", dimension : _Integer ? Positive}, opts___] := QuantumOperator[
+QuantumOperator[{"PauliZ" | "Z" | "ShiftPhase", dimension : _Integer ? Positive}, opts___] := QuantumOperator[
     QuantumOperator[pauliMatrix[3, dimension], dimension, "Label" -> "Z"],
     opts
 ]
