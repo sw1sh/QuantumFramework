@@ -11,7 +11,7 @@ PackageExport["TensorNetworkTensors"]
 PackageExport["TensorNetworkFreeIndices"]
 PackageExport["TensorNetworkAdd"]
 PackageExport["RemoveTensorNetworkCycles"]
-PackageExport["TensorNetworkCotractionPath"]
+PackageExport["TensorNetworkContractionPath"]
 PackageExport["TensorNetworkContractPath"]
 PackageExport["TensorNetworkNetGraph"]
 
@@ -479,9 +479,9 @@ RemoveTensorNetworkCycles[inputNet_ ? DirectedGraphQ, opts : OptionsPattern[Grap
 
 
 
-Options[TensorNetworkCotractionPath] = {"ReturnParameters" -> False, "Optimal" -> False}
+Options[TensorNetworkContractionPath] = {"ReturnParameters" -> False, "Optimal" -> False}
 
-TensorNetworkCotractionPath[net_ ? TensorNetworkQ, OptionsPattern[]] := Enclose @ Block[{
+TensorNetworkContractionPath[net_ ? TensorNetworkQ, OptionsPattern[]] := Enclose @ Block[{
 	tensors, indices, pairs, freeIndices, normalIndices, input, output, dimensions
 },
 	tensors = TensorNetworkTensors[net];
