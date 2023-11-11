@@ -200,10 +200,10 @@ spinMatrix[3, dimension_] := With[{
 
 fanoMatrix[d_, p_, q_, x_ : Automatic, z_ : Automatic] :=
     FullSimplify @
-    Exp[- I Pi p q / d] *
-        MatrixPower[Replace[z, Automatic :> pauliMatrix[3, d]], p] .
-            MatrixPower[FourierMatrix[d], 2] .
-                MatrixPower[Replace[x, Automatic :> pauliMatrix[1, d]], q]
+    Exp[I Pi p q / d] *
+        MatrixPower[FourierMatrix[d], 2] .
+            MatrixPower[Replace[z, Automatic :> pauliMatrix[3, d]], p] .
+                    MatrixPower[Replace[x, Automatic :> pauliMatrix[1, d]], q]
 
 
 (* optimization *)
