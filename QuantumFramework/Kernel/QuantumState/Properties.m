@@ -158,22 +158,33 @@ QuantumStateProp[qs_, "ProbabilityAssociation" | "Probability"] := With[{proba =
 
 QuantumStateProp[qs_, "Distribution"] := CategoricalDistribution[qs["Names"], qs["Probabilities"]]
 
-QuantumStateProp[qs_, "PhaseSpace"] /; qs["Picture"] === "PhaseSpace" := Enclose @ With[{d = ConfirmBy[Sqrt[qs["Dimension"]], IntegerQ]},
-    If[ EvenQ[d],
-        With[{w = Partition[qs["StateVector"], d]},
-            Join[
-                Join[w, w SparseArray[{i_, _} :> (-1) ^ Mod[i + 1, 2], {d, d}], 2],
-                Join[w SparseArray[{_, j_} :> (-1) ^ Mod[j + 1, 2], {d, d}], w SparseArray[{i_, j_} :> (-1) ^ Mod[i + j, 2], {d, d}], 2]
+QuantumStateProp[qs_, "PhaseSpace"] /; qs["Picture"] === "PhaseSpace" := Enclose @ With[{dims = ConfirmBy[Sqrt[qs["Dimensions"]], AllTrue[IntegerQ]]},
+    Fold[
+        With[{ds = Dimensions[#1][[#2]] {1, 1}, lds = Dimensions[#1][[;; #2 - 1]], rds = Dimensions[#1][[#2 + 2 ;;]]},
+            If[ EvenQ[ds[[1]]],
+                Block[{makeTensor},
+                    makeTensor[t_] := TensorProduct[ConstantArray[1, lds, SparseArray], t, ConstantArray[1, rds, SparseArray]];
+                    Join[
+                        Join[#1, #1 makeTensor[SparseArray[{i_, _} :> (-1) ^ Mod[i + 1, 2], ds]], #2 + 1],
+                        Join[#1 makeTensor[SparseArray[{_, j_} :> (-1) ^ Mod[j + 1, 2], ds]], #1 makeTensor[SparseArray[{i_, j_} :> (-1) ^ Mod[i + j, 2], ds]], #2 + 1],
+                        #2
+                    ]
+                ],
+                #1
             ]
-        ],
-        Partition[qs["StateVector"], d]
+        ] &,
+        ArrayReshape[qs["StateVector"], Catenate[{#, #} & /@ dims]],
+        2 Range[qs["Qudits"]] - 1
     ]
 ]
 
 QuantumStateProp[qs_, "PhaseSpace", opts___] := QuantumWignerTransform[qs, opts]["PhaseSpace"]
 
-QuantumStateProp[qs_, "QuasiProbability", opts___] := QuantumWignerTransform[QuantumState[qs, {qs["OutputDimension"]}, {qs["InputDimension"]}], opts]["PhaseSpace"]
-
+QuantumStateProp[qs_, "QuasiProbability", opts___] :=
+    ArrayReshape[
+        QuantumWignerTransform[QuantumState[qs["Split", qs["Qudits"]], qs["Dimension"]], opts]["PhaseSpace"],
+        If[EvenQ[qs["Dimension"]], 2, 1] {1, 1} qs["Dimension"]
+    ]
 
 QuantumStateProp[qs_, "Formula", OptionsPattern[]] /; qs["DegenerateStateQ"] := 0
 
