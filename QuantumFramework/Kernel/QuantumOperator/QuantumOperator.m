@@ -521,7 +521,7 @@ StackQuantumOperators[ops : {_ ? QuantumOperatorQ ..}, name_ : "E"] := Block[{
     basis = First[ops]["Basis"],
     order = MapAt[Prepend[#, Min[#] - 1] &, First[ops]["Order"], {1}]
 },
-    basis = QuantumBasis[
+    basis = QuantumBasis[basis,
         "Output" -> QuantumTensorProduct[QuditBasis[Subscript[name, #] & /@ Range @ Length @ ops], basis["Output"]],
         "Input" -> basis["Input"]
     ];
