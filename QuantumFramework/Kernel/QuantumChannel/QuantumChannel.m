@@ -14,9 +14,9 @@ QuantumChannelQ[___] := False
 
 QuantumChannel[opArgs_List, args___] := Enclose @ Block[{ops = QuantumOperator[#, args]["Computational"] & /@ opArgs, order, inputDims, outputDims},
     order = Range @@@ (MinMax /@ Thread[#["Order"] & /@ ops]);
-    inputDims = Merge[AssociationThread[#["InputOrder"], #["InputDimension"]] & /@ ops, Identity];
+    inputDims = Merge[AssociationThread[#["InputOrder"], #["InputDimensions"]] & /@ ops, Identity];
     ConfirmAssert[AllTrue[inputDims, Apply[Equal]]];
-    outputDims = Merge[AssociationThread[#["OutputOrder"], #["OutputDimension"]] & /@ ops, Identity];
+    outputDims = Merge[AssociationThread[#["OutputOrder"], #["OutputDimensions"]] & /@ ops, Identity];
     ConfirmAssert[AllTrue[outputDims, Apply[Equal]]];
     inputDims = Values[inputDims][[All, 1]];
     outputDims = Values[outputDims][[All, 1]];
