@@ -182,8 +182,9 @@ QuantumStateProp[qs_, "TransitionPhaseSpace"] /; qs["Picture"] === "PhaseSpace" 
     Fold[
         With[{ds = Dimensions[#1][[#2]] {1, 1}, lds = Dimensions[#1][[;; #2 - 1]], rds = Dimensions[#1][[#2 + 2 ;;]]}, {d = ds[[1]]},
             Map[
-                With[{perm = Riffle[Range[d], Range[d] + d]},
-                    Transpose @ Permute[Transpose @ Permute[#, perm], perm]
+                Block[{perm1 = Riffle[Range[d], Range[d] + d], perm2},
+                    perm2 = If[EvenQ[d], Riffle[Range[d] + d, Range[d]], perm1];
+                    Transpose @ Permute[Transpose @ Permute[#, perm2], perm1]
                 ] &,
                 If[ EvenQ[d],
                     Block[{makeTensor},
@@ -212,10 +213,32 @@ QuantumStateProp[qs_, "TransitionPhaseSpace"] /; qs["Picture"] === "PhaseSpace" 
 
 QuantumStateProp[qs_, prop : "PhaseSpace" | "TransitionPhaseSpace", opts___] := QuantumWignerTransform[qs, opts][prop]
 
+QuantumStateProp[qs_, "TransitionGraph", opts___] := With[{
+    q = qs["Qudits"], dims = qs["Dimensions"]
+}, {
+    vs = Join[QuditBasis[dims]["Names"], QuditBasis["X"[dims]]["Names"]]
+},
+    WeightedAdjacencyGraph[
+        vs,
+        Normal @ qs["TransitionQuasiProbability"],
+        opts,
+        EdgeLabelStyle -> {_ -> Background -> White},
+        VertexShapeFunction -> Function[Inset[Framed[Style[#2, Black], Background -> LightBlue], #1, #3]],
+        PerformanceGoal -> "Quality"
+    ]
+]
+
+
 QuantumStateProp[qs_, "QuasiProbability", opts___] :=
     ArrayReshape[
         QuantumWignerTransform[QuantumState[qs["Split", qs["Qudits"]], qs["Dimension"]], opts]["PhaseSpace"],
         If[EvenQ[qs["Dimension"]], 2, 1] {1, 1} qs["Dimension"]
+    ]
+
+QuantumStateProp[qs_, "TransitionQuasiProbability", opts___] :=
+    ArrayReshape[
+        QuantumWignerTransform[QuantumState[qs["Split", qs["Qudits"]], qs["Dimension"]], opts]["TransitionPhaseSpace"],
+        2 {1, 1} qs["Dimension"]
     ]
 
 QuantumStateProp[qs_, "Formula", OptionsPattern[]] /; qs["DegenerateStateQ"] := 0
