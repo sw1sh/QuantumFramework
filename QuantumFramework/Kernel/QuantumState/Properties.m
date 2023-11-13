@@ -421,7 +421,8 @@ QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /;
             {
                 QuditBasis[Association @ MapIndexed[Subscript["u", First @ #2] -> #1 &, Transpose[uMatrix]]],
                 QuditBasis[Association @ MapIndexed[Subscript["v", First @ #2] -> #1 &, ConjugateTranspose[wMatrix]]]
-            }
+            },
+            "Picture" -> qs["Picture"]
         ]
     ]
 ]

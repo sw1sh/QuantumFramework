@@ -22,11 +22,11 @@ QuantumTensorProduct[qb1_QuditBasis, qb2_QuditBasis] := If[qb1["Length"] == 0 ||
 
 (* basis x basis *)
 
-QuantumTensorProduct[qb1_QuantumBasis, qb2_QuantumBasis] /; qb1["Picture"] === qb2["Picture"] :=
+QuantumTensorProduct[qb1_QuantumBasis, qb2_QuantumBasis] :=
 QuantumBasis[<|
     "Output" -> QuantumTensorProduct[qb1["Output"], qb2["Output"]],
     "Input" -> QuantumTensorProduct[qb1["Input"], qb2["Input"]],
-    "Picture" -> qb1["Picture"],
+    "Picture" -> If[MemberQ[{qb1["Picture"], qb2["Picture"]}, "PhaseSpace"], "PhaseSpace", qb1["Picture"]],
     "Label" ->
         Replace[
             {qb1["Label"], qb2["Label"]},
@@ -45,7 +45,6 @@ QuantumBasis[<|
 (* state x state *)
 
 QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] /; qs1["Input"] == qs2["Input"] && qs1["Output"] == qs2["Output"] := Enclose[
-    ConfirmAssert[ConfirmBy[qs1, QuantumStateQ]["Picture"] === ConfirmBy[qs2, QuantumStateQ]["Picture"]];
     profile["Kronecker"] @ QuantumState[
         If[ qs1["StateType"] === qs2["StateType"] === "Vector",
             SparseArrayFlatten @ KroneckerProduct[
@@ -59,7 +58,6 @@ QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] /; qs1["Input"] == qs2[
 ]
 
 QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] := Enclose[
-    ConfirmAssert[ConfirmBy[qs1, QuantumStateQ]["Picture"] === ConfirmBy[qs2, QuantumStateQ]["Picture"]];
     QuantumState[QuantumState[
         If[ qs1["StateType"] === qs2["StateType"] === "Vector",
             SparseArrayFlatten @ KroneckerProduct[

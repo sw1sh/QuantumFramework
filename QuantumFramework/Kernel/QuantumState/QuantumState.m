@@ -280,6 +280,7 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
         b = QuantumBasis[
             "Output" -> qs1["Output"], "Input" -> qs2["Input"],
             "Label" -> qs1["Label"] @* qs2["Label"],
+            "Picture" -> If[MemberQ[{qs1["Picture"], qs2["Picture"]}, "PhaseSpace"], "PhaseSpace", qs1["Picture"]],
             "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
     ]},
         QuantumState[s, b]

@@ -362,7 +362,7 @@ Enclose @ Block[{
                     {1}
                 ]
             ]["Split", Length[out]],
-            "Picture" -> top["Picture"],
+            "Picture" -> If[MemberQ[{top["Picture"], bot["Picture"]}, "PhaseSpace"], "PhaseSpace", top["Picture"]],
             "Label" -> top["Label"] @* bot["Label"],
             "ParameterSpec" -> MergeParameterSpecs[top, bot]
         ]
