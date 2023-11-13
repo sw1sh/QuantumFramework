@@ -178,12 +178,67 @@ QuantumStateProp[qs_, "PhaseSpace"] /; qs["Picture"] === "PhaseSpace" := Enclose
     ]
 ]
 
-QuantumStateProp[qs_, "PhaseSpace", opts___] := QuantumWignerTransform[qs, opts]["PhaseSpace"]
+QuantumStateProp[qs_, "TransitionPhaseSpace"] /; qs["Picture"] === "PhaseSpace" := Enclose @ With[{dims = ConfirmBy[Sqrt[qs["Dimensions"]], AllTrue[IntegerQ]]},
+    Fold[
+        With[{ds = Dimensions[#1][[#2]] {1, 1}, lds = Dimensions[#1][[;; #2 - 1]], rds = Dimensions[#1][[#2 + 2 ;;]]}, {d = ds[[1]]},
+            Map[
+                Block[{perm1 = Riffle[Range[d], Range[d] + d], perm2},
+                    perm2 = If[EvenQ[d], Riffle[Range[d] + d, Range[d]], perm1];
+                    Transpose @ Permute[Transpose @ Permute[#, perm2], perm1]
+                ] &,
+                If[ EvenQ[d],
+                    Block[{makeTensor},
+                        makeTensor[t_] := TensorProduct[ConstantArray[1, lds, SparseArray], t, ConstantArray[1, rds, SparseArray]];
+                        Join[
+                            Join[#1, #1 makeTensor[SparseArray[{i_, _} :> (-1) ^ Mod[i + 1, 2], ds]], #2 + 1],
+                            Join[#1 makeTensor[SparseArray[{_, j_} :> (-1) ^ Mod[j + 1, 2], ds]], #1 makeTensor[SparseArray[{i_, j_} :> (-1) ^ Mod[i + j, 2], ds]], #2 + 1],
+                            #2
+                        ]
+                    ],
+                    With[{riffle = ArrayReduce[Riffle @@ TakeDrop[#, d] &, Join[##], List /@ Range[#3, TensorRank[#1]]] &},
+                        riffle[
+                            riffle[#1, -#1, #2 + 1],
+                            riffle[#1, #1, #2 + 1],
+                            #2
+                        ] / 2
+                    ]
+                ],
+                {#2 - 1}
+            ]
+        ] &,
+        ArrayReshape[qs["StateVector"], Catenate[{#, #} & /@ dims]],
+        2 Range[qs["Qudits"]] - 1
+    ]
+]
+
+QuantumStateProp[qs_, prop : "PhaseSpace" | "TransitionPhaseSpace", opts___] := QuantumWignerTransform[qs, opts][prop]
+
+QuantumStateProp[qs_, "TransitionGraph", opts___] := With[{
+    q = qs["Qudits"], dims = qs["Dimensions"]
+}, {
+    vs = Join[QuditBasis[dims]["Names"], QuditBasis["X"[dims]]["Names"]]
+},
+    WeightedAdjacencyGraph[
+        vs,
+        Normal @ qs["TransitionQuasiProbability"],
+        opts,
+        EdgeLabelStyle -> {_ -> Background -> White},
+        VertexShapeFunction -> Function[Inset[Framed[Style[#2, Black], Background -> LightBlue], #1, #3]],
+        PerformanceGoal -> "Quality"
+    ]
+]
+
 
 QuantumStateProp[qs_, "QuasiProbability", opts___] :=
     ArrayReshape[
         QuantumWignerTransform[QuantumState[qs["Split", qs["Qudits"]], qs["Dimension"]], opts]["PhaseSpace"],
         If[EvenQ[qs["Dimension"]], 2, 1] {1, 1} qs["Dimension"]
+    ]
+
+QuantumStateProp[qs_, "TransitionQuasiProbability", opts___] :=
+    ArrayReshape[
+        QuantumWignerTransform[QuantumState[qs["Split", qs["Qudits"]], qs["Dimension"]], opts]["TransitionPhaseSpace"],
+        2 {1, 1} qs["Dimension"]
     ]
 
 QuantumStateProp[qs_, "Formula", OptionsPattern[]] /; qs["DegenerateStateQ"] := 0
@@ -389,7 +444,8 @@ QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /;
             {
                 QuditBasis[Association @ MapIndexed[Subscript["u", First @ #2] -> #1 &, Transpose[uMatrix]]],
                 QuditBasis[Association @ MapIndexed[Subscript["v", First @ #2] -> #1 &, ConjugateTranspose[wMatrix]]]
-            }
+            },
+            "Picture" -> qs["Picture"]
         ]
     ]
 ]

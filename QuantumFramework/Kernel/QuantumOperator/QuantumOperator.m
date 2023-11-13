@@ -362,7 +362,7 @@ Enclose @ Block[{
                     {1}
                 ]
             ]["Split", Length[out]],
-            "Picture" -> top["Picture"],
+            "Picture" -> If[MemberQ[{top["Picture"], bot["Picture"]}, "PhaseSpace"], "PhaseSpace", top["Picture"]],
             "Label" -> top["Label"] @* bot["Label"],
             "ParameterSpec" -> MergeParameterSpecs[top, bot]
         ]
@@ -521,7 +521,7 @@ StackQuantumOperators[ops : {_ ? QuantumOperatorQ ..}, name_ : "E"] := Block[{
     basis = First[ops]["Basis"],
     order = MapAt[Prepend[#, Min[#] - 1] &, First[ops]["Order"], {1}]
 },
-    basis = QuantumBasis[
+    basis = QuantumBasis[basis,
         "Output" -> QuantumTensorProduct[QuditBasis[Subscript[name, #] & /@ Range @ Length @ ops], basis["Output"]],
         "Input" -> basis["Input"]
     ];

@@ -56,7 +56,7 @@ QuantumWignerTransform[qo_ ? QuantumOperatorQ, opts : OptionsPattern[]] :=
 QuantumWignerTransform[qc_ ? QuantumChannelQ, opts : OptionsPattern[]] :=
     Enclose @ QuantumChannel[ConfirmBy[QuantumWignerTransform[qc["QuantumOperator"], opts], QuantumOperatorQ]]
 
-QuantumWignerTransform[qmo_ ? QuantumMeasurementOperatorQ, opts : OptionsPattern[]] /; qmo["Picture"] =!= "PhaseSpace" :=
+QuantumWignerTransform[qmo_ ? QuantumMeasurementOperatorQ, opts : OptionsPattern[]] :=
     Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumWignerTransform[qmo["Operator"], opts], QuantumOperatorQ], qmo["Target"]]
 
 QuantumWignerTransform[qco_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]] :=
