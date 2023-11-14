@@ -32,6 +32,6 @@ If[ PacletFind["ServiceConnection_IBMQ"] === {},
 ]
 
 If[ PacletFind["Cotengra"] === {},
-    PacletInstall[PacletObject["Wolfram/QuantumFramework"]["AssetLocation", "Cotengra.paclet"]]
+    Quiet @ PacletInstall[PacletObject["Wolfram/QuantumFramework"]["AssetLocation", "Cotengra.paclet"]]
 ]
 
