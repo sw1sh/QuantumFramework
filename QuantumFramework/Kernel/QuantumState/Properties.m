@@ -8,6 +8,7 @@ $QuantumStateProperties = {
     "NormalizedState", "NormalizedAmplitudes", "NormalizedStateVector", "NormalizedDensityMatrix",
     "Entropy", "VonNeumannEntropy",
     "Purity", "Type", "PureStateQ", "MixedStateQ", "MatrixQ", "VectorQ", "UnknownQ", "PhysicalQ",
+    "NumericQ", "NumberQ",
     "Kind", "Scalar",
     "Norm", "TraceNorm", "NormalizedQ",
     "BlochSphericalCoordinates", "BlochCartesianCoordinates",
@@ -179,7 +180,7 @@ QuantumStateProp[qs_, "PhaseSpace"] /; qs["Picture"] === "PhaseSpace" := Enclose
 ]
 
 QuantumStateProp[qs_, "TransitionPhaseSpace"] /; qs["Picture"] === "PhaseSpace" := Enclose @ With[{dims = ConfirmBy[Sqrt[qs["Dimensions"]], AllTrue[IntegerQ]]},
-    Fold[
+    SparseArray @ Fold[
         With[{ds = Dimensions[#1][[#2]] {1, 1}, lds = Dimensions[#1][[;; #2 - 1]], rds = Dimensions[#1][[#2 + 2 ;;]]}, {d = ds[[1]]},
             Map[
                 Block[{perm1 = Riffle[Range[d], Range[d] + d], perm2},
@@ -220,7 +221,26 @@ QuantumStateProp[qs_, "TransitionGraph", opts___] := With[{
 },
     WeightedAdjacencyGraph[
         vs,
-        Normal @ qs["TransitionQuasiProbability"],
+        Replace[Normal[qs["TransitionQuasiProbability"]], 0 -> Infinity, {2}],
+        opts,
+        EdgeLabelStyle -> {_ -> Background -> White},
+        VertexShapeFunction -> Function[Inset[Framed[Style[#2, Black], Background -> LightBlue], #1, #3]],
+        PerformanceGoal -> "Quality"
+    ]
+]
+
+QuantumStateProp[qs_, "FullTransitionGraph", opts___] := With[{
+    q = qs["Qudits"], dims = If[qs["Picture"] === "PhaseSpace", Sqrt, Identity] @ qs["Dimensions"]
+}, {
+    vs = QuantumTensorProduct /@ Tuples[Join[QuditBasis[#]["Names"], QuditBasis["X"[#]]["Names"]] & /@ dims]
+},
+    WeightedAdjacencyGraph[
+        vs,
+        Replace[
+            Normal @ ArrayReshape[Transpose[qs["TransitionPhaseSpace"], Riffle[Range[q], Range[q] + q]], Length[vs] {1, 1}],
+            0 -> Infinity,
+            {2}
+        ],
         opts,
         EdgeLabelStyle -> {_ -> Background -> White},
         VertexShapeFunction -> Function[Inset[Framed[Style[#2, Black], Background -> LightBlue], #1, #3]],
@@ -231,13 +251,13 @@ QuantumStateProp[qs_, "TransitionGraph", opts___] := With[{
 
 QuantumStateProp[qs_, "QuasiProbability", opts___] :=
     ArrayReshape[
-        QuantumWignerTransform[QuantumState[qs["Split", qs["Qudits"]], qs["Dimension"]], opts]["PhaseSpace"],
+        QuantumWignerTransform[QuantumState[qs["Split", qs["Qudits"]], qs["Dimension"]], opts, "Exact" -> ! qs["NumberQ"]]["PhaseSpace"],
         If[EvenQ[qs["Dimension"]], 2, 1] {1, 1} qs["Dimension"]
     ]
 
 QuantumStateProp[qs_, "TransitionQuasiProbability", opts___] :=
     ArrayReshape[
-        QuantumWignerTransform[QuantumState[qs["Split", qs["Qudits"]], qs["Dimension"]], opts]["TransitionPhaseSpace"],
+        QuantumWignerTransform[QuantumState[qs["Split", qs["Qudits"]], qs["Dimension"]], opts, "Exact" -> ! qs["NumberQ"]]["TransitionPhaseSpace"],
         2 {1, 1} qs["Dimension"]
     ]
 
