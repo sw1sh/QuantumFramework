@@ -23,12 +23,14 @@ QuantumEvolve[
     numericQ, solution,
     method,
     rhs, init,
-    equations, return, param
+    equations, return, param,
+    phaseSpaceQ = False
 },
     If[ defaultState =!= None,
         state = Replace[defaultState, Automatic :> QuantumState[{"Register", hamiltonian["InputDimensions"]}]];
-        ConfirmAssert[state["OutputDimensions"] == hamiltonian["InputDimensions"]]
+        phaseSpaceQ = state["Picture"] === "PhaseSpace"
     ];
+    ConfirmAssert[hamiltonian["OutputDimensions"] == hamiltonian["InputDimensions"]];
     If[ defaultParameter === Automatic,
         parameter = First[hamiltonian["Parameters"], \[FormalT]];
         parameterSpec = Replace[First[hamiltonian["ParameterSpec"], {}], {} :> {parameter, 0, 1}],
@@ -36,16 +38,24 @@ QuantumEvolve[
         parameter = Replace[defaultParameter, {p_Symbol, _, _} :> p];
         parameterSpec = Replace[defaultParameter, _Symbol :> {parameter, 0, 1}]
     ];
-    numericQ = MatchQ[defaultParameter, {_Symbol, _ ? NumericQ, _ ? NumericQ}];
+    numericQ = MatchQ[defaultParameter, {_Symbol, _ ? NumericQ, _ ? NumericQ}] || hamiltonian["NumberQ"] || state["NumberQ"];
     (* TrigToExp helps with some examples *)
-    matrix = TrigToExp @ Confirm @ MergeInterpolatingFunctions[hamiltonian["Matrix"] / I];
+    matrix = TrigToExp @ Confirm @ MergeInterpolatingFunctions[
+        If[ phaseSpaceQ,
+            HamiltonianTransitionRate[hamiltonian],
+            hamiltonian["Matrix"] / I
+        ]
+    ];
+    ConfirmAssert[Dimensions[matrix] == {1, 1} state["Dimension"]];
     method = If[numericQ, NDSolveValue, DSolveValue];
     rhs = If[
-        defaultState === None || state["VectorQ"],
+        state === None || state["VectorQ"],
         matrix . \[FormalS][parameter],
         matrix . \[FormalS][parameter] - \[FormalS][parameter] . matrix
     ];
-    state = QuantumState[state, QuantumBasis[hamiltonian["Input"], state["Input"]]];
+    If[ state =!= None && ! phaseSpaceQ,
+        state = QuantumState[state["Split", state["Qudits"]], hamiltonian["Input"]]
+    ];
     init = If[defaultState === None, IdentityMatrix[hamiltonian["InputDimension"], SparseArray], state["State"]];
     equations = Join[
         {
@@ -58,9 +68,9 @@ QuantumEvolve[
         \[FormalS],
         Element[
             \[FormalS][parameter],
-            If[ defaultState === None,
+            If[ state === None,
                 Matrices[hamiltonian["MatrixNameDimensions"]],
-                If[state["VectorQ"], Vectors[state["Dimension"]], Matrices[state["MatrixDimensions"]]]
+                If[state["VectorQ"], Vectors[state["Dimension"], If[phaseSpaceQ, Reals, Complexes]], Matrices[state["MatrixDimensions"]]]
             ]
         ]
     ];
@@ -108,7 +118,7 @@ QuantumEvolve[
             ]
     ];
     Which[
-        defaultState === None && SquareMatrixQ[solution],
+        state === None && SquareMatrixQ[solution],
         QuantumOperator[
             solution,
             hamiltonian["Order"],
@@ -118,7 +128,7 @@ QuantumEvolve[
         stateQ[solution],
         QuantumState[
             solution,
-            hamiltonian["OutputBasis"],
+            If[state =!= None && phaseSpaceQ, state["Basis"], hamiltonian["OutputBasis"]],
             "ParameterSpec" -> parameterSpec
         ],
         True,
@@ -146,4 +156,12 @@ MergeInterpolatingFunctions[array_ ? SparseArrayQ] := Enclose @ Block[{pos, valu
 ]
 
 MergeInterpolatingFunctions[array_ ? ArrayQ] := MergeInterpolatingFunctions[SparseArray[array]]
+
+
+HamiltonianTransitionRate[H_QuantumOperator] /; H["OutputDimension"] == H["InputDimension"] :=
+    Block[{d = H["OutputDimension"], A, G},
+        A = QuditBasis["Wigner"[d, "Exact" -> ! H["NumberQ"]]]["Elements"];
+        G = Simplify[2 Im[Map[Tr, Outer[Dot, A, A, A, 1], {3}] / d]] / If[EvenQ[d], 4, 1];
+        Transpose[G . QuantumWignerTransform[QuantumState[H["MatrixRepresentation"], d]]["StateVector"]]
+    ]
 
