@@ -240,7 +240,7 @@ QuantumMeasurementProp[qm_, "SimulatedStateMeasurement", n_] := Part[qm["StateAs
 
 QuantumMeasurementProp[qm_, "MeanState"] := Total @ KeyValueMap[Times, qm["StateAssociation"]]
 
-QuantumMeasurementProp[qm_, "Simplify"] := QuantumMeasurement[qm["QuantumOperator"]["Simplify"]]
+QuantumMeasurementProp[qm_, prop : "Simplify" | "FullSimplify" | "Chop", args___] := QuantumMeasurement[qm["QuantumOperator"][prop, args]]
 
 
 (* qmo properties *)
@@ -255,9 +255,19 @@ QuantumMeasurement /: Equal[qms : _QuantumMeasurement ...] :=
     Equal @@ (#["Canonical"]["State"] & /@ {qms})
 
 
+(* simplify *)
+
+Simplify[qm_QuantumMeasurement, args___] ^:= qm["Simplify", args]
+
+FullSimplify[qm_QuantumMeasurement, args___] ^:= qm["FullSimplify", args]
+
+Chop[qm_QuantumMeasurement, args___] ^:= qm["Chop", args]
+
+
+
 (* formatting *)
 
-QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement, TraditionalForm] /; QuantumMeasurementQ[Unevaluated[qm]] :=
+QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement, TraditionalForm] /; QuantumMeasurementQ[qm] :=
     With[{proba = ToBoxes[qm["Probabilities"]]},
         InterpretationBox[proba, qm]
     ]

@@ -5,7 +5,7 @@ Package["Wolfram`QuantumFramework`"]
 QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator, TraditionalForm] /; QuantumMeasurementOperatorQ[qmo] :=
     With[{formula = ToBoxes[qmo["SuperOperator"], TraditionalForm]}, InterpretationBox[formula, qmo]]
 
-QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; QuantumMeasurementOperatorQ[Unevaluated @ qmo], format_] := With[{
+QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; QuantumMeasurementOperatorQ[qmo], format_] := With[{
     icon = If[
         qmo["Dimension"] < 2 ^ 9,
         ComplexArrayPlot[

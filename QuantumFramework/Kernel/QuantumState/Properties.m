@@ -44,7 +44,7 @@ QuantumState::undefprop = "property `` is undefined for this state"
 
 QuantumState::failprop = "property `` failed with ``"
 
-(qs_QuantumState[prop_ ? propQ, args___]) /; QuantumStateQ[qs] := With[{
+(qs_QuantumState[prop_ ? propQ, args___]) /; QuantumStateQ[Unevaluated[qs]] := With[{
     result = QuantumStateProp[qs, prop, args]
 },
     If[ TrueQ[$QuantumFrameworkPropCache] &&
@@ -297,7 +297,7 @@ QuantumStateProp[qs_, "GraphRule"] := Block[{v = qs["Pure"]["StateVector"], pos}
     ]
 ]
 
-QuantumStateProp[qs_, prop : "Simplify" | "FullSimplify" | "Chop"] := QuantumState[Map[Symbol[prop], qs["State"], {If[qs["VectorQ"], 1, 2]}], qs["Basis"]]
+QuantumStateProp[qs_, prop : "Simplify" | "FullSimplify" | "Chop", args___] := QuantumState[Map[Symbol[prop][#, args] &, qs["State"], {If[qs["VectorQ"], 1, 2]}], qs["Basis"]]
 
 
 (* normalization *)
@@ -806,7 +806,7 @@ QuantumStateProp[qs_, "Tensor" | "TensorRepresentation"] := qs["Computational"][
 QuantumStateProp[qs_, "NormalizedMatrixRepresentation"] := normalizeMatrix @ qs["MatrixRepresentation"]
 
 
-(* block sphere*)
+(* Bloch sphere *)
 
 QuantumStateProp[qs_, "BlochSphericalCoordinates"] /; qs["Dimension"] == 2 := With[{
     state = Simplify @ Normal[qs["Computational"]["NormalizedStateVector"]],

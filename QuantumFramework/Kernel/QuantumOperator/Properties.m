@@ -29,7 +29,8 @@ $QuantumOperatorProperties = {
     "TraceNorm",
     "PauliDecompose",
     "CircuitDiagram",
-    "OrderedFormula"
+    "OrderedFormula",
+    "Simplify", "FullSimplify", "Chop"
 };
 
 QuantumOperator["Properties"] := Union @ Join[$QuantumOperatorProperties, Complement[QuantumState["Properties"], {
@@ -544,7 +545,7 @@ With[{state = qo["State"]["PrimeBasis"]},
     ]
 ]
 
-QuantumOperatorProp[qo_, prop : "Simplify" | "FullSimplify" | "Chop"] := QuantumOperator[qo["State"][prop], qo["Order"]]
+QuantumOperatorProp[qo_, prop : "Simplify" | "FullSimplify" | "Chop", args___] := QuantumOperator[qo["State"][prop, args], qo["Order"]]
 
 
 (* evolution *)

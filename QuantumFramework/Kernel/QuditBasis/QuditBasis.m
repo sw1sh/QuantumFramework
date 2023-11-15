@@ -142,20 +142,20 @@ QuditBasis /: Times[qb__QuditBasis ? QuditBasisQ] := QuditBasis @ Association @ 
 
 (* simplify *)
 
-Simplify[qb_QuditBasis] ^:= qb["Simplify"]
+Simplify[qb_QuditBasis, args___] ^:= qb["Simplify", args]
 
-FullSimplify[qb_QuditBasis] ^:= qb["FullSimplify"]
+FullSimplify[qb_QuditBasis, args___] ^:= qb["FullSimplify", args]
 
-Chop[qb_QuditBasis] ^:= qb["Chop"]
+Chop[qb_QuditBasis, args___] ^:= qb["Chop", args]
 
 
 (* formatting *)
 
-QuditBasis /: MakeBoxes[qb_QuditBasis ? QuditBasisQ, format : TraditionalForm] := With[{boxes = ToBoxes[Normal /@ qb["Association"], format]},
+QuditBasis /: MakeBoxes[qb_QuditBasis /; QuditBasisQ[qb], format : TraditionalForm] := With[{boxes = ToBoxes[Normal /@ qb["Association"], format]},
     InterpretationBox[boxes, qb]
 ]
 
-QuditBasis /: MakeBoxes[qb_QuditBasis ? QuditBasisQ, format_] := With[{
+QuditBasis /: MakeBoxes[qb_QuditBasis /; QuditBasisQ[qb], format_] := With[{
     icon = If[
         qb["ElementDimension"] < 2 ^ 9,
         ComplexArrayPlot[

@@ -2,7 +2,7 @@ Package["Wolfram`QuantumFramework`"]
 
 
 
-QuantumOperator /: MakeBoxes[qo_QuantumOperator, TraditionalForm] /; QuantumOperatorQ[Unevaluated[qo]] :=
+QuantumOperator /: MakeBoxes[qo_QuantumOperator, TraditionalForm] /; QuantumOperatorQ[qo] :=
     With[{formula = TooltipBox[
             StyleBox[ToBoxes[qo["Formula"], StandardForm], "ShowStringCharacters" -> False],
             ToBoxes[
@@ -22,7 +22,7 @@ QuantumOperator /: MakeBoxes[qo_QuantumOperator, TraditionalForm] /; QuantumOper
         InterpretationBox[formula, qo]
     ]
 
-QuantumOperator /: MakeBoxes[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated @ qo], format_] := Enclose[With[{
+QuantumOperator /: MakeBoxes[qo_QuantumOperator /; QuantumOperatorQ[qo], format_] := Enclose[With[{
     icon = If[
         qo["Dimension"] < 2 ^ 9,
         ComplexArrayPlot[

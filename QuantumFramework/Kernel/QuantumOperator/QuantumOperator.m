@@ -9,13 +9,21 @@ PackageScope["StackQuantumOperators"]
 QuantumOperator::invalidInputOrder = "input order should be a list of distinct input qudit positions"
 QuantumOperator::invalidOutputOrder = "output order should be a list of distinct output qudit positions"
 
-QuantumOperatorQ[QuantumOperator[qs_, {outputOrder_ ? orderQ, inputOrder_ ? orderQ}]] :=
+quantumOperatorQ[QuantumOperator[qs_, {outputOrder_ ? orderQ, inputOrder_ ? orderQ}]] :=
     QuantumStateQ[qs] &&
     (orderQ[outputOrder] || (Message[QuantumOperator::invalidOutputOrder]; False)) &&
     (orderQ[inputOrder] || (Message[QuantumOperator::invalidInputOrder]; False))
 
 
+quantumOperatorQ[___] := False
+
+
+QuantumOperatorQ[qo_QuantumOperator] := System`Private`HoldValidQ[qo]
+
 QuantumOperatorQ[___] := False
+
+
+qo_QuantumOperator /; quantumOperatorQ[Unevaluated[qo]] && ! System`Private`HoldValidQ[qo] := System`Private`HoldSetValid[qo]
 
 
 (* constructors *)
@@ -484,11 +492,12 @@ SuperDagger[qo_QuantumOperator] ^:= qo["Dagger"]
 
 (* simplify *)
 
-Simplify[qo_QuantumOperator] ^:= qo["Simplify"]
+Simplify[qo_QuantumOperator, args___] ^:= qo["Simplify", args]
 
-FullSimplify[qo_QuantumOperator] ^:= qo["FullSimplify"]
+FullSimplify[qo_QuantumOperator, args___] ^:= qo["FullSimplify", args]
 
-Chop[qo_QuantumOperator] ^:= qo["Chop"]
+Chop[qo_QuantumOperator, args___] ^:= qo["Chop", args]
+
 
 (* join *)
 

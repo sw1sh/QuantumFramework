@@ -2,22 +2,25 @@ Package["Wolfram`QuantumFramework`"]
 
 PackageExport["QuantumState"]
 
+PackageScope["quantumStateQ"]
 PackageScope["QuantumStateQ"]
 
 
-QuantumState::inState = "is invalid";
 
-QuantumState::inBasis = "has invalid basis";
+quantumStateQ[QuantumState[state_, basis_]] :=
+    stateQ[state] &&
+    QuantumBasisQ[basis] &&
+    Length[state] === basis["Dimension"]
 
-QuantumState::incompatible = "is incompatible with its basis";
+quantumStateQ[___] := False
 
 
-QuantumStateQ[QuantumState[state_, basis_]] :=
-    (stateQ[state] || (Message[QuantumState::inState]; False)) &&
-    (QuantumBasisQ[basis] || (Message[QuantumState::inBasis]; False)) &&
-    (Length[state] === basis["Dimension"] || (Message[QuantumState::incompatible]; False))
+QuantumStateQ[qs_QuantumState] := System`Private`HoldValidQ[qs]
 
 QuantumStateQ[___] := False
+
+
+qs_QuantumState /; quantumStateQ[Unevaluated[qs]] && ! System`Private`HoldValidQ[qs] := System`Private`HoldSetValid[qs]
 
 
 (* basis argument input *)
@@ -231,11 +234,11 @@ SuperStar[qs_QuantumState] ^:= qs["Conjugate"]
 
 (* simplify *)
 
-Simplify[qs_QuantumState] ^:= qs["Simplify"]
+Simplify[qs_QuantumState, args___] ^:= qs["Simplify", args]
 
-FullSimplify[qs_QuantumState] ^:= qs["FullSimplify"]
+FullSimplify[qs_QuantumState, args___] ^:= qs["FullSimplify", args]
 
-Chop[qs_QuantumState] ^:= qs["Chop"]
+Chop[qs_QuantumState, args___] ^:= qs["Chop", args]
 
 
 (* join *)

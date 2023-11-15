@@ -57,3 +57,13 @@ QuantumChannel[qm : _ ? QuantumMeasurementOperatorQ | _ ? QuantumMeasurementQ] :
 (* equality *)
 
 QuantumChannel /: Equal[qc : _QuantumChannel ... ] := Equal @@ (#["QuantumOperator"] & /@ {qc})
+
+
+(* simplify *)
+
+Simplify[qc_QuantumChannel, args___] ^:= qc["Simplify", args]
+
+FullSimplify[qc_QuantumChannel, args___] ^:= qc["FullSimplify", args]
+
+Chop[qc_QuantumChannel, args___] ^:= qc["Chop", args]
+

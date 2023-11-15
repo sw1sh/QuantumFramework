@@ -6,9 +6,17 @@ PackageScope["QuantumMeasurementOperatorQ"]
 
 
 
-QuantumMeasurementOperatorQ[QuantumMeasurementOperator[qo_, _ ? targetQ]] := QuantumOperatorQ[qo]
+quantumMeasurementOperatorQ[QuantumMeasurementOperator[qo_, _ ? targetQ]] := QuantumOperatorQ[qo]
+
+quantumMeasurementOperatorQ[___] := False
+
+
+QuantumMeasurementOperatorQ[qmo_QuantumMeasurementOperator] := System`Private`HoldValidQ[qmo]
 
 QuantumMeasurementOperatorQ[___] := False
+
+
+qmo_QuantumMeasurementOperator /; quantumMeasurementOperatorQ[Unevaluated[qmo]] && ! System`Private`HoldValidQ[qmo] := System`Private`HoldSetValid[qmo]
 
 
 (* constructors *)
@@ -256,8 +264,11 @@ QuantumMeasurementOperator /: Equal[qmo : _QuantumMeasurementOperator ... ] :=
     Equal @@ (#["Picture"] & /@ {qmo}) && Equal @@ (#["Canonical"]["QuantumOperator"] & /@ {qmo})
 
 
+(* simplify *)
 
-Simplify[qmo_QuantumMeasurementOperator] ^:= qmo["Simplify"]
+Simplify[qmo_QuantumMeasurementOperator, args___] ^:= qmo["Simplify", args]
 
-FullSimplify[qmo_QuantumMeasurementOperator] ^:= qmo["FullSimplify"]
+FullSimplify[qmo_QuantumMeasurementOperator, args___] ^:= qmo["FullSimplify", args]
+
+Chop[qmo_QuantumMeasurementOperator, args___] ^:= qmo["Chop", args]
 

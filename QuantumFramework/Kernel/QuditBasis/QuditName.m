@@ -2,8 +2,20 @@ Package["Wolfram`QuantumFramework`"]
 
 PackageExport["QuditName"]
 
+PackageScope["QuditNameQ"]
 PackageScope["$QuditZero"]
 PackageScope["$QuditIdentity"]
+
+
+quditNameQ[qn_QuditName] := MatchQ[Unevaluated[qn], HoldPattern[QuditName[_, OptionsPattern[]] | QuditName[___ ? quditNameQ, OptionsPattern[]]]]
+
+quditNameQ[___] := False
+
+QuditNameQ[qn_QuditName] := System`Private`HoldValidQ[qn]
+
+QuditNameQ[___] := False
+
+qn_QuditName /; quditNameQ[Unevaluated[qn]] && ! System`Private`HoldValidQ[qn] := System`Private`HoldSetValid[qn]
 
 
 QuditName["Properties"] = {"Name", "DualQ", "Dual", "Qudits"}
@@ -109,7 +121,7 @@ QuantumTensorProduct[qbn1_QuditName, qbn2_QuditName] := Which[
 ]["Group"]
 
 
-QuditName /: MakeBoxes[qbn : QuditName[name_, OptionsPattern[]], format_] := With[{
+QuditName /: MakeBoxes[qbn : QuditName[name_, OptionsPattern[]] /; QuditNameQ[qbn], format_] := With[{
     boxes = Block[{BoxForm`UseTextFormattingQ = False},
         StyleBox[
             Switch[name, {}, "\[EmptySet]", $QuditIdentity, "\[ScriptOne]", _,
@@ -125,11 +137,9 @@ QuditName /: MakeBoxes[qbn : QuditName[name_, OptionsPattern[]], format_] := Wit
     InterpretationBox[boxes, qbn]
 ]
 
-QuditName /: MakeBoxes[qbn : QuditName[names__QuditName, OptionsPattern[]], format_] := With[{
+QuditName /: MakeBoxes[qbn : QuditName[names__QuditName, OptionsPattern[]] /; QuditNameQ[qbn], format_] := With[{
     boxes = RowBox @ If[qbn["DualQ"], Map[ToBoxes[#["Dual"], format] &], Map[ToBoxes[#, format] &]] @ {names}
 },
     InterpretationBox[boxes, qbn]
 ]
-
-
 
