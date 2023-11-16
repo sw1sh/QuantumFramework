@@ -20,8 +20,9 @@ QuantumChannel[opArgs_List, args___] := Enclose @ Block[{ops = QuantumOperator[#
     ConfirmAssert[AllTrue[outputDims, Apply[Equal]]];
     inputDims = Values[inputDims][[All, 1]];
     outputDims = Values[outputDims][[All, 1]];
-    QuantumChannel[
-        StackQuantumOperators[#["OrderedOutput", order[[1]], QuditBasis[outputDims]]["OrderedInput", order[[2]], QuditBasis[inputDims]] & /@ ops]
+    QuantumChannel @ QuantumOperator[
+        StackQuantumOperators[#["OrderedOutput", order[[1]], QuditBasis[outputDims]]["OrderedInput", order[[2]], QuditBasis[inputDims]] & /@ ops],
+        MapAt[Prepend[0], order, {1}]
     ]
 ]
 
