@@ -1,6 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
 PackageExport["QuantumEvolve"]
+PackageExport["HamiltonianTransitionRate"]
 
 
 
@@ -162,6 +163,6 @@ HamiltonianTransitionRate[H_QuantumOperator] /; H["OutputDimension"] == H["Input
     Block[{d = H["OutputDimension"], A, G},
         A = QuditBasis["Wigner"[d, "Exact" -> ! H["NumberQ"]]]["Elements"];
         G = Simplify[2 Im[Map[Tr, Outer[Dot, A, A, A, 1], {3}] / d]] / If[EvenQ[d], 4, 1];
-        Transpose[G . QuantumWignerTransform[QuantumState[H["MatrixRepresentation"], d]]["StateVector"]]
+        SymmetrizedArray[Transpose[G . QuantumWignerTransform[QuantumState[H["MatrixRepresentation"], d]]["StateVector"]], Automatic, Antisymmetric[{1, 2}]]
     ]
 

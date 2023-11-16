@@ -183,9 +183,14 @@ QuantumStateProp[qs_, "TransitionPhaseSpace"] /; qs["Picture"] === "PhaseSpace" 
     SparseArray @ Fold[
         With[{ds = Dimensions[#1][[#2]] {1, 1}, lds = Dimensions[#1][[;; #2 - 1]], rds = Dimensions[#1][[#2 + 2 ;;]]}, {d = ds[[1]]},
             Map[
-                Block[{perm1 = Riffle[Range[d], Range[d] + d], perm2},
-                    perm2 = If[EvenQ[d], Riffle[Range[d] + d, Range[d]], perm1];
-                    Transpose @ Permute[Transpose @ Permute[#, perm2], perm1]
+                Block[{perm1, perm2},
+                    If[ EvenQ[d],
+                        perm1 = Riffle[Range[d] + d, Range[d]];
+                        perm2 = Riffle[Range[d], Range[d] + d],
+
+                        perm1 = perm2 = Riffle[Range[d], Range[d] + d];
+                    ];
+                    Transpose @ Permute[Transpose @ Permute[#, perm1], perm2]
                 ] &,
                 If[ EvenQ[d],
                     Block[{makeTensor},

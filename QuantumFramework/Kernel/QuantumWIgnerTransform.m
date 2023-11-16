@@ -19,7 +19,10 @@ WignerBasis[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := Block[{d, a, x, z},
     x = FourierMatrix[d] . z . ConjugateTranspose[FourierMatrix[d]];
     QuditBasis @
         AssociationThread[
-            Subscript["W", Row[#]] & /@ Tuples[Range[0, d - 1], 2],
+            If[ OddQ[d],
+                Subscript["W", Row[#]] & /@ Tuples[Range[0, d - 1], 2],
+                Subsuperscript["W", Row[{#1, #3}], FromDigits[{#2, #4}, 2] + 1] & @@@ Tuples[{Range[0, d/2 - 1], {1, 0}, Range[0, d/2 - 1], {0, 1}}]
+            ],
             Chop @ FullSimplify @ Catenate[If[ OddQ[d],
                 Table[fanoMatrix[d, 2 p, 2 q, x, z], {p, 0, d - 1}, {q, 0, d - 1}],
                 Table[2 fanoMatrix[d, p, q, x, z], {p, 0, d - 1}, {q, 0, d - 1}]
