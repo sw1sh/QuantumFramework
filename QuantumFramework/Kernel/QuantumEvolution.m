@@ -39,7 +39,7 @@ QuantumEvolve[
         parameter = Replace[defaultParameter, {p_Symbol, _, _} :> p];
         parameterSpec = Replace[defaultParameter, _Symbol :> {parameter, 0, 1}]
     ];
-    numericQ = MatchQ[defaultParameter, {_Symbol, _ ? NumericQ, _ ? NumericQ}] || hamiltonian["NumberQ"] || state["NumberQ"];
+    numericQ = MatchQ[defaultParameter, {_Symbol, _ ? NumericQ, _ ? NumericQ}] && hamiltonian["NumberQ"] && state["NumberQ"];
     (* TrigToExp helps with some examples *)
     matrix = TrigToExp @ Confirm @ MergeInterpolatingFunctions[
         If[ phaseSpaceQ,
