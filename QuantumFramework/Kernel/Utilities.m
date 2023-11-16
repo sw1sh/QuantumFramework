@@ -187,7 +187,7 @@ spinMatrix[2, dimension_] := With[{
     ]
 ]
 
-pauliMatrix[3, dimension_] := SparseArray[Table[{n, n} + 1 -> Exp[2 Pi I n / dimension], {n, 0, dimension - 1}], {dimension, dimension}]
+pauliMatrix[3, dimension_] := SparseArray[Table[{n, n} + 1 -> Exp[- 2 Pi I n / dimension], {n, 0, dimension - 1}], {dimension, dimension}]
 
 spinMatrix[3, dimension_] := With[{
     s = (dimension - 1) / 2
