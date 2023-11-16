@@ -731,15 +731,15 @@ jY[j_] := 1 / (2 I) (jUp[j] - jDown[j])
 
 jZ[j_] := DiagonalMatrix[Table[m, {m, j, -j, -1}]]
 
-QuantumOperator[{"WignerD", j_, {a_, b_, c_}}, arg___] :=  QuantumOperator[wignerD[j, {a, b, c}], arg, QuantumBasis[2 j + 1]]
+QuantumOperator[{"WignerD", j_, {a_, b_, c_}}, opts___] :=  QuantumOperator[QuantumOperator[wignerD[j, {a, b, c}], 2 j + 1], opts]
 
-QuantumOperator[{"WignerD", j_, b_}, arg___] := QuantumOperator[wignerD[j, b], arg, QuantumBasis[2 j + 1]]
+QuantumOperator[{"WignerD", j_, b_}, opts___] := QuantumOperator[QuantumOperator[wignerD[j, b], 2 j + 1], opts]
 
-QuantumOperator[{"JX" | "AngularMomentumX", j_}, arg___] := QuantumOperator[jX[j], arg, QuantumBasis[2 j + 1]]
+QuantumOperator[{"JX" | "AngularMomentumX", j_}, opts___] := QuantumOperator[QuantumOperator[jX[j], 2 j + 1], opts]
 
-QuantumOperator[{"JY" | "AngularMomentumY", j_}, arg___] := QuantumOperator[jY[j], arg, QuantumBasis[2 j + 1]]
+QuantumOperator[{"JY" | "AngularMomentumY", j_}, opts___] := QuantumOperator[QuantumOperator[jY[j], 2 j + 1], opts]
 
-QuantumOperator[{"JZ" | "AngularMomentumZ", j_}, arg___] := QuantumOperator[jZ[j], arg, QuantumBasis[2 j + 1]]
+QuantumOperator[{"JZ" | "AngularMomentumZ", j_}, opts___] := QuantumOperator[QuantumOperator[jZ[j], 2 j + 1], opts]
 
 
 QuantumOperator[{"Double", args___}, opts___] := QuantumOperator[args, opts]["Double"]

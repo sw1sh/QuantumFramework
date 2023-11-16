@@ -7,6 +7,7 @@ $QuditBasisNames = {
     "Computational",
     "PauliX", "PauliY", "PauliZ",
     "X", "Y", "Z",
+    "JX", "JY", "JZ",
     "Bell",
     "Fourier",
     "Identity",
@@ -62,6 +63,25 @@ QuditBasis[{name : "PauliX" | "PauliY" | "PauliZ", dim_Integer : 2}, args___] :=
                 Subscript[
                     ToLowerCase @ StringDelete[name, "Pauli"],
                     Interpretation[If[dim == 2, Replace[#2[[1]], {1 -> "+", 2 -> "\[Minus]"}], #2[[1]] - 1], #]
+                ] &,
+                First[es]
+            ],
+            Last[es]
+        ],
+        args
+    ]
+]
+
+QuditBasis[{name : "JX" | "JY" | "JZ", j_ : 1 / 2}, args___] /; IntegerQ[2 j] := With[{
+    es = eigensystem[spinMatrix[name /. {"JX" -> 1, "JY" -> 2, "JZ" -> 3}, 2 j + 1], "Normalize" -> True, "Sort" -> True]
+},
+    QuditBasis[
+        AssociationThread[
+            MapIndexed[
+                Subsuperscript[
+                    "J",
+                    Interpretation[If[j == 1 / 2, Replace[#2[[1]], {1 -> "+", 2 -> "\[Minus]"}], #2[[1]] - 1], #],
+                    ToLowerCase @ StringDelete[name, "J"]
                 ] &,
                 First[es]
             ],
