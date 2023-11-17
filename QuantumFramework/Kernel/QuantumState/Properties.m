@@ -88,9 +88,9 @@ QuantumStateProp[qs_, "UnknownQ" | "UnknownStateQ"] := qs["StateType"] === "Unkn
 
 QuantumStateProp[qs_, "PhysicalQ"] := ! qs["UnknownQ"]
 
-QuantumStateProp[qs_, "NumericQ"] := ArrayQ[qs["State"], 1 | 2, NumericQ]
+QuantumStateProp[qs_, "NumericQ"] := ArrayQ[Replace[qs["State"], sa_ ? SparseArrayQ :> sa["ExplicitValues"]], 1 | 2, NumericQ]
 
-QuantumStateProp[qs_, "NumberQ"] := ArrayQ[qs["State"], 1 | 2, MachineNumberQ]
+QuantumStateProp[qs_, "NumberQ"] := ArrayQ[Replace[qs["State"], sa_ ? SparseArrayQ :> sa["ExplicitValues"]], 1 | 2, MachineNumberQ]
 
 
 QuantumStateProp[qs_, "Kind"] := Which[
