@@ -230,7 +230,7 @@ QuantumStateProp[qs_, "TransitionGraph", opts___] := With[{
 QuantumStateProp[qs_, "FullTransitionGraph", opts___] := With[{
     q = qs["Qudits"], dims = If[qs["Picture"] === "PhaseSpace", Sqrt, Identity] @ qs["Dimensions"]
 }, {
-    vs = QuantumTensorProduct /@ Tuples[Join[QuditBasis[#]["Names"], QuditBasis["X"[#]]["Names"]] & /@ dims]
+    vs = QuantumTensorProduct /@ Tuples[Join[QuditBasis["X"[#]]["Names"], QuditBasis[#]["Names"]] & /@ dims]
 },
     WeightedAdjacencyGraph[
         vs,
