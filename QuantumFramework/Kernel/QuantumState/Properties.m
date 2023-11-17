@@ -183,14 +183,9 @@ QuantumStateProp[qs_, "TransitionPhaseSpace"] /; qs["Picture"] === "PhaseSpace" 
     SparseArray @ Fold[
         With[{ds = Dimensions[#1][[#2]] {1, 1}, lds = Dimensions[#1][[;; #2 - 1]], rds = Dimensions[#1][[#2 + 2 ;;]]}, {d = ds[[1]]},
             Map[
-                Block[{perm1, perm2},
-                    If[ EvenQ[d],
-                        perm1 = Riffle[Range[d] + d, Range[d]];
-                        perm2 = Riffle[Range[d], Range[d] + d],
-
-                        perm1 = perm2 = Riffle[Range[d], Range[d] + d];
-                    ];
-                    Transpose @ Permute[Transpose @ Permute[#, perm1], perm2]
+                If[ OddQ[d],
+                    #,
+                    Transpose @ Permute[Transpose @ Permute[#, Riffle[Range[d], Range[d] + d]], Riffle[Range[d] + d, Range[d]]]
                 ] &,
                 If[ EvenQ[d],
                     Block[{makeTensor},
@@ -201,12 +196,10 @@ QuantumStateProp[qs_, "TransitionPhaseSpace"] /; qs["Picture"] === "PhaseSpace" 
                             #2
                         ]
                     ],
-                    With[{riffle = ArrayReduce[Riffle @@ TakeDrop[#, d] &, Join[##], List /@ Range[#3, TensorRank[#1]]] &},
-                        riffle[
-                            riffle[#1, -#1, #2 + 1],
-                            riffle[#1, #1, #2 + 1],
-                            #2
-                        ] / 2
+                    Join[
+                        Join[ConstantArray[0, Dimensions[#1]], #1, #2 + 1],
+                        Join[ConstantArray[0, Dimensions[#1]], ConstantArray[0, Dimensions[#1]], #2 + 1],
+                        #2
                     ]
                 ],
                 {#2 - 1}
@@ -222,7 +215,7 @@ QuantumStateProp[qs_, prop : "PhaseSpace" | "TransitionPhaseSpace", opts___] := 
 QuantumStateProp[qs_, "TransitionGraph", opts___] := With[{
     q = qs["Qudits"], dims = qs["Dimensions"]
 }, {
-    vs = Join[QuditBasis[dims]["Names"], QuditBasis["X"[dims]]["Names"]]
+    vs = Join[QuditBasis["X"[dims]]["Names"], QuditBasis[dims]["Names"]]
 },
     WeightedAdjacencyGraph[
         vs,
