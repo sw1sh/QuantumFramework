@@ -6,11 +6,10 @@ PackageScope["$QuditBasisNames"]
 $QuditBasisNames = {
     "Computational",
     "PauliX", "PauliY", "PauliZ",
-    "X", "Y", "Z",
+    "Identity", "I", "X", "Y", "Z",
     "JX", "JY", "JZ",
     "Bell",
     "Fourier",
-    "Identity",
     "Schwinger", "Pauli", "Dirac", "Wigner"
 }
 
@@ -27,11 +26,11 @@ QuditBasis[1, args___] := QuditBasis[args]
 
 QuditBasis[dimension_Integer, args___] := QuditBasis[{"Computational", dimension}, args]
 
-QuditBasis["Computational", args___] := QuditBasis[{"Computational", 2}, args]
+QuditBasis["Computational" | "Identity" | "I", args___] := QuditBasis[{"Computational", 2}, args]
 
-QuditBasis[{"Computational", 0}, args___] := QuditBasis[{$QuditZero}, {{}}]
+QuditBasis[{"Computational" | "Identity" | "I", 0}, ___] := QuditBasis[{$QuditZero}, {{}}]
 
-QuditBasis[{"Computational", dimension_Integer ? Positive}, args___] :=
+QuditBasis[{"Computational" | "Identity" | "I", dimension_Integer ? Positive}, args___] :=
     QuditBasis[QuditBasis[Range[dimension] - 1, identityMatrix[dimension]], args]
 
 
@@ -111,17 +110,6 @@ QuditBasis[{"Fourier", qb_ ? QuditBasisQ}, args___] := With[{dimension = qb["Dim
 QuditBasis[{"Fourier", basisArgs___}, args___] := QuditBasis[{"Fourier", QuditBasis[basisArgs]}, args]
 
 
-QuditBasis["Identity"] := QuditBasis[{"Identity", 2}]
-
-QuditBasis[{"Identity", dimension_Integer ? Positive}, args___] := QuditBasis[
-    AssociationThread[
-        Subscript["I", #] & /@ Range[dimension ^ 2],
-        Partition[#, dimension] & /@ IdentityMatrix[dimension ^ 2]
-    ],
-    args
-]
-
-
 QuditBasis["Schwinger"] := QuditBasis[{"Schwinger", 2}]
 
 QuditBasis[{"Schwinger", dimension_Integer ? Positive}, args___] := QuditBasis[
@@ -181,6 +169,14 @@ QuditBasis[{"Wigner", qb_QuditBasis /; QuditBasisQ[qb], opts : OptionsPattern[Wi
 
 QuditBasis[{"Wigner", basisArgs___, opts : OptionsPattern[]}, args___] := QuditBasis[{"Wigner", QuditBasis[basisArgs], opts}, args]
 
+
+QuditBasis[pauliString_String] := With[{chars = Characters[pauliString]},
+    QuditBasis[chars] /; Length[chars] > 1 && ContainsOnly[chars, {"I", "X", "Y", "Z"}]
+]
+
+QuditBasis[pauliString_String[dimension_Integer ? Positive]] := With[{chars = Characters[pauliString]},
+    QuditBasis[Through[chars[dimension]]] /; Length[chars] > 1 && ContainsOnly[chars, {"I", "X", "Y", "Z"}]
+]
 
 QuditBasis[nameArg_ ? nameQ, args___] /; ! FreeQ[nameArg, _String ? (StringContainsQ["Basis"])] :=
     QuditBasis[nameArg /. name_String :> StringDelete[name, "Basis"], args]
