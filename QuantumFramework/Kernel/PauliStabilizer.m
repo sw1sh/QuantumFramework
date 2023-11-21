@@ -9,7 +9,7 @@ PackageScope[$PauliStabilizerNames]
 $PauliStabilizerNames = {"5QubitCode", "5QubitCode1", "9QubitCode", "9QubitCode1", "Random"}
 
 
-PauliTableauQ[t_] := ArrayQ[t, 3, MatchQ[0 | 1]] && MatchQ[Dimensions[t], {2, n_, m_}]
+PauliTableauQ[t_] := ArrayQ[t, 3, MatchQ[0 | 1 | -1]] && MatchQ[Dimensions[t], {2, n_, m_}]
 PauliStabilizerQ[PauliStabilizer[KeyValuePattern[{"Signs" -> signs : {(-1 | 1) ...}, "Tableau" -> tableau_ ? PauliTableauQ}] /; Length[signs] == Dimensions[tableau][[3]]]] := True
 PauliStabilizerQ[_] := False
 
@@ -20,7 +20,7 @@ _PauliStabilizer["Properties"] = {"Qubits", "Generators", "Matrix", "Phase", "Ta
 (* constructors *)
 
 PauliStabilizerTableau[v_ ? ArrayQ, n_Integer ? Positive] :=
-	Transpose[
+	Enclose @ Replace[#, Thread[PadRight[ConfirmBy[DeleteCases[Union[Flatten[#]], 0], Length[#] <= 2 &], 2, -1] -> {1, -1}], {3}] & @ Transpose[
 		Partition[#, 2] & /@ Take[#, n] & @ ReverseSort @ ResourceFunction["RowSpace"][
 			With[{pauli = Tuples[Range[0, 3], n]},
 				Map[
@@ -34,8 +34,19 @@ PauliStabilizerTableau[v_ ? ArrayQ, n_Integer ? Positive] :=
 		{3, 2, 1}
 	]
 
-PauliStabilizer[qs_QuantumState] := PauliStabilizer @ PauliStabilizerTableau[qs["Computational"]["StateVector"], qs["Qudits"]]
+(* PauliStabilizer[qs_QuantumState] := Enclose @ PauliStabilizer @ ConfirmBy[PauliStabilizerTableau[qs["Computational"]["StateVector"], qs["Qudits"]], PauliTableauQ] *)
 (* PauliStabilizer[qs_QuantumState] := PauliStabilizer[QuantumOperator[Transpose @ qs["Eigenvectors"]]] *)
+(* PauliStabilizer[qs_QuantumState] := PauliStabilizer[QuantumCircuitOperator[qs]] *)
+PauliStabilizer[qs_QuantumState] := Enclose @ With[{
+	z = ConfirmBy[PauliStabilizerTableau[qs["Computational"]["StateVector"], qs["Qudits"]], PauliTableauQ],
+	x = ConfirmBy[PauliStabilizerTableau[QuantumState[qs, Table["X", qs["Qudits"]]]["StateVector"], qs["Qudits"]], PauliTableauQ]
+},
+{
+	tableau = MapThread[Join[##, 2] &, {x, z}]
+},
+	PauliStabilizer[<|"Signs" -> Map[First[ConfirmBy[DeleteCases[#, 0], Apply[Equal]], 1] &, Transpose[Catenate[tableau]]], "Tableau" -> Abs @ tableau|>]
+]
+
 
 PauliStabilizer[data : KeyValuePattern[{"Phase" -> phase_}]] := PauliStabilizer[<|KeyDrop[data, "Phase"], "Signs" -> 1 - 2 phase|>]
 PauliStabilizer[data : KeyValuePattern[{"Matrix" -> mat_}]] := PauliStabilizer[<|KeyDrop[data, "Matrix"], "Tableau" -> Transpose[ArrayReshape[mat, {Length[mat], 2, Length[mat] / 2}], {3, 1, 2}]|>]
@@ -49,7 +60,7 @@ PauliRow[mat_ ? MatrixQ, n_Integer ? Positive, d : _Integer ? Positive : 2] := E
 	xbits = bitvector[xint, n, d];
 	entries = MapIndexed[
 		With[{i = #2[[1]] - 1, index = Confirm @ firstIndex[#1]},
-			ConfirmAssert[bitvector[index, n, d] == Mod[xbits + bitvector[i, n, d], d] && MemberQ[Table[Exp[I a 2 Pi], {a, 0, 1 - 1 / 2 / d, 1 / 2 / d}], #1[[index + 1]]]];
+			ConfirmAssert[bitvector[index, n, d] == Mod[xbits + Threaded[bitvector[i, n, d]], d] && MemberQ[Table[Exp[I a 2 Pi], {a, 0, 1 - 1 / 2 / d, 1 / 2 / d}], #1[[index + 1]]]];
 			#1[[index + 1]]
 		] &,
 		mat
