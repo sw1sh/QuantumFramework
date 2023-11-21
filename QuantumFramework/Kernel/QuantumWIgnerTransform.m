@@ -20,8 +20,8 @@ WignerBasis[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := Block[{d, a, x, z},
     QuditBasis @
         AssociationThread[
             If[ OddQ[d],
-                Subscript["W", Row[#]] & /@ Tuples[Range[0, d - 1], 2],
-                Subsuperscript["W", Row[{#1, #3}], Replace[{#2, #4}, {{0, 0} -> 1, {0, 1} -> 2, {1, 0} -> 4, {1, 1} -> 3}]] & @@@ Tuples[{Range[0, d/2 - 1], {0, 1}, Range[0, d/2 - 1], {0, 1}}]
+                Subscript["\[ScriptCapitalW]", Row[#]] & /@ Tuples[Range[0, d - 1], 2],
+                Subsuperscript["\[ScriptCapitalW]", Row[{#1, #3}], Replace[{#2, #4}, {{0, 0} -> 1, {0, 1} -> 2, {1, 0} -> 4, {1, 1} -> 3}]] & @@@ Tuples[{Range[0, d/2 - 1], {0, 1}, Range[0, d/2 - 1], {0, 1}}]
             ],
             Chop @ FullSimplify @ Catenate[If[ OddQ[d],
                 Table[fanoMatrix[d, 2 p, 2 q, x, z], {p, 0, d - 1}, {q, 0, d - 1}],

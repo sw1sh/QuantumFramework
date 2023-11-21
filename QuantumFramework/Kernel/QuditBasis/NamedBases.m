@@ -61,7 +61,7 @@ QuditBasis[{name : "PauliX" | "PauliY" | "PauliZ", dim_Integer : 2}, args___] :=
         AssociationThread[
             MapIndexed[
                 Subscript[
-                    ToLowerCase @ StringDelete[name, "Pauli"],
+                    Replace[StringDelete[name, "Pauli"], {"X" -> "\[ScriptX]", "Y" -> "\[ScriptY]", "Z" -> "\[ScriptZ]"}],
                     Interpretation[If[dim == 2, Replace[#2[[1]], {1 -> "+", 2 -> "\[Minus]"}], #2[[1]] - 1], #]
                 ] &,
                 First[es]
