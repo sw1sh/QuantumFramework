@@ -294,8 +294,8 @@ Enclose @ Block[{
     ];
 
     newBasis = QuantumBasis[qb,
-        "Output" -> QuditBasis[qo["Output"]["Reverse"], newBasis["Output"]["Reverse"]]["Reverse"],
-        "Input" -> QuditBasis[qo["Input"]["Reverse"], newBasis["Input"]["Reverse"]]["Reverse"],
+        "Output" -> QuditBasis[qo["Output"], newBasis["Output"]],
+        "Input" -> QuditBasis[qo["Input"], newBasis["Input"]],
         opts
     ];
 
