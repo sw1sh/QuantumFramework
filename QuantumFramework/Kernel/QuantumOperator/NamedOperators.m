@@ -444,14 +444,12 @@ QuantumOperator["SUM", opts___] := QuantumOperator[{"SUM", 2}, opts]
 
 QuantumOperator[{"SUM", dimension : _Integer ? Positive}, opts___] := QuantumOperator[
     QuantumOperator[
-        SparseArray[{input_, output_} :>
+        SparseArray[{output_, input_} :>
             With[{
-                i1 = First[IntegerDigits[input - 1, dimension, 2]],
-                j1 = IntegerDigits[input - 1, dimension, 2][[2]],
-                i2 = First[IntegerDigits[output - 1, dimension, 2]],
-                j2 = IntegerDigits[output - 1, dimension, 2][[2]]
+                i = IntegerDigits[input - 1, dimension, 2],
+                o = IntegerDigits[output - 1, dimension, 2]
             },
-            If[i1 == i2 && j2 == Mod[i1 + j1, dimension], 1, 0]
+                1 /; i[[1]] == o[[1]] && o[[2]] == Mod[Total[i], dimension]
             ],
             {dimension ^ 2, dimension ^ 2}
         ],
