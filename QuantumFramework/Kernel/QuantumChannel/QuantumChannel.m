@@ -21,7 +21,7 @@ QuantumChannel[opArgs_List, args___] := Enclose @ Block[{ops = QuantumOperator[#
     inputDims = Values[inputDims][[All, 1]];
     outputDims = Values[outputDims][[All, 1]];
     QuantumChannel @ QuantumOperator[
-        StackQuantumOperators[#["OrderedOutput", order[[1]], QuditBasis[outputDims]]["OrderedInput", order[[2]], QuditBasis[inputDims]] & /@ ops],
+        StackQuantumOperators[#["OrderedOutput", order[[1]], QuditBasis[outputDims]]["OrderedInput", order[[2]], QuditBasis[inputDims]["Dual"]] & /@ ops],
         MapAt[Prepend[0], order, {1}]
     ]
 ]
