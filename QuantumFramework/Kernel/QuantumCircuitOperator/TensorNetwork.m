@@ -14,6 +14,7 @@ PackageExport["RemoveTensorNetworkCycles"]
 PackageExport["TensorNetworkContractionPath"]
 PackageExport["TensorNetworkContractPath"]
 PackageExport["TensorNetworkNetGraph"]
+PackageExport["TensorNetworkIndexReplace"]
 
 PackageScope["TensorNetworkIndexDimensions"]
 PackageScope["InitializeTensorNetwork"]
@@ -151,6 +152,10 @@ TensorNetworkFreeIndices[net_Graph ? TensorNetworkQ] :=
 
 TensorNetworkIndexDimensions[net_Graph ? TensorNetworkQ] :=
     Catenate @ MapThread[Thread[#2 -> Dimensions[#1]] &, {TensorNetworkTensors[net], TensorNetworkIndices[net]}]
+
+
+TensorNetworkIndexReplace[net_ ? TensorNetworkQ, rules_] :=
+    Graph[net, AnnotationRules -> MapThread[#1 -> {"Index" -> #2} &, {VertexList[net], Replace[TensorNetworkIndices[net], rules, {2}]}]]
 
 
 InitializeTensorNetwork[net_Graph ? TensorNetworkQ, tensor_ ? TensorQ, index_List : Automatic] := Annotate[

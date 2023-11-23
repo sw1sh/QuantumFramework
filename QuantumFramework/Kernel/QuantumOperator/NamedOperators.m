@@ -28,7 +28,7 @@ $QuantumOperatorNames = {
     "Switch",
     "Discard",
     "Multiplexer",
-    "WignerD", "JX", "JY", "JZ",
+    "WignerD", "JX", "JY", "JZ", "J+", "J-",
     "Double"
 }
 
@@ -729,15 +729,21 @@ jY[j_] := 1 / (2 I) (jUp[j] - jDown[j])
 
 jZ[j_] := DiagonalMatrix[Table[m, {m, j, -j, -1}]]
 
-QuantumOperator[{"WignerD", j_, {a_, b_, c_}}, opts___] :=  QuantumOperator[QuantumOperator[wignerD[j, {a, b, c}], 2 j + 1], opts]
+QuantumOperator[name : "WignerD" | "JX" | "AngularMomentumX" | "JY" | "AngularMomentumY" | "JZ" | "AngularMomentumZ" | "J+" | "J-", opts___] := QuantumOperator[{name, 1 / 2}, opts]
 
-QuantumOperator[{"WignerD", j_, b_}, opts___] := QuantumOperator[QuantumOperator[wignerD[j, b], 2 j + 1], opts]
+QuantumOperator[{"WignerD", j_, {a_, b_, c_}}, opts___] :=  QuantumOperator[QuantumOperator[wignerD[j, {a, b, c}], 2 j + 1], opts, "Label" -> "WignerD"]
 
-QuantumOperator[{"JX" | "AngularMomentumX", j_}, opts___] := QuantumOperator[QuantumOperator[jX[j], 2 j + 1], opts]
+QuantumOperator[{"WignerD", j_, b_ : 0}, opts___] := QuantumOperator[QuantumOperator[wignerD[j, b], 2 j + 1], opts, "Label" -> "WignerD"]
 
-QuantumOperator[{"JY" | "AngularMomentumY", j_}, opts___] := QuantumOperator[QuantumOperator[jY[j], 2 j + 1], opts]
+QuantumOperator[{"JX" | "AngularMomentumX", j_}, opts___] := QuantumOperator[QuantumOperator[jX[j], 2 j + 1], opts, "Label" -> "JX"]
 
-QuantumOperator[{"JZ" | "AngularMomentumZ", j_}, opts___] := QuantumOperator[QuantumOperator[jZ[j], 2 j + 1], opts]
+QuantumOperator[{"JY" | "AngularMomentumY", j_}, opts___] := QuantumOperator[QuantumOperator[jY[j], 2 j + 1], opts, "Label" -> "JY"]
+
+QuantumOperator[{"JZ" | "AngularMomentumZ", j_}, opts___] := QuantumOperator[QuantumOperator[jZ[j], 2 j + 1], opts, "Label" -> "JZ"]
+
+QuantumOperator[{"J+", j_}, opts___] := QuantumOperator[QuantumOperator[jUp[j], 2 j + 1], opts, "Label" -> "J+"]
+
+QuantumOperator[{"J-", j_}, opts___] := QuantumOperator[QuantumOperator[jDown[j], 2 j + 1], opts, "Label" -> "J-"]
 
 
 QuantumOperator[{"Double", args___}, opts___] := QuantumOperator[args, opts]["Double"]

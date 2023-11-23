@@ -5,7 +5,7 @@ PackageScope["$QuantumStateNames"]
 
 
 $QuantumStateNames = {
-    "0", "Zero", "1", "One",
+    "0", "Zero", "Up", "1", "One", "Down",
     "Plus", "Minus", "Left", "Right",
     "PsiPlus", "PsiMinus", "PhiPlus", "PhiMinus",
     "BasisState", "Register",
@@ -28,9 +28,9 @@ QuantumState[] := QuantumState["0"]
 
 QuantumState[""] := QuantumState[{}, QuantumBasis[1]]
 
-QuantumState["Zero", args___] := QuantumState["0", args]
+QuantumState["Zero" | "Up", args___] := QuantumState["0", args]
 
-QuantumState["One", args___] := QuantumState["1", args]
+QuantumState["One" | "Down", args___] := QuantumState["1", args]
 
 QuantumState[s_String /; StringMatchQ[s, DigitCharacter..], dim : (_Integer ? Positive) : 2, args___] := With[{
     digits = Clip[Interpreter[DelimitedSequence["Digit", ""]] @ s, {0, dim - 1}]
