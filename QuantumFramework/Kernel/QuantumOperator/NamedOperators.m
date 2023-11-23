@@ -28,7 +28,7 @@ $QuantumOperatorNames = {
     "Switch",
     "Discard",
     "Multiplexer",
-    "WignerD", "JX", "JY", "JZ",
+    "WignerD", "JX", "JY", "JZ", "J+", "J-",
     "Double"
 }
 
@@ -444,14 +444,12 @@ QuantumOperator["SUM", opts___] := QuantumOperator[{"SUM", 2}, opts]
 
 QuantumOperator[{"SUM", dimension : _Integer ? Positive}, opts___] := QuantumOperator[
     QuantumOperator[
-        SparseArray[{input_, output_} :>
+        SparseArray[{output_, input_} :>
             With[{
-                i1 = First[IntegerDigits[input - 1, dimension, 2]],
-                j1 = IntegerDigits[input - 1, dimension, 2][[2]],
-                i2 = First[IntegerDigits[output - 1, dimension, 2]],
-                j2 = IntegerDigits[output - 1, dimension, 2][[2]]
+                i = IntegerDigits[input - 1, dimension, 2],
+                o = IntegerDigits[output - 1, dimension, 2]
             },
-            If[i1 == i2 && j2 == Mod[i1 + j1, dimension], 1, 0]
+                1 /; i[[1]] == o[[1]] && o[[2]] == Mod[Total[i], dimension]
             ],
             {dimension ^ 2, dimension ^ 2}
         ],
@@ -731,15 +729,21 @@ jY[j_] := 1 / (2 I) (jUp[j] - jDown[j])
 
 jZ[j_] := DiagonalMatrix[Table[m, {m, j, -j, -1}]]
 
-QuantumOperator[{"WignerD", j_, {a_, b_, c_}}, opts___] :=  QuantumOperator[QuantumOperator[wignerD[j, {a, b, c}], 2 j + 1], opts]
+QuantumOperator[name : "WignerD" | "JX" | "AngularMomentumX" | "JY" | "AngularMomentumY" | "JZ" | "AngularMomentumZ" | "J+" | "J-", opts___] := QuantumOperator[{name, 1 / 2}, opts]
 
-QuantumOperator[{"WignerD", j_, b_}, opts___] := QuantumOperator[QuantumOperator[wignerD[j, b], 2 j + 1], opts]
+QuantumOperator[{"WignerD", j_, {a_, b_, c_}}, opts___] :=  QuantumOperator[QuantumOperator[wignerD[j, {a, b, c}], 2 j + 1], opts, "Label" -> "WignerD"]
 
-QuantumOperator[{"JX" | "AngularMomentumX", j_}, opts___] := QuantumOperator[QuantumOperator[jX[j], 2 j + 1], opts]
+QuantumOperator[{"WignerD", j_, b_ : 0}, opts___] := QuantumOperator[QuantumOperator[wignerD[j, b], 2 j + 1], opts, "Label" -> "WignerD"]
 
-QuantumOperator[{"JY" | "AngularMomentumY", j_}, opts___] := QuantumOperator[QuantumOperator[jY[j], 2 j + 1], opts]
+QuantumOperator[{"JX" | "AngularMomentumX", j_}, opts___] := QuantumOperator[QuantumOperator[jX[j], 2 j + 1], opts, "Label" -> "JX"]
 
-QuantumOperator[{"JZ" | "AngularMomentumZ", j_}, opts___] := QuantumOperator[QuantumOperator[jZ[j], 2 j + 1], opts]
+QuantumOperator[{"JY" | "AngularMomentumY", j_}, opts___] := QuantumOperator[QuantumOperator[jY[j], 2 j + 1], opts, "Label" -> "JY"]
+
+QuantumOperator[{"JZ" | "AngularMomentumZ", j_}, opts___] := QuantumOperator[QuantumOperator[jZ[j], 2 j + 1], opts, "Label" -> "JZ"]
+
+QuantumOperator[{"J+", j_}, opts___] := QuantumOperator[QuantumOperator[jUp[j], 2 j + 1], opts, "Label" -> "J+"]
+
+QuantumOperator[{"J-", j_}, opts___] := QuantumOperator[QuantumOperator[jDown[j], 2 j + 1], opts, "Label" -> "J-"]
 
 
 QuantumOperator[{"Double", args___}, opts___] := QuantumOperator[args, opts]["Double"]

@@ -48,10 +48,10 @@ QuantumChannelProp[qc_, "TraceDimensions"] := MapThread[If[Positive[#1], Nothing
 
 QuantumChannelProp[qc_, "TraceQudits"] := Length @ qc["TraceOrder"]
 
-QuantumChannelProp[qc_, "Trace"] := QuantumPartialTrace[qc["Operator"] @ qc["Operator"]["Dagger"], qc["TraceOrder"]]
+QuantumChannelProp[qc_, "Trace"] := QuantumOperator @ QuantumPartialTrace[QuantumCircuitOperator[{qc["Operator"]["Dagger"], qc["Operator"]}], qc["TraceOrder"]]
 
 QuantumChannelProp[qc_, "TracePreservingQ"] := With[{m = Chop @ qc["Trace"]["MatrixRepresentation"]},
-    If[MatrixQ[m, NumericQ], m == IdentityMatrix[Length @ m], Undefined]
+    If[MatrixQ[m, NumericQ], m == IdentityMatrix[Length @ m, SparseArray], Undefined]
 ]
 
 QuantumChannelProp[qc_, "EvolutionChannel"] := QuantumChannel[

@@ -14,12 +14,18 @@ $GateDefaultBoundaryStyle = {
 	Subscript["R", _][_] -> RGBColor[0.528488, 0.470624, 0.701351],
 	"Measurement" -> RGBColor[0.7367, 0.358, 0.5030],
 	"Channel" -> $DefaultGray,
+	"ZSpider" | "XSpider" | "Spider" -> Directive[CapForm[None], $DefaultGray, Opacity[.3]],
 	_ -> $DefaultGray
 };
 
-$GateDefaultBackgroundStyle = Append[
+$GateDefaultBackgroundStyle = Join[
+	{
+		"ZSpider" -> White, "XSpider" ->LightGray, "Spider" -> Directive[Opacity[.1], $DefaultGray]
+	},
 	MapAt[Directive[#, Opacity[0.3]] &, Most[$GateDefaultBoundaryStyle], {All, 2}],
-	_ -> Directive[RGBColor[0.0313725, 0.027451, 0.027451], Opacity[.25]]
+	{
+		_ -> Directive[RGBColor[0.0313725, 0.027451, 0.027451], Opacity[.25]]
+	}
 ]
 
 $DefaultFontStyleOptions = {FontFamily -> "Roboto", FontSize -> 11, FontColor -> Black};
@@ -210,8 +216,8 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 		},
 
 		(type : "ZSpider" | "XSpider" | "Spider")[phase_] :> {
-			FaceForm[Switch[type, "ZSpider", White, "XSpider", LightGray, "Spider", Directive[Opacity[.1], $DefaultGray]]],
-			EdgeForm[Directive[wireThickness[Max[Values[inDims], Values[outDims]]], wireStyle]],
+			FaceForm[Replace[type, gateBackgroundStyle]],
+			EdgeForm[Directive[wireThickness[Max[Values[inDims], Values[outDims]]], Replace[type, gateBoundaryStyle]]],
 			Disk[center, size / 5],
 			If[	phase === 0,
 				Nothing,

@@ -14,6 +14,7 @@ PackageExport["RemoveTensorNetworkCycles"]
 PackageExport["TensorNetworkContractionPath"]
 PackageExport["TensorNetworkContractPath"]
 PackageExport["TensorNetworkNetGraph"]
+PackageExport["TensorNetworkIndexReplace"]
 
 PackageScope["TensorNetworkIndexDimensions"]
 PackageScope["InitializeTensorNetwork"]
@@ -153,6 +154,10 @@ TensorNetworkIndexDimensions[net_Graph ? TensorNetworkQ] :=
     Catenate @ MapThread[Thread[#2 -> Dimensions[#1]] &, {TensorNetworkTensors[net], TensorNetworkIndices[net]}]
 
 
+TensorNetworkIndexReplace[net_ ? TensorNetworkQ, rules_] :=
+    Graph[net, AnnotationRules -> MapThread[#1 -> {"Index" -> #2} &, {VertexList[net], Replace[TensorNetworkIndices[net], rules, {2}]}]]
+
+
 InitializeTensorNetwork[net_Graph ? TensorNetworkQ, tensor_ ? TensorQ, index_List : Automatic] := Annotate[
     {
         EdgeAdd[
@@ -267,14 +272,14 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
 ]
 
 QuantumCircuitHypergraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]] := Enclose @ Block[{
-    net = qc["TensorNetwork"], vs, indices, labels, edges
+    net = QuantumTensorNetwork[qc["Flatten"], FilterRules[{opts}, Except[Options[Graph], Options[QuantumTensorNetwork]]]], vs, indices, labels, edges
 },
-	Confirm @ Needs["WolframInstitute`Hypergraph`"];
+	Confirm @ Needs["WolframInstitute`Hypergraph`" -> "H`"];
 	vs = Developer`FromPackedArray @ VertexList[net];
-	indices = AnnotationValue[{net, vs}, "Index"];
+	indices = TensorNetworkIndices[net];
 	labels = AnnotationValue[{net, vs}, VertexLabels];
 	edges = Replace[indices, Rule @@@ EdgeTags[net], {2}];
-	WolframInstitute`Hypergraph`Hypergraph[edges, opts, EdgeLabels -> Thread[edges -> labels]]
+	H`Hypergraph[Union @@ edges, edges, FilterRules[{opts}, Options[H`Hypergraph]], EdgeLabels -> Thread[edges -> labels]]
 ]
 
 

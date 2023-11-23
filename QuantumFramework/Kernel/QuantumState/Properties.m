@@ -259,7 +259,7 @@ QuantumStateProp[qs_, "TransitionQuasiProbability", opts___] :=
         2 {1, 1} qs["Dimension"]
     ]
 
-QuantumStateProp[qs_, "Formula", OptionsPattern[]] /; qs["DegenerateStateQ"] := 0
+QuantumStateProp[qs_, "Formula", OptionsPattern[]] /; qs["DegenerateStateQ"] := RawBoxes[0]
 
 MinusBoxQ[boxes_] := MatchQ[boxes, RowBox[{"-" | _ ? MinusBoxQ, __}]]
 

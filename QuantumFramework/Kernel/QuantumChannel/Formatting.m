@@ -32,7 +32,7 @@ QuantumChannel /: MakeBoxes[qc_QuantumChannel /; QuantumChannelQ[qc], format_] :
         },
         {
             {
-                BoxForm`SummaryItem[{"Trace preserving: ", qc["TracePreservingQ"]}]
+                BoxForm`SummaryItem[{"Trace preserving: ", TimeConstrained[qc["TracePreservingQ"], 1]}]
             },
             {
                 BoxForm`SummaryItem[{"Order: ", Row[{qc["InputOrder"]}]}],
