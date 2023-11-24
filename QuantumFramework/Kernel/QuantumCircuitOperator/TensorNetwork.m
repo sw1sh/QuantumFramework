@@ -301,9 +301,9 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
     ]
 ]
 
-Options[TensorNetworkCompile] = {}
+Options[TensorNetworkCompile] = Options[QuantumTensorNetwork]
 
-TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ Block[{
+TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
     circuit = qco, net, phaseSpaceQ, bendQ, order, res,
     traceOrder, eigenOrder, basis = qco["Basis"]
 },
@@ -320,7 +320,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
             circuit = circuit /* ({"Cap", #[[1, 2]]} -> #[[All, 1]] & /@ Partition[Thread[{circuit["TraceOrder"], circuit["TraceDimensions"]}], 2]);
         ]
     ];
-    net = ConfirmBy[circuit["TensorNetwork", "PrependInitial" -> False, "Computational" -> ! phaseSpaceQ], TensorNetworkQ];
+    net = ConfirmBy[QuantumTensorNetwork[circuit, opts, "PrependInitial" -> False, "Computational" -> ! phaseSpaceQ], TensorNetworkQ];
     res = Confirm @ ContractTensorNetwork[net];
     res = With[{basis = circuit["Basis"]},
         QuantumState[
@@ -345,7 +345,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, OptionsPattern[]] := Enclose @ 
         ];
         res = res["Unbend"]
     ];
-    res = If[phaseSpaceQ, QuantumState[res["State"], basis], QuantumState[res, basis]];
+    res = If[phaseSpaceQ || ! TrueQ[OptionValue["Computational"]], QuantumState[res["State"], basis], QuantumState[res, basis]];
     res = Which[
         eigenOrder =!= {},
         QuantumMeasurementOperator[QuantumOperator[res, order], qco["Target"]],

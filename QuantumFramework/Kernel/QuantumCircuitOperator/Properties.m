@@ -111,7 +111,7 @@ QuantumCircuitOperatorProp[qco_, "Icon", opts : OptionsPattern[Options[CircuitDr
     ]
 
 
-Options[quantumCircuitCompile] = {Method -> Automatic}
+Options[quantumCircuitCompile] := Join[{Method -> Automatic}, Options[TensorNetworkCompile]]
 
 quantumCircuitCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] :=
     Switch[
