@@ -212,38 +212,55 @@ QuantumStateProp[qs_, "TransitionPhaseSpace"] /; qs["Picture"] === "PhaseSpace" 
 
 QuantumStateProp[qs_, prop : "PhaseSpace" | "TransitionPhaseSpace", opts___] := QuantumWignerTransform[qs, opts][prop]
 
-QuantumStateProp[qs_, "TransitionGraph", opts___] := With[{
+QuantumStateProp[qs_, "PositiveTransitionQuasiProbability", opts___] := UnitStep[#] # - Transpose[UnitStep[- #] #] & @ qs["TransitionQuasiProbability", opts]
+
+QuantumStateProp[qs_, "PositiveTransitionPhaseSpace", opts___] :=
+    UnitStep[#] # - Transpose[UnitStep[-#] #, Catenate[Reverse /@ Partition[Range[2 qs["Qudits"]], 2]]] & @ qs["TransitionPhaseSpace", opts]
+
+
+QuantumStateProp[qs_, "TransitionGraph", opts : OptionsPattern[Join[{"Positive" -> False}, Options[Graph]]]] := With[{
     q = qs["Qudits"], dims = qs["Dimensions"]
 }, {
-    vs = Join[QuditBasis["X"[dims]]["Names"], QuditBasis[dims]["Names"]]
-},
-    WeightedAdjacencyGraph[
+    vs = Join[QuditBasis["X"[dims]]["Names"], QuditBasis[dims]["Names"]],
+    mat = qs[If[TrueQ[Lookup[{opts}, "Positive"]], "PositiveTransitionQuasiProbability", "TransitionQuasiProbability"]]
+}, {
+    g = WeightedAdjacencyGraph[
         vs,
-        Replace[Normal[qs["TransitionQuasiProbability"]], 0 -> Infinity, {2}],
-        opts,
+        Replace[Normal[mat], 0 | 0. -> Infinity, {2}],
+        FilterRules[{opts}, Options[Graph]],
         EdgeLabelStyle -> {_ -> Background -> White},
-        VertexShapeFunction -> Function[Inset[Framed[Style[#2, Black], Background -> LightBlue], #1, #3]],
+        VertexShapeFunction -> Catenate @ MapThread[{xs, color} |-> Thread[xs -> Function[Inset[Framed[Style[#2, Black], Background -> color], #1, #3]]], {Partition[vs, Times @@ dims], {LightBlue, LightRed}}],
+        VertexStyle -> Catenate @ MapThread[{xs, color} |-> Thread[xs -> color], {Partition[vs, Times @@ dims], {LightBlue, LightRed}}],
         PerformanceGoal -> "Quality"
     ]
+},
+    Graph[g, EdgeStyle -> (# -> Replace[Sign[AnnotationValue[{g, #}, EdgeWeight]], {0 | 1 -> Red, -1 -> Blue}] & /@ EdgeList[g])]
 ]
 
-QuantumStateProp[qs_, "FullTransitionGraph", opts___] := With[{
+QuantumStateProp[qs_, "FullTransitionGraph", opts : OptionsPattern[Join[{"Positive" -> False}, Options[Graph]]]] := With[{
     q = qs["Qudits"], dims = If[qs["Picture"] === "PhaseSpace", Sqrt, Identity] @ qs["Dimensions"]
 }, {
-    vs = QuantumTensorProduct /@ Tuples[Join[QuditBasis["X"[#]]["Names"], QuditBasis[#]["Names"]] & /@ dims]
-},
-    WeightedAdjacencyGraph[
+    vs = QuantumTensorProduct /@ Tuples[Join[QuditBasis["X"[#]]["Names"], QuditBasis[#]["Names"]] & /@ dims],
+    tensor = qs[If[TrueQ[Lookup[{opts}, "Positive"]], "PositiveTransitionPhaseSpace", "TransitionPhaseSpace"]]
+},  {
+    g = WeightedAdjacencyGraph[
         vs,
         Replace[
-            Normal @ ArrayReshape[Transpose[qs["TransitionPhaseSpace"], Riffle[Range[q], Range[q] + q]], Length[vs] {1, 1}],
+            Normal @ ArrayReshape[Transpose[tensor, Riffle[Range[q], Range[q] + q]], Length[vs] {1, 1}],
             0 -> Infinity,
             {2}
         ],
-        opts,
+        FilterRules[{opts}, Options[Graph]],
         EdgeLabelStyle -> {_ -> Background -> White},
-        VertexShapeFunction -> Function[Inset[Framed[Style[#2, Black], Background -> LightBlue], #1, #3]],
+        VertexShapeFunction -> Join[
+            {_ -> Function[Inset[Framed[Style[#2, Black], Background -> LightGray], #1, #3]]},
+            Thread[QuditBasis["X"[dims]]["Names"] -> Function[Inset[Framed[Style[#2, Black], Background -> LightBlue], #1, #3]]],
+            Thread[QuditBasis[dims]["Names"] -> Function[Inset[Framed[Style[#2, Black], Background -> LightRed], #1, #3]]]
+        ],
         PerformanceGoal -> "Quality"
     ]
+},
+    Graph[g, EdgeStyle -> (# -> Replace[Sign[AnnotationValue[{g, #}, EdgeWeight]], {0 | 1 -> Red, -1 -> Blue}] & /@ EdgeList[g])]
 ]
 
 
