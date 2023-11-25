@@ -7,14 +7,18 @@ PackageScope[WignerBasis]
 
 
 
-Options[WignerBasis] = {"Exact" -> True, "Decompose" -> True}
+Options[WignerBasis] = {"Exact" -> True, "Decompose" -> True, "Basis" -> "Pauli"}
 
-WignerBasis[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := Block[{d, a, x, z},
+WignerBasis[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := Block[{d, x, z},
     If[TrueQ[OptionValue["Decompose"]], Return[QuantumTensorProduct[WignerBasis[#, "Decompose" -> False, opts] & /@ qb["Decompose"]]]];
     d = qb["Dimension"];
     If[d == 1, Return[qb]];
-    a = DiagonalMatrix[Exp[I 2 Pi Range[0, d - 1] / d]];
-    z = qb["Matrix"] . a . PseudoInverse[qb["Matrix"]];
+    z = Switch[OptionValue["Basis"],
+        "Pauli",
+            ConjugateTranspose[pauliMatrix[3, d]],
+        _,
+            qb["Matrix"] . DiagonalMatrix[Exp[2 Pi I Range[0, d - 1] / d]] . PseudoInverse[qb["Matrix"]]
+    ];
     If[ ! TrueQ[OptionValue["Exact"]], z = N[z]];
     x = FourierMatrix[d] . z . ConjugateTranspose[FourierMatrix[d]];
     QuditBasis @
@@ -24,8 +28,8 @@ WignerBasis[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := Block[{d, a, x, z},
                 Subsuperscript["\[ScriptCapitalW]", Row[{#1, #3}], Replace[{#2, #4}, {{0, 0} -> 1, {0, 1} -> 2, {1, 0} -> 4, {1, 1} -> 3}]] & @@@ Tuples[{Range[0, d/2 - 1], {0, 1}, Range[0, d/2 - 1], {0, 1}}]
             ],
             Chop @ FullSimplify @ Catenate[If[ OddQ[d],
-                Table[fanoMatrix[d, 2 p, 2 q, x, z], {p, 0, d - 1}, {q, 0, d - 1}],
-                Table[2 fanoMatrix[d, p, q, x, z], {p, 0, d - 1}, {q, 0, d - 1}]
+                Table[fanoMatrix[d, 2 q, 2 p, x, z], {q, 0, d - 1}, {p, 0, d - 1}],
+                Table[2 fanoMatrix[d, q, p, x, z], {q, 0, d - 1}, {p, 0, d - 1}]
             ]]
         ]
 ]

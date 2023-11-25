@@ -198,13 +198,12 @@ spinMatrix[3, dimension_] := With[{
     ]
 ]
 
-fanoMatrix[d_, p_, q_, x_ : Automatic, z_ : Automatic] :=
+fanoMatrix[d_, q_, p_, x_ : Automatic, z_ : Automatic] :=
     FullSimplify @
-    Exp[I Pi p q / d] *
+    Exp[I Pi q p / d] *
         MatrixPower[FourierMatrix[d], 2] .
-            MatrixPower[Replace[z, Automatic :> pauliMatrix[3, d]], p] .
-                    MatrixPower[Replace[x, Automatic :> pauliMatrix[1, d]], q]
-
+            MatrixPower[Replace[z, Automatic :> ConjugateTranspose[pauliMatrix[3, d]]], q] .
+                    MatrixPower[Replace[x, Automatic :> ConjugateTranspose[pauliMatrix[1, d]]], p]
 
 (* optimization *)
 
