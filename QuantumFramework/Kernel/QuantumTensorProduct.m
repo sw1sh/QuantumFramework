@@ -37,7 +37,7 @@ QuantumBasis[<|
                 {a_, b_} :> Flatten @ CircleTimes[a, b] /. None -> Sequence[]
             }
         ],
-    "ParameterSpec" -> Join[qb1["ParameterSpec"], qb2["ParameterSpec"]]
+    "ParameterSpec" -> Values @ GroupBy[Join[qb1["ParameterSpec"], qb2["ParameterSpec"]], First, First @ TakeLargestBy[#, Last, 1] &]
 |>
 ]
 

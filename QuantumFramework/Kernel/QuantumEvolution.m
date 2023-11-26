@@ -18,7 +18,7 @@ QuantumEvolve[
     defaultParameter : _Symbol | {_Symbol, _ ? NumericQ, _ ? NumericQ} | Automatic : Automatic,
     opts : OptionsPattern[]
 ] := Enclose @ Block[{
-    state = None,
+    state = None, basis,
     matrix,
     parameter, parameterSpec,
     numericQ, solution,
@@ -29,7 +29,7 @@ QuantumEvolve[
 },
     If[ defaultState =!= None,
         state = Replace[defaultState, Automatic :> QuantumState[{"Register", hamiltonian["InputDimensions"]}]];
-        phaseSpaceQ = state["Picture"] === "PhaseSpace"
+        phaseSpaceQ = state["Picture"] === "PhaseSpace" && AllTrue[Sqrt[state["Dimensions"]], IntegerQ]
     ];
     ConfirmAssert[hamiltonian["OutputDimensions"] == hamiltonian["InputDimensions"]];
     If[ defaultParameter === Automatic,
@@ -54,8 +54,13 @@ QuantumEvolve[
         matrix . \[FormalS][parameter],
         matrix . \[FormalS][parameter] - \[FormalS][parameter] . matrix
     ];
-    If[ state =!= None && ! phaseSpaceQ,
-        state = QuantumState[state["Split", state["Qudits"]], hamiltonian["Input"]]
+    basis = If[state =!= None && phaseSpaceQ, state["Basis"], hamiltonian["OutputBasis"]];
+    If[ state =!= None,
+        If[ phaseSpaceQ,
+            (* always treat state as a single system in phase-space *)
+            state = QuantumWignerTransform[QuantumState[QuantumWeylTransform[state], Sqrt[state["Dimension"]]]],
+            state = QuantumState[state["Split", state["Qudits"]], hamiltonian["Input"]]
+        ]
     ];
     init = If[defaultState === None, IdentityMatrix[hamiltonian["InputDimension"], SparseArray], state["State"]];
     equations = Join[
@@ -111,12 +116,7 @@ QuantumEvolve[
     ];
     Protect[\[FormalS]];
     If[ MatchQ[solution, _InterpolatingFunction],
-        solution =
-            Map[
-                Interpolation[Thread[{solution["Grid"], #}], InterpolationOrder -> solution["InterpolationOrder"]][parameter] &,
-                Transpose[solution["ValuesOnGrid"], InversePermutation[Cycles[{Range[Length[solution["OutputDimensions"]] + 1]}]]],
-                {-2}
-            ]
+        solution = ExpandInterpolatingFunction[solution, parameter]
     ];
     Which[
         state === None && SquareMatrixQ[solution],
@@ -127,10 +127,16 @@ QuantumEvolve[
             "ParameterSpec" -> parameterSpec
         ],
         stateQ[solution],
-        QuantumState[
-            solution,
-            If[state =!= None && phaseSpaceQ, state["Basis"], hamiltonian["OutputBasis"]],
-            "ParameterSpec" -> parameterSpec
+        If[ state =!= None && phaseSpaceQ,
+            ExpandInterpolatingFunction @ QuantumState[
+                QuantumState[
+                    QuantumWeylTransform[QuantumState[solution, "Wigner"[Sqrt[state["Dimension"]]], "Picture" -> "PhaseSpace"]],
+                    Sqrt[basis["Dimensions"]]
+                ]["Double"],
+                basis,
+                "ParameterSpec" -> parameterSpec
+            ],
+            QuantumState[solution, basis, "ParameterSpec" -> parameterSpec]
         ],
         True,
         Message[QuantumEvolve::error];
@@ -157,6 +163,19 @@ MergeInterpolatingFunctions[array_ ? SparseArrayQ] := Enclose @ Block[{pos, valu
 ]
 
 MergeInterpolatingFunctions[array_ ? ArrayQ] := MergeInterpolatingFunctions[SparseArray[array]]
+
+
+ExpandInterpolatingFunction[f_InterpolatingFunction, parameter_] := Map[
+    Interpolation[Thread[{f["Grid"], #}], InterpolationOrder -> f["InterpolationOrder"]][parameter] &,
+    Transpose[f["ValuesOnGrid"], InversePermutation[Cycles[{Range[Length[f["OutputDimensions"]] + 1]}]]],
+    {-2}
+]
+
+ExpandInterpolatingFunction[f_InterpolatingFunction[parameter_]] := ExpandInterpolatingFunction[f, parameter]
+
+ExpandInterpolatingFunction[array_ ? ArrayQ] := ExpandInterpolatingFunction[MergeInterpolatingFunctions[array]]
+
+ExpandInterpolatingFunction[qs_QuantumState] := QuantumState[ExpandInterpolatingFunction @ qs["State"], qs["Basis"]]
 
 
 HamiltonianTransitionRate[H_QuantumOperator] /; H["OutputDimension"] == H["InputDimension"] :=
