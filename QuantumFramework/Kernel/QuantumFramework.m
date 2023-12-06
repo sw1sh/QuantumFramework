@@ -2,7 +2,6 @@ Package["Wolfram`QuantumFramework`"]
 
 PackageScope["QuantumFrameworkOperatorQ"]
 PackageScope["$QuantumFrameworkPropCache"]
-PackageScope["CacheProperty"]
 
 PackageImport["DocumentationSearch`"]
 
@@ -23,15 +22,5 @@ If[ $FrontEnd =!= Null,
         FE`Evaluate[FEPrivate`AddSpecialArgCompletion[#]] &,
         Import[FileNameJoin[{PacletObject["Wolfram/QuantumFramework"]["Location"], "AutoCompletionData", "specialArgFunctions.tr"}], "WL"]
     ]
-]
-
-(* Quiet[CreateDocumentationIndex[FileNameJoin[{PacletObject["Wolfram/QuantumFramework"]["Location"], "Documentation", "English"}]]] *)
-
-If[ PacletFind["ServiceConnection_IBMQ"] === {},
-    PacletInstall[PacletObject["Wolfram/QuantumFramework"]["AssetLocation", "IBMQ.paclet"]]
-]
-
-If[ PacletFind["Cotengra"] === {},
-    Quiet @ PacletInstall[PacletObject["Wolfram/QuantumFramework"]["AssetLocation", "Cotengra.paclet"]]
 ]
 
