@@ -298,7 +298,7 @@ Options[qiskitInitBackend] = {"Provider" -> None, "Backend" -> Automatic}
 
 qiskitInitBackend[qc_QiskitCircuit, OptionsPattern[]] := Enclose @ Block[{
     $pythonBytes = qc["Bytes"],
-    provider,
+    provider, params,
     $backendName = Replace[OptionValue["Backend"], Automatic -> Null],
     $token = Null
 },
