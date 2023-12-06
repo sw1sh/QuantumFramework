@@ -8,7 +8,7 @@ Begin["`Private`"];
 
 $libraryName = "libcotengra";
 
-libraryFunctions = LibraryFunctionLoad[
+libraryFunctions := libraryFunctions = LibraryFunctionLoad[
 	$libraryName,
 	"load_wstp_functions",
 	LinkObject,
