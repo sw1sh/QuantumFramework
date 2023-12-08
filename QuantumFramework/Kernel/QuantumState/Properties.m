@@ -109,7 +109,7 @@ QuantumStateProp[qs_, "Kind"] := Which[
 QuantumState::notpure = "is not a pure state";
 
 QuantumStateProp[qs_, "Amplitudes"] := Module[{s = qs["Pure"], result},
-    result = Enclose @ KeySort @ Association @ Thread[s["ElementNames"] -> ConfirmBy[Chop @ s["StateVector"], VectorQ]];
+    result = Enclose @ Association @ Thread[s["ElementNames"] -> ConfirmBy[Chop @ s["StateVector"], VectorQ]];
     result /; !FailureQ[result]
 ]
 
