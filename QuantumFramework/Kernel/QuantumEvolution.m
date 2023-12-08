@@ -47,7 +47,7 @@ QuantumEvolve[
             hamiltonian["Matrix"] / I
         ]
     ];
-    ConfirmAssert[Dimensions[matrix] == {1, 1} state["Dimension"]];
+    ConfirmAssert[state === None || Dimensions[matrix] == {1, 1} state["Dimension"]];
     method = If[numericQ, NDSolveValue, DSolveValue];
     rhs = If[
         state === None || state["VectorQ"],
