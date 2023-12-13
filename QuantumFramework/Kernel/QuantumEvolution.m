@@ -32,6 +32,7 @@ QuantumEvolve[
         phaseSpaceQ = state["Picture"] === "PhaseSpace" && AllTrue[Sqrt[state["Dimensions"]], IntegerQ]
     ];
     ConfirmAssert[hamiltonian["OutputDimensions"] == hamiltonian["InputDimensions"]];
+    ConfirmAssert[state === None || hamiltonian["InputDimension"] == state["Dimension"]];
     If[ defaultParameter === Automatic,
         parameter = First[hamiltonian["Parameters"], \[FormalT]];
         parameterSpec = Replace[First[hamiltonian["ParameterSpec"], {}], {} :> {parameter, 0, 1}],
@@ -47,7 +48,6 @@ QuantumEvolve[
             hamiltonian["Matrix"] / I
         ]
     ];
-    ConfirmAssert[state === None || Dimensions[matrix] == {1, 1} state["Dimension"]];
     method = If[numericQ, NDSolveValue, DSolveValue];
     rhs = If[
         state === None || state["VectorQ"],
