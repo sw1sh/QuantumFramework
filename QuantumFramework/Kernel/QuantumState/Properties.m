@@ -450,7 +450,7 @@ QuantumStateProp[qs_, "Computational"] := If[
 QuantumStateProp[qs_, "Canonical"] := QuantumState[qs, qs["Basis"]["Canonical"]]
 
 
-QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /; dim === Automatic || Divisible[qs["Dimension"], dim] := Module[{
+QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /; qs["VectorQ"] && dim === Automatic || Divisible[qs["Dimension"], dim] := Module[{
     uMatrix, alphaValues, wMatrix,
     n = Replace[dim, Automatic -> If[
         qs["Qudits"] > 1,
@@ -462,19 +462,10 @@ QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /;
     mat
 },
     m = qs["Dimension"] / n;
-    mat = If[ qs["PureStateQ"] || qs["DegenerateStateQ"],
-        ArrayReshape[state["StateVector"], {n, m}],
-        ArrayReshape[
-            Transpose[ArrayReshape[state["DensityMatrix"], {n, m, n, m}], 2 <-> 3],
-            {n, m} ^ 2
-        ]
-    ];
+    mat = ArrayReshape[state["StateVector"], {n, m}];
     {uMatrix, alphaValues, wMatrix} = SingularValueDecomposition[mat];
     QuantumState[
-        If[ qs["PureStateQ"],
-            Flatten @ alphaValues,
-            ArrayReshape[Transpose[ArrayReshape[alphaValues, {n, n, m, m}], 2 <-> 3], {n * m, n * m}]
-        ],
+        Flatten @ alphaValues,
         QuantumBasis[
             {
                 QuditBasis[Association @ MapIndexed[Subscript["u", First @ #2] -> #1 &, Transpose[uMatrix]]],
@@ -484,6 +475,9 @@ QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /;
         ]
     ]
 ]
+
+QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /; qs["MatrixQ"] :=
+    qs["Eigenvalues"] . (#["SchmidtBasis", dim]["MatrixState"] & /@ qs["Eigenstates"])
 
 
 primeFactors[n_] := Catenate[Table @@@ FactorInteger[n]]
@@ -541,24 +535,25 @@ QuantumStateProp[qs_, "Disentangle"] /; qs["PureStateQ"] := With[{s = qs["Schmid
 
 QuantumStateProp[qs_, "Decompose", {}] := {{qs}}
 
-QuantumStateProp[qs_, "Decompose", dims_List] /; qs["PureStateQ"] || qs["DegenerateStateQ"] := If[Length[dims] == 1, {{qs}}, Module[{s = qs["SchmidtBasis", First[dims]], basis},
+QuantumStateProp[qs_, "Decompose", dims_List] /; qs["VectorQ"] || qs["DegenerateStateQ"] := Enclose @ If[Length[dims] == 1, {{qs}},
+Block[{s = Confirm @ qs["SchmidtBasis", First[dims]], basis},
     basis = s["Basis"]["Decompose"];
     If[s["DegenerateStateQ"], Return[{QuantumState[0, #] & /@ basis}]];
 	MapIndexed[{v, idx} |->
-		Splice[Catenate /@ Tuples[If[Length[basis] == 2, MapAt[#["Decompose", {}] &, 1], Identity] @
-            MapAt[#["Decompose", Rest[dims]] &, -1] @ MapIndexed[QuantumState[SparseArray[idx -> If[#2 === {1}, v, 1], #["Dimension"]], #] &, basis]]],
+		Splice[Catenate /@ Tuples[If[Length[basis] == 2, MapAt[Confirm @ #["Decompose", {}] &, 1], Identity] @
+            MapAt[Confirm @ #["Decompose", Rest[dims]] &, -1] @ MapIndexed[QuantumState[SparseArray[idx -> If[#2 === {1}, v, 1], #["Dimension"]], #] &, basis]]],
 		s["StateVector"]["ExplicitValues"]
 	]
 ]]
 
 decompose[qs_, {}] := {1 -> {qs}}
 
-decompose[qs_, dims_List] := If[Length[dims] == 1, {1 -> {qs}}, Module[{s = qs["SchmidtBasis", First[dims]], basis},
+decompose[qs_, dims : {_Integer ? Positive ...}] := Enclose @ If[Length[dims] == 1, {1 -> {qs}}, Block[{s = Confirm @ qs["SchmidtBasis", First[dims]], basis},
     basis = s["Basis"]["Decompose"];
     If[s["DegenerateStateQ"], Return[{1 -> (QuantumState[0, #] & /@ basis)}]];
 	MapIndexed[{v, idx} |->
-		With[{decomp = If[Length[basis] == 2, MapAt[decompose[#, {}] &, 1], Identity] @
-            MapAt[decompose[#, Rest[dims]] &, -1] @ Map[QuantumState[SparseArray[idx -> 1, #["Dimension"]], #] &, basis]
+		With[{decomp = If[Length[basis] == 2, MapAt[Confirm @ decompose[#, {}] &, 1], Identity] @
+            MapAt[Confirm @ decompose[#, Rest[dims]] &, -1] @ Map[QuantumState[SparseArray[idx -> 1, #["Dimension"]], #] &, basis]
         },
             Splice @ Thread[v Times @@@ Tuples[decomp[[All, All, 1]]] -> Catenate /@ Tuples[decomp[[All, All, 2]]]]
         ],
@@ -566,14 +561,21 @@ decompose[qs_, dims_List] := If[Length[dims] == 1, {1 -> {qs}}, Module[{s = qs["
 	]
 ]]
 
-QuantumStateProp[qs_, "DecomposeWithProbabilities", dims_List] /; qs["PureStateQ"] || qs["DegenerateStateQ"] := SubsetMap[Normalize[#, Total] &, {All, 1}] @ decompose[qs, dims]
+QuantumStateProp[qs_, "DecomposeWithProbabilities", dims : {_Integer ? Positive ...}] /; qs["VectorQ"] || qs["DegenerateStateQ"] := SubsetMap[Normalize[#, Total] &, {All, 1}] @ decompose[qs, dims]
 
-QuantumStateProp[qs_, "DecomposeWithAmplitudes", dims_List] /; qs["PureStateQ"] || qs["DegenerateStateQ"] := decompose[qs, dims]
+QuantumStateProp[qs_, "DecomposeWithAmplitudes", dims : {_Integer ? Positive ...}] /; qs["VectorQ"] || qs["DegenerateStateQ"] := decompose[qs, dims]
 
-QuantumStateProp[qs_, prop : "Decompose" | "DecomposeWithProbabilities" | "DecomposeWithAmplitudes"] /; qs["PureStateQ"] || qs["DegenerateStateQ"] := qs[prop, Catenate[Table @@@ FactorInteger[qs["Dimension"]]]]
+QuantumStateProp[qs_, prop : "DecomposeWithProbabilities" | "DecomposeWithAmplitudes", dims : {_Integer ? Positive ...}] /; qs["MatrixQ"] :=
+    Enclose @ SubsetMap[Normalize[#, Total] &, {All, 1}] @ Catenate @ MapThread[
+        {p, v} |-> If[p == 0,
+            Nothing,
+            (* MapAt[QuantumState[Partition[#, Sqrt[Length[#]]] & @ #["Computational"]["StateVector"]] &, {All, 2, All}] @ *)
+                MapAt[p # &, Confirm @ QuantumState[v, qs["Basis"]][prop, dims], {All, 1}]
+        ],
+        qs["Eigensystem"]
+    ]
 
-QuantumStateProp[qs_, prop : "Decompose" | "DecomposeWithProbabilities" | "DecomposeWithAmplitudes", args___] /; qs["MixedStateQ"] := qs["Bend"][prop, args]
-
+QuantumStateProp[qs_, prop : "Decompose" | "DecomposeWithProbabilities" | "DecomposeWithAmplitudes"] := qs[prop, Catenate[Table @@@ FactorInteger[qs["Dimension"]]]]
 
 QuantumStateProp[qs_, "SchmidtDecompose"] := #1 Inactive[CircleTimes] @@ ##2 & @@@
 		MapAt[MatrixForm @ ArrayReshape[#["Computational"]["StateVector"], If[qs["MatrixQ"], qs["MatrixNameDimensions"], qs["OutputDimensions"]]] &, {All, 2, All}] @

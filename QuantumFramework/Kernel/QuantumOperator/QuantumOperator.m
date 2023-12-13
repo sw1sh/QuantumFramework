@@ -294,8 +294,8 @@ Enclose @ Block[{
     ];
 
     newBasis = QuantumBasis[qb,
-        "Output" -> QuditBasis[qo["Output"], newBasis["Output"]],
-        "Input" -> QuditBasis[qo["Input"], newBasis["Input"]],
+        "Output" -> Confirm @ QuditBasis[qo["Output"], newBasis["Output"]],
+        "Input" -> Confirm @ QuditBasis[qo["Input"], newBasis["Input"]],
         opts
     ];
 

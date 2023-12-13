@@ -154,12 +154,12 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ, opts__] :=
 
 QuantumState /: Equal[qs : _QuantumState ...] :=
     Which[
-        And @@ (#["PureStateQ"] & /@ {qs}),
+        And @@ (#["VectorStateQ"] & /@ {qs}),
         Thread[Equal @@ (Chop @ SetPrecisionNumeric[#["Computational"]["CanonicalStateVector"]] & /@ {qs})],
-        And @@ (#["MixedStateQ"] & /@ {qs}),
+        And @@ (#["MatrixStateQ"] & /@ {qs}),
         Thread[Equal @@ (Chop @ SetPrecisionNumeric[SparseArrayFlatten @ #["NormalizedMatrixRepresentation"]] & /@ {qs})],
         True,
-        Thread[Equal @@ (Chop @ SetPrecisionNumeric[#["Split", #["Qudits"]]["Bend"]["Computational"]["CanonicalStateVector"]] & /@ {qs})]
+        Thread[Equal @@ Through[{qs}]["MatrixState"]]
     ]
 
 
