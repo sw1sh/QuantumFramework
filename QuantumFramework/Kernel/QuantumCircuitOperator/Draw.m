@@ -9,7 +9,7 @@ $DefaultGray = RGBColor[0.537254, 0.537254, 0.537254];
 $GateDefaultBoundaryStyle = {
 	"H" -> RGBColor[0.368417, 0.506779, 0.709798],
 	"T" | "S" -> RGBColor[0.922526, 0.385626, 0.209179],
-	"X" | "Y" | "Z" | "NOT" | "0" | "1" -> RGBColor[0.880722, 0.611041, 0.142051],
+	"X" | "Y" | "Z" | "Pauli" | "NOT" | "0" | "1" -> RGBColor[0.880722, 0.611041, 0.142051],
 	"P"[_] | (Superscript | Power)["P"[_], _] | "PhaseShift"[_] | _Integer -> RGBColor[0.560181, 0.691569, 0.194885],
 	Subscript["R", _][_] -> RGBColor[0.528488, 0.470624, 0.701351],
 	"Measurement" -> RGBColor[0.7367, 0.358, 0.5030],
@@ -86,7 +86,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 	drawControlWires,
 	wireStyle = Replace[OptionValue["WireStyle"], Automatic -> Directive[CapForm[None], $DefaultGray, Opacity[.3]]],
 	wireThickness = If[TrueQ[OptionValue["DimensionWires"]], defaultWireThickness, AbsoluteThickness[1] &],
-	gate
+	gateFunction, gate
 },
 	vpos = Union[vposOut, vposIn];
 	vposIndex = PositionIndex[Developer`ToList[vpos]];
@@ -102,8 +102,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			{center[[1]], - vGapSize #1[[2]] + size Switch[#2[[2]], "NOT", 1 / 5, "SWAP", 0, "1" | "0", 1 / 8, _, 1 / 2]}
 		}]
 	}];
-	gate = Replace[Replace[label, Interpretation[_, l_] :> l], {
-		_ /; gateShapeFunction =!= None -> gateShapeFunction[center, label, hGapSize hpos, - vGapSize vpos],
+	gateFunction = Function[Replace[Replace[#, Interpretation[_, l_] :> l], {
 		Subscript["C", subLabel_][control1_, control0_] :> Block[{
 			target = DeleteCases[vpos, Alternatives @@ Join[control1, control0]],
 			control = Join[control1, control0],
@@ -315,9 +314,9 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			wireStyle,
 			MapThread[{wireThickness[Replace[#1, inDims]], Line[{{center[[1]] - size / 2, - #1 vGapSize}, {center[[1]] + size / 2, - #2 vGapSize}}]} &, {vposIn, vposOut[[{perm}]]}]
 		},
-		"PhaseShift"[n_] /; Length[vpos] == 1 :> {
-			EdgeForm[Replace[label, gateBoundaryStyle]],
-			FaceForm[Replace[label, gateBackgroundStyle]],
+		l : "PhaseShift"[n_] /; Length[vpos] == 1 :> {
+			EdgeForm[Replace[l, gateBoundaryStyle]],
+			FaceForm[Replace[l, gateBackgroundStyle]],
 			Disk[center, size / 2],
 			If[connectorsQ, {FaceForm[Directive[$DefaultGray, Opacity[1]]], Disk[#, size / 32] & /@ {{center[[1]] - size / 2, - vGapSize #}, {center[[1]] + size / 2, - vGapSize #}} & /@ vpos}, Nothing],
 			If[gateLabelsQ, Rotate[Text[Style[Row[{If[TrueQ[Negative[n]], "-", ""], InputForm[2 ^ (1 - Abs[n])]}], labelStyleOpts], center], rotateLabel], Nothing]
@@ -349,14 +348,18 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			GeometricTransformation[Rectangle[Sequence @@ corners, Sequence @@ FilterRules[{opts}, Options[Rectangle]]], RotationTransform[Pi / 4, center]],
 			If[gateLabelsQ, Rotate[Text[Style[subSubLabel, labelStyleOpts], center], rotateLabel], Nothing]
 		},
-		SuperDagger[subLabel_] | subLabel_ :> {
+		l : SuperDagger[subLabel_] | subLabel_ :> {
 			EdgeForm[If[thickWireQ, Directive[AbsoluteThickness[3], #] &, Identity] @ Replace[subLabel, gateBoundaryStyle]],
 			FaceForm[Replace[subLabel, gateBackgroundStyle]],
 			Rectangle[Sequence @@ corners, Sequence @@ FilterRules[{opts}, Options[Rectangle]]],
 			If[connectorsQ, {FaceForm[Directive[$DefaultGray, Opacity[1]]], Disk[#, size / 32] & /@ Join[{center[[1]] + size / 2, - vGapSize #} & /@ vposOut, {center[[1]] - size / 2, - vGapSize #} & /@ vposIn]}, Nothing],
-			If[gateLabelsQ, Rotate[Text[Style[Replace[label, OptionValue["GateLabels"]], labelStyleOpts], center], rotateLabel], Nothing]
+			If[gateLabelsQ, Rotate[Text[Style[Replace[l, OptionValue["GateLabels"]], labelStyleOpts], center], rotateLabel], Nothing]
 		}
-	}];
+	}]];
+	gate = If[gateShapeFunction =!= None,
+		gateShapeFunction[center, label, hGapSize hpos, - vGapSize vpos, gateFunction, gateBackgroundStyle, gateBoundaryStyle],
+		gateFunction[label]
+	];
 	Tooltip[gate, label]
 ]
 
