@@ -21,7 +21,8 @@ $QuantumCircuitOperatorNames = {
     "Trotterization",
     "Magic",
     "Multiplexer",
-    "QuantumState"
+    "QuantumState",
+    "CHSH"
 }
 
 
@@ -559,3 +560,16 @@ QuantumCircuitOperator[qs_QuantumState | {"QuantumState", qs_QuantumState}, opts
 
 QuantumCircuitOperator["QuantumState", opts___] := QuantumCircuitOperator[{"QuantumState", QuantumState[{"UniformSuperposition", 3}]}, opts]
 
+
+QuantumCircuitOperator["CHSH"] :=
+    QuantumCircuitOperator[{
+        "Cup" -> {1, 4},
+        QuantumCircuitOperator[{"+" -> 2, "+" -> 3}, "Charlie"],
+        "Barrier",
+        "I",
+        {"C", "H"} -> {2, 1},
+        {"RY", Pi/4} -> 4,
+        {"C0", "H"} -> {3, 4},
+        "Barrier",
+        {1, 2}, {3, 4}
+    }]

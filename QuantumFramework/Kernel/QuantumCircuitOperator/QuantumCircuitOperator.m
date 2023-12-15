@@ -173,3 +173,12 @@ QuantumCircuitOperator[qc_ ? QuantumCircuitOperatorQ, {outOrder_ ? orderQ, inOrd
     ]
 ]
 
+(* simplify *)
+
+Simplify[qco_QuantumCircuitOperator, args___] ^:= qco["Simplify", args]
+
+FullSimplify[qco_QuantumCircuitOperator, args___] ^:= qco["FullSimplify", args]
+
+Chop[qco_QuantumCircuitOperator, args___] ^:= qco["Chop", args]
+
+
