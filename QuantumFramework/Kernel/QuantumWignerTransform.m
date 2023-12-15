@@ -63,8 +63,15 @@ QuantumWignerTransform[qo_ ? QuantumOperatorQ, opts : OptionsPattern[]] :=
 QuantumWignerTransform[qc_ ? QuantumChannelQ, opts : OptionsPattern[]] :=
     Enclose @ QuantumChannel[ConfirmBy[QuantumWignerTransform[qc["QuantumOperator"], opts], QuantumOperatorQ]]
 
-QuantumWignerTransform[qmo_ ? QuantumMeasurementOperatorQ, opts : OptionsPattern[]] :=
-    Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumWignerTransform[qmo["Operator"], opts], QuantumOperatorQ], qmo["Target"]]
+QuantumWignerTransform[qmo_ ? QuantumMeasurementOperatorQ, opts : OptionsPattern[]] := Enclose @ QuantumOperator[
+    QuantumTensorProduct[
+        QuantumOperator[
+            QuantumOperator["Spider"[QuantumBasis[{#}, {# ^ 2}]]],
+            QuantumBasis[{#}, WignerBasis[QuditBasis[#], opts], "Label" -> "M"]
+        ] & /@ qmo["InputDimensions"]
+    ],
+    qmo["InputOrder"]
+]
 
 QuantumWignerTransform[qco_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]] :=
     Enclose @ QuantumCircuitOperator[If[BarrierQ[#], #, Confirm @ QuantumWignerTransform[#, opts]] & /@ qco["Elements"], qco["Label"]]

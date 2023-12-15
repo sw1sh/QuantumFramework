@@ -72,15 +72,15 @@ WignerMICTransform[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := FullSimplify @
 
 WignerMICTransform[qb_ ? QuantumBasisQ, opts : OptionsPattern[]] :=
     Enclose @ QuantumBasis[
-        ConfirmBy[QuantumWignerTransform[qb["Output"], opts], QuditBasisQ],
-        ConfirmBy[QuantumWignerTransform[qb["Input"], opts], QuditBasisQ],
+        ConfirmBy[WignerMICTransform[qb["Output"], opts], QuditBasisQ],
+        ConfirmBy[WignerMICTransform[qb["Input"], opts], QuditBasisQ],
         "Picture" -> "PhaseSpace", qb["Meta"]
     ]
 
 
 WignerMICTransform[qs_ ? QuantumStateQ, opts : OptionsPattern[]] := Enclose @ Chop @ FullSimplify @ QuantumState[
     qs["Double"],
-    ConfirmBy[WignerMICBasis[qs["Basis"], opts], QuantumBasisQ]
+    ConfirmBy[WignerMICTransform[qs["Basis"], opts], QuantumBasisQ]
 ]
 
 WignerMICTransform[qo_ ? QuantumOperatorQ, opts : OptionsPattern[]] := Enclose @ QuantumOperator[
@@ -88,10 +88,18 @@ WignerMICTransform[qo_ ? QuantumOperatorQ, opts : OptionsPattern[]] := Enclose @
     qo["Order"]
 ]
 
-WignerMICTransform[qc_ ? QuantumChannelQ] := Enclose @ QuantumChannel[ConfirmBy[WignerMICTransform[qc["QuantumOperator"]], QuantumOperatorQ]]
+WignerMICTransform[qc_ ? QuantumChannelQ, opts: OptionsPattern[]] := Enclose @ QuantumChannel[ConfirmBy[WignerMICTransform[qc["QuantumOperator"], opts], QuantumOperatorQ]]
 
-WignerMICTransform[qmo_ ? QuantumMeasurementOperatorQ] := Enclose @ QuantumMeasurementOperator[ConfirmBy[WignerMICTransform[qmo["QuantumOperator"]], QuantumOperatorQ], qmo["Target"]]
+WignerMICTransform[qmo_ ? QuantumMeasurementOperatorQ, opts: OptionsPattern[]] := Enclose @ QuantumOperator[
+    QuantumTensorProduct[
+        QuantumOperator[
+            QuantumOperator["Spider"[QuantumBasis[{#}, {# ^ 2}]]],
+            QuantumBasis[{#}, WignerMICBasis[#, opts], "Label" -> "M"]
+        ] & /@ qmo["InputDimensions"]
+    ],
+    qmo["InputOrder"]
+]
 
-WignerMICTransform[qco_ ? QuantumCircuitOperatorQ] :=
-    Enclose @ QuantumCircuitOperator[If[BarrierQ[#], #, Confirm @ WignerMICTransform[#]] & /@ qco["Elements"], qco["Label"]]
+WignerMICTransform[qco_ ? QuantumCircuitOperatorQ, opts: OptionsPattern[]] :=
+    Enclose @ QuantumCircuitOperator[If[BarrierQ[#], #, Confirm @ WignerMICTransform[#, opts]] & /@ qco["Elements"], qco["Label"]]
 

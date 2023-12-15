@@ -320,7 +320,7 @@ QuantumOperator[qo_ ? QuantumOperatorQ,
 (* composition *)
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qb_ ? QuantumBasisQ] := QuantumBasis[
-    AssociationThread[qo["Output"]["Names"], qo[#]["StateVector"] & /@ qb["PureStates"]],
+    AssociationThread[qo["Output"]["Names"], qo[#]["StateVector"] & /@ qb["BasisStates"]],
     "Label" -> qo["Label"] @* qb["Label"],
     qb["Meta"]
 ]

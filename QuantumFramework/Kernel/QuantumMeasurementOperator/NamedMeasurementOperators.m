@@ -25,5 +25,5 @@ QuantumMeasurementOperator[{"WignerMICPOVM", args___}, opts___] := Enclose @ Ful
 ]
 
 
-QuantumMeasurementOperator[name_String | name_String[args___], opts___] := QuantumMeasurementOperator[{name, args}, opts]
+QuantumMeasurementOperator[name_String | name_String[args___], opts___] /; MemberQ[$QuantumMeasurementOperatorNames, name] := QuantumMeasurementOperator[{name, args}, opts]
 

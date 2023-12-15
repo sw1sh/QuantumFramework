@@ -11,7 +11,7 @@ $QuantumBasisProperties = {
     "ElementDimensions", "ElementDimension",
     "MatrixElementDimensions",
     "OrthogonalElements",
-    "Projectors", "PureStates", "PureEffects", "PureMaps",
+    "Projectors", "BasisStates", "BasisEffects", "BasisMaps",
     "InputSize", "OutputSize", "Size",
     "InputRank", "OutputRank", "Rank", "Type",
     "InputNameDimensions", "InputDimensions", "InputNameDimension", "InputDimension",
@@ -210,11 +210,11 @@ QuantumBasisProp[qb_, "Projectors"] := projector @* Flatten /@ qb["Elements"]
 
 QuantumBasisProp[qb_, "NormalizedProjectors"] := normalizeMatrix @* projector @* Flatten /@ qb["Elements"]
 
-QuantumBasisProp[qb_, "PureStates"] := QuantumState[SparseArray[# -> 1, qb["OutputDimension"]], qb] & /@ Range[qb["OutputDimension"]]
+QuantumBasisProp[qb_, "BasisStates"] := QuantumState[SparseArray[# -> 1, qb["OutputDimension"]], qb] & /@ Range[qb["OutputDimension"]]
 
-QuantumBasisProp[qb_, "PureEffects"] := QuantumState[SparseArray[# -> 1, qb["InputDimension"]], qb] & /@ Range[qb["InputDimension"]]
+QuantumBasisProp[qb_, "BasisEffects"] := QuantumState[SparseArray[# -> 1, qb["InputDimension"]], qb] & /@ Range[qb["InputDimension"]]
 
-QuantumBasisProp[qb_, "PureMaps" | "PureOperators"] :=
+QuantumBasisProp[qb_, "BasisMaps" | "BasisOperators"] :=
     Table[
         With[{array = SparseArray[{i, j} -> 1, {qb["OutputDimension"], qb["InputDimension"]}]}, QuantumState[Flatten @ array, qb]],
         {i, qb["OutputDimension"]}, {j, qb["InputDimension"]}
