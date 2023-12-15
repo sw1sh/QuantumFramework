@@ -3,10 +3,11 @@ Package["Wolfram`QuantumFramework`"]
 PackageScope["$QuantumMeasurementOperatorNames"]
 
 
-$QuantumMeasurementOperatorNames = {"RandomHermitian"}
+
+$QuantumMeasurementOperatorNames = {"RandomHermitian", "WignerMICPOVM"}
 
 
-QuantumMeasurementOperator["RandomHermitian", args___, target : (_ ? targetQ) : {1}] := With[{
+QuantumMeasurementOperator[{"RandomHermitian", args___}, opts___] := With[{
     basis = QuantumBasis[args]
 },
     QuantumMeasurementOperator[
@@ -14,7 +15,15 @@ QuantumMeasurementOperator["RandomHermitian", args___, target : (_ ? targetQ) : 
             With[{m = RandomComplex[1 + I, {basis["Dimension"], basis["Dimension"]}]}, (m + ConjugateTranspose[m]) / 2],
             basis
         ],
-        target
+        opts
 ]
 ]
+
+QuantumMeasurementOperator[{"WignerMICPOVM", args___}, opts___] := Enclose @ FullSimplify @ QuantumMeasurementOperator[
+    ConfirmBy[WignerMICPOVM[args], ArrayQ[#, 3] &],
+    opts
+]
+
+
+QuantumMeasurementOperator[name_String | name_String[args___], opts___] := QuantumMeasurementOperator[{name, args}, opts]
 

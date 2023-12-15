@@ -18,7 +18,8 @@
             "Schwinger",
             "Pauli",
             "Dirac",
-            "Wigner"
+            "Wigner",
+            "WignerMIC"
         }
     },
     "QuantumBasis" -> {
@@ -40,7 +41,8 @@
             "Schwinger",
             "Pauli",
             "Dirac",
-            "Wigner"
+            "Wigner",
+            "WignerMIC"
         }
     },
     "QuantumState" -> {
@@ -91,7 +93,8 @@
             "Schwinger",
             "Pauli",
             "Dirac",
-            "Wigner"
+            "Wigner",
+            "WignerMIC"
         }
     },
     "QuantumOperator" -> {
@@ -192,7 +195,8 @@
             "Schwinger",
             "Pauli",
             "Dirac",
-            "Wigner"
+            "Wigner",
+            "WignerMIC"
         }
     },
     "QuantumMeasurementOperator" -> {
@@ -215,7 +219,9 @@
             "Pauli",
             "Dirac",
             "Wigner",
-            "RandomHermitian"
+            "WignerMIC",
+            "RandomHermitian",
+            "WignerMICPOVM"
         },
         {
             "Computational",
@@ -235,7 +241,8 @@
             "Schwinger",
             "Pauli",
             "Dirac",
-            "Wigner"
+            "Wigner",
+            "WignerMIC"
         }
     },
     "QuantumChannel" -> {
@@ -267,7 +274,8 @@
             "Schwinger",
             "Pauli",
             "Dirac",
-            "Wigner"
+            "Wigner",
+            "WignerMIC"
         }
     },
     "QuantumCircuitOperator" -> {

@@ -10,7 +10,7 @@ $QuditBasisNames = {
     "JX", "JY", "JZ",
     "Bell",
     "Fourier",
-    "Schwinger", "Pauli", "Dirac", "Wigner"
+    "Schwinger", "Pauli", "Dirac", "Wigner", "WignerMIC"
 }
 
 $QuditBasisCache = <||>
@@ -170,6 +170,9 @@ QuditBasis[{"Wigner", qb_QuditBasis /; QuditBasisQ[qb], opts : OptionsPattern[Wi
     QuditBasis[WignerBasis[qb, opts], args]
 
 QuditBasis[{"Wigner", basisArgs___, opts : OptionsPattern[]}, args___] := QuditBasis[{"Wigner", QuditBasis[basisArgs], opts}, args]
+
+
+QuditBasis["WignerMIC" | {"WignerMIC", args___}, opts___] := QuditBasis[WignerMICBasis[args], opts]
 
 
 QuditBasis[pauliString_String] := With[{chars = Characters[pauliString]},
