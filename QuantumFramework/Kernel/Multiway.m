@@ -143,7 +143,12 @@ QuantumCircuitLayeredMultiwayGraph[qc_ ? QuantumCircuitOperatorQ, opts___] := Bl
 	g = VertexReplace[
 		EdgeDelete[
 			ResourceFunction["FoldGraph"][{bot, top} |->
-				MapThread[Labeled[{bot[[1]] + 1, #1}, {FullSimplify[#2], top["Order"]}] &, With[{newOp = top[bot[[2]]]["Sort"]}, {QuantumOperator[#, {newOp["OutputOrder"], {}}] & /@ newOp["OutputBasis"]["BasisStates"], newOp["StateVector"]}]],
+				MapThread[
+                    With[{amplitude = FullSimplify[#2]}, If[amplitude == 0, Nothing, Labeled[{bot[[1]] + 1, #1}, {amplitude, top["Order"]}]]] &,
+                    With[{newOp = top[bot[[2]]]["Sort"]},
+                        {QuantumOperator[#, {newOp["OutputOrder"], {}}] & /@ newOp["OutputBasis"]["BasisStates"], newOp["StateVector"]}
+                    ]
+                ],
 				{1, #} & /@ initOperators,
 				ops
 			],
@@ -166,8 +171,8 @@ QuantumCircuitTokenEventGraph[qc_ ? QuantumCircuitOperatorQ, opts___] := With[{
     events = Replace[
         EdgeList[QuantumCircuitLayeredMultiwayGraph[qc]],
         DirectedEdge[{_, q1_, o1_}, {_, q2_, o2_}, {p_, {out_, in_}}] :> DirectedEdge[
-            Replace[Thread @ {Extract[FirstCase[q1, q_QuditName :> q["Name"], , All], FirstPosition[o1, #] & /@ in], in}, {} -> {$QuditIdentity}],
-            Thread @ {Extract[FirstCase[q2, q_QuditName :> q["Name"], , All], FirstPosition[o2, #] & /@ out], out},
+            Replace[Thread @ {Extract[FirstCase[q1, q_QuditName :> q["Name"], None, All], FirstPosition[o1, #] & /@ in], in}, {} -> {$QuditIdentity}],
+            Thread @ {Extract[FirstCase[q2, q_QuditName :> q["Name"], None, All], FirstPosition[o2, #] & /@ out], out},
             p
         ],
         {1}

@@ -552,7 +552,7 @@ TensorNetworkContractPath[net_ ? TensorNetworkQ, path_] := Enclose @ Block[{tens
 ]
 
 
-TensorNetworkNetGraph[net_ ? TensorNetworkQ] := TensorNetworkNetGraph[net, TensorNetworkCotractionPath[net]]
+TensorNetworkNetGraph[net_ ? TensorNetworkQ] := TensorNetworkNetGraph[net, TensorNetworkContractionPath[net]]
 
 TensorNetworkNetGraph[net_ ? TensorNetworkQ, path_] := Enclose @ Block[{tensors, indices, freeIndices, g, tensorQueue, addEinsumLayer, n},
     tensors = NumericArray[N[#]] & /@ TensorNetworkTensors[net];

@@ -579,7 +579,7 @@ QuantumStateProp[qs_, prop : "Decompose" | "DecomposeWithProbabilities" | "Decom
 
 QuantumStateProp[qs_, "SchmidtDecompose"] := #1 Inactive[CircleTimes] @@ ##2 & @@@
 		MapAt[MatrixForm @ ArrayReshape[#["Computational"]["StateVector"], If[qs["MatrixQ"], qs["MatrixNameDimensions"], qs["OutputDimensions"]]] &, {All, 2, All}] @
-			If[qs["MatrixQ"], qs["Bend"], qs]["DecomposeWithProbabilities", {If[qs["MatrixQ"], qs["Dimension"], qs["OutputDimension"]]}] // Total // Chop
+			If[qs["MatrixQ"], qs["Bend"], qs]["DecomposeWithProbabilities", If[qs["MatrixQ"], qs["Dimensions"], qs["OutputDimensions"]]] // Total // Chop
 
 
 QuantumStateProp[qs_, "Compress"] := With[{decomp = qs["DecomposeWithProbabilities"]},

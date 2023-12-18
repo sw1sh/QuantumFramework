@@ -563,7 +563,7 @@ QuantumCircuitOperator["QuantumState", opts___] := QuantumCircuitOperator[{"Quan
 
 QuantumCircuitOperator["CHSH"] :=
     QuantumCircuitOperator[{
-        "Cup" -> {1, 4},
+        QuantumOperator["Cup" / Sqrt[2], {1, 4}, "Label" -> "Cup"],
         QuantumCircuitOperator[{"+" -> 2, "+" -> 3}, "Charlie"],
         "Barrier",
         "I",
