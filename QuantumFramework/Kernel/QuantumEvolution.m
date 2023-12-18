@@ -8,7 +8,7 @@ PackageExport["HamiltonianTransitionRate"]
 QuantumEvolve::error = "Differential Solver failed to find a solution"
 
 Options[QuantumEvolve] = DeleteDuplicatesBy[First] @ Join[
-    {"AdditionalEquations" -> {}, "ReturnEquations" -> False},
+    {"AdditionalEquations" -> {}, "ReturnEquations" -> False, "MergeInterpolatingFunctions" -> True},
     Options[NDSolveValue], Options[DSolveValue]
 ]
 
@@ -22,7 +22,6 @@ QuantumEvolve[
     matrix,
     parameter, parameterSpec,
     numericQ, solution,
-    method,
     rhs, init,
     equations, return, param,
     phaseSpaceQ = False
@@ -42,13 +41,15 @@ QuantumEvolve[
     ];
     numericQ = MatchQ[defaultParameter, {_Symbol, _ ? NumericQ, _ ? NumericQ}];
     (* TrigToExp helps with some examples *)
-    matrix = TrigToExp @ Confirm @ MergeInterpolatingFunctions[
-        If[ phaseSpaceQ,
-            HamiltonianTransitionRate[hamiltonian],
-            hamiltonian["Matrix"] / I
-        ]
+    matrix = Progress`EvaluateWithProgress[
+        TrigToExp @ Confirm @ If[TrueQ[OptionValue["MergeInterpolatingFunctions"]], MergeInterpolatingFunctions, Identity][
+            If[ phaseSpaceQ,
+                HamiltonianTransitionRate[hamiltonian],
+                hamiltonian["Matrix"] / I
+            ]
+        ],
+        <|"Text" -> "Preparing Hamiltonian"|>
     ];
-    method = If[numericQ, NDSolveValue, DSolveValue];
     rhs = If[
         state === None || state["VectorQ"],
         matrix . \[FormalS][parameter],
@@ -94,7 +95,7 @@ QuantumEvolve[
                         parameter -> t
                     }
                 },
-                    SetDelayed @@ Hold[frhs[s_ ? ArrayQ, t_], Unevaluated[def] /. sa_SparseArray ? SparseArrayQ :> Map[ReplaceAll[parameter -> t], sa, {-1}]]
+                    SetDelayed @@ Hold[frhs[s_ ? ArrayQ, t_], Unevaluated[def] /. sa_SparseArray ? SparseArrayQ :> MapSparseArray[ReplaceAll[parameter -> t], sa]]
                 ]
             ];
             equations = Join[
@@ -108,11 +109,26 @@ QuantumEvolve[
         equations = equations /. sa_SparseArray ? SparseArrayQ :> Normal[sa]
     ];
     Unprotect[\[FormalS]];
-    solution = method[
-        equations,
-        return,
-        param,
-        FilterRules[{opts}, Options[method]]
+
+    solution = If[numericQ,
+        Module[{time},
+            Progress`EvaluateWithProgress[
+                NDSolveValue[
+                    equations,
+                    return,
+                    param,
+                    FilterRules[{opts}, Options[NDSolveValue]],
+                    StepMonitor :> (time = parameter)
+                ],
+                <|"Text" -> "Integrating", "Progress" :> time / Last[param], "Percentage" :> time / Last[param], "ElapsedTime" -> Automatic, "RemainingTime" -> Automatic|>
+            ]
+        ],
+        DSolveValue[
+            equations,
+            return,
+            param,
+            FilterRules[{opts}, Options[NDSolveValue]]
+        ]
     ];
     Protect[\[FormalS]];
     If[ MatchQ[solution, _InterpolatingFunction],
@@ -144,6 +160,7 @@ QuantumEvolve[
     ]
 ]
 
+MapSparseArray[f_, sa_] := SparseArray[Thread[sa["ExplicitPositions"] -> f /@ sa["ExplicitValues"]], Dimensions[sa]]
 
 MergeInterpolatingFunctions[array_ ? SparseArrayQ] := Enclose @ Block[{pos, values, ifs, grid, dims, dim, params, param},
     pos = array["ExplicitPositions"];
