@@ -24,7 +24,8 @@ QuantumEvolve[
     numericQ, solution,
     rhs, init,
     equations, return, param,
-    phaseSpaceQ = False
+    phaseSpaceQ = False,
+    mergeQ = TrueQ[OptionValue["MergeInterpolatingFunctions"]]
 },
     If[ defaultState =!= None,
         state = Replace[defaultState, Automatic :> QuantumState[{"Register", hamiltonian["InputDimensions"]}]];
@@ -42,7 +43,7 @@ QuantumEvolve[
     numericQ = MatchQ[defaultParameter, {_Symbol, _ ? NumericQ, _ ? NumericQ}];
     (* TrigToExp helps with some examples *)
     matrix = Progress`EvaluateWithProgress[
-        TrigToExp @ Confirm @ If[TrueQ[OptionValue["MergeInterpolatingFunctions"]], MergeInterpolatingFunctions, Identity][
+        TrigToExp @ Confirm @ If[mergeQ, MergeInterpolatingFunctions, Identity][
             If[ phaseSpaceQ,
                 HamiltonianTransitionRate[hamiltonian],
                 hamiltonian["Matrix"] / I
@@ -85,7 +86,7 @@ QuantumEvolve[
     If[TrueQ[OptionValue["ReturnEquations"]], Return[{equations, return, param}]];
 
     (* hide sparse arrays over delayed definitions and inject numeric paratemer, initial condition is always dense *)
-    If[ numericQ,
+    If[ numericQ && ! mergeQ,
         Module[{frhs},
             Block[{s, t},
                 With[{
@@ -175,8 +176,25 @@ MergeInterpolatingFunctions[array_ ? SparseArrayQ] := Enclose @ Block[{pos, valu
     param = First[params];
 	dim = First[dims];
 	ConfirmAssert[dim === {}];
-	grid = Intersection @@ Through[ifs["Grid"]];
-	Interpolation[{#, Normal @ SparseArray[Thread[pos -> (values /. param -> #)], Dimensions[array]]} & /@ Catenate[grid], InterpolationOrder -> 1][param]
+	grid = Catenate[Intersection @@ Through[ifs["Grid"]]];
+    (* make custom linear interpolation supporting sparse arrays *)
+	(* Interpolation[{#, Normal @ SparseArray[Thread[pos -> (values /. param -> #)], Dimensions[array]]} & /@ grid, InterpolationOrder -> 1][param] *)
+	With[{arrays = SparseArray[Thread[pos -> (values /. param -> #)], Dimensions[array]] & /@ grid},
+        Module[{f},
+            Block[{t},
+                With[{rhs = Piecewise @ MapIndexed[
+                    With[{a = (#[[2]] - t) / (#[[2]] - #[[1]]), b = (t - #[[1]]) / (#[[2]] - #[[1]])},
+                        {Inactive[Times][a, arrays[[#2[[1]]]]] + Inactive[Times][b, arrays[[#2[[1]] + 1]]], Between[t, #]}
+                    ] &,
+                    Partition[grid, 2, 1]
+                ]},
+                    SetDelayed @@ Unevaluated[{f[t_ ? NumericQ], Activate[rhs]}]
+                ];
+                Format[f] ^:= Interpretation["SparseInterpolationFunction", f];
+                f[param]
+            ]
+        ]
+    ]
 ]
 
 MergeInterpolatingFunctions[array_ ? ArrayQ] := MergeInterpolatingFunctions[SparseArray[array]]
