@@ -40,6 +40,7 @@ QuantumEvolve[
         parameter = Replace[defaultParameter, {p_Symbol, _, _} :> p];
         parameterSpec = Replace[defaultParameter, _Symbol :> {parameter, 0, 1}]
     ];
+    ConfirmAssert[Developer`SymbolQ[parameter]];
     numericQ = MatchQ[defaultParameter, {_Symbol, _ ? NumericQ, _ ? NumericQ}];
     (* TrigToExp helps with some examples *)
     matrix = Progress`EvaluateWithProgress[
@@ -109,19 +110,22 @@ QuantumEvolve[
         ],
         equations = equations /. sa_SparseArray ? SparseArrayQ :> Normal[sa]
     ];
-    Unprotect[\[FormalS]];
 
     solution = If[numericQ,
         Module[{time},
-            Progress`EvaluateWithProgress[
-                NDSolveValue[
-                    equations,
-                    return,
-                    param,
-                    FilterRules[{opts}, Options[NDSolveValue]],
-                    StepMonitor :> (time = parameter)
+            WithCleanup[
+                Unprotect[\[FormalS], Evaluate[parameter]],
+                Progress`EvaluateWithProgress[
+                    NDSolveValue[
+                        equations,
+                        return,
+                        param,
+                        FilterRules[{opts}, Options[NDSolveValue]],
+                        StepMonitor :> (time = parameter)
+                    ],
+                    <|"Text" -> "Integrating", "Progress" :> time / Last[param], "Percentage" :> time / Last[param], "ElapsedTime" -> Automatic, "RemainingTime" -> Automatic|>
                 ],
-                <|"Text" -> "Integrating", "Progress" :> time / Last[param], "Percentage" :> time / Last[param], "ElapsedTime" -> Automatic, "RemainingTime" -> Automatic|>
+                Protect[\[FormalS], Evaluate[parameter]]
             ]
         ],
         DSolveValue[
@@ -131,7 +135,6 @@ QuantumEvolve[
             FilterRules[{opts}, Options[NDSolveValue]]
         ]
     ];
-    Protect[\[FormalS]];
     If[ MatchQ[solution, _InterpolatingFunction],
         solution = ExpandInterpolatingFunction[solution, parameter]
     ];
@@ -180,17 +183,18 @@ MergeInterpolatingFunctions[array_ ? SparseArrayQ] := Enclose @ Block[{pos, valu
     (* make custom linear interpolation supporting sparse arrays *)
 	(* Interpolation[{#, Normal @ SparseArray[Thread[pos -> (values /. param -> #)], Dimensions[array]]} & /@ grid, InterpolationOrder -> 1][param] *)
 	With[{arrays = SparseArray[Thread[pos -> (values /. param -> #)], Dimensions[array]] & /@ grid},
-        Module[{f},
+        Module[{f, getArray},
             Block[{t},
                 With[{rhs = Piecewise @ MapIndexed[
                     With[{a = (#[[2]] - t) / (#[[2]] - #[[1]]), b = (t - #[[1]]) / (#[[2]] - #[[1]])},
-                        {Inactive[Times][a, arrays[[#2[[1]]]]] + Inactive[Times][b, arrays[[#2[[1]] + 1]]], Between[t, #]}
+                        {a getArray[#2[[1]]] + b getArray[#2[[1]] + 1], Between[t, #]}
                     ] &,
                     Partition[grid, 2, 1]
                 ]},
-                    SetDelayed @@ Unevaluated[{f[t_ ? NumericQ], Activate[rhs]}]
+                    SetDelayed @@ {f[t_ ? NumericQ], rhs}
                 ];
                 Format[f] ^:= Interpretation["SparseInterpolationFunction", f];
+                getArray[i_] := arrays[[i]];
                 f[param]
             ]
         ]
