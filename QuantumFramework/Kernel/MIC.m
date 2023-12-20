@@ -1,9 +1,9 @@
 Package["Wolfram`QuantumFramework`"]
 
-PackageExport[WignerMICTransform]
+PackageExport[QuantumWignerMICTransform]
 
-PackageScope[WignerMICPOVM]
-PackageScope[WignerMICBasis]
+PackageScope[QuantumWignerMICPOVM]
+PackageScope[QuantumWignerMICBasis]
 
 
 
@@ -13,10 +13,10 @@ a2[d_] := If[OddQ[d / 2], 2, 2 - 1 / (d / 2) ^ 2]
 b2[d_] := If[EvenQ[d / 2], 2, 2 - 1 / (d / 2) ^ 2]
 
 
-Options[WignerMICPOVM] := Options[WignerBasis]
+Options[QuantumWignerMICPOVM] := Options[WignerBasis]
 
 
-WignerMICPOVM[d : _Integer ? Positive : 2, opts : OptionsPattern[]] := Block[{
+QuantumWignerMICPOVM[d : _Integer ? Positive : 2, opts : OptionsPattern[]] := Block[{
     W = QuditBasis["Wigner"[d, FilterRules[{opts}, Options[WignerBasis]], "Exact" -> True]]["Elements"],
     ev, pos, G, K
 },
@@ -45,9 +45,9 @@ WignerMICPOVM[d : _Integer ? Positive : 2, opts : OptionsPattern[]] := Block[{
 ]
 
 
-Options[WignerMICBasis] = Options[WignerMICPOVM]
+Options[QuantumWignerMICBasis] = Options[QuantumWignerMICPOVM]
 
-WignerMICBasis[d : _Integer ? Positive : 2, opts : OptionsPattern[]] := Block[{povm = WignerMICPOVM[d, opts], G, dual},
+QuantumWignerMICBasis[d : _Integer ? Positive : 2, opts : OptionsPattern[]] := Block[{povm = QuantumWignerMICPOVM[d, opts], G, dual},
     G = Simplify @ Outer[Tr @* Dot, povm, povm, 1];
     dual = Inverse[G] . povm;
     FullSimplify @ QuditBasis @ AssociationThread[
@@ -62,44 +62,44 @@ WignerMICBasis[d : _Integer ? Positive : 2, opts : OptionsPattern[]] := Block[{p
     ]
 ]
 
-WignerMICBasis[qb_QuantumBasis, opts : OptionsPattern[]] := FullSimplify @ QuantumBasis[
-    QuantumTensorProduct[WignerMICBasis[#, opts] & /@ qb["OutputDimensions"]],
-    QuantumTensorProduct[WignerMICBasis[#, opts] & /@ qb["InputDimensions"]]
+QuantumWignerMICBasis[qb_QuantumBasis, opts : OptionsPattern[]] := FullSimplify @ QuantumBasis[
+    QuantumTensorProduct[QuantumWignerMICBasis[#, opts] & /@ qb["OutputDimensions"]],
+    QuantumTensorProduct[QuantumWignerMICBasis[#, opts] & /@ qb["InputDimensions"]]
 ]
 
 
-WignerMICTransform[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := FullSimplify @ QuantumTensorProduct[WignerMICBasis[#, opts] & /@ qb["Dimensions"]]
+QuantumWignerMICTransform[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := FullSimplify @ QuantumTensorProduct[QuantumWignerMICBasis[#, opts] & /@ qb["Dimensions"]]
 
-WignerMICTransform[qb_ ? QuantumBasisQ, opts : OptionsPattern[]] :=
+QuantumWignerMICTransform[qb_ ? QuantumBasisQ, opts : OptionsPattern[]] :=
     Enclose @ QuantumBasis[
-        ConfirmBy[WignerMICTransform[qb["Output"], opts], QuditBasisQ],
-        ConfirmBy[WignerMICTransform[qb["Input"], opts], QuditBasisQ],
+        ConfirmBy[QuantumWignerMICTransform[qb["Output"], opts], QuditBasisQ],
+        ConfirmBy[QuantumWignerMICTransform[qb["Input"], opts], QuditBasisQ],
         "Picture" -> "PhaseSpace", qb["Meta"]
     ]
 
 
-WignerMICTransform[qs_ ? QuantumStateQ, opts : OptionsPattern[]] := Enclose @ Chop @ FullSimplify @ QuantumState[
+QuantumWignerMICTransform[qs_ ? QuantumStateQ, opts : OptionsPattern[]] := Enclose @ Chop @ FullSimplify @ QuantumState[
     qs["Double"],
-    ConfirmBy[WignerMICTransform[qs["Basis"], opts], QuantumBasisQ]
+    ConfirmBy[QuantumWignerMICTransform[qs["Basis"], opts], QuantumBasisQ]
 ]
 
-WignerMICTransform[qo_ ? QuantumOperatorQ, opts : OptionsPattern[]] := Enclose @ QuantumOperator[
-    ConfirmBy[WignerMICTransform[qo["State"], opts], QuantumStateQ],
+QuantumWignerMICTransform[qo_ ? QuantumOperatorQ, opts : OptionsPattern[]] := Enclose @ QuantumOperator[
+    ConfirmBy[QuantumWignerMICTransform[qo["State"], opts], QuantumStateQ],
     qo["Order"]
 ]
 
-WignerMICTransform[qc_ ? QuantumChannelQ, opts: OptionsPattern[]] := Enclose @ QuantumChannel[ConfirmBy[WignerMICTransform[qc["QuantumOperator"], opts], QuantumOperatorQ]]
+QuantumWignerMICTransform[qc_ ? QuantumChannelQ, opts: OptionsPattern[]] := Enclose @ QuantumChannel[ConfirmBy[QuantumWignerMICTransform[qc["QuantumOperator"], opts], QuantumOperatorQ]]
 
-WignerMICTransform[qmo_ ? QuantumMeasurementOperatorQ, opts: OptionsPattern[]] := Enclose @ QuantumOperator[
+QuantumWignerMICTransform[qmo_ ? QuantumMeasurementOperatorQ, opts: OptionsPattern[]] := Enclose @ QuantumOperator[
     QuantumTensorProduct[
         QuantumOperator[
             QuantumOperator["Spider"[QuantumBasis[{#}, {# ^ 2}]]],
-            QuantumBasis[{#}, WignerMICBasis[#, opts], "Label" -> "M"]
+            QuantumBasis[{#}, QuantumWignerMICBasis[#, opts], "Label" -> "M"]
         ] & /@ qmo["InputDimensions"]
     ],
     qmo["InputOrder"]
 ]
 
-WignerMICTransform[qco_ ? QuantumCircuitOperatorQ, opts: OptionsPattern[]] :=
-    Enclose @ QuantumCircuitOperator[If[BarrierQ[#], #, Confirm @ WignerMICTransform[#, opts]] & /@ qco["Elements"], qco["Label"]]
+QuantumWignerMICTransform[qco_ ? QuantumCircuitOperatorQ, opts: OptionsPattern[]] :=
+    Enclose @ QuantumCircuitOperator[If[BarrierQ[#], #, Confirm @ QuantumWignerMICTransform[#, opts]] & /@ qco["Elements"], qco["Label"]]
 

@@ -20,7 +20,7 @@ QuantumMeasurementOperator[{"RandomHermitian", args___}, opts___] := With[{
 ]
 
 QuantumMeasurementOperator[{"WignerMICPOVM", args___}, opts___] := Enclose @ FullSimplify @ QuantumMeasurementOperator[
-    ConfirmBy[WignerMICPOVM[args], ArrayQ[#, 3] &],
+    ConfirmBy[QuantumWignerMICPOVM[args], ArrayQ[#, 3] &],
     opts
 ]
 
