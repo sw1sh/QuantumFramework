@@ -3,7 +3,7 @@ Package["Wolfram`QuantumFramework`"]
 
 PackageExport[QuantumCircuitMultiwayGraph]
 PackageExport[QuantumCircuitMultiwayCausalGraph]
-PackageExport[QuantumCircuitLayeredMultiwayGraph]
+PackageExport[QuantumCircuitPathGraph]
 PackageExport[QuantumCircuitTokenEventGraph]
 
 
@@ -136,40 +136,52 @@ QuantumCircuitMultiwayCausalGraph[sg_ ? GraphQ, opts : OptionsPattern[]] := Encl
 ]
 
 
-QuantumCircuitLayeredMultiwayGraph[qc_ ? QuantumCircuitOperatorQ, opts___] := Block[{ops = qc["Flatten"]["NormalOperators"], initOperators, g},
+UntaggedGraph[g_] := Graph[VertexList[g], EdgeList[g][[All, ;; 2]], Options[g] /. e_DirectedEdge :> e[[;; 2]]]
 
-	initOperators = QuantumOperator[#, {qc["InputOrder"], {}}] & /@ qc["InputBasis"]["BasisStates"];
+Options[QuantumCircuitPathGraph] = Join[{"Tagged" -> False}, Options[Graph]]
 
-	g = VertexReplace[
-		EdgeDelete[
-			ResourceFunction["FoldGraph"][{bot, top} |->
-				MapThread[
-                    With[{amplitude = FullSimplify[#2]}, If[amplitude == 0, Nothing, Labeled[{bot[[1]] + 1, #1}, {amplitude, top["Order"]}]]] &,
-                    With[{newOp = top[bot[[2]]]["Sort"]},
-                        {QuantumOperator[#, {newOp["OutputOrder"], {}}] & /@ newOp["OutputBasis"]["BasisStates"], newOp["StateVector"]}
-                    ]
-                ],
-				{1, #} & /@ initOperators,
-				ops
-			],
-			DirectedEdge[_, _, {0, _}]
-		],
-		{i_, op_} :> {i, op["Formula"], op["OutputOrder"]}
+QuantumCircuitPathGraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]] := Block[{
+	ops = qc["NormalOperators"], g, weights,
+	taggedQ = TrueQ[OptionValue["Tagged"]]
+},
+	If[	qc["InputOrder"] =!= {},
+		PrependTo[ops, QuantumOperator[QuantumState[QuantumState[{1}, qc["InputDimensions"]], qc["Input"]["Dual"]], {qc["InputOrder"], {}}]]
 	];
-
+	g = VertexReplace[
+		ResourceFunction["FoldGraph"][{bot, top} |->
+			MapThread[
+				With[{amplitude = Chop @ FullSimplify[#2]}, If[amplitude == 0, Nothing, Labeled[{bot[[1]] + 1, #1}, {amplitude, top["Order"]}]]] &,
+				With[{newOp = top[bot[[2]]]["Sort"]},
+					{QuantumOperator[#, {newOp["OutputOrder"], {}}] & /@ newOp["OutputBasis"]["BasisStates"], newOp["StateVector"]}
+				]
+			],
+			{{1, QuantumOperator[{{1}}, {{}, {}}]}},
+			ops
+		],
+		{i_, op_} :> {i, First @ Keys[op["Amplitude"]], op["OutputOrder"]}
+	];
+	weights = EdgeTags[g][[All, 1]];
 	g = Graph[g,
-		opts,
+		FilterRules[{opts}, Options[Graph]],
         VertexShapeFunction -> Function[Inset[Framed[Style[#2[[2]], Black], Background -> LightBlue], #1, #3]],
 		VertexLabels -> {_, formula_, _} :> Placed[formula, Tooltip],
-        EdgeWeight -> EdgeTags[g][[All, 1]],
+		VertexWeight -> Thread[VertexList[g] -> 1],
+        EdgeWeight -> weights,
+		EdgeStyle -> If[AllTrue[weights, RealValuedNumericQ],
+			Thread[EdgeList[g] -> ({Arrowheads[0.0075], Thickness[0.001 Abs[#]], Replace[Sign[#], {-1 -> Blue, 1 -> Red}]} & /@ weights)],
+			Automatic
+		],
 		VertexCoordinates -> RotationTransform[- Pi / 2] @ GraphEmbedding[g, {"MultipartiteEmbedding", "VertexPartition" -> Length /@ GatherBy[VertexList[g], First]}],
         PerformanceGoal -> "Quality"
-	]
+	];
+
+	If[! taggedQ, g = UntaggedGraph[g]];
+	g
 ]
 
 QuantumCircuitTokenEventGraph[qc_ ? QuantumCircuitOperatorQ, opts___] := With[{
     events = Replace[
-        EdgeList[QuantumCircuitLayeredMultiwayGraph[qc]],
+        EdgeList[QuantumCircuitPathGraph[qc, "Tagged" -> True]],
         DirectedEdge[{_, q1_, o1_}, {_, q2_, o2_}, {p_, {out_, in_}}] :> DirectedEdge[
             Replace[Thread @ {Extract[FirstCase[q1, q_QuditName :> q["Name"], None, All], FirstPosition[o1, #] & /@ in], in}, {} -> {$QuditIdentity}],
             Thread @ {Extract[FirstCase[q2, q_QuditName :> q["Name"], None, All], FirstPosition[o2, #] & /@ out], out},
@@ -184,7 +196,7 @@ QuantumCircuitTokenEventGraph[qc_ ? QuantumCircuitOperatorQ, opts___] := With[{
         opts,
         VertexStyle -> Thread[events -> Hue[0.11, 1, 0.97]],
         VertexShapeFunction -> {
-            _DirectedEdge -> Function[Inset[Framed[Style[#2[[3]], Black], FrameStyle -> Directive[Thick, Hue[0.11, 1, 0.97]], Background -> If[RealValuedNumberQ[#2[[3]]], If[#2[[3]] < 0, LightBlue, LightPink], White]], #1, #3]],
+            _DirectedEdge -> Function[Inset[Framed[Style[#2[[3]], Black], FrameStyle -> Directive[Thick, Hue[0.11, 1, 0.97]], Background -> If[RealValuedNumericQ[#2[[3]]], If[#2[[3]] < 0, LightBlue, LightPink], White]], #1, #3]],
             Except[_DirectedEdge] -> Function[Inset[Framed[Style[Replace[#2, {l_, o_} :> Subscript[l, o]], Black], Background -> White], #1, #3]]
         },
         EdgeStyle -> Directive[Opacity[.5], Arrowheads[0.005]],
