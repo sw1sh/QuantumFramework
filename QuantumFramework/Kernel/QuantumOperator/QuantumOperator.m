@@ -337,8 +337,9 @@ Enclose @ Block[{
 
 
 (qo1_QuantumOperator ? QuantumOperatorQ)[qo2_ ? QuantumOperatorQ] := Enclose @ Block[{
-    top = qo1["Sort"], bot = qo2["Sort"],
-    fullTopOut, fullBotIn, fullTopIn, fullBotOut, topOut, botIn, out, in, basis, tensor
+    top = qo1["Sort"], bot = qo2["Sort"], computationalQ = False,
+    fullTopOut, fullBotIn, fullTopIn, fullBotOut, topOut, botIn, out, in,
+    basis, tensor
 },
     fullTopOut = 1 /@ top["FullOutputOrder"];
     fullTopIn = If[MemberQ[bot["OutputOrder"], #], 0, 2][#] & /@ top["FullInputOrder"];
@@ -354,12 +355,19 @@ Enclose @ Block[{
     ];
     out = Join[topOut, Cases[fullBotOut, 1[_]]];
     in = Join[Cases[fullTopIn, 2[_]], botIn];
-    With[{
-        outBasis = Join[top["Output"]["Decompose"], bot["Output"]["Decompose"]],
-        inBasis = Join[top["Input"]["Decompose"], bot["Input"]["Decompose"]],
+    Block[{
+        topOutBases, botInBases, topInBases, botOutBases, outBasis, inBasis,
         outIndex = First /@ PositionIndex[Join[fullTopOut, fullBotOut]],
-        inIndex = First /@ PositionIndex[Join[fullTopIn, fullBotIn]]
+        inIndex = First /@ PositionIndex[Join[fullTopIn, fullBotIn]],
+        topInIndex = First /@ PositionIndex[fullTopIn],
+        botOutIndex = First /@ PositionIndex[fullBotOut]
     },
+        topOutBases = top["Output"]["Decompose"];
+        botOutBases = bot["Output"]["Decompose"];
+        topInBases = top["Input"]["Decompose"];
+        botInBases = bot["Input"]["Decompose"];
+        outBasis = Join[topOutBases, botOutBases];
+        inBasis = Join[topInBases, botInBases];
         basis = QuantumBasis[
             QuantumBasis[
                 QuantumTensorProduct @ Replace[
@@ -373,6 +381,16 @@ Enclose @ Block[{
             "Picture" -> If[MemberQ[{top["Picture"], bot["Picture"]}, "PhaseSpace"], "PhaseSpace", top["Picture"]],
             "Label" -> top["Label"] @* bot["Label"],
             "ParameterSpec" -> MergeParameterSpecs[top, bot]
+        ];
+        With[{
+            topContracts = topInBases[[ Lookup[topInIndex, Sort[Cases[fullTopIn, 0[_]]]] ]],
+            botContracts = botOutBases[[ Lookup[botOutIndex, Sort[Cases[fullBotOut, 0[_]]]] ]]
+        },
+            If[ Length[topContracts] != Length[botContracts] || ! AllTrue[Thread[{topContracts, botContracts}], Apply[Equal]],
+                computationalQ = True;
+                top = top["Computational"];
+                bot = bot["Computational"];
+            ]
         ]
     ];
     tensor = Confirm[
@@ -380,25 +398,28 @@ Enclose @ Block[{
             top["VectorQ"] && bot["VectorQ"],
             SparseArrayFlatten @ EinsteinSummation[
                 {Join[fullTopOut, fullTopIn], Join[fullBotOut, fullBotIn]} -> Join[out, in],
-                {top["TensorRepresentation"], bot["TensorRepresentation"]}
+                {top["Tensor"], bot["Tensor"]}
             ],
             ArrayReshape[
                 EinsteinSummation[
                     {Join[fullTopOut, 3 @@@ fullTopOut, fullTopIn, 4 @@@ fullTopIn], Join[fullBotOut, 4 @@@ fullBotOut, fullBotIn, 3 @@@ fullBotIn]} ->
                         Join[out, in, Join[3 @@@ topOut, 4 @@@ Cases[fullBotOut, 1[_]]], Join[4 @@@ Cases[fullTopIn, 2[_]], 3 @@@ botIn]],
-                    {If[top["VectorQ"], top["Computational"]["State"]["Bend"], top]["TensorRepresentation"], If[bot["VectorQ"], bot["Computational"]["State"]["Bend"], bot]["TensorRepresentation"]}
+                    {If[top["VectorQ"], top["State"]["Bend"], top]["Tensor"], If[bot["VectorQ"], bot["State"]["Bend"], bot]["Tensor"]}
                 ],
                 Table[basis["Dimension"], 2]
             ]
         ]
     ];
     QuantumOperator[
-        QuantumState[
+        If[ computationalQ,
             QuantumState[
-                tensor,
-                QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
+                QuantumState[
+                    tensor,
+                    QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
+                ],
+                basis
             ],
-            basis
+            QuantumState[tensor, basis]
         ],
         orderDuplicates /@ Map[First, {out, in}, {2}]
     ]
