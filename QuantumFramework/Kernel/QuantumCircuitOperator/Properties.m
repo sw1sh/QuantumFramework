@@ -36,7 +36,7 @@ QuantumCircuitOperatorProp[qco_, "FullElements"] := Replace[qco["Elements"], {} 
 
 QuantumCircuitOperatorProp[qco_, "Operators"] := Replace[DeleteCases[qco["Elements"], _ ? BarrierQ], {} :> {QuantumOperator["I"]}]
 
-QuantumCircuitOperatorProp[qco_, "NormalOperators", elements_ : False] :=
+QuantumCircuitOperatorProp[qco_, "NormalOperators", elements_ : False, orders_ : Automatic] :=
     MapThread[
         Which[
             BarrierQ[#],
@@ -46,7 +46,7 @@ QuantumCircuitOperatorProp[qco_, "NormalOperators", elements_ : False] :=
                 QuantumMeasurementOperator[
                     QuantumOperator[
                         #["Sort"]["POVM"]["State"]["Bend"],
-                        #2,
+                        #2[[1]],
                         "Label" -> (Subscript["Measurement", ##] & @@ #["Target"])
                     ],
                     #1["Target"]
@@ -54,31 +54,35 @@ QuantumCircuitOperatorProp[qco_, "NormalOperators", elements_ : False] :=
                 QuantumMeasurementOperator[
                     QuantumOperator[
                         #["Sort"]["POVM"]["State"],
-                        #2,
+                        #2[[1]],
                         "Label" -> (Subscript["Measurement", ##] & @@ #["Target"])
                     ],
                     #1["Target"]
                 ]
             ],
             QuantumChannelQ[#],
-            QuantumChannel[#, #2],
+            QuantumChannel[#, #2[[1]]],
             QuantumCircuitOperatorQ[#],
-            #["Normal"],
+            #["Normal", elements, List /@ #2],
             QuantumOperatorQ[#],
-            #["Reorder", #2, False],
+            #["Reorder", #2[[1]], False],
             QuantumStateQ[#],
-            QuantumOperator[#, #2],
+            QuantumOperator[#, #2[[1]]],
             True,
             #
         ] &,
-        {#[If[elements, "FullElements", "Operators"]], #["NormalOrders", elements]} & @ qco["Sort"]
+        With[{ops = #[If[elements, "FullElements", "Operators"]]}, {
+            ops,
+            Replace[orders, Automatic :> collectOrder[#["Flatten"]["NormalOrders", elements], ops]]
+        }] & @ qco["Sort"]
     ]
 
 
+collectOrder[orders_, elements_] := FoldPairList[With[{count = If[QuantumCircuitOperatorQ[#2], #2["GateCount"], 1]}, TakeDrop[#1, count]] &, orders, elements]
+
 collectOrders[orders_] := Fold[{Union[#2[[1]], Complement[#1[[1]], #2[[2]]]], Union[#1[[2]], Complement[#2[[2]], #1[[1]]]]} &, orders]
 
-collectOrders[orders_, elements_] :=
-    collectOrders /@ FoldPairList[With[{count = If[QuantumCircuitOperatorQ[#2], #2["GateCount"], 1]}, TakeDrop[#1, count]] &, orders, elements]
+collectOrders[orders_, elements_] := collectOrders /@ collectOrder[orders, elements]
 
 QuantumCircuitOperatorProp[qco_, "NormalOrders", elements_ : False] := Block[{occupied = {}, getNext, orders},
     getNext[q_] := With[{next = If[MemberQ[occupied, q], Last[Complement[Range[Min[occupied, 0] - 1, 0], occupied]], q]}, AppendTo[occupied, next]; next];
@@ -284,8 +288,8 @@ QuantumCircuitOperatorProp[qco_, "Bend"] := QuantumCircuitOperator[
     qco["Label"]
 ]
 
-QuantumCircuitOperatorProp[qco_, "Normal"] :=
-    QuantumCircuitOperator[qco["NormalOperators"], qco["Label"]]
+QuantumCircuitOperatorProp[qco_, "Normal", args___] :=
+    QuantumCircuitOperator[qco["NormalOperators", args], qco["Label"]]
 
 QuantumCircuitOperatorProp[qco_, "TensorNetwork", opts : OptionsPattern[QuantumTensorNetwork]] := QuantumTensorNetwork[qco["Flatten"], opts]
 

@@ -751,11 +751,11 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, defaultOverl
 			overlapShift = Function[x, If[! overlapQ, NestWhile[# + 1 &, 0, ContainsAny[Lookup[ranges, x + #, {}], pos] &], 0]];
 			shift = If[
 				level > 0 && QuantumCircuitOperatorQ[op],
-				ReplacePart[ConstantArray[0, width], Thread[Range @@ MinMax[pos] -> Max[Replace[circuitPositions[op, level - 1, overlapQ, False], {{___, {_, o_}} :> o, _ -> 0}]]]],
+				ReplacePart[ConstantArray[0, width], Thread[pos -> Max[Replace[circuitPositions[op, level - 1, overlapQ, False], {{___, {_, o_}} :> o, _ -> 0}]]]],
 				ReplacePart[ConstantArray[0, width], Thread[pos -> 1]]
 			];
 			{
-				gatePos = SubsetMap[With[{x = Max[gatePos[[Span @@ MinMax[pos]]]]}, overlapShift[x] + ConstantArray[x, Length[pos]]] &, gatePos, List /@ pos],
+				gatePos = SubsetMap[With[{x = Max[gatePos[[pos]]]}, overlapShift[x] + ConstantArray[x, Length[pos]]] &, gatePos, List /@ pos],
 				gatePos + shift,
 				Merge[{ranges, Max[gatePos[[pos]]] -> Range @@ MinMax[pos]}, Apply[Union]]
 			}
