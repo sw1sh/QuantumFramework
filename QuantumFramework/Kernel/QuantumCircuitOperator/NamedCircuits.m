@@ -561,24 +561,26 @@ QuantumCircuitOperator[qs_QuantumState | {"QuantumState", qs_QuantumState}, opts
 QuantumCircuitOperator["QuantumState", opts___] := QuantumCircuitOperator[{"QuantumState", QuantumState[{"UniformSuperposition", 3}]}, opts]
 
 
-QuantumCircuitOperator["CHSH"] :=
+QuantumCircuitOperator[name : "CHSH" | "WignerCHSH"] := QuantumCircuitOperator[{name, Pi / 4}]
+
+QuantumCircuitOperator[{"CHSH", theta_ : Pi / 4}] :=
     QuantumCircuitOperator[{
         QuantumOperator["Cup" / Sqrt[2], {1, 4}, "Label" -> "Cup"],
         QuantumCircuitOperator[{"+" -> 2, "+" -> 3}, "Charlie"],
         "Barrier",
         QuantumCircuitOperator[{{"C", "H"} -> {2, 1}}, "Alice"],
-        QuantumCircuitOperator[{{"RY", Pi/4} -> 4, {"C0", "H"} -> {3, 4}}, "Bob"],
+        QuantumCircuitOperator[{{"RY", theta} -> 4, {"C0", "H"} -> {3, 4}}, "Bob"],
         "Barrier",
         {1, 2}, {3, 4}
     }]
 
-QuantumCircuitOperator["WignerCHSH"] := Block[{
+QuantumCircuitOperator[{"WignerCHSH", theta_ : Pi / 4}] := Block[{
     basis = QuditBasis[CharacterRange["a", "d"], QuditBasis["WignerMIC"]["Elements"]],
     Bell, Alice, Bob, Charlie, M
 },
     Bell = Simplify @ QuantumState[QuantumState["Bell"]["Double"], QuantumBasis[QuantumTensorProduct[basis, basis], "Label" -> "Cup"]];
     Alice = Simplify @ QuantumOperator[QuantumOperator[{"C", "Double"["H"]}, {2, 1}]["Sort"], QuantumBasis[QuditBasis[{basis, 2}], QuantumTensorProduct[basis, QuditBasis[2]]], "Label" -> "Alice"];
-    Bob = Simplify @ QuantumOperator[QuantumOperator[{"C0", "Double"["H"]} -> {3, 4}] @ QuantumOperator["RY"[ \[Pi]/4] -> 4]["Double"], QuantumBasis[QuditBasis[{2, basis}], QuantumTensorProduct[QuditBasis[2], basis]], "Label" -> "Bob"];
+    Bob = Simplify @ QuantumOperator[QuantumOperator[{"C0", "Double"["H"]} -> {3, 4}] @ QuantumOperator["RY"[theta] -> 4]["Double"], QuantumBasis[QuditBasis[{2, basis}], QuantumTensorProduct[QuditBasis[2], basis]], "Label" -> "Bob"];
     Charlie = QuantumCircuitOperator[{QuantumState["+"] / Sqrt[2] -> 2, QuantumState["+"] / Sqrt[2] -> 3}, "Charlie"];
     M = QuantumOperator[QuantumOperator["Spider"[QuantumBasis[{2}, {4}]], QuantumBasis[QuditBasis[2], basis]], "Label" -> "Measure"];
     QuantumCircuitOperator[{
@@ -588,3 +590,7 @@ QuantumCircuitOperator["WignerCHSH"] := Block[{
         M -> 1, M -> 4
     }]
 ]
+
+
+QuantumCircuitOperator[name_String | name_String[args___], opts___] /; MemberQ[$QuantumCircuitOperatorNames, name] := QuantumCircuitOperator[{name, args}, opts]
+
