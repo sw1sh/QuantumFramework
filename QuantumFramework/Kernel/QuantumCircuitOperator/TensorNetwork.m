@@ -274,7 +274,7 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
 QuantumCircuitHypergraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]] := Enclose @ Block[{
     net = QuantumTensorNetwork[qc["Flatten"], FilterRules[{opts}, Except[Options[Graph], Options[QuantumTensorNetwork]]]], vs, indices, labels, edges
 },
-	Confirm @ Needs["WolframInstitute`Hypergraph`" -> "H`"];
+	Confirm[Needs["WolframInstitute`Hypergraph`" -> "H`"], "Hypergraph paclet is not installed."];
 	vs = Developer`FromPackedArray @ VertexList[net];
 	indices = TensorNetworkIndices[net];
 	labels = AnnotationValue[{net, vs}, VertexLabels];

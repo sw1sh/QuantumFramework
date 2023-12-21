@@ -6,6 +6,8 @@ If[ PacletFind["Cotengra"] === {},
     PacletInstall[PacletObject["Wolfram/QuantumFramework"]["AssetLocation", "Cotengra.paclet"]]
 ]
 
+$ContextAliases["H`"] = "WolframInstitute`Hypergraph`"
+
 PacletManager`Package`loadWolframLanguageCode[
     "Wolfram/QuantumFramework",
     "Wolfram`QuantumFramework`",
