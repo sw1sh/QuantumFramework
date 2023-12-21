@@ -10,13 +10,15 @@ PackageScope["sortLabel"]
 
 
 
-simplifyLabel[x : _QuantumBasis | _QuantumState | _QuantumOperator] := QuantumOperator[x, "Label" -> simplifyLabel[x["Label"]]]
+simplifyLabel[x : _QuantumBasis | _QuantumState | _QuantumOperator] := QuantumOperator[x, "Label" -> simplifyLabel[x["Label"], x["OutputDimensions"], x["InputDimensions"], x["Order"]]]
 
 conj = SuperDagger | SuperStar
 
-simplifyLabel[l_] := Replace[l, {
+(* TODO: dimensions and order dependence *)
+simplifyLabel[l_, out_ : None, in_ : None, order_ : None] := Replace[l, {
     _CircleTimes :> Map[simplifyLabel, l],
-    conj[label : None | "X" | "Y" | "Z" | "I" | "NOT" | "H" | "SWAP" | "Cap" | "Cup"] :> label,
+    conj[label : None | "X" | "I" | "NOT" | "SWAP" | "Cap" | "Cup"] :> label,
+    conj[label : "Y" | "Z" | "H"] /; out == in == {2} :> label,
     SuperStar[label: "S" | "T"] :> SuperDagger[label],
     (h : conj)[Superscript[label_, p_CircleTimes]] :> Superscript[simplifyLabel[h[label]], p],
     (h : conj)[t_CircleTimes] :> simplifyLabel @* h /@ t,
@@ -35,7 +37,7 @@ simplifyLabel[l_] := Replace[l, {
     SuperDagger[Bra[x_]] :> Ket[x],
     conj[(name : "XSpider" | "YSpider" | "ZSpider" | "Spider")[phase_]] :> name[-phase],
     conj["WSpider"] :> "WSpider",
-    (h : conj)[(h : conj)[label_]] :> simplifyLabel[label]
+    (h : conj)[(h : conj)[label_]] :> simplifyLabel[label, out, in, order]
 }]
 
 expandLabel[label_CircleTimes] := Flatten[expandLabel /@ label, Infinity, CircleTimes]
