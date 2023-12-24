@@ -124,6 +124,9 @@ QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> T
     ]
 ]
 
+QuantumMeasurementOperatorProp[qmo_, "Canonical", ___] := qmo
+
+
 QuantumMeasurementOperatorProp[qmo_, "SortTarget"] := qmo["Canonical", "Reverse" -> False]
 
 
