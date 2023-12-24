@@ -9,6 +9,7 @@ $QuantumCircuitOperatorNames = {
     "GroverDiffusion", "GroverDiffusion0",
     "GroverPhaseDiffusion", "GroverPhaseDiffusion0",
     "BooleanOracle", "PhaseOracle",
+    "DeutschJozsa",
     "BooleanOracleR",
     "Grover", "GroverPhase",
     "Grover0", "GroverPhase0",
@@ -288,7 +289,7 @@ QuantumCircuitOperator[{"PhaseOracle",
         Join[
             If[ #[1] === {},
                 If[ #[0] === {},
-                    QuantumOperator[{"I", 2, Max[Length[vars], 1]}],
+                    QuantumOperator[{"GlobalPhase", If[esop === {{True}}, 0, Pi]}],
                     QuantumOperator[{"Controlled0", "0", Most[#[0]]}, {Last[#[0]]}]
                 ],
                 QuantumOperator[{"Controlled", "1", Most[#[1]], #[0]}, {Last[#[1]]}]
@@ -302,6 +303,11 @@ QuantumCircuitOperator[{"PhaseOracle",
 
 QuantumCircuitOperator[{"PhaseOracle", formula_ : BooleanFunction[2 ^ 6, 3], vars : KeyValuePattern[_ -> _Integer ? Positive], n : _Integer ? NonNegative : 0}, opts___] :=
     QuantumCircuitOperator[{"PhaseOracle", formula, Lookup[Reverse /@ Normal @ vars, Range[Max[vars]]], n}, opts]
+
+
+QuantumCircuitOperator[{"DeutschJozsa", f_Integer : 1}, opts___] := QuantumCircuitOperator[{QuantumCircuitOperator[{QuantumCircuitOperator[{"PhaseOracle", BooleanFunction[Mod[f - 1, 4], 1]}, "?"]}, "f"]}, opts]
+
+QuantumCircuitOperator["DeutschJozsa", opts___] := QuantumCircuitOperator[{"DeutschJozsa", 1}, opts]
 
 
 
@@ -568,7 +574,7 @@ QuantumCircuitOperator[{"CHSH", theta_ : Pi / 4}] :=
         QuantumOperator["Cup" / Sqrt[2], {1, 4}, "Label" -> "Cup"],
         QuantumCircuitOperator[{"+" -> 2, "+" -> 3}, "Charlie"],
         "Barrier",
-        QuantumCircuitOperator[{{"C", "H"} -> {2, 1}}, "Alice"],
+        QuantumCircuitOperator[{"I", {"C", "H"} -> {2, 1}}, "Alice"],
         QuantumCircuitOperator[{{"RY", theta} -> 4, {"C0", "H"} -> {3, 4}}, "Bob"],
         "Barrier",
         {1, 2}, {3, 4}

@@ -288,6 +288,7 @@
             "GroverPhaseDiffusion0",
             "BooleanOracle",
             "PhaseOracle",
+            "DeutschJozsa",
             "BooleanOracleR",
             "Grover",
             "GroverPhase",
@@ -308,7 +309,8 @@
             "Magic",
             "Multiplexer",
             "QuantumState",
-            "CHSH"
+            "CHSH",
+            "WignerCHSH"
         }
     },
     "QuantumEntanglementMonotone" -> {
