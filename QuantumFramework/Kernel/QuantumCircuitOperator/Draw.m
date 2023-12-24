@@ -722,15 +722,9 @@ circuitElementPosition["Barrier"[order_ ? orderQ], from_, to_, ___] := Select[or
 circuitElementPosition["Barrier"[span : Span[_Integer, _Integer | All]], from_, to_, ___] := Range @@ (Replace[List @@ span, {x_Integer :> Clip[x, {from ,to}], All -> to}, {1}] - from + 1)
 circuitElementPosition[order_List, from_, _] := Union[Flatten[order]] - from + 1
 circuitElementPosition[op_, from_, to_] := circuitElementPosition[op["Order"], from, to]
-circuitElementPosition[op_, from_, to_, showExtraQuditsQ_] := With[{order = op["Order"]},
-	If[
-		QuantumMeasurementOperatorQ[op] || QuantumChannelQ[op],
-		If[showExtraQuditsQ, circuitElementPosition[Range @@ MinMax[order], from, to], circuitElementPosition[order[[2]], from, to]],
-		circuitElementPosition[order, from, to]
-	]
-]
 
-circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, defaultOverlapQ : True | False : False, showExtraQuditsQ : True | False : True] := With[{
+
+circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, overlapQ : True | False : False, showExtraQuditsQ : True | False : True] := With[{
 	min = Min[1, circuit["Min"]],
 	max = circuit["Max"],
 	width = circuit["Width"]
@@ -738,17 +732,23 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, defaultOverl
 	Rest @ FoldList[
 		Block[{
 			op = #2,
-			pos,
+			pos, fullPos,
 			gatePos = #1[[2]],
 			ranges = #1[[3]],
-			overlapQ,
 			shift,
 			overlapShift
 		},
-			overlapQ = defaultOverlapQ || MatchQ[op["Label"], "I" | "\[Pi]"[___] | "Cap" | "Cup"];
-			pos = circuitElementPosition[op, min, max, showExtraQuditsQ];
+			pos = circuitElementPosition[op, min, max];
 			If[pos === {}, Return[#1, Block]];
-			overlapShift = Function[x, If[! overlapQ, NestWhile[# + 1 &, 0, ContainsAny[Lookup[ranges, x + #, {}], pos] &], 0]];
+			fullPos = Which[
+				QuantumCircuitOperatorQ[op],
+				Range @@ MinMax[Select[pos, # + min - 1 > 0 &]],
+				(QuantumMeasurementOperatorQ[op] || QuantumChannelQ[op]) && ! showExtraQuditsQ,
+				pos,
+				True,
+				Range @@ MinMax[pos]
+			];
+			overlapShift = Function[x, If[overlapQ, 0, NestWhile[# + 1 &, 0, ContainsAny[Lookup[ranges, x + #, {}], fullPos] &]]];
 			shift = If[
 				level > 0 && QuantumCircuitOperatorQ[op],
 				ReplacePart[ConstantArray[0, width], Thread[pos -> Max[Replace[circuitPositions[op, level - 1, overlapQ, False], {{___, {_, o_}} :> o, _ -> 0}]]]],
@@ -757,7 +757,7 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, defaultOverl
 			{
 				gatePos = SubsetMap[With[{x = Max[gatePos[[pos]]]}, overlapShift[x] + ConstantArray[x, Length[pos]]] &, gatePos, List /@ pos],
 				gatePos + shift,
-				Merge[{ranges, Max[gatePos[[pos]]] -> Range @@ MinMax[pos]}, Apply[Union]]
+				Merge[{ranges, Max[gatePos[[pos]]] -> fullPos}, Apply[Union]]
 			}
 		] &,
 		{ConstantArray[0, width], ConstantArray[0, width], <|0 -> {}|>},
