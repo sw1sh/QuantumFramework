@@ -150,21 +150,21 @@ QuantumCircuitPathGraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]] 
 	g = VertexReplace[
 		ResourceFunction["FoldGraph"][{bot, top} |->
 			MapThread[
-				With[{amplitude = Chop @ FullSimplify[#2]}, If[amplitude == 0, Nothing, Labeled[{bot[[1]] + 1, #1}, {amplitude, top["Order"]}]]] &,
+				With[{amplitude = Chop @ FullSimplify[#2]}, If[amplitude == 0, Nothing, Labeled[{MapAt[# + 1 &, Join[AssociationThread[top["OutputOrder"] -> 0], bot[[1]]], {Key[#]} & /@ top["OutputOrder"]], #1}, {amplitude, top["Order"]}]]] &,
 				With[{newOp = top[bot[[2]]]["Sort"]},
 					{QuantumOperator[#, {newOp["OutputOrder"], {}}] & /@ newOp["OutputBasis"]["BasisStates"], newOp["StateVector"]}
 				]
 			],
-			{{1, QuantumOperator[{{1}}, {{}, {}}]}},
+			{{<||>, QuantumOperator[{{1}}, {{}, {}}]}},
 			ops
 		],
-		{i_, op_} :> {i, First @ Keys[op["Amplitude"]], op["OutputOrder"]}
+		{i_, op_} :> {{i, op["OutputOrder"]}, First @ Keys[op["Amplitude"]]}
 	];
 	weights = EdgeTags[g][[All, 1]];
 	g = Graph[g,
 		FilterRules[{opts}, Options[Graph]],
         VertexShapeFunction -> Function[Inset[Framed[Style[#2[[2]], Black], Background -> LightBlue], #1, #3]],
-		VertexLabels -> {_, formula_, _} :> Placed[formula, Tooltip],
+		VertexLabels -> {_, formula_} :> Placed[formula, Tooltip],
 		VertexWeight -> Thread[VertexList[g] -> 1],
         EdgeWeight -> weights,
 		EdgeStyle -> If[AllTrue[weights, RealValuedNumericQ],
@@ -182,9 +182,9 @@ QuantumCircuitPathGraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]] 
 QuantumCircuitTokenEventGraph[qc_ ? QuantumCircuitOperatorQ, opts___] := With[{
     events = Replace[
         EdgeList[QuantumCircuitPathGraph[qc, "Tagged" -> True]],
-        DirectedEdge[{_, q1_, o1_}, {_, q2_, o2_}, {p_, {out_, in_}}] :> DirectedEdge[
-            Replace[Thread @ {Extract[FirstCase[q1, q_QuditName :> q["Name"], None, All], FirstPosition[o1, #] & /@ in], in}, {} -> {$QuditIdentity}],
-            Thread @ {Extract[FirstCase[q2, q_QuditName :> q["Name"], None, All], FirstPosition[o2, #] & /@ out], out},
+        DirectedEdge[{{i_, o1_}, q1_}, {{j_, o2_}, q2_}, {p_, {out_, in_}}] :> DirectedEdge[
+            {Lookup[i, #[[2]]], #[[2]]} -> #[[1]] & /@ Replace[Thread @ {Extract[FirstCase[q1, q_QuditName :> q["Name"], None, All], FirstPosition[o1, #] & /@ in], in}, {} -> {{$QuditIdentity, {}}}],
+           	{Lookup[j, #[[2]]], #[[2]]} -> #[[1]] & /@ Thread @ {Extract[FirstCase[q2, q_QuditName :> q["Name"], None, All], FirstPosition[o2, #] & /@ out], out},
             p
         ],
         {1}
@@ -197,7 +197,7 @@ QuantumCircuitTokenEventGraph[qc_ ? QuantumCircuitOperatorQ, opts___] := With[{
         VertexStyle -> Thread[events -> Hue[0.11, 1, 0.97]],
         VertexShapeFunction -> {
             _DirectedEdge -> Function[Inset[Framed[Style[#2[[3]], Black], FrameStyle -> Directive[Thick, Hue[0.11, 1, 0.97]], Background -> If[RealValuedNumericQ[#2[[3]]], If[#2[[3]] < 0, LightBlue, LightPink], White]], #1, #3]],
-            Except[_DirectedEdge] -> Function[Inset[Framed[Style[Replace[#2, {l_, o_} :> Subscript[l, o]], Black], Background -> White], #1, #3]]
+            Except[_DirectedEdge] -> Function[Inset[Framed[Style[Replace[#2, {({{}, {}} -> l_) :> l, ({t_, o_} -> l_) :> Subsuperscript[l, o, t]}], Black], Background -> White], #1, #3]]
         },
         EdgeStyle -> Directive[Opacity[.5], Arrowheads[0.005]],
         PerformanceGoal -> "Quality"
