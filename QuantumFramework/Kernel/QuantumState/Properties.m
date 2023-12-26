@@ -6,7 +6,7 @@ $QuantumStateProperties = {
     "StateType", "State", "Basis",
     "Amplitudes", "Amplitude", "Weights", "Probabilities", "Probability", "StateVector", "DensityMatrix",
     "NormalizedState", "NormalizedAmplitudes", "NormalizedStateVector", "NormalizedDensityMatrix",
-    "Entropy", "VonNeumannEntropy",
+    "Entropy", "VonNeumannEntropy", "LogicalEntropy",
     "Purity", "Type", "PureStateQ", "MixedStateQ", "MatrixQ", "VectorQ", "UnknownQ", "PhysicalQ",
     "NumericQ", "NumberQ",
     "Kind", "Scalar",
@@ -398,6 +398,9 @@ QuantumStateProp[qs_, "VonNeumannEntropy" | "Entropy", logBase_ ? NumericQ] := E
 QuantumStateProp[qs_, "VonNeumannEntropy" | "Entropy"] := Quantity[qs["VonNeumannEntropy", 2], "Bits"]
 
 QuantumStateProp[qs_, {"VonNeumannEntropy" | "Entropy", logBase_}] := qs["VonNeumannEntropy", logBase]
+
+
+QuantumStateProp[qs_, "LogicalEntropy"] := 1 - Tr[MatrixPower[qs["NormalizedDensityMatrix"], 2]]
 
 
 (* purity *)
