@@ -219,18 +219,18 @@ TensorNetworkIndexGraph[net_Graph ? (TensorNetworkQ[True]), opts : OptionsPatter
 
 Options[QuantumTensorNetwork] = Join[{"PrependInitial" -> True, "Computational" -> True}, Options[Graph]]
 
-QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
-    width, min, ops, orders, arity, vertices, edges, tensors
+QuantumTensorNetwork[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
+    circuit = qco["Sort"], width, min, ops, orders, arity, vertices, edges, tensors
 },
-	ConfirmAssert[AllTrue[qc["Operators"], #["Order"] === #["FullOrder"] &]];
-    width = qc["Width"];
-    min = qc["Min"];
-    ops = qc["NormalOperators"];
+	ConfirmAssert[AllTrue[circuit["Operators"], #["Order"] === #["FullOrder"] &]];
+    width = circuit["Width"];
+    min = circuit["Min"];
+    ops = circuit["NormalOperators"];
     If[TrueQ[OptionValue["Computational"]], ops = Through[ops["Computational"]]];
-    arity = qc["Arity"];
+    arity = circuit["Arity"];
     MapThread[
         PrependTo[ops, QuantumOperator[QuantumState[{1}, #2, "Label" -> "0"], {#1}]] &,
-        {qc["InputOrder"], PadLeft[qc["InputDimensions"], arity, 2]}
+        {circuit["InputOrder"], PadLeft[circuit["InputDimensions"], arity, 2]}
     ];
 	orders = #["Order"] & /@ ops;
     vertices = Range[Length[ops]] - arity;
@@ -249,7 +249,7 @@ QuantumTensorNetwork[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Encl
 	];
 	tensors = #["Tensor"] & /@ ops;
 	ConfirmBy[
-        If[TrueQ[OptionValue["PrependInitial"]] && qc["Arity"] > 0, Identity, VertexDelete[#, _ ? NonPositive] &] @ Graph[
+        If[TrueQ[OptionValue["PrependInitial"]] && circuit["Arity"] > 0, Identity, VertexDelete[#, _ ? NonPositive] &] @ Graph[
             vertices,
             edges,
             FilterRules[{opts}, Options[Graph]],
@@ -284,11 +284,10 @@ QuantumCircuitHypergraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]]
 
 
 TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
-    circuit, res
+    circuit = qco["Sort"], res
 },
-    circuit = If[ qs["Qudits"] > 0,
-        {qs -> qco["InputOrder"]} /* QuantumCircuitOperator[qco["Operators"]],
-        qco
+    If[ qs["Qudits"] > 0,
+        circuit = {qs -> circuit["InputOrder"]} /* circuit
     ];
     res = TensorNetworkCompile[circuit];
     Which[
@@ -304,9 +303,10 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
 Options[TensorNetworkCompile] = Options[QuantumTensorNetwork]
 
 TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
-    circuit = qco, net, phaseSpaceQ, bendQ, order, res,
-    traceOrder, eigenOrder, basis = qco["Basis"]
+    circuit = qco["Sort"], net, phaseSpaceQ, bendQ, order, res,
+    traceOrder, eigenOrder, basis
 },
+    basis = circuit["Basis"];
     phaseSpaceQ = basis["Picture"] === "PhaseSpace";
     traceOrder = circuit["TraceOrder"];
     eigenOrder = circuit["Eigenorder"];
