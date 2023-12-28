@@ -179,6 +179,21 @@ BooleanIndices[formula_, vars : _List] := Enclose @ Module[{
     indices
 ]
 
+OrderBooleanVariables[formula_, varSpec : _List | _Association | Automatic : Automatic] := Enclose @ Block[{vars, order},
+    vars = Replace[varSpec, {
+        Automatic | {__Integer} :> Replace[BooleanVariables[formula], k_Integer :> Array[\[FormalX], k]],
+        rules : KeyValuePattern[{_ -> _Integer ? Positive}] :> DeleteDuplicates[Join[Replace[BooleanVariables[formula], k_Integer :> Array[\[FormalX], k]], Keys[rules]]]
+    }];
+    order = Replace[varSpec, {
+        rules : KeyValuePattern[{_ -> _Integer ? Positive}] :>
+            With[{freeOrder = Complement[Range[Max[Values[rules], Length[vars]]], Values[rules]], freeVars = Complement[vars, Keys[rules]]},
+                Lookup[Join[rules, Thread[freeVars -> Take[freeOrder, Length[freeVars]]]], vars]
+            ],
+        Except[{__Integer}] :> Range[Length[vars]]
+    }];
+    ConfirmAssert[orderQ[order]];
+    {vars, order}
+]
 
 QuantumCircuitOperator[{"BooleanOracle",
     formula_ : BooleanFunction[2 ^ 6, 3],
@@ -190,13 +205,9 @@ QuantumCircuitOperator[{"BooleanOracle",
     esopFormula, esop, vars, order, indices, negIndices, isNegative = False, targetQubits
 },
     esopFormula = BooleanConvert[formula, "ESOP"];
-    vars = Replace[varSpec, {
-        Automatic | {__Integer} -> Replace[BooleanVariables[formula], k_Integer :> Array[\[FormalX], k]],
-        rules : KeyValuePattern[{_ -> _Integer ? Positive}] :> Keys[rules]
-    }];
+    {vars, order} = Confirm @ OrderBooleanVariables[formula, varSpec];
+    order = order + m;
     esop = BooleanExpression[esopFormula, vars];
-    order = m + Replace[varSpec, {rules : KeyValuePattern[{_ -> _Integer ? Positive}] :> Values[rules], Except[{__Integer}] :> Range[Length[vars]]}];
-    ConfirmAssert[orderQ[order]];
     indices = ConfirmMatch[BooleanIndices[esopFormula, vars], indicesPattern];
     negIndices = ConfirmMatch[BooleanIndices[BooleanConvert[Not[Replace[formula, bf_BooleanFunction :> bf @@ vars]], "ESOP"], vars], indicesPattern];
     If[ Length[negIndices] < Length[indices],
@@ -215,7 +226,7 @@ QuantumCircuitOperator[{"BooleanOracle",
                 ] & /@ indices,
                 If[isNegative, QuantumOperator[gate, targetQubits]["Dagger"], Nothing]
             ],
-            QuantumOperator["I", {#}] & /@ Complement[Range[Max[indices, Length[vars] + 1]], Flatten @ Values[indices]]
+            QuantumOperator["I", {#}] & /@ Complement[Range[Max[indices, Length[vars]]], Join[Flatten @ Values[indices], targetQubits]]
         ],
         opts,
         If[MatchQ[formula, _BooleanFunction], esop, formula]
@@ -232,13 +243,9 @@ QuantumCircuitOperator[{"BooleanOracleR",
     esopFormula, esop, vars, order, indices, negIndices, isNegative = False, l, angles, targetQubit
 },
     esopFormula = BooleanConvert[formula, "ESOP"];
-    vars = Replace[varSpec, {
-        Automatic | {__Integer} -> Replace[BooleanVariables[formula], k_Integer :> Array[\[FormalX], k]],
-        rules : KeyValuePattern[_ -> _Integer ? Positive] :> Keys[rules]
-    }];
+    {vars, order} = Confirm @ OrderBooleanVariables[formula, varSpec];
+    order = order + m;
     esop = BooleanExpression[esopFormula, vars];
-    order = m + Replace[varSpec, {rules : KeyValuePattern[{_ -> _Integer ? Positive}] :> Values[rules], Except[{__Integer}] :> Range[Length[vars]]}];
-    ConfirmAssert[orderQ[order]];
     indices = ConfirmMatch[BooleanIndices[esopFormula, vars], indicesPattern];
     negIndices = ConfirmMatch[BooleanIndices[BooleanConvert[Not[Replace[formula, bf_BooleanFunction :> bf @@ vars]], "ESOP"], vars], indicesPattern];
     If[ Length[negIndices] < Length[indices],
@@ -261,7 +268,7 @@ QuantumCircuitOperator[{"BooleanOracleR",
                 ],
                 If[isNegative, QuantumOperator[MapAt[Minus, rotationGate, {2}], {targetQubit}], Nothing]
             ],
-            QuantumOperator["I", {#}] & /@ Complement[Range[Max[indices, Length[vars]]], Flatten @ Values[indices]]
+            QuantumOperator["I", {#}] & /@ Complement[Range[Max[indices, Length[vars]]], Join[Flatten @ Values[indices], {targetQubit}]]
         ],
         opts,
         If[MatchQ[formula, _BooleanFunction], esop, formula]
@@ -287,16 +294,16 @@ BooleanGrayAngles[indices : indicesPattern, angle_ : Pi] := KeyValueMap[
 
 QuantumCircuitOperator[{"PhaseOracle",
     formula_ : BooleanFunction[2 ^ 6, 3],
-    defaultVars : _List | Automatic : Automatic,
+    varSpec : _List | _Association | Automatic : Automatic,
     m : _Integer ? NonNegative : 0
 }, opts___] := Enclose @ Block[{
-    esopFormula = Confirm @ BooleanConvert[formula, "ESOP"],
-    esop,
-    vars = Replace[defaultVars, Automatic :> Replace[BooleanVariables[formula], k_Integer :> Array[\[FormalX], k]]],
-    indices
+    esopFormula = Confirm @ BooleanConvert[formula, "ESOP"], esop, vars, order, indices
 },
+    {vars, order} = Confirm @ OrderBooleanVariables[formula, varSpec];
+    order = order + m;
     esop = BooleanExpression[esopFormula, vars];
 	indices = m + <|0 -> {}, 1 -> {}, KeySelect[Not @* MissingQ] @ PositionIndex @ Lookup[#, vars]|> & /@ Map[If[MatchQ[#, _Not], #[[1]] -> 0, # -> 1] &, esop, {2}];
+    indices = With[{repl = Thread[Range[Length[order]] -> order]}, Replace[indices, repl, {3}]];
     QuantumCircuitOperator[
         Join[
             If[ #[1] === {},

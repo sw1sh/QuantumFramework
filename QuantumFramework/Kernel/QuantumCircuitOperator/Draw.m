@@ -748,7 +748,7 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, overlapQ : T
 				True,
 				Range @@ MinMax[pos]
 			];
-			overlapShift = Function[x, If[overlapQ, 0, NestWhile[# + 1 &, 0, ContainsAny[Lookup[ranges, x + #, {}], fullPos] &]]];
+			overlapShift = Function[x, If[overlapQ || MatchQ[op["Label"], "I" | "Permutation" | "Cap" | "Cup"], 0, NestWhile[# + 1 &, 0, ContainsAny[Lookup[ranges, x + #, {}], fullPos] &]]];
 			shift = If[
 				level > 0 && QuantumCircuitOperatorQ[op],
 				ReplacePart[ConstantArray[0, width], Thread[pos -> Max[Replace[circuitPositions[op, level - 1, overlapQ, False], {{___, {_, o_}} :> o, _ -> 0}]]]],
