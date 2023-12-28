@@ -552,7 +552,7 @@ QuantumOperator[obj : _QuantumMeasurementOperator | _QuantumMeasurement | _Quant
     QuantumOperator[qo["State"][ps], qo["Order"]]
 
 
-StackQuantumOperators[ops : {_ ? QuantumOperatorQ ..}, name_ : "E"] := Block[{
+StackQuantumOperators[ops : {_ ? QuantumOperatorQ ..}, name_ : "\[ScriptCapitalE]"] := Block[{
     basis = First[ops]["Basis"],
     order = MapAt[Prepend[#, Min[#] - 1] &, First[ops]["Order"], {1}]
 },

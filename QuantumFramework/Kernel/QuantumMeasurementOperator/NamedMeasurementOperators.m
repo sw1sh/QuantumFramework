@@ -20,7 +20,10 @@ QuantumMeasurementOperator[{"RandomHermitian", args___}, opts___] := With[{
 ]
 
 QuantumMeasurementOperator[{"WignerMICPOVM", args___}, opts___] := Enclose @ FullSimplify @ QuantumMeasurementOperator[
-    ConfirmBy[QuantumWignerMICPOVM[args], ArrayQ[#, 3] &],
+    QuantumMeasurementOperator[ConfirmBy[QuantumWignerMICPOVM[args], ArrayQ[#, 3] &]],
+    With[{basis = QuditBasis[{"WignerMIC", args}]},
+        QuantumBasis[QuantumTensorProduct[QuditBasis[basis["Names"]], QuditBasis[Sqrt[basis["Dimension"]]]], QuditBasis[Sqrt[basis["Dimension"]]]]
+    ],
     opts
 ]
 

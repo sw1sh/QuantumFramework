@@ -17,7 +17,7 @@ quantumChannel[qo_ ? QuantumOperatorQ] := Enclose @ QuantumChannel @
             Prepend[qo["InputOrder"], Last[Complement[Range[Min[1, qo["InputOrder"]] - 1, 0], Select[qo["InputOrder"], NonPositive]], 0]],
             qo["InputOrder"]
         },
-        "Output" -> QuditBasis @ KeyMap[Replace[{qn_QuditName, 1} :> {QuditName[Subscript["K", qn["Name"]]], 1}]] @
+        "Output" -> QuditBasis @ KeyMap[Replace[{qn_QuditName, 1} :> {QuditName[Subscript["\[ScriptCapitalK]", qn["Name"]]], 1}]] @
             qo["Output"]["Representations"]
     ]
 

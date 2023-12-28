@@ -179,7 +179,7 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
 
         eigenBasis = QuditBasis[
             MapIndexed[
-                Interpretation[Tooltip[Style[#, Bold], StringTemplate["Eigenvalue ``"][First @ #2]], {#1, #2}] &,
+                Interpretation[Tooltip[Style[Subscript["\[ScriptCapitalE]", #1], Bold], StringTemplate["Eigenvalue ``"][First @ #2]], {#1, #2}] &,
                 eigenvalues
             ],
             eigenvectors
