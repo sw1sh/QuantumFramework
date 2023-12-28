@@ -134,7 +134,7 @@ QuantumMeasurementProp[qm_, "MixedStates"] := With[{rep = If[qm["PureStateQ"], 1
         MatchQ[qm["LabelHead"], "Computational" | Automatic],
         QuantumState[QuantumState[ArrayReshape[#, Table[qm["StateDimension"], rep]], QuantumBasis[qm["StateDimensions"]]], qm["StateBasis"]]["Computational"] & /@
             qm["StateDual"]["StateMatrix"],
-        MatchQ[qm["LabelHead"], "Eigen"] || qm["Eigendimension"] != qm["TargetDimension"],
+        MatchQ[qm["LabelHead"], "Eigen"],
         QuantumState[ArrayReshape[#, Table[qm["StateDimension"], rep]], qm["StateBasis"]] & /@
             qm["StateDual"]["StateMatrix"],
         True,
@@ -149,7 +149,7 @@ QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
     Which[
         MatchQ[qm["LabelHead"], "Computational" | Automatic],
         qm["Computational"]["Eigenstate"],
-        MatchQ[qm["LabelHead"], "Eigen"] || qm["Eigendimension"] != qm["TargetDimension"],
+        MatchQ[qm["LabelHead"], "Eigen"],
         qm["Eigenstate"],
         True,
         qm["Canonical"]["Eigenstate"]
@@ -166,7 +166,7 @@ QuantumMeasurementProp[qm_, "Projectors"] := qm["Eigenstate"]["Projectors"]
 QuantumMeasurementProp[qm_, "Outcomes"] := Which[
     MatchQ[qm["LabelHead"], "Computational" | Automatic],
     qm["Computational"],
-    MatchQ[qm["LabelHead"], "Eigen"] || qm["Eigendimension"] != qm["TargetDimension"],
+    MatchQ[qm["LabelHead"], "Eigen"],
     qm,
     True,
     qm["Canonical"]

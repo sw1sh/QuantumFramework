@@ -98,8 +98,7 @@ QuantumMeasurementOperator[tensor_ ? TensorQ /; TensorRank[tensor] == 3, target 
                 {Prepend[#, 0], #} & @ Join[target, Drop[Drop[Union @@ op["Order"], Length[target]], 1]],
                 QuantumBasis[
                     QuantumTensorProduct[QuditBasis[Table[Subscript["\[ScriptCapitalE]", i], {i, dims[[1]]}]], QuditBasis[dims[[2]]]],
-                    QuditBasis[dims[[3]]],
-                    "Label" -> "Eigen"
+                    QuditBasis[dims[[3]]]
                 ]
             ]
         ],
@@ -108,7 +107,7 @@ QuantumMeasurementOperator[tensor_ ? TensorQ /; TensorRank[tensor] == 3, target 
 
 QuantumMeasurementOperator[tensor_ ? (TensorQ[#, Not @* StringQ] &) /; TensorRank[tensor] == 2, target : (_ ? targetQ) : {1}, args___] :=
     QuantumMeasurementOperator[
-        QuantumOperator[tensor, args, "Label" -> "Eigen"],
+        QuantumOperator[tensor, args],
         target
     ]
 
