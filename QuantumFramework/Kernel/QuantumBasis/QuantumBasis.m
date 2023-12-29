@@ -101,7 +101,9 @@ QuantumBasis[params_List, args___] := Enclose @ QuantumTensorProduct[ConfirmBy[Q
 
 QuantumBasis[{}, args___] := QuantumBasis[QuditBasis[{}], args]
 
+
 (* defaults *)
+
 QuantumBasis[data_Association ? (Keys /* Not @* ContainsAll[$QuantumBasisDataKeys]), args___] :=
     QuantumBasis[<|$QuantumBasisDefaults, data|>, args]
 
@@ -157,7 +159,7 @@ QuantumBasis[output : _ ? nameQ | _Integer, input  : _ ? nameQ | _Integer, args_
     Enclose @ QuantumBasis[<|"Output" -> ConfirmBy[QuditBasis[output], QuditBasisQ], "Input" -> ConfirmBy[QuditBasis[input], QuditBasisQ]["Dual"]|>, args]
 
 QuantumBasis[output : _ ? nameQ | _Integer, args___] :=
-    Enclose @ QuantumBasis[<|"Output" -> ConfirmBy[QuditBasis[output], QuditBasisQ]|>, args]
+    Enclose @ QuantumBasis[<|"Output" -> ConfirmBy[QuditBasis[output], QuditBasisQ], "Label" -> Replace[output, {{name_String, ___} | name_String :> name}]|>, args]
 
 QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) | OptionsPattern[]) ...] :=
     QuantumBasis["Computational", args, "Label" -> None]

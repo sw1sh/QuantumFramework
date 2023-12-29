@@ -24,10 +24,11 @@ qmo_QuantumMeasurementOperator /; quantumMeasurementOperatorQ[Unevaluated[qmo]] 
 SetAttributes[QuantumMeasurementOperator, NHoldRest]
 
 QuantumMeasurementOperator[arg_ -> eigenvalues_ ? VectorQ, args___] :=
-    Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumBasis[arg, "Label" -> "M"], QuantumBasisQ] -> eigenvalues, args]
+    Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumBasis[arg], QuantumBasisQ] -> eigenvalues, args]
 
-QuantumMeasurementOperator[target : _ ? targetQ, args___] :=
-    QuantumMeasurementOperator[QuantumBasis[args, "Label" -> "M"], target]
+QuantumMeasurementOperator[target : _ ? targetQ, args___] := QuantumMeasurementOperator[QuantumBasis[args], target]
+
+QuantumMeasurementOperator[target_ -> arg_, opts___] := QuantumMeasurementOperator[QuantumBasis[arg], target, opts]
 
 QuantumMeasurementOperator[target_Integer, args___] := QuantumMeasurementOperator[{target}, args]
 
@@ -75,34 +76,31 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, Automatic] := QuantumMeasurem
 
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ] := QuantumMeasurementOperator[qo, Automatic]
 
-QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args : PatternSequence[___, Except[_ ? targetQ]]] :=
-    QuantumMeasurementOperator[QuantumOperator[qo, {qo["OutputOrder"], qo["FullInputOrder"]}, args], qo["InputOrder"]]
-
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args__, target_ ? targetQ] :=
     QuantumMeasurementOperator[QuantumOperator[qo, {qo["OutputOrder"], qo["FullInputOrder"]}, args], target]
 
 
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target : _ ? targetQ, args__] :=
-    QuantumMeasurementOperator[
-        With[{op = QuantumOperator[qo, args]},
-            QuantumOperator[op, Sort @ Join[target, Complement[op["InputQuditOrder"] + Min[target] - 1, target]]]
-        ],
-        target
-    ]
+    QuantumMeasurementOperator[QuantumOperator[qo, args], target]
+
+QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args : PatternSequence[___, Except[_ ? targetQ]]] :=
+    QuantumMeasurementOperator[QuantumOperator[qo, {qo["OutputOrder"], qo["FullInputOrder"]}, args], qo["InputOrder"]]
+
 
 QuantumMeasurementOperator[tensor_ ? TensorQ /; TensorRank[tensor] == 3, target : (_ ? targetQ) : {1}, args___] :=
     QuantumMeasurementOperator[
-        With[{op = QuantumOperator[MatrixFunction[Sqrt, #] & /@ tensor, args], dims = Dimensions[tensor]},
+        With[{op = QuantumOperator[MatrixFunction[Sqrt, #] & /@ tensor], dims = Dimensions[tensor]},
             QuantumOperator[
                 op["State"]["Split", 2],
-                {Prepend[#, 0], #} & @ Join[target, Drop[Drop[Union @@ op["Order"], Length[target]], 1]],
+                {Prepend[target, 0], target},
                 QuantumBasis[
                     QuantumTensorProduct[QuditBasis[Table[Subscript["\[ScriptCapitalE]", i], {i, dims[[1]]}]], QuditBasis[dims[[2]]]],
                     QuditBasis[dims[[3]]]
                 ]
             ]
         ],
-        target
+        target,
+        args
     ]
 
 QuantumMeasurementOperator[tensor_ ? (TensorQ[#, Not @* StringQ] &) /; TensorRank[tensor] == 2, target : (_ ? targetQ) : {1}, args___] :=
@@ -141,10 +139,10 @@ Enclose @ Block[{
 
 QuantumMeasurementOperator[qm_ ? QuantumMeasurementQ, opts___] := QuantumMeasurementOperator[qm["QuantumOperator"], opts]
 
-QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOperatorQ | _ ? QuantumBasisQ], ___], target_ ? targetQ] :=
-    Enclose @ With[{qb = ConfirmBy[QuantumBasis[args, "Label" -> "M"], QuantumBasisQ]}, QuantumMeasurementOperator[qb, target]]
+QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOperatorQ | _ ? QuantumBasisQ], ___], target_ ? targetQ, opts___] :=
+    Enclose @ With[{qb = ConfirmBy[QuantumBasis[args], QuantumBasisQ]}, QuantumMeasurementOperator[qb, target, opts]]
 
-QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOperatorQ], ___]] := QuantumMeasurementOperator[QuantumBasis[args, "Label" -> "M"]]
+QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOperatorQ], ___]] := QuantumMeasurementOperator[QuantumBasis[args]]
 
 (* mutation *)
 

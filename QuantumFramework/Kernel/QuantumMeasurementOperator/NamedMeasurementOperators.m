@@ -8,7 +8,7 @@ $QuantumMeasurementOperatorNames = {"RandomHermitian", "WignerMICPOVM"}
 
 
 QuantumMeasurementOperator[{"RandomHermitian", args___}, target : _ ? targetQ : {1}, opts___] := With[{
-    basis = QuantumBasis[args]
+    basis = QuantumBasis[args, "Label" -> "Random"]
 },
     QuantumMeasurementOperator[
         QuantumOperator[
@@ -24,7 +24,7 @@ QuantumMeasurementOperator[{"WignerMICPOVM", args___}, target : _ ? targetQ : {1
     QuantumMeasurementOperator[
         QuantumMeasurementOperator[ConfirmBy[QuantumWignerMICPOVM[args], ArrayQ[#, 3] &], target],
         With[{basis = QuditBasis[{"WignerMIC", args}]},
-            QuantumBasis[QuantumTensorProduct[QuditBasis[basis["Names"]], QuditBasis[Sqrt[basis["Dimension"]]]], QuditBasis[Sqrt[basis["Dimension"]]]]
+            QuantumBasis[QuantumTensorProduct[QuditBasis[basis["Names"]], QuditBasis[Sqrt[basis["Dimension"]]]], QuditBasis[Sqrt[basis["Dimension"]]], "Label" -> "WignerMIC"]
         ]
     ],
     opts

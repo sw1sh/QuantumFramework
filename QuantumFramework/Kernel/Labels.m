@@ -72,7 +72,12 @@ QuantumShortcut[qo_QuantumOperator] := Replace[
     }
 ]
 
-QuantumShortcut[qmo_QuantumMeasurementOperator] := {qmo["InputOrder"]}
+QuantumShortcut[qmo_QuantumMeasurementOperator] := {
+    If[ MatchQ[qmo["Label"], None | "I"[___]],
+        If[AllTrue[qmo["TargetDimensions"], # == 2 &], qmo["InputOrder"], qmo["InputOrder"] -> {"I"[qmo["TargetDimensions"]], "Label" -> None}],
+        qmo
+    ]
+}
 
 QuantumShortcut[qc_QuantumCircuitOperator] := Catenate[QuantumShortcut /@ qc["Operators"]]
 

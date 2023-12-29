@@ -46,16 +46,14 @@ QuantumCircuitOperatorProp[qco_, "NormalOperators", elements_ : False] :=
                 QuantumMeasurementOperator[
                     QuantumOperator[
                         #["Sort"]["POVM"]["State"]["Bend"],
-                        #2,
-                        "Label" -> (Subscript["Measurement", ##] & @@ #["Target"])
+                        #2
                     ],
                     #1["Target"]
                 ],
                 QuantumMeasurementOperator[
                     QuantumOperator[
                         #["Sort"]["POVM"]["State"],
-                        #2,
-                        "Label" -> (Subscript["Measurement", ##] & @@ #["Target"])
+                        #2
                     ],
                     #1["Target"]
                 ]
