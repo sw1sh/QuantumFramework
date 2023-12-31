@@ -389,7 +389,10 @@ QuantumOperatorProp[qo_, "OrderedFormula", OptionsPattern["Normalize" -> False]]
     ]
 ]
 
-QuantumOperatorProp[qo_, "Reorder", order : {_ ? orderQ | Automatic, _ ? orderQ | Automatic}, controlQ_ : False] := With[{
+QuantumOperatorProp[qo_, "Reorder", order : {_ ? orderQ | Automatic, _ ? orderQ | Automatic}, controlQ_ : False] := Block[{
+    output = Replace[order[[1]], Automatic :> qo["FullOutputOrder"]], input = Replace[order[[2]], Automatic :> qo["FullInputOrder"]],
+    inputRepl, outputRepl
+},
     inputRepl =
         Thread[
             Take[
@@ -397,15 +400,14 @@ QuantumOperatorProp[qo_, "Reorder", order : {_ ? orderQ | Automatic, _ ? orderQ 
                     Join[#, Complement[qo["FullInputOrder"], #]] & @ Join[qo["ControlOrder"], qo["TargetOrder"]],
                     Take[qo["FullInputOrder"], UpTo[Length[qo["FullInputOrder"]]]]
                 ],
-                UpTo[Length[order[[2]]]]
+                UpTo[Length[input]]
             ] ->
-            Take[Replace[order[[2]], Automatic :> qo["FullInputOrder"]], UpTo[Length[qo["FullInputOrder"]]]]
-        ],
+            Take[input, UpTo[Length[qo["FullInputOrder"]]]]
+        ];
     outputRepl =
         Thread[
-            Take[qo["FullOutputOrder"], UpTo[Length[order[[1]]]]] ->
-            Take[Replace[order[[1]], Automatic :> qo["FullOutputOrder"]], UpTo[Length[qo["FullOutputOrder"]]]]]
-},
+            Take[qo["FullOutputOrder"], UpTo[Length[output]]] ->
+            Take[output, UpTo[Length[qo["FullOutputOrder"]]]]];
     QuantumOperator[
         qo["State"],
         {qo["FullOutputOrder"] /. outputRepl, qo["FullInputOrder"] /. inputRepl},
@@ -414,6 +416,9 @@ QuantumOperatorProp[qo_, "Reorder", order : {_ ? orderQ | Automatic, _ ? orderQ 
         ]
     ]
 ]
+
+QuantumOperatorProp[qo_, "Reorder", order_ ? orderQ, args___] := qo["Reorder", {order, Automatic}, args]
+
 
 QuantumOperatorProp[qo_, "Shift", n : _Integer : 1] := qo["Reorder", qo["Order"] /. k_Integer :> k + n]
 

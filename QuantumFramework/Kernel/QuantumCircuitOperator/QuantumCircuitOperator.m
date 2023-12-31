@@ -31,14 +31,14 @@ qco_QuantumCircuitOperator /; quantumCircuitOperatorQ[Unevaluated[qco]] && ! Sys
 
 (* constructors *)
 
-circuitNamePattern = name_String | {name_String, ___} /; MemberQ[$QuantumCircuitOperatorNames, name]
+circuitNamePattern = name_String | {name_String, ___} | name_String[___] /; MemberQ[$QuantumCircuitOperatorNames, name]
 
 FromCircuitOperatorShorthand[barrier_ ? BarrierQ] := barrier
 FromCircuitOperatorShorthand[qc_ ? QuantumCircuitOperatorQ] := qc
 FromCircuitOperatorShorthand[qc_ ? QuantumCircuitOperatorQ -> order_ ? orderQ] := QuantumCircuitOperator[qc, order]
 FromCircuitOperatorShorthand[arg : circuitNamePattern] := QuantumCircuitOperator[arg]
-FromCircuitOperatorShorthand[(arg : circuitNamePattern) -> order_ ? orderQ] :=
-    QuantumCircuitOperator[FromCircuitOperatorShorthand[arg], order]
+FromCircuitOperatorShorthand[(arg : circuitNamePattern) -> args_] := QuantumCircuitOperator[FromCircuitOperatorShorthand[arg], args]
+FromCircuitOperatorShorthand[(arg : circuitNamePattern) -> order_ ? orderQ -> args_] := QuantumCircuitOperator[FromCircuitOperatorShorthand[arg], order, args]
 FromCircuitOperatorShorthand["M" | {"M", args___}] := FromCircuitOperatorShorthand[{"M", args} -> {1}]
 FromCircuitOperatorShorthand["M" | {"M", args___} -> target_Integer] := FromCircuitOperatorShorthand[{"M", args} -> {target}]
 FromCircuitOperatorShorthand["M" | {"M", args___} -> target_ ? orderQ] := QuantumMeasurementOperator[args, target]
@@ -51,6 +51,8 @@ QuantumCircuitOperator[operators_ ? ListQ] := Enclose @ With[{ops = Confirm @* F
 ]
 
 QuantumCircuitOperator[arg_, order_ ? orderQ, args___] := QuantumCircuitOperator[QuantumCircuitOperator[arg, args], order]
+
+QuantumCircuitOperator[arg_ -> order_ ? orderQ, args___] := QuantumCircuitOperator[QuantumCircuitOperator[arg, args], order]
 
 QuantumCircuitOperator[operators_ ? ListQ, label_, ___] :=
     Enclose @ QuantumCircuitOperator[<|"Elements" -> Confirm @* FromCircuitOperatorShorthand /@ operators, "Label" -> label|>]
@@ -154,16 +156,16 @@ Part[qco_QuantumCircuitOperator, part_] ^:= QuantumCircuitOperator[qco["Elements
 
 (* reorder *)
 
-QuantumCircuitOperator[qc_ ? QuantumCircuitOperatorQ, order_ ? orderQ] := With[{
-    repl = Thread[qc["InputOrder"] -> Take[Join[order, Drop[qc["InputOrder"], UpTo[Length[order]]]], UpTo[Length[qc["InputOrder"]]]]]
-},
-    QuantumCircuitOperator[qc, {qc["OutputOrder"] /. repl, order}]
-]
+QuantumCircuitOperator[qc_ ? QuantumCircuitOperatorQ, order_ ? orderQ] := QuantumCircuitOperator[qc, {order, order}]
 
-QuantumCircuitOperator[qc_ ? QuantumCircuitOperatorQ, {outOrder_ ? orderQ, inOrder_ ? orderQ}] := With[{
-    outRepl = Thread[qc["OutputOrder"] -> Take[Join[outOrder, Drop[qc["OutputOrder"], UpTo[Length[outOrder]]]], UpTo[Length[qc["OutputOrder"]]]]],
-    inRepl = Thread[qc["InputOrder"] -> Take[Join[inOrder, Drop[qc["InputOrder"], UpTo[Length[inOrder]]]], UpTo[Length[qc["InputOrder"]]]]]
+QuantumCircuitOperator[qc_ ? QuantumCircuitOperatorQ, order : {_ ? orderQ, _ ? orderQ}] := Block[{
+    outOrder = Select[qc["OutputOrder"], Positive],
+    inOrder = Select[qc["InputOrder"], Positive],
+    outRepl, inRepl
 },
+    outRepl = Thread[outOrder -> Take[Join[order[[1]], Drop[outOrder, UpTo[Length[order[[1]]]]]], UpTo[Length[outOrder]]]];
+    inRepl = Thread[inOrder -> Take[Join[order[[2]], Drop[inOrder, UpTo[Length[order[[2]]]]]], UpTo[Length[inOrder]]]];
+    {outRepl, inRepl} = {Join[outRepl, inRepl], Join[inRepl, outRepl]};
     QuantumCircuitOperator[
         Which[
             BarrierQ[#], # /. inRepl,
