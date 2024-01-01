@@ -321,35 +321,53 @@ QuantumCircuitOperator[{"PhaseOracle",
 ]
 
 QuantumCircuitOperator[{"PhaseOracle", formula_ : BooleanFunction[2 ^ 6, 3], vars : KeyValuePattern[_ -> _Integer ? Positive], n : _Integer ? NonNegative : 0}, opts___] :=
-    QuantumCircuitOperator[{"PhaseOracle", formula, Lookup[Reverse /@ Normal @ vars, Range[Max[vars]]], n}, opts]
+    QuantumCircuitOperator[{"PhaseOracle", formula, Lookup[Reverse /@ Normal @ vars, Range[Max[vars]]]}, opts]
 
 
-QuantumCircuitOperator[{"DeutschJozsaPhaseOracle", f_ : 1, n : _Integer ? Positive : 1}, opts___] :=
-    QuantumCircuitOperator[{"PhaseOracle", Replace[f, i_Integer :> BooleanFunction[Mod[i - 1, 2 ^ 2 ^ n], n]]}, opts]
+QuantumCircuitOperator[{name : "DeutschJozsaPhaseOracle" | "DeutschJozsaBooleanOracle", f_ : 1, n : _Integer ? Positive | Automatic : Automatic}, opts___] :=
+    With[{formula = Replace[f, i_Integer :> With[{m = Replace[n, Automatic :> Max[Ceiling[Log2[Log2[i]]], 1]]}, BooleanFunction[Mod[i - 1, 2 ^ 2 ^ m], m]]]},
+        QuantumCircuitOperator[{StringReplace[name, "DeutschJozsa" -> ""], formula}, opts]
+    ]
 
-QuantumCircuitOperator[{"DeutschJozsaBooleanOracle", f_ : 1, n : _Integer ? Positive : 1}, opts___] :=
-    QuantumCircuitOperator[{"BooleanOracle", Replace[f, i_Integer :> BooleanFunction[Mod[i - 1, 2 ^ 2 ^ n], n]]}, opts]
-
-QuantumCircuitOperator[{"DeutschJozsaPhase", f_ : Automatic, n : _Integer ? Positive : 1}, opts___] := QuantumCircuitOperator[{
-    Splice["+" -> # & /@ Range[n]],
-    Replace[f, {
+QuantumCircuitOperator[{"DeutschJozsaPhase", f_ : Automatic, n : _Integer ? Positive | Automatic : Automatic}, opts___] := Enclose @ With[{
+    oracle = Confirm @ Replace[f, {
         Automatic :> 
             QuantumCircuitOperator[{QuantumCircuitOperator[{QuantumCircuitOperator[{"DeutschJozsaPhaseOracle", RandomInteger[{1, 2 ^ 2 ^ n}], n}]}, "?"]}, "Oracle"],
         _ :> QuantumCircuitOperator[{"DeutschJozsaPhaseOracle", f, n}]
-    }],
-    Splice[QuantumMeasurementOperator["X", {#}] & /@ Range[n]]
-}, opts]
+    }]
+},
+{
+    m = oracle["Width"]
+},
+    QuantumCircuitOperator[
+        {
+            Splice["+" -> # & /@ Range[m]],
+            oracle,
+            Splice[QuantumMeasurementOperator["X", {#}] & /@ Range[m]]
+        },
+        opts
+    ]
+]
 
-QuantumCircuitOperator[{"DeutschJozsa", f_ : Automatic, n : _Integer ? Positive : 1}, opts___] := QuantumCircuitOperator[{
-    Splice["+" -> # & /@ Range[n]],
-    "-" -> n + 1,
-    Replace[f, {
+QuantumCircuitOperator[{"DeutschJozsa", f_ : Automatic, n : _Integer ? Positive | Automatic : Automatic}, opts___] := With[{
+    oracle = Replace[f, {
         Automatic :> 
             QuantumCircuitOperator[{QuantumCircuitOperator[{QuantumCircuitOperator[{"DeutschJozsaBooleanOracle", RandomInteger[{1, 2 ^ 2 ^ n}], n}]}, "?"]}, "Oracle"],
         _ :> QuantumCircuitOperator[{"DeutschJozsaBooleanOracle", f, n}]
-    }],
-    Splice[QuantumMeasurementOperator["X", {#}] & /@ Range[n]]
-}, opts]
+    }]
+},
+{
+    m = oracle["Width"] - 1
+},
+    QuantumCircuitOperator[{
+            Splice["+" -> # & /@ Range[m]],
+            "-" -> m + 1,
+            oracle,
+            Splice[QuantumMeasurementOperator["X", {#}] & /@ Range[m]]
+        },
+    opts
+    ]
+]
 
 QuantumCircuitOperator[{"DeutschPhase", f_ : Automatic}, opts___] := QuantumCircuitOperator[{"DeutschJozsaPhase", f, 1}, opts]
 
