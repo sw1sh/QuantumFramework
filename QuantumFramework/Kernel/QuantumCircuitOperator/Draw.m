@@ -13,14 +13,15 @@ $GateDefaultBoundaryStyle = {
 	"P"[_] | (Superscript | Power)["P"[_], _] | "PhaseShift"[_] | _Integer -> RGBColor[0.560181, 0.691569, 0.194885],
 	Subscript["R", _][_] -> RGBColor[0.528488, 0.470624, 0.701351],
 	"Measurement" -> RGBColor[0.7367, 0.358, 0.5030],
-	"Channel" -> $DefaultGray,
+	"Channel" -> Directive[Dotted, $DefaultGray],
 	"ZSpider" | "XSpider" | "Spider" -> Directive[CapForm[None], $DefaultGray, Opacity[.3]],
 	_ -> $DefaultGray
 };
 
 $GateDefaultBackgroundStyle = Join[
 	{
-		"ZSpider" -> White, "XSpider" ->LightGray, "Spider" -> Directive[Opacity[.1], $DefaultGray]
+		"ZSpider" -> White, "XSpider" ->LightGray, "Spider" -> Directive[Opacity[.1], $DefaultGray],
+		"Channel" -> Directive[$DefaultGray, Opacity[.25]]
 	},
 	MapAt[Directive[#, Opacity[0.3]] &, Most[$GateDefaultBoundaryStyle], {All, 2}],
 	{
@@ -57,6 +58,7 @@ Options[drawGate] := DeleteDuplicatesBy[First] @ Join[{
 	"GateBoundaryStyle" -> Automatic,
 	"GateShapeFunction" -> Automatic,
 	"ShowConnectors" -> False,
+	"ShowGlobalPhase" -> True,
 	"WireStyle" -> Automatic,
 	"ThickWire" -> False,
 	"DimensionWires" -> True
@@ -80,6 +82,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 	center,
 	gateLabelsQ = TrueQ[OptionValue["ShowGateLabels"]],
 	connectorsQ = TrueQ[OptionValue["ShowConnectors"]],
+	globalPhaseQ = TrueQ[OptionValue["ShowGlobalPhase"]],
 	thickWireQ = TrueQ[OptionValue["ThickWire"]],
 	backgroundStyle,
 	boundaryStyle,
@@ -321,6 +324,29 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			If[connectorsQ, {FaceForm[Directive[$DefaultGray, Opacity[1]]], Disk[#, size / 32] & /@ {{center[[1]] - size / 2, - vGapSize #}, {center[[1]] + size / 2, - vGapSize #}} & /@ vpos}, Nothing],
 			If[gateLabelsQ, Rotate[Text[Style[Row[{If[TrueQ[Negative[n]], "-", ""], InputForm[2 ^ (1 - Abs[n])]}], labelStyleOpts], center], rotateLabel], Nothing]
 		},
+		"Measurement"[subLabel_] :> {
+			Map[drawGate[{{#1}, hpos}, dims, "Measurement", "ShowGateLabels" -> False, opts] &, vpos],
+			{
+				Thickness[Small],
+				Table[Line[{# + 0.25 size {Cos[a], Sin[a]} - {0, size / 4}, # + 0.35 size {Cos[a], Sin[a]} - {0, size / 4}}], {a, Pi Subdivide[.2, .8, 7]}],
+				Thickness[Medium],
+				With[{a = 0.35 Pi}, Line[{# - {0, size / 4}, # + 0.5 size {Cos[a], Sin[a]} - {0, size / 4}}]]
+			} & /@ ({Max[hpos] hGapSize, - vGapSize #} & /@ vpos),
+			Replace[subLabel, {
+				Automatic | None | False :> Nothing,
+				_ :> If[gateLabelsQ, Text[Style[subLabel, labelStyleOpts], {hGapSize hpos[[1]], - vGapSize # - 2 size / 5}] & /@ vpos, Nothing]
+			}]
+		},
+		"Channel"[subLabel_] :> {
+			Map[drawGate[{{#1}, hpos}, dims, subLabel,
+					"GateBackgroundStyle" -> subLabel -> Replace["Channel", gateBackgroundStyle],
+					"GateBoundaryStyle" -> subLabel -> Replace["Channel", gateBoundaryStyle],
+					opts
+				] &,
+				vpos
+			],
+			If[gateLabelsQ, Text[Style[subLabel, labelStyleOpts], {hGapSize hpos[[1]], - vGapSize #}] & /@ vpos, Nothing]
+		},
 		subLabels_CircleTimes :> With[{
 			labels = Catenate @ Replace[List @@ subLabels, {Superscript[subSubLabel_, CircleTimes[n_Integer]] :> Table[subSubLabel, n], subSubLabel_ :> {subSubLabel}}, {1}]
 		},
@@ -342,12 +368,15 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			Map[drawGate[{{#1}, hpos}, dims, subLabel, opts] &, vpos],
 			Dashed, drawControlWires[#, {subLabel, subLabel}] & /@ Partition[Sort[vpos], 2, 1]
 		},
-		subLabel : "GlobalPhase"[subSubLabel_] | (subSubLabel_ /; AnyTrue[hpos, LessThan[0]]) :> {
-			EdgeForm[Replace[subLabel, gateBoundaryStyle]],
-			FaceForm[Replace[subLabel, gateBackgroundStyle]],
-			GeometricTransformation[Rectangle[Sequence @@ corners, Sequence @@ FilterRules[{opts}, Options[Rectangle]]], RotationTransform[Pi / 4, center]],
-			If[gateLabelsQ, Rotate[Text[Style[subSubLabel, labelStyleOpts], center], rotateLabel], Nothing]
-		},
+		subLabel : "GlobalPhase"[subSubLabel_] | (subSubLabel_ /; AnyTrue[hpos, LessThan[0]]) :> If[globalPhaseQ,
+			{
+				EdgeForm[Replace[subLabel, gateBoundaryStyle]],
+				FaceForm[Replace[subLabel, gateBackgroundStyle]],
+				GeometricTransformation[Rectangle[Sequence @@ corners, Sequence @@ FilterRules[{opts}, Options[Rectangle]]], RotationTransform[Pi / 4, center]],
+				If[gateLabelsQ, Rotate[Text[Style[subSubLabel, labelStyleOpts], center], rotateLabel], Nothing]
+			},
+			{}
+		],
 		l : SuperDagger[subLabel_] | subLabel_ :> {
 			EdgeForm[If[thickWireQ, Directive[AbsoluteThickness[3], #] &, Identity] @ Replace[subLabel, gateBoundaryStyle]],
 			FaceForm[Replace[subLabel, gateBackgroundStyle]],
@@ -368,8 +397,6 @@ Options[drawMeasurement] = Join[{
 	"VerticalGapSize" -> 1,
 	"HorizontalGapSize" -> 1,
 	"Arrowhead" -> 0.005,
-	"MeasurementBackgroundStyle" -> Replace["Measurement", $GateDefaultBackgroundStyle],
-	"MeasurementBoundaryStyle" -> Replace["Measurement", $GateDefaultBoundaryStyle],
 	"MeasurementWirePosition" -> Top,
 	"Label" -> Automatic,
 	"GateLabels" -> {},
@@ -379,9 +406,9 @@ Options[drawMeasurement] = Join[{
 	"ShowExtraQudits" -> False,
 	"ShowGauge" -> True,
 	"WireStyle" -> Automatic,
-	"ThickWire" -> False,
 	"DimensionWires" -> True
 },
+	Options[drawGate],
 	Options[Style],
 	Options[Rectangle]
 ];
@@ -397,31 +424,17 @@ drawMeasurement[{vpos_, _, hpos_}, eigenDims_, max_, opts : OptionsPattern[]] :=
 	connectorsQ = TrueQ[OptionValue["ShowConnectors"]],
 	gateLabelsQ = TrueQ[OptionValue["ShowGateLabels"]],
 	labelStyleOpts = {Background -> Transparent, FilterRules[{opts}, Options[Style]], $DefaultFontStyleOptions},
-	thickWireQ = TrueQ[OptionValue["ThickWire"]],
 	wireStyle = Replace[OptionValue["WireStyle"], Automatic -> Directive[CapForm[None], $DefaultGray, Opacity[.3]]],
 	wireThickness = If[TrueQ[OptionValue["DimensionWires"]], defaultWireThickness, AbsoluteThickness[1] &],
+	order = Select[vpos, Positive],
+	height = Max[hpos],
 	corners,
 	center
 },
-	corners = positionCorners[{Select[vpos, Positive], Table[Max[hpos], 2]}, size, vGapSize, hGapSize];
+	corners = positionCorners[{order, Table[height, 2]}, size, vGapSize, hGapSize];
 	center = Mean[corners];
 	{
-		EdgeForm[If[thickWireQ, Directive[#, AbsoluteThickness[3]] &, Identity] @ OptionValue["MeasurementBoundaryStyle"]],
-		FaceForm[OptionValue["MeasurementBackgroundStyle"]],
-		Rectangle[Sequence @@ corners, Sequence @@ FilterRules[{opts}, Options[Rectangle]]],
-		If[	gaugeQ,
-			{
-				Thickness[Small],
-				Table[Line[{center + 0.25 size {Cos[a], Sin[a]} - {0, size / 4}, center + 0.35 size {Cos[a], Sin[a]} - {0, size / 4}}], {a, Pi Subdivide[.2, .8, 7]}],
-				Thickness[Medium],
-				With[{a = 0.35 Pi}, Line[{center - {0, size / 4}, center + 0.5 size {Cos[a], Sin[a]} - {0, size / 4}}]]
-			},
-			Nothing
-		],
-		Replace[label, {
-			Automatic | None | False :> Nothing,
-			_ :> If[gateLabelsQ, Text[Style[Replace[label, OptionValue["GateLabels"]], labelStyleOpts], If[gaugeQ, center - {0, 2 size / 5}, center]], Nothing]
-		}],
+		drawGate[{order, order, hpos}, {{}, {}}, Superscript[If[gaugeQ, "Measurement", "Channel"][label], CircleTimes[Length[order]]], FilterRules[{opts}, Options[drawGate]]],
 		If[	connectorsQ, {FaceForm[Directive[$DefaultGray, Opacity[1]]], Disk[#, size / 32] & /@ {{center[[1]] - size / 2, - vGapSize #}, {center[[1]] + size / 2, - vGapSize #}} & /@ Select[vpos, Positive]}, Nothing],
 		If[	showMeasurementWireQ || extraQuditsQ, {
 			$DefaultGray,
@@ -681,7 +694,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 							"SubcircuitLevel" -> level - 1,
 							"WireLabels" -> None, "ShowOutline" -> True, "ShowLabel" -> True,
 							"ShowMeasurementWire" -> False, "ShowEmptyWires" -> False, "ShortOuterWires" -> False,
-							"ShowExtraQudits" -> False,
+							"ShowExtraQudits" -> False, "ShowGlobalPhase" -> False,
 							opts
 						],
 						{hGapSize Max[#3[[circuitElementPosition[#1, min, max]]]], 0}
@@ -692,7 +705,6 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 				drawMeasurement[#2, #1["Eigendimensions"], max, "ShowMeasurementWire" -> showMeasurementWireQ, "ShowExtraQudits" -> extraQuditsQ, "ThickWire" -> #["MatrixQ"], "Label" -> #1["Label"], FilterRules[{opts}, Options[drawMeasurement]]],
 				QuantumChannelQ[#1],
 				drawMeasurement[#2, #1["TraceDimensions"], max, "ShowMeasurementWire" -> False,
-					"MeasurementBackgroundStyle" -> Replace["Channel", $GateDefaultBackgroundStyle], "MeasurementBoundaryStyle" -> Directive[Dotted, Replace["Channel", $GateDefaultBoundaryStyle]],
 					"ShowExtraQudits" -> extraQuditsQ, "ThickWire" -> #["MatrixQ"], "Label" -> #1["Label"], "ShowGauge" -> False,
 					FilterRules[{opts}, Options[drawMeasurement]]
 				],
