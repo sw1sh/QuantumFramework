@@ -37,11 +37,11 @@ QuditBasis[{"Computational" | "Identity" | "I", dimension_Integer ? Positive}, a
 QuditBasis["Bell", args___] := QuditBasis[
     AssociationThread[{
             Superscript["\[CapitalPhi]", "+"],
-            Superscript["\[CapitalPhi]", "-"],
+            Superscript["\[CapitalPsi]", "-"],
             Superscript["\[CapitalPsi]", "+"],
-            Superscript["\[CapitalPsi]", "-"]
+            Superscript["\[CapitalPhi]", "-"]
         },
-        (1 / Sqrt[2]) {{1, 0, 0, 1}, {1, 0, 0, -1}, {0, 1, 1, 0}, {0, 1, -1, 0}}
+        (1 / Sqrt[2]) {{1, 0, 0, 1}, {0, 1, -1, 0}, {0, 1, 1, 0}, {1, 0, 0, -1}}
     ],
     args
 ]
