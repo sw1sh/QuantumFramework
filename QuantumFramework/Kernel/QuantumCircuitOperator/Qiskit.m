@@ -153,7 +153,7 @@ import pickle
 import PIL
 import matplotlib
 matplotlib.use('Agg')
-fig = pickle.loads(<* $pythonBytes *>).draw(output='mpl', scale=<* scale *>)
+fig = pickle.loads(<* $pythonBytes *>).draw(output='mpl', style='iqp', scale=<* scale *>)
 fig.canvas.draw()
 image = PIL.Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
 matplotlib.pyplot.close()
@@ -439,8 +439,8 @@ result
 "];
     Which[
         AssociationQ[result],
-        Enclose[
-            Block[{counts = KeyMap[StringDelete[Whitespace]] @ result, size},
+        Block[{counts = KeyMap[StringDelete[Whitespace]] @ result, size},
+            Enclose[
                 size = StringLength @ First @ Keys[counts];
                 ConfirmAssert[size <= 8];
                 ConfirmBy[
@@ -451,9 +451,9 @@ result
                         ]
                     ],
                     QuantumMeasurementQ
-                ]
-            ],
-            counts &
+                ],
+                counts &
+            ]
         ],
         NumericArrayQ[result],
         QuantumState[Chop @ Normal[result]]["Reverse"],
