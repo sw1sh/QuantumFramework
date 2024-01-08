@@ -644,8 +644,8 @@ UnitaryEulerAnglesWithPhase[qo_QuantumOperator] := UnitaryEulerAnglesWithPhase[q
 QuantumOperatorProp[qo_, "ZYZ"] /; qo["Dimension"] == 4 := Enclose @ Module[{angles, phase},
     {angles, phase} = UnitaryEulerAnglesWithPhase[qo["MatrixRepresentation"]];
     If[ NumericQ[phase] && phase == 0,
-        QuantumOperator[QuantumOperator[{"U", Splice @ angles}]["State"], QuantumOperator],
-        QuantumCircuitOperator[{QuantumOperator[{"GlobalPhase", phase}], QuantumOperator[QuantumOperator[{"U", Splice @ angles}]["State"], qo["Order"]]}]
+        QuantumOperator[{"U", Splice @ angles}, qo["Order"]],
+        QuantumCircuitOperator[{QuantumOperator[{"GlobalPhase", phase}], QuantumOperator[{"U", Splice @ angles}, qo["Order"]]}]
     ]
 ]
 
