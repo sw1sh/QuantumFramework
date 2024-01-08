@@ -567,7 +567,7 @@ QuantumCircuitOperator[{"Multiplexer"| "Multiplexor", ops__} -> defaultK : _Inte
     m = Ceiling[Log2[n]];
     k = Replace[defaultK, Automatic :> m + 1];
     seq = Values[<|0 -> {}, 1 -> {}, PositionIndex[#]|>] & /@ Take[Tuples[{1, 0}, m], n];
-    QuantumCircuitOperator[MapThread[If[MatchQ[#1, "I" | {"I"..}], Nothing, {"C", #1, Splice[#2 /. c_Integer /; c == k :> m + 1]}] &, {{ops}, seq}], opts]
+    QuantumCircuitOperator[MapThread[If[MatchQ[#1["Label"], "I" | CircleTimes["I" ..] | Superscript["I", _CircleTimes]], Nothing, {"C", #1, Splice[#2 /. c_Integer /; c == k :> m + 1]}] &, {QuantumOperator /@ {ops}, seq}], opts]
 ]
 
 QuantumCircuitOperator[{"Multiplexer"| "Multiplexor", ops__}, opts___] := QuantumCircuitOperator[{"Multiplexer", ops} -> Automatic, opts]
