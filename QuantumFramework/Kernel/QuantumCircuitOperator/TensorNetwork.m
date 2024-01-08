@@ -292,7 +292,7 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
     res = TensorNetworkCompile[circuit];
     Which[
         QuantumMeasurementOperatorQ[res],
-        QuantumMeasurement[res],
+        If[ContainsAll[res["OutputOrder"], res["TargetOrder"]], QuantumMeasurement[res], res],
         QuantumOperatorQ[res],
         res["State"],
         True,
