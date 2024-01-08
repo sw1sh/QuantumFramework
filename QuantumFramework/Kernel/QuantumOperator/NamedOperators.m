@@ -59,6 +59,7 @@ FromOperatorShorthand[f_Symbol[
 FromOperatorShorthand[op_ ? QuantumFrameworkOperatorQ] := op
 FromOperatorShorthand[target_ ? targetQ] := QuantumMeasurementOperator[target]
 FromOperatorShorthand[target_ ? targetQ -> {arg_, opts___} | arg_] := QuantumMeasurementOperator[arg, target, opts]
+FromOperatorShorthand[target_Integer ? Positive -> {arg_, opts___} | arg_] := QuantumMeasurementOperator[arg, {target}, opts]
 FromOperatorShorthand[arg : {name_String, ___} | name_String[___] | name_String] /; MemberQ[$QuantumStateNames, name] :=
     With[{s = QuantumState[arg]}, QuantumOperator[s, "Label" -> Ket[{s["Label"]}]]]
 FromOperatorShorthand[arg : name_String] /; MemberQ[$QuantumStateNames, name] || StringMatchQ[name, ("0" | "1" | "+" | "-" | "L" | "R") ..] :=
