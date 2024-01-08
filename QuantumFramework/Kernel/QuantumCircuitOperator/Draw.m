@@ -9,7 +9,7 @@ $DefaultGray = RGBColor[0.537254, 0.537254, 0.537254];
 $GateDefaultBoundaryStyle = {
 	"H" -> RGBColor[0.368417, 0.506779, 0.709798],
 	"T" | "S" -> RGBColor[0.922526, 0.385626, 0.209179],
-	"X" | "Y" | "Z" | "Pauli" | "NOT" | "0" | "1" -> RGBColor[0.880722, 0.611041, 0.142051],
+	"I" | "X" | "Y" | "Z" | "Pauli" | "NOT" | "0" | "1" -> RGBColor[0.880722, 0.611041, 0.142051],
 	"P"[_] | (Superscript | Power)["P"[_], _] | "PhaseShift"[_] | _Integer -> RGBColor[0.560181, 0.691569, 0.194885],
 	Subscript["R", _][_] -> RGBColor[0.528488, 0.470624, 0.701351],
 	"Measurement" -> RGBColor[0.7367, 0.358, 0.5030],
@@ -61,7 +61,8 @@ Options[drawGate] := DeleteDuplicatesBy[First] @ Join[{
 	"ShowGlobalPhase" -> True,
 	"WireStyle" -> Automatic,
 	"ThickWire" -> False,
-	"DimensionWires" -> True
+	"DimensionWires" -> True,
+	"IdentityGate" -> False
 },
 	Options[Style], Options[Rectangle]
 ];
@@ -84,6 +85,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 	connectorsQ = TrueQ[OptionValue["ShowConnectors"]],
 	globalPhaseQ = TrueQ[OptionValue["ShowGlobalPhase"]],
 	thickWireQ = TrueQ[OptionValue["ThickWire"]],
+	identityQ = TrueQ[OptionValue["IdentityGate"]],
 	backgroundStyle,
 	boundaryStyle,
 	drawControlWires,
@@ -124,7 +126,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 									boundaryStyle = First[boundaryStyles];
 								]
 							];
-							Map[drawGate[{{#}, hpos}, dims, labels[[index[#]]], opts] &, target],
+							Map[drawGate[{{#}, hpos}, dims, labels[[index[#]]], "IdentityGate" -> True, opts] &, target],
 							drawControlWires[#, {If[MemberQ[target, #[[1]]], labels[[index[#[[1]]]]], "1"], If[MemberQ[target, #[[2]]], labels[[index[#[[2]]]]], "1"]}] & /@ Partition[Sort[vpos], 2, 1]
 						} /; Length[labels] == Length[target]
 					],
@@ -132,7 +134,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 						{
 							backgroundStyle = Replace[subSubLabel, gateBackgroundStyle];
 							boundaryStyle = Replace[subSubLabel, gateBoundaryStyle];
-							MapIndexed[drawGate[{{#1}, hpos}, dims, subSubLabel, opts] &, target],
+							MapIndexed[drawGate[{{#1}, hpos}, dims, subSubLabel, "IdentityGate" -> True, opts] &, target],
 							drawControlWires[#, {If[MemberQ[target, #[[1]]], subSubLabel, "1"], If[MemberQ[target, #[[2]]], subSubLabel, "1"]}] & /@ Partition[Sort[vpos], 2, 1]
 						},
 					_ :> {
@@ -141,7 +143,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 						Which[
 							Length[target] == 1,
 							{
-								drawGate[{target, hpos}, dims, subLabel, opts],
+								drawGate[{target, hpos}, dims, subLabel, "IdentityGate" -> True, opts],
 								drawControlWires[#, {
 									If[MemberQ[target, #[[1]]], subLabel, "1"],
 									If[MemberQ[target, #[[2]]], subLabel, "1"]
@@ -157,7 +159,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 							},
 							True,
 							{
-								Map[drawGate[{{#}, hpos}, dims, Subscript[subLabel, #], opts] &, target],
+								Map[drawGate[{{#}, hpos}, dims, Subscript[subLabel, #], "IdentityGate" -> True, opts] &, target],
 								drawControlWires[#, {
 									If[MemberQ[target, #[[1]]], Subscript[subLabel, #[[1]]], "1"],
 									If[MemberQ[target, #[[2]]], Subscript[subLabel, #[[2]]], "1"]
@@ -194,7 +196,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			Map[drawGate[{{#}, hpos}, dims, Subscript["R", Subscript[subLabel, #]][angle], opts] &, vpos],
 			drawControlWires[#, {Subscript["R", Subscript[subLabel, #[[1]]]][angle], Subscript["R", Subscript[subLabel, #[[2]]]][angle]}] & /@ Partition[Sort[vpos], 2, 1]
 		},
-		"I" /; Length[vposOut] === Length[vposIn] :> {
+		"I" /; Length[vposOut] === Length[vposIn] && ! identityQ :> {
 			wireStyle,
 			MapThread[{wireThickness[Replace[#1, inDims]], Line[{{center[[1]] - size / 2, - #1 vGapSize}, {center[[1]] + size / 2, - #2 vGapSize}}]} &, {vposIn, vposOut}]
 		},
@@ -357,7 +359,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 					]
 				];
 				With[{index = First /@ PositionIndex[vpos]}, {
-					Map[drawGate[{{#}, hpos}, dims, labels[[index[#1]]], opts] &, vpos],
+					Map[drawGate[{{#}, hpos}, dims, labels[[index[#1]]], "IdentityGate" -> True, opts] &, vpos],
 					Dashed, drawControlWires[#, {labels[[index[#[[1]]]]], labels[[index[#[[1]]]]]}] & /@ Partition[Sort[vpos], 2, 1]
 				}]
 			} /; Length[labels] == Length[vpos]
@@ -365,7 +367,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 		Superscript[subLabel_, CircleTimes[n_Integer]] /; n == Length[vpos] :> {
 			boundaryStyle = Replace[subLabel, gateBoundaryStyle];
 			If[thickWireQ, boundaryStyle = Directive[boundaryStyle, AbsoluteThickness[3]]];
-			Map[drawGate[{{#1}, hpos}, dims, subLabel, opts] &, vpos],
+			Map[drawGate[{{#1}, hpos}, dims, subLabel, "IdentityGate" -> True, opts] &, vpos],
 			Dashed, drawControlWires[#, {subLabel, subLabel}] & /@ Partition[Sort[vpos], 2, 1]
 		},
 		subLabel : "GlobalPhase"[subSubLabel_] | (subSubLabel_ /; AnyTrue[hpos, LessThan[0]]) :> If[globalPhaseQ,
