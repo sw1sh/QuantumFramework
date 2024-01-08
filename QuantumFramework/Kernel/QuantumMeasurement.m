@@ -205,8 +205,9 @@ QuantumMeasurementProp[qm_, "DistributionInformation", args___] := Information[q
 
 QuantumMeasurementProp[qm_, args :
     "Categories" | "Probabilities" | "ProbabilityTable" | "ProbabilityArray" |
-    "ProbabilityPlot" |
     "TopProbabilities" | ("TopProbabilities" -> _Integer)] := qm["DistributionInformation", args]
+
+QuantumMeasurementProp[qm_, "ProbabilityPlot", opts___] := BarChart[qm["Probabilities"], FilterRules[{opts}, Options[BarChart]], ChartLabels -> Automatic]
 
 
 QuantumMeasurementProp[qm_, "Entropy"] := TimeConstrained[Quantity[qm["DistributionInformation", "Entropy"] / Log[2], "Bits"], 1]
