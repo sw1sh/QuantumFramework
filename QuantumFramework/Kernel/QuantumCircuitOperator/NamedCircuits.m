@@ -10,6 +10,7 @@ $QuantumCircuitOperatorNames = {
     "GroverPhaseDiffusion", "GroverPhaseDiffusion0",
     "BooleanOracle", "PhaseOracle",
     "DeutschJozsaPhaseOracle", "DeutschJozsaBooleanOracle", "DeutschJozsaPhase", "DeutschJozsa", "DeutschPhase", "Deutsch",
+    "SimonOracle", "Simon",
     "BooleanOracleR",
     "Grover", "GroverPhase",
     "Grover0", "GroverPhase0",
@@ -374,6 +375,40 @@ QuantumCircuitOperator[{"DeutschPhase", f_ : Automatic}, opts___] := QuantumCirc
 QuantumCircuitOperator[{"Deutsch", f_ : Automatic}, opts___] := QuantumCircuitOperator[{"DeutschJozsa", f, 1}, opts]
 
 QuantumCircuitOperator[name : "DeutschJozsaPhaseOracle" | "DeutschJozsaBooleanOracle" | "DeutschJozsaPhase" | "DeutschJozsa" | "DeutschPhase" | "Deutsch", opts___] := QuantumCircuitOperator[{name}, opts]
+
+
+MinNumberOfArguments[f_Function] := Max[Cases[f, Verbatim[Slot][i_] :> i, All]]
+
+QuantumCircuitOperator[{"SimonOracle", f : Verbatim[Function][{_BooleanFunction[___] ..}]}, opts___] := With[{n = MinNumberOfArguments[f]},
+    QuantumCircuitOperator[
+        "Multiplexer" @@ QuantumTensorProduct @* Replace[{} -> QuantumOperator["I" -> n + 1]] @* MapIndexed[If[#1, Nothing, QuantumOperator["NOT", #2 + n]] &] /@ f @@@ Tuples[{0, 1}, n],
+        opts
+    ]
+
+]
+
+QuantumCircuitOperator[{"Simon", f : Verbatim[Function][{_BooleanFunction[___] ..}]}, opts___] := With[{n = MinNumberOfArguments[f]},
+    QuantumCircuitOperator[{
+        Splice["H" -> # & /@ Range[n]],
+        QuantumCircuitOperator[{"SimonOracle", f}, "Simon Oracle"],
+        Splice["H" -> # & /@ Range[n]],
+        Splice[List /@ Range[n]]
+    }, opts]
+]
+
+QuantumCircuitOperator[{name : "SimonOracle" | "Simon", s : {(0 | 1) ..}}, opts___] := Block[{
+    n = Length[s], x, fx
+},
+    x = RandomSample[Tuples[{0, 1}, n], 2 ^ (n - 1)];
+    fx = RandomInteger[{0, 1}, {2 ^ (n - 1), n}];
+    QuantumCircuitOperator[{name, BooleanFunction[Catenate @ MapThread[{#1 -> #2, BitXor[#1, s] -> #2} &, {x, fx}]]}, opts]
+]
+
+QuantumCircuitOperator[{name : "SimonOracle" | "Simon", s : {(False | True) ..}}, opts___] := QuantumCircuitOperator[{name, Boole[s]}, opts]
+
+QuantumCircuitOperator[{name : "SimonOracle" | "Simon", s_String}, opts___] /; StringMatchQ[s, ("0" | "1") ..] := QuantumCircuitOperator[{name, IntegerDigits[FromDigits[s, 2], 2, StringLength[s]]}, opts]
+
+QuantumCircuitOperator[(name : "SimonOracle" | "Simon") | {name : "SimonOracle" | "Simon"}, opts___] := QuantumCircuitOperator[{name, "110"}, opts]
 
 
 QuantumCircuitOperator[name : "Bell" | "Toffoli" | "Fredkin", opts___] := QuantumCircuitOperator[{name}, opts]

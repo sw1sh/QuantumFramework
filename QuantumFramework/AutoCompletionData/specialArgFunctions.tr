@@ -294,6 +294,8 @@
             "DeutschJozsa",
             "DeutschPhase",
             "Deutsch",
+            "SimonOracle",
+            "Simon",
             "BooleanOracleR",
             "Grover",
             "GroverPhase",
