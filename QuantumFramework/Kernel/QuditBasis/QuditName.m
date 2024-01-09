@@ -72,9 +72,9 @@ qbn_QuditName["Dual"] := QuditName[qbn, "Dual" -> Not @ qbn["DualQ"]]
 
 QuditName[$QuditIdentity, opts : OptionsPattern[QuditName]] /; TrueQ[Lookup[{opts}, "Dual", False]] := QuditName[]
 
-qbn_QuditName["Qudits"] := Length @ DeleteCases[QuditName[$QuditIdentity, ___]] @ Normal @ qbn
+qbn_QuditName["Qudits"] := Length @ DeleteCases[QuditName[$QuditIdentity, ___]] @ splitQuditName @ qbn
 
-qbn_QuditName["Pretty"] := simplifyName[CircleTimes @@ Normal[qbn]]
+qbn_QuditName["Pretty"] := simplifyName[CircleTimes @@ splitQuditName[qbn]]
 
 
 splitQuditName[qbn : QuditName[name_ ? nameHeadQ, ___]] :=
@@ -85,11 +85,11 @@ splitQuditName[qbn : QuditName[_, OptionsPattern[]]] := {qbn}
 splitQuditName[qbn : QuditName[names___, OptionsPattern[]]] :=
     Catenate[splitQuditName @* If[qbn["DualQ"], QuditName[#]["Dual"] &, QuditName] /@ {names}]
 
-QuditName /: Normal[qbn_QuditName] := splitQuditName @ qbn
+QuditName /: Normal[qbn_QuditName] := Through[splitQuditName[qbn]["Name"]]
 
 
 groupQuditName[qbn_QuditName] := QuditName @@
-    SequenceReplace[Normal[qbn],
+    SequenceReplace[splitQuditName[qbn],
         qbns : {Repeated[_QuditName, {2, Infinity}]} /; Equal @@ (#["DualQ"] & /@ qbns) :>
             QuditName[Flatten[#["Name"] & /@ qbns], "Dual" -> First[qbns]["DualQ"]]
 ]
@@ -97,13 +97,13 @@ groupQuditName[qbn_QuditName] := QuditName @@
 qbn_QuditName["Group"] := groupQuditName @ qbn
 
 qbn_QuditName["Permute", perm_Cycles, outputs_Integer : 0] :=
-    (QuditName @@ MapThread[If[#2, #1["Dual"], #1] &, {Permute[Normal[qbn], perm], toggleSwap[PermutationList[perm, qbn["Qudits"]], outputs]}])["Group"]
+    (QuditName @@ MapThread[If[#2, #1["Dual"], #1] &, {Permute[splitQuditName[qbn], perm], toggleSwap[PermutationList[perm, qbn["Qudits"]], outputs]}])["Group"]
 
-qbn_QuditName["Take", arg_] := (QuditName @@ Take[Normal[qbn], arg])["Group"]
+qbn_QuditName["Take", arg_] := (QuditName @@ Take[splitQuditName[qbn], arg])["Group"]
 
-qbn_QuditName["Drop", arg_] := (QuditName @@ Drop[Normal[qbn], arg])["Group"]
+qbn_QuditName["Drop", arg_] := (QuditName @@ Drop[splitQuditName[qbn], arg])["Group"]
 
-qbn_QuditName["Delete", arg_] := (QuditName @@ Delete[Normal[qbn], arg])["Group"]
+qbn_QuditName["Delete", arg_] := (QuditName @@ Delete[splitQuditName[qbn], arg])["Group"]
 
 isIdentity[name_] := MatchQ[name, $QuditIdentity | Subscript[$QuditIdentity, _]]
 
