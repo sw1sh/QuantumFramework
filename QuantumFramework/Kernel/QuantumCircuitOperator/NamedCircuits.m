@@ -379,7 +379,8 @@ QuantumCircuitOperator[name : "DeutschJozsaPhaseOracle" | "DeutschJozsaBooleanOr
 
 MinNumberOfArguments[f_Function] := Max[Cases[f, Verbatim[Slot][i_] :> i, All]]
 
-QuantumCircuitOperator[{"SimonOracle", f : Verbatim[Function][{_BooleanFunction[___] ..}]}, opts___] := With[{n = MinNumberOfArguments[f]},
+QuantumCircuitOperator[{"SimonOracle", f : Verbatim[Function][output : {_BooleanFunction[___] ..}]}, opts___] := Enclose @ With[{n = MinNumberOfArguments[f]},
+    ConfirmAssert[Length[output] == n, "Boolean function output should be the same size as input."];
     QuantumCircuitOperator[
         "Multiplexer" @@ QuantumTensorProduct @* Replace[{} -> QuantumOperator["I" -> n + 1]] @* MapIndexed[If[#1, Nothing, QuantumOperator["NOT", #2 + n]] &] /@ f @@@ Tuples[{0, 1}, n],
         opts
@@ -387,18 +388,19 @@ QuantumCircuitOperator[{"SimonOracle", f : Verbatim[Function][{_BooleanFunction[
 
 ]
 
-QuantumCircuitOperator[{"Simon", f : Verbatim[Function][{_BooleanFunction[___] ..}]}, opts___] := With[{n = MinNumberOfArguments[f]},
+QuantumCircuitOperator[{"Simon", f : Verbatim[Function][{_BooleanFunction[___] ..}]}, opts___] := Enclose @ With[{n = MinNumberOfArguments[f]},
     QuantumCircuitOperator[{
         Splice["H" -> # & /@ Range[n]],
-        QuantumCircuitOperator[{"SimonOracle", f}, "Simon Oracle"],
+        Confirm @ QuantumCircuitOperator[{"SimonOracle", f}, ClickToCopy["Simon Oracle", f]],
         Splice["H" -> # & /@ Range[n]],
         Splice[List /@ Range[n]]
     }, opts]
 ]
 
-QuantumCircuitOperator[{name : "SimonOracle" | "Simon", s : {(0 | 1) ..}}, opts___] := Block[{
-    n = Length[s], x, fx
+QuantumCircuitOperator[{name : "SimonOracle" | "Simon", secret : {(0 | 1) ..} | Automatic : Automatic}, opts___] := Block[{
+    s = Replace[secret, Automatic | {0 ..} :> RandomInteger[{0, 1}, Replace[secret, {s_List :> Length[s], _ -> 3}]]], n, x, fx, bf
 },
+    n = Length[s];
     x = RandomSample[Tuples[{0, 1}, n], 2 ^ (n - 1)];
     fx = RandomInteger[{0, 1}, {2 ^ (n - 1), n}];
     QuantumCircuitOperator[{name, BooleanFunction[Catenate @ MapThread[{#1 -> #2, BitXor[#1, s] -> #2} &, {x, fx}]]}, opts]
@@ -408,7 +410,7 @@ QuantumCircuitOperator[{name : "SimonOracle" | "Simon", s : {(False | True) ..}}
 
 QuantumCircuitOperator[{name : "SimonOracle" | "Simon", s_String}, opts___] /; StringMatchQ[s, ("0" | "1") ..] := QuantumCircuitOperator[{name, IntegerDigits[FromDigits[s, 2], 2, StringLength[s]]}, opts]
 
-QuantumCircuitOperator[(name : "SimonOracle" | "Simon") | {name : "SimonOracle" | "Simon"}, opts___] := QuantumCircuitOperator[{name, "110"}, opts]
+QuantumCircuitOperator[(name : "SimonOracle" | "Simon") | {name : "SimonOracle" | "Simon"}, opts___] := QuantumCircuitOperator[{name, Automatic}, opts]
 
 
 QuantumCircuitOperator[name : "Bell" | "Toffoli" | "Fredkin", opts___] := QuantumCircuitOperator[{name}, opts]
