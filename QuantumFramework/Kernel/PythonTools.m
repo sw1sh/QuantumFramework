@@ -31,7 +31,10 @@ PythonEvaluate[code_] := Enclose @ ExternalEvaluate[Confirm @ $PythonSession, co
 
 PythonEvaluate[ctx_, code_] := WithCleanup[
     PrependTo[$ContextPath, ctx],
-    PythonEvaluate[code],
+    Progress`EvaluateWithProgress[
+        PythonEvaluate[code],
+        <|"Text" -> "Running Python code", "ElapsedTime" -> Automatic|>
+    ],
     $ContextPath = DeleteCases[$ContextPath, ctx]
 ]
 

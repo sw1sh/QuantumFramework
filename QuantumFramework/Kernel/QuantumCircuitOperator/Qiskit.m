@@ -447,7 +447,7 @@ result
                     QuantumMeasurement[
                         Join[
                             Association[# -> 0 & /@ IntegerDigits[Range[2 ^ size] - 1, 2, size]],
-                            KeyMap[Characters[#] /. {"0" -> 0, "1" -> 1} &] @ counts
+                            KeyMap[Reverse[Characters[#]] /. {"0" -> 0, "1" -> 1} &] @ counts
                         ]
                     ],
                     QuantumMeasurementQ
