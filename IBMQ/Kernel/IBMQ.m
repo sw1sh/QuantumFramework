@@ -36,12 +36,15 @@ IBMQdata[] = {
             "token"
         ]
     },
-        URLExecute[
-            HTTPRequest[
-                "https://auth.quantum-computing.ibm.com/api/users/loginWithToken",
-                <|Method -> "POST", "Body" -> <|"apiToken" -> token|>|>
+        Join[
+            Confirm @ URLExecute[
+                HTTPRequest[
+                    "https://auth.quantum-computing.ibm.com/api/users/loginWithToken",
+                    <|Method -> "POST", "Body" -> <|"apiToken" -> token|>|>
+                ],
+                "JSON"
             ],
-            "JSON"
+            {"Token" -> token}
         ]
     ],
     "RawGets" -> {"RawAccount", "RawNetwork", "RawBackends", "RawBackend", "RawJobStatus", "RawJobResults"},

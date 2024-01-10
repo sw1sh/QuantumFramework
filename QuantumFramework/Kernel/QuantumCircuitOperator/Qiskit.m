@@ -318,7 +318,11 @@ qiskitInitBackend[qc_QiskitCircuit, OptionsPattern[]] := Enclose @ Block[{
     }];
 
     If[ MatchQ[provider, "IBMQ" | "IBMProvider"],
-        $token = Lookup[params, "Token", Null];
+        $token = Lookup[
+            params,
+            "Token",
+            Enclose[Confirm @ Lookup[Last[ConfirmMatch[ServiceConnections`Private`serviceAuthentication[ServiceConnect["IBMQ"]["ID"]], _KeyClient`KeyToken]], "Token"], Null &]
+        ];
     ];
 
     Confirm @ PythonEvaluate[Context[$pythonBytes], Switch[provider,
