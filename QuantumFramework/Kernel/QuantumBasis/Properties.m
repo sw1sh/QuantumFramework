@@ -26,6 +26,7 @@ $QuantumBasisProperties = {
     "Qudits", "InputQudits", "OutputQudits",
     "FullQudits", "FullInputQudits", "FullOutputQudits",
     "InputBasis", "OutputBasis",
+    "ComputationalQ",
     "Dual", "Transpose", "ConjugateTranspose",
     "Label", "LabelHead",
     "Picture",
