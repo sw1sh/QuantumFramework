@@ -333,7 +333,7 @@ QuantumCircuitOperator[{name : "DeutschJozsaPhaseOracle" | "DeutschJozsaBooleanO
 QuantumCircuitOperator[{"DeutschJozsaPhase", f_ : Automatic, n : _Integer ? Positive | Automatic : Automatic}, opts___] := Enclose @ With[{
     oracle = Confirm @ Replace[f, {
         Automatic :> 
-            QuantumCircuitOperator[{QuantumCircuitOperator[{QuantumCircuitOperator[{"DeutschJozsaPhaseOracle", RandomInteger[{1, 2 ^ 2 ^ n}], n}]}, "?"]}, "Oracle"],
+            With[{m = Replace[n, Automatic -> 1]}, QuantumCircuitOperator[{QuantumCircuitOperator[{QuantumCircuitOperator[{"DeutschJozsaPhaseOracle", RandomInteger[{1, 2 ^ 2 ^ m}], m}]}, "?"]}, "Oracle"]],
         _ :> QuantumCircuitOperator[{"DeutschJozsaPhaseOracle", f, n}]
     }]
 },
@@ -353,7 +353,7 @@ QuantumCircuitOperator[{"DeutschJozsaPhase", f_ : Automatic, n : _Integer ? Posi
 QuantumCircuitOperator[{"DeutschJozsa", f_ : Automatic, n : _Integer ? Positive | Automatic : Automatic}, opts___] := With[{
     oracle = Replace[f, {
         Automatic :> 
-            QuantumCircuitOperator[{QuantumCircuitOperator[{QuantumCircuitOperator[{"DeutschJozsaBooleanOracle", f, n}]}, "?"]}, "Oracle"],
+            With[{m = Replace[n, Automatic -> 1]}, QuantumCircuitOperator[{QuantumCircuitOperator[{QuantumCircuitOperator[{"DeutschJozsaBooleanOracle", RandomInteger[{1, 2 ^ 2 ^ m}], m}]}, "?"]}, "Oracle"]],
         _ :> QuantumCircuitOperator[{"DeutschJozsaBooleanOracle", f, n}]
     }]
 },

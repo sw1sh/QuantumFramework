@@ -11,7 +11,8 @@ PackageScope["QuantumCircuitOperatorToQiskit"]
 shortcutToGate = Replace[
     {
         {"R", angle_, {name_ -> order_ ? orderQ}} :> shortcutToGate[{"R", angle, name}] -> order,
-        (name_ -> (order_ ? orderQ)) :> shortcutToGate[name] -> order,
+        (name_ -> (order_ ? orderQ)) :> With[{shortcut = shortcutToGate[name]}, If[shortcut === Nothing, Nothing, shortcut -> order]],
+        "I" -> Nothing,
         "X" | "NOT" -> "XGate",
         "Y" -> "YGate",
         "Z" | "1" -> "ZGate",
@@ -20,11 +21,11 @@ shortcutToGate = Replace[
         "T" -> "TGate",
         "V" -> "SXGate",
         "SWAP" -> "SwapGate",
-        {"Diagonal", x_} :> If[ListQ[x], {"Diagonal", NumericArray @ N[x]}, {"GlobalPhaseGate", N[Arg[x]]}],
+        {"Diagonal", x_} :> If[ListQ[x], {"Diagonal", NumericArray @ N[x]}, {"GlobalPhaseGate", Chop[N[Arg[x]]]}],
         {"U2", a_, b_} :> {"U2Gate", N[a], N[b]},
         {"U", a_, b_, c_} :> {"U3Gate", N[a], N[b], N[c]},
         {"Permutation", perm_} :> {"PermutationGate", PermutationList[perm] - 1},
-        {"GlobalPhase", phase_} :> {"GlobalPhaseGate", N[phase]},
+        {"GlobalPhase", phase_} :> {"GlobalPhaseGate", Chop[N[phase]]},
         {"R", angle_, "X"} :> {"RXGate", N[angle]},
         {"R", angle_, "Y"} :> {"RYGate", N[angle]},
         {"R", angle_, "Z"} :> {"RZGate", N[angle]},
@@ -33,14 +34,24 @@ shortcutToGate = Replace[
         {"C", name_, controls___} :> {"Control", shortcutToGate[name], controls},
         SuperDagger[name_] :> {"Dagger", shortcutToGate[name]},
         barrier: "Barrier" | "Barrier"[arg_] :> "Barrier",
-        Labeled[arr_ /; ArrayQ[arr] || NumericArrayQ[arr] -> order_, label_] :> {"Unitary", NumericArray[Normal @ N @ arr, "ComplexReal32"], ToString[label], order},
+        Labeled[arr_ /; ArrayQ[arr] || NumericArrayQ[arr] -> order_, label_] :> If[
+            order[[2]] === {},
+            With[{state = QuantumOperator[arr, order]["State"]},
+                If[ MatchQ[order[[1]], {_}] && state == QuantumState[1],
+                    Nothing,
+                    Splice[shortcutToGate /@ Catenate[QuantumShortcut /@ QuantumCircuitOperator[state, order[[1]]]["Operators"][[state["OutputQudits"] + 1 ;;]]]]
+                ]
+            ],
+            {"Unitary", NumericArray[Normal @ N @ arr, "ComplexReal32"], ToString[label], order}
+        ],
         target_ ? orderQ :> {"Measure", target},
+        qmo_ ? QuantumMeasurementOperatorQ :> Replace[qmo["Label"], {None :> shortcutToGate[qmo["Target"]], label_ :> Splice[shortcutToGate /@ Append[QuantumShortcut[QuantumOperator[Inverse[QuditBasis[label]["Matrix"]], qmo["Target"]]], qmo["Target"]]]}],
         shortcut_ :> With[{op = QuantumOperator[shortcut]}, {"Unitary", NumericArray[Normal @ N @ op["Matrix"], "ComplexReal32"], ToString[shortcut], op["Order"]}]
     }
 ]
 
 QuantumCircuitOperatorToQiskit[qco_QuantumCircuitOperator] := Enclose @ Block[{
-    gates = shortcutToGate /@ Catenate[QuantumShortcut /@ qco["Flatten"]["Elements"]],
+    gates = Confirm @* shortcutToGate /@ Catenate[QuantumShortcut /@ qco["Flatten"]["Elements"]],
     arity = {qco["Max"], Replace[Quiet[qco["TargetArity"]], Except[_Integer] -> Nothing]}
 },
     Confirm @ PythonEvaluate[Context[arity], "

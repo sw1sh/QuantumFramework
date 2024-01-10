@@ -19,22 +19,26 @@ Enclose[
         "No qiskit package found. Installing it first instead."
     ]],
     Enclose[
-        PrintTemporary["Installing Python Packages ..."];
-        Confirm[ResourceFunction["PythonPackageInstall"][session, $PythonPackages]];
+        Progress`EvaluateWithProgress[
+            Confirm[ResourceFunction["PythonPackageInstall"][session, $PythonPackages]],
+            <|"Text" -> "Installing Python Packages", "ElapsedTime" -> Automatic|>
+        ];
         ConfirmBy[session, confirmPython, "Failed to install qiskit."]
     ] &
 ]
 ]
 
 
-PythonEvaluate[code_] := Enclose @ ExternalEvaluate[Confirm @ $PythonSession, code]
+PythonEvaluate[code_] := Enclose @ With[{session = Confirm @ $PythonSession},
+    Progress`EvaluateWithProgress[
+        ExternalEvaluate[session, code],
+        <|"Text" -> "Running Python code", "ElapsedTime" -> Automatic|>
+    ]
+]
 
 PythonEvaluate[ctx_, code_] := WithCleanup[
     PrependTo[$ContextPath, ctx],
-    Progress`EvaluateWithProgress[
-        PythonEvaluate[code],
-        <|"Text" -> "Running Python code", "ElapsedTime" -> Automatic|>
-    ],
+    PythonEvaluate[code],
     $ContextPath = DeleteCases[$ContextPath, ctx]
 ]
 

@@ -80,22 +80,17 @@ QuantumCircuitOperator[] := QuantumCircuitOperator[{}]
 
 Options[quantumCircuitApply] = {Method -> Automatic}
 
-quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[]] /; qco["InputDimensions"] == qs["OutputDimensions"] :=
-    Switch[
-        OptionValue[Method],
-        "Schrodinger" | "Schroedinger" | "Schrödinger",
-        Fold[ReverseApplied[Construct], qs, qco["Operators"]],
-        Automatic | "TensorNetwork",
-        TensorNetworkApply[qco["Flatten"], qs],
-        "QuEST",
-        QuESTApply[qco, qs],
-        "Qiskit",
-        qco["Qiskit"][qs],
-        "Stabilizer",
-        PauliStabilizerApply[qco, qs],
-        _,
-        $Failed
-    ]
+quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[]] /; qco["InputDimensions"] == qs["OutputDimensions"] := Replace[
+    OptionValue[Method],
+    {
+        "Schrodinger" | "Schroedinger" | "Schrödinger" :> Fold[ReverseApplied[Construct], qs, qco["Operators"]],
+        Automatic | "TensorNetwork" :> TensorNetworkApply[qco["Flatten"], qs],
+        "QuEST" :> QuESTApply[qco, qs],
+        "Qiskit" | {"Qiskit", opts___} :> qco["Qiskit"][qs, opts],
+        "Stabilizer" :> PauliStabilizerApply[qco, qs],
+        _ -> $Failed
+    }
+]
 
 QuantumCircuitOperator::dim = "Circuit expecting dimensions `1`, but the state has dimensions `2`."
 QuantumCircuitOperator::fail = "Circuit evaluation resulted in a failure: ``."
@@ -117,7 +112,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[quantumCircuitApply]] := If[
     OptionValue[{opts}, Method] === "Stabilizer",
     PauliStabilizerApply[qco, Automatic],
-    (QuantumCircuitOperator[MapThread[QuantumState["Register", #2, "Label" -> Ket[{"0"}]] -> {#1} &, {qco["InputOrder"], qco["InputDimensions"]}]] /* qco)[QuantumState[1, 1]]
+    (QuantumCircuitOperator[MapThread[QuantumState["Register", #2, "Label" -> Ket[{"0"}]] -> {#1} &, {qco["InputOrder"], qco["InputDimensions"]}]] /* qco)[QuantumState[1, 1], opts]
 ]
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qm_QuantumMeasurement, opts : OptionsPattern[]] :=
