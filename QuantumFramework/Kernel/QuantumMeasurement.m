@@ -31,17 +31,9 @@ QuantumMeasurement[
     QuantumOperator[
         QuantumState[
             QuantumState[
-                ArrayReshape[
-                    Transpose[
-                        With[{probValues = Sqrt @ SparseArray @ Values[proba]},
-                            TensorProduct[
-                                probValues,
-                                SparseArray[#["Computational"]["Normalized"]["DensityTensor"] & /@ states]
-                            ]
-                        ],
-                        Cycles[{RotateRight @ Reverse @ Range[First[states]["Qudits"] + 2]}]
-                    ],
-                    Length[states] First[states]["Dimension"]
+                Flatten @ Transpose[
+                    Sqrt[Values[proba]] * Through[states["Tensor"]],
+                    Cycles[{RotateRight @ Reverse @ Range[First[states]["Qudits"] + 1]}]
                 ],
                 QuantumTensorProduct[
                     QuantumBasis[QuditName /@ Keys[proba]],
