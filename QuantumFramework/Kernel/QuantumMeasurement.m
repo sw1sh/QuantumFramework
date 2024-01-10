@@ -34,14 +34,14 @@ QuantumMeasurement[
                 ArrayReshape[
                     Transpose[
                         With[{probValues = Sqrt @ SparseArray @ Values[proba]},
-                            SparseArray @ TensorProduct[
+                            TensorProduct[
                                 probValues,
-                                MapThread[Times, {probValues, #["Computational"]["Normalized"]["DensityTensor"] & /@ states}]
+                                SparseArray[#["Computational"]["Normalized"]["DensityTensor"] & /@ states]
                             ]
                         ],
                         Cycles[{RotateRight @ Reverse @ Range[First[states]["Qudits"] + 2]}]
                     ],
-                    Table[Length[states] First[states]["Dimension"], 2]
+                    Length[states] First[states]["Dimension"]
                 ],
                 QuantumTensorProduct[
                     QuantumBasis[QuditName /@ Keys[proba]],
