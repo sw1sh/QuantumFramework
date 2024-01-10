@@ -395,7 +395,7 @@ else:
 Options[qiskitApply] = Join[{"Shots" -> 1024, "FireOpal" -> False}, Options[qiskitInitBackend]]
 
 qiskitApply[qc_QiskitCircuit, qs_QuantumState, opts : OptionsPattern[]] := Enclose @ Block[{
-    $state = NumericArray @ N @ qs["Reverse"]["StateVector"],
+    $state = If[qs["Dimension"] == 1, Null, NumericArray @ N @ qs["Reverse"]["StateVector"]],
     $shots = OptionValue["Shots"],
     $fireOpal = TrueQ[OptionValue["FireOpal"]],
     result
@@ -415,9 +415,9 @@ from qiskit_braket_provider import AWSBraketProvider
 
 circuit = QuantumCircuit(qc.num_qubits, qc.num_clbits)
 
-
-if not isinstance(provider, AWSBraketProvider):
-    circuit.initialize(<* $state *>)
+state = <* $state *>
+if state is not None and not isinstance(provider, AWSBraketProvider):
+    circuit.initialize(state)
 circuit = circuit.compose(qc)
 
 try:
