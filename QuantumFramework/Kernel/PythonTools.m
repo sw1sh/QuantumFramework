@@ -8,24 +8,14 @@ PackageScope["PythonEvaluate"]
 
 $PythonPackages = {"wolframclient", "qiskit", "matplotlib", "pylatexenc", "qiskit-ibm-provider", "qiskit-braket-provider", "fire-opal"}
 
-confirmPython[session_] := confirmPython[session] = AllTrue[$PythonPackages, ResourceFunction["PythonPackageInstalledQ"][session, #] &] &&
-    ExternalEvaluate[session, "import qiskit\nfrom qiskit import QuantumCircuit"] === Null
-
-$PythonSession := Block[{session},
-Enclose[
-    SelectFirst[ExternalSessions[], confirmPython, ConfirmBy[
-        session = StartExternalSession["Python"],
-        confirmPython,
-        "No qiskit package found. Installing it first instead."
-    ]],
-    Enclose[
-        Progress`EvaluateWithProgress[
-            Confirm[ResourceFunction["PythonPackageInstall"][session, $PythonPackages]],
-            <|"Text" -> "Installing Python Packages", "ElapsedTime" -> Automatic|>
-        ];
-        ConfirmBy[session, confirmPython, "Failed to install qiskit."]
-    ] &
-]
+$PythonSession := SelectFirst[
+    ExternalSessions["Python"],
+    #["ID"] == "QuantumFramework" &,
+    StartExternalSession[{{"Python", "StandardErrorFunction" -> Null},
+        "ID" -> "QuantumFramework",
+        "Evaluator" -> <|"Dependencies" -> $PythonPackages, "PythonRuntime" -> "3.11"|>,
+        "SessionProlog" -> "import qiskit\nfrom qiskit import QuantumCircuit"
+    }]
 ]
 
 
