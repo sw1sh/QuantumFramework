@@ -9,7 +9,7 @@ PackageScope["$QuantumEntanglementMonotones"]
 $QuantumEntanglementMonotones = {"Concurrence", "Negativity", "LogNegativity", "EntanglementEntropy", "RenyiEntropy", "Realignment"}
 
 QuantumEntangledQ[qs_ ? QuantumStateQ, biPartition_ : Automatic, method_String : "Realignment"] /; MemberQ[$QuantumEntanglementMonotones, method] :=
-    Enclose[ConfirmMatch[QuantumEntanglementMonotone[qs, biPartition, method], _ ? NumericQ] > 0, Indeterminate &]
+    Enclose[Chop[ConfirmMatch[QuantumEntanglementMonotone[qs, biPartition, method], _ ? NumericQ]] > 0, Indeterminate &]
 
 
 
