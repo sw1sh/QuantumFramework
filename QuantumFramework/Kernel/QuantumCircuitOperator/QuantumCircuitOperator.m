@@ -93,20 +93,17 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
 ]
 
 QuantumCircuitOperator::dim = "Circuit expecting dimensions `1`, but the state has dimensions `2`."
-QuantumCircuitOperator::fail = "Circuit evaluation resulted in a failure: ``."
 
 quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[]] :=
     (Message[QuantumCircuitOperator::dim, qco["InputDimensions"], qs["OutputDimensions"]]; $Failed)
 
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qs_QuantumState ? QuantumStateQ, opts : OptionsPattern[quantumCircuitApply]] :=
-    With[{result = quantumCircuitApply[
+    quantumCircuitApply[
         qco /* QuantumCircuitOperator["I" -> # & /@ qco["FreeOrder"]],
         If[# === {}, qs, QuantumTensorProduct[qs, QuantumState[{"Register", #}]]] & @
             ConstantArray[2, Max[0, Length[qco["FullInputOrder"]] - qs["OutputQudits"]]],
         opts
-    ]},
-        result /; ! FailureQ[result] || Message[QuantumCircuitOperator::fail, result]
     ]
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[quantumCircuitApply]] := If[
