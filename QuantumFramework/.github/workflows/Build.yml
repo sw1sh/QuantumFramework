@@ -1,0 +1,46 @@
+name: Build
+on: 
+  workflow_dispatch:
+  push: 
+    branches:  [main]
+  pull_request: 
+    branches:  [main]
+env: 
+  RESOURCE_PUBLISHER_TOKEN: ${{ secrets.RESOURCE_PUBLISHER_TOKEN }}
+  WOLFRAMSCRIPT_ENTITLEMENTID: ${{ secrets.WOLFRAMSCRIPT_ENTITLEMENTID }}
+  WLPR_PACLET_SITE: https://resources.wolframcloud.com/PacletRepository/pacletsite
+jobs: 
+  Build: 
+    name: Build
+    runs-on: ubuntu-latest
+    container: 
+      image: wolframresearch/wolframengine:latest
+      options: --user root
+    env: 
+      WOLFRAM_SYSTEM_ID: Linux-x86-64
+    steps: 
+    - name: Checkout
+      id: checkout-code-step
+      uses: actions/checkout@v3
+    - name: Build
+      id: build-paclet-step
+      uses: WolframResearch/build-paclet@v1.11.0
+      with: 
+        target: Submit
+        paclet_cicd_version: 0.36.0
+        definition_notebook: ./ResourceDefinition.nb
+        resource_system_base: https://www.wolframcloud.com/obj/resourcesystem/api/1.0
+    - name: UploadArtifact
+      id: upload-build-artifacts-step
+      uses: actions/upload-artifact@v3
+      with: 
+        path: ${{ env.PACLET_BUILD_DIR }}
+        if-no-files-found: ignore
+    - name: UploadWorkflowValues
+      id: upload-workflow-values-step
+      if: always() && env.PACLET_WORKFLOW_VALUES
+      uses: actions/upload-artifact@v3
+      with: 
+        name: paclet-workflow-values
+        path: ${{ env.PACLET_WORKFLOW_VALUES }}
+        if-no-files-found: ignore
