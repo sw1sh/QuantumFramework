@@ -1,8 +1,6 @@
 
 .project
 
-*.paclet
-
 build/
 
 Notebooks/.ipynb_checkpoints/
