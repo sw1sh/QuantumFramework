@@ -319,6 +319,30 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			wireStyle,
 			MapThread[{wireThickness[Replace[#1, inDims]], Line[{{center[[1]] - size / 2, - #1 vGapSize}, {center[[1]] + size / 2, - #2 vGapSize}}]} &, {vposIn, vposOut[[{perm}]]}]
 		},
+		"Braid" :> {
+			wireStyle,
+			{
+				wireThickness[Replace[vposIn[[1]], inDims]],
+				Line[{{center[[1]] - size / 2, - vposIn[[1]] vGapSize}, {center[[1]] + size / 2, - vposOut[[2]] vGapSize}}],
+				wireThickness[Replace[vposIn[[2]], inDims]],
+				With[{start = {center[[1]] - size / 2, - vposIn[[2]] vGapSize}, finish = {center[[1]] + size / 2, - vposOut[[1]] vGapSize}}, {
+					Line[{start, start + (finish - start) 0.45}],
+					Line[{start + (finish - start) 0.55, finish}]
+				}]
+			}
+		},
+		SuperDagger["Braid"] :> {
+			wireStyle,
+			{
+				wireThickness[Replace[vposIn[[1]], inDims]],
+				Line[{{center[[1]] - size / 2, - vposIn[[2]] vGapSize}, {center[[1]] + size / 2, - vposOut[[1]] vGapSize}}],
+				wireThickness[Replace[vposIn[[2]], inDims]],
+				With[{start = {center[[1]] - size / 2, - vposIn[[1]] vGapSize}, finish = {center[[1]] + size / 2, - vposOut[[2]] vGapSize}}, {
+					Line[{start, start + (finish - start) 0.45}],
+					Line[{start + (finish - start) 0.55, finish}]
+				}]
+			}
+		},
 		l : "PhaseShift"[n_] /; Length[vpos] == 1 :> {
 			EdgeForm[Replace[l, gateBoundaryStyle]],
 			FaceForm[Replace[l, gateBackgroundStyle]],

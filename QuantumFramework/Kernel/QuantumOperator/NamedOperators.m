@@ -17,7 +17,7 @@ $QuantumOperatorNames = {
     "X", "Y", "Z", "PauliX", "PauliY", "PauliZ", "Shift", "ShiftPhase",
     "H", "Hadamard", "NOT",
     "0", "1",
-    "SWAP", "RootSWAP", "CSWAP", "Fredkin",
+    "SWAP", "RootSWAP", "CSWAP", "Fredkin", "Braid",
     "C", "Controlled", "C0", "Controlled0", "CX", "CY", "CZ", "CH", "CT", "CS", "CPHASE", "CNOT",
     "S", "T", "V",
     "Toffoli", "Deutsch",
@@ -431,15 +431,24 @@ swapMatrix[dimension_] := SparseArray[# -> 1 & /@
     }]
 ]
 
-QuantumOperator["SWAP", opts___] := QuantumOperator[{"SWAP", 2}, opts]
+QuantumOperator["SWAP", opts___] := QuantumOperator[{"SWAP"}, opts]
 
-QuantumOperator[{"SWAP", dimension : _Integer ? Positive}, opts___] :=
+QuantumOperator[{"SWAP", dimension : _Integer ? Positive : 2}, opts___] :=
     QuantumOperator[QuantumOperator[{"Permutation", {dimension, dimension}, Cycles[{{1, 2}}]}, opts], "Label" -> "SWAP"]
 
-QuantumOperator["RootSWAP", opts___] := QuantumOperator[{"RootSWAP", 2}, opts]
+QuantumOperator["RootSWAP", opts___] := QuantumOperator[{"RootSWAP"}, opts]
 
-QuantumOperator[{"RootSWAP", dimension : _Integer ? Positive}, opts___] :=
+QuantumOperator[{"RootSWAP", dimension : _Integer ? Positive : 2}, opts___] :=
     QuantumOperator[Sqrt[QuantumOperator[{"SWAP", dimension}, opts]], "Label" -> "RootSWAP"]
+
+
+QuantumOperator["Braid", opts___] := QuantumOperator[{"Braid"}, opts]
+
+QuantumOperator[{"Braid", method_ : "Bell"}, opts___] := QuantumOperator[
+    Switch[method, "Bell", QuditBasis["Bell"]["Matrix"], "SwapPhase" | _, ReplacePart[PermutationMatrix[{1, 3, 2, 4}], {4, 4} -> -1]],
+    opts,
+    "Label" -> "Braid"
+]
 
 
 QuantumOperator["SUM", opts___] := QuantumOperator[{"SUM", 2}, opts]

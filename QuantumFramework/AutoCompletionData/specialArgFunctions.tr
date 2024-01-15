@@ -138,6 +138,7 @@
             "RootSWAP",
             "CSWAP",
             "Fredkin",
+            "Braid",
             "C",
             "Controlled",
             "C0",
