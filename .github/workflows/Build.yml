@@ -33,17 +33,4 @@ jobs:
         paclet_cicd_version: 0.36.0
         definition_notebook: ./QuantumFramework/ResourceDefinition.nb
         resource_system_base: https://www.wolframcloud.com/obj/resourcesystem/api/1.0
-    - name: UploadArtifact
-      id: upload-build-artifacts-step
-      uses: actions/upload-artifact@v3
-      with: 
-        path: ${{ env.PACLET_BUILD_DIR }}
-        if-no-files-found: ignore
-    - name: UploadWorkflowValues
-      id: upload-workflow-values-step
-      if: always() && env.PACLET_WORKFLOW_VALUES
-      uses: actions/upload-artifact@v3
-      with: 
-        name: paclet-workflow-values
-        path: ${{ env.PACLET_WORKFLOW_VALUES }}
-        if-no-files-found: ignore
+    - run: wolframscript -code "CloudConnect[\"wolframquantumframework@wolfram.com\", \"${{ secrets.WQF_PASSWORD }}\"]; CopyFile[\"${{env.PACLET_FILE}}\", CloudObject[\"QuantumFramework.paclet\", Permissions -> \"Public\"], OverwriteTarget -> True]"
