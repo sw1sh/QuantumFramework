@@ -182,10 +182,7 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
 
 (* composition *)
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qs_ ? QuantumStateQ] :=
-    QuantumMeasurement[qmo[QuantumOperator[qs]]["Sort"]]
-
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[] := QuantumMeasurement @ qmo[QuantumOperator[QuantumState[{"Register", qmo["InputDimensions"]}], {} -> qmo["InputOrder"]]]
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[args___] := QuantumCircuitOperator[qmo][args]
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qo_ ? QuantumOperatorQ] := Enclose @ With[{
     top = qmo["SuperOperator"]["Sort"], bot = qo["Sort"]

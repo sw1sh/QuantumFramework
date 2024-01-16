@@ -106,9 +106,13 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
         opts
     ]
 
-(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[quantumCircuitApply]] := If[
-    OptionValue[{opts}, Method] === "Stabilizer",
+(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[quantumCircuitApply]] := Switch[
+    OptionValue[{opts}, Method],
+    "Stabilizer",
     PauliStabilizerApply[qco, Automatic],
+    "QuEST",
+    QuESTApply[qco, QuantumState[{"Register", qco["InputDimensions"]}]],
+    _,
     (QuantumCircuitOperator[MapThread[QuantumState["Register", #2, "Label" -> Ket[{"0"}]] -> {#1} &, {qco["InputOrder"], qco["InputDimensions"]}]] /* qco)[QuantumState[1, 1], opts]
 ]
 

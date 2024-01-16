@@ -31,9 +31,9 @@ QuantumChannel[qc_ ? QuantumChannelQ, args___] := QuantumChannel[QuantumOperator
 QuantumChannel[qm : _ ? QuantumMeasurementOperatorQ | _ ? QuantumMeasurementQ] := QuantumChannel[QuantumOperator[qm["POVM"]]]
 
 
-(qc_QuantumChannel ? QuantumChannelQ)[qs_ ? QuantumStateQ] := QuantumPartialTrace[qc["Operator"] @ qs, Range @ qc["TraceQudits"]]
+(qc_QuantumChannel ? QuantumChannelQ)[opts___] := QuantumCircuitOperator[qc][opts]
 
-(qc_QuantumChannel ? QuantumChannelQ)[] := QuantumPartialTrace[qc["Operator"][], Range @ qc["TraceQudits"]]
+(qc_QuantumChannel ? QuantumChannelQ)[qs_ ? QuantumStateQ, opts___] := QuantumPartialTrace[qc["Operator"][qs, opts], Range @ qc["TraceQudits"]]
 
 (qc_QuantumChannel ? QuantumChannelQ)[qo_ ? QuantumOperatorQ] := QuantumChannel[qc["Operator"] @ qo]
 

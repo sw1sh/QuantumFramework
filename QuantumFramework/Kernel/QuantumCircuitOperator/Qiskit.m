@@ -93,7 +93,7 @@ def make_gate(gate_spec):
         gate = base_gate.inverse()
     elif name == 'Unitary':
         gate = UnitaryGate(args[0], label=args[1])
-        assert(args[2][0] == args[2][1])
+        assert(all(i == j for i, j in zip(args[2][0], args[2][1])))
         order = list(args[2][0])
     elif name == 'Barrier':
         gate = Barrier(len(order))

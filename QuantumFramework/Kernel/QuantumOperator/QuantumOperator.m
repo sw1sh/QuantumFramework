@@ -327,13 +327,7 @@ QuantumOperator[qo_ ? QuantumOperatorQ,
 
 QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible with this operation"
 
-(qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ] :=
-Enclose @ Block[{
-    order = Range[Max[1, qs["OutputQudits"]]] + Max[0, Max[qo["InputOrder"]] - qs["OutputQudits"]], res
-},
-    res = ConfirmBy[qo[QuantumOperator[qs, order, Automatic]], QuantumOperatorQ]["Sort"]["State"];
-    If[qs["MatrixQ"], res["Unbend"], res]
-]
+(qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ, opts___] := QuantumCircuitOperator[qo][qs, opts]
 
 
 (qo1_QuantumOperator ? QuantumOperatorQ)[qo2_ ? QuantumOperatorQ] := Enclose @ Block[{
@@ -546,7 +540,7 @@ QuantumOperator[obj : _QuantumMeasurementOperator | _QuantumMeasurement | _Quant
 
 (* parameterization *)
 
-(qo_QuantumOperator ? QuantumOperatorQ)[] := qo[QuantumState[{"Register", qo["InputDimensions"]}]]
+(qo_QuantumOperator ? QuantumOperatorQ)[opts___] := qo[QuantumState[{"Register", qo["InputDimensions"]}], opts]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[ps__] /; Length[{ps}] <= qo["ParameterArity"] :=
     QuantumOperator[qo["State"][ps], qo["Order"]]
