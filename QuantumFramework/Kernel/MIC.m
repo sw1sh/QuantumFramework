@@ -62,10 +62,7 @@ QuantumWignerMICBasis[d : _Integer ? Positive : 2, opts : OptionsPattern[]] := B
     ]
 ]
 
-QuantumWignerMICBasis[qb_QuantumBasis, opts : OptionsPattern[]] := FullSimplify @ QuantumBasis[
-    QuantumTensorProduct[QuantumWignerMICBasis[#, opts] & /@ qb["OutputDimensions"]],
-    QuantumTensorProduct[QuantumWignerMICBasis[#, opts] & /@ qb["InputDimensions"]]
-]
+QuantumWignerMICBasis[basisArgs_, opts : OptionsPattern[]] := QuantumTensorProduct[QuantumWignerMICBasis[#, opts] & /@ QuantumBasis[basisArgs]["Dimensions"]]
 
 
 QuantumWignerMICTransform[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := FullSimplify @ QuantumTensorProduct[QuantumWignerMICBasis[#, opts] & /@ qb["Dimensions"]]

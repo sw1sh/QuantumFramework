@@ -31,7 +31,7 @@ QuantumEvolve[
         state = Replace[defaultState, Automatic :> QuantumState[{"Register", hamiltonian["InputDimensions"]}]];
         phaseSpaceQ = state["Picture"] === "PhaseSpace" && AllTrue[Sqrt[state["Dimensions"]], IntegerQ];
         If[ phaseSpaceQ,
-            MICQ = (state["Output"] == QuditBasis["WignerMIC"[hamiltonian["InputDimension"]]])
+            MICQ = (state["Output"] == QuditBasis["WignerMIC"[hamiltonian["InputDimensions"]]])
         ]
     ];
     ConfirmAssert[hamiltonian["OutputDimensions"] == hamiltonian["InputDimensions"]];
