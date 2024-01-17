@@ -24,15 +24,18 @@ QuantumEvolve[
     numericQ, solution,
     rhs, init,
     equations, return, param,
-    phaseSpaceQ = False,
+    phaseSpaceQ = False, MICQ = False,
     mergeQ = TrueQ[OptionValue["MergeInterpolatingFunctions"]]
 },
     If[ defaultState =!= None,
         state = Replace[defaultState, Automatic :> QuantumState[{"Register", hamiltonian["InputDimensions"]}]];
-        phaseSpaceQ = state["Picture"] === "PhaseSpace" && AllTrue[Sqrt[state["Dimensions"]], IntegerQ]
+        phaseSpaceQ = state["Picture"] === "PhaseSpace" && AllTrue[Sqrt[state["Dimensions"]], IntegerQ];
+        If[ phaseSpaceQ,
+            MICQ = (state["Output"] == QuditBasis["WignerMIC"[hamiltonian["InputDimension"]]])
+        ]
     ];
     ConfirmAssert[hamiltonian["OutputDimensions"] == hamiltonian["InputDimensions"]];
-    ConfirmAssert[state === None || hamiltonian["InputDimension"] == state["Dimension"]];
+    ConfirmAssert[state === None || phaseSpaceQ || hamiltonian["InputDimension"] == state["Dimension"]];
     If[ defaultParameter === Automatic,
         parameter = First[hamiltonian["Parameters"], \[FormalT]];
         parameterSpec = Replace[First[hamiltonian["ParameterSpec"], {}], {} :> {parameter, 0, 1}],
@@ -46,7 +49,7 @@ QuantumEvolve[
     matrix = Progress`EvaluateWithProgress[
         TrigToExp @ Confirm @ If[mergeQ, MergeInterpolatingFunctions, Identity][
             If[ phaseSpaceQ,
-                HamiltonianTransitionRate[hamiltonian],
+                HamiltonianTransitionRate[hamiltonian, MICQ],
                 hamiltonian["Matrix"] / I
             ]
         ],
@@ -61,7 +64,7 @@ QuantumEvolve[
     If[ state =!= None,
         If[ phaseSpaceQ,
             (* always treat state as a single system in phase-space *)
-            state = QuantumWignerTransform[QuantumState[QuantumWeylTransform[state], Sqrt[state["Dimension"]]]],
+            state = If[MICQ, QuantumWignerMICTransform, QuantumWignerTransform][QuantumState[QuantumWeylTransform[state], Sqrt[state["Dimension"]]]],
             state = QuantumState[state["Split", state["Qudits"]], hamiltonian["Input"]]
         ]
     ];
@@ -148,9 +151,9 @@ QuantumEvolve[
         ],
         stateQ[solution],
         If[ state =!= None && phaseSpaceQ,
-            ExpandInterpolatingFunction @ QuantumState[
+            QuantumState[
                 QuantumState[
-                    QuantumWeylTransform[QuantumState[solution, "Wigner"[Sqrt[state["Dimension"]]], "Picture" -> "PhaseSpace"]],
+                    QuantumWeylTransform[QuantumState[solution, If[MICQ, "WignerMIC", "Wigner"][Sqrt[state["Dimension"]]], "Picture" -> "PhaseSpace"]],
                     Sqrt[basis["Dimensions"]]
                 ]["Double"],
                 basis,
@@ -217,10 +220,22 @@ ExpandInterpolatingFunction[array_ ? ArrayQ] := ExpandInterpolatingFunction[Merg
 ExpandInterpolatingFunction[qs_QuantumState] := QuantumState[ExpandInterpolatingFunction @ qs["State"], qs["Basis"]]
 
 
-HamiltonianTransitionRate[H_QuantumOperator] /; H["OutputDimension"] == H["InputDimension"] :=
-    Block[{d = H["OutputDimension"], A, G},
+HamiltonianTransitionRate[H_QuantumOperator, MICQ_ : False] /; H["OutputDimension"] == H["InputDimension"] := Block[{
+    d = H["OutputDimension"], A, G, h = H["MatrixRepresentation"]
+},
+    If[ TrueQ[MICQ],
+        A = QuditBasis["WignerMIC"[d, "Exact" -> ! H["NumberQ"]]]["Elements"];
+        G = Inverse[Outer[Tr @* Dot, A, A, 1]] . A;
+        h = Chop @ Table[I  Tr[h . (A[[l]] . G[[k]] - G[[k]] . A[[l]])], {l, d ^ 2}, {k, d ^ 2}];
+        h = If[ OddQ[d],
+            SymmetrizedArray[h, Automatic, Antisymmetric[{1, 2}]],
+            - Transpose[h]
+        ]
+        ,
         A = QuditBasis["Wigner"[d, "Exact" -> ! H["NumberQ"]]]["Elements"];
         G = Simplify[2 Im[Map[Tr, Outer[Dot, A, A, A, 1], {3}] / d]] / If[EvenQ[d], 4, 1];
-        SymmetrizedArray[Transpose[G . QuantumWignerTransform[QuantumState[H["MatrixRepresentation"], d]]["StateVector"]], Automatic, Antisymmetric[{1, 2}]]
-    ]
+        h = SymmetrizedArray[Transpose[G . QuantumWignerTransform[QuantumState[H["MatrixRepresentation"], d]]["StateVector"]], Automatic, Antisymmetric[{1, 2}]]
+    ];
+    h
+]
 
