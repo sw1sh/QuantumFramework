@@ -30,7 +30,8 @@ jobs:
       uses: WolframResearch/build-paclet@v1.11.0
       with: 
         target: Submit
+        check: false
         paclet_cicd_version: 0.36.0
         definition_notebook: ./QuantumFramework/ResourceDefinition.nb
         resource_system_base: https://www.wolframcloud.com/obj/resourcesystem/api/1.0
-    - run: wolframscript -code "CloudConnect[\"wolframquantumframework@wolfram.com\", \"${{ secrets.WQF_PASSWORD }}\"]; CopyFile[\"${{env.PACLET_FILE}}\", CloudObject[\"QuantumFramework.paclet\", Permissions -> \"Public\"], OverwriteTarget -> True]"
+    - run: wolframscript -code "CloudConnect[\"wolframquantumframework@wolfram.com\", \"${{ secrets.WQF_PASSWORD }}\"]; CopyFile[\"${{env.PACLET_PATH}}\", CloudObject[\"QuantumFramework.paclet\", Permissions -> \"Public\"], OverwriteTarget -> True]"
