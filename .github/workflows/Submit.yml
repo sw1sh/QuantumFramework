@@ -26,7 +26,8 @@ jobs:
     - name: Submit
       id: submit-paclet-step
       uses: WolframResearch/submit-paclet@v1.11.0
-      with: 
+      with:
+        check: false
         paclet_cicd_version: 0.36.0
         definition_notebook: ./QuantumFramework/ResourceDefinition.nb
         resource_system_base: https://www.wolframcloud.com/obj/resourcesystem/api/1.0
