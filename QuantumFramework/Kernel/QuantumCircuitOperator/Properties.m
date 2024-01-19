@@ -223,7 +223,8 @@ QuantumCircuitOperatorProp[qco_, "Output"] := If[Length[qco["OutputOrder"]] > 0,
 
 QuantumCircuitOperatorProp[qco_, "Basis"] := QuantumBasis[
     "Output" -> qco["Output"], "Input" -> qco["Input"],
-    "Picture" -> First @ Commonest[Through[qco["NormalOperators"]["Picture"]]]
+    "Picture" -> First @ Commonest[Through[qco["NormalOperators"]["Picture"]]],
+    "ParameterSpec" -> DeleteDuplicatesBy[Join @@ Through[qco["Operators"]["ParameterSpec"]], First]
 ]
 
 QuantumCircuitOperatorProp[qco_, "Measurements"] := Count[qco["Flatten"]["Operators"], _ ? QuantumMeasurementOperatorQ]
@@ -339,6 +340,8 @@ CircuitTopology[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Bloc
 
 QuantumCircuitOperatorProp[qco_, "Topology", opts___] := CircuitTopology[qco, opts]
 
+
+QuantumCircuitOperatorProp[qco_, "Parameters"] := DeleteDuplicates[Join @@ Through[qco["Operators"]["Parameters"]]]
 
 (* operator properties *)
 

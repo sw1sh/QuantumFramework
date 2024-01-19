@@ -180,3 +180,14 @@ FullSimplify[qco_QuantumCircuitOperator, args___] ^:= qco["FullSimplify", args]
 Chop[qco_QuantumCircuitOperator, args___] ^:= qco["Chop", args]
 
 
+(* parameterization *)
+
+(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[rules_ ? AssociationQ] :=
+    QuantumCircuitOperator[
+        If[BarrierQ[#], #, #[KeyTake[rules, #["Parameters"]]]] & /@ qco["Elements"],
+        qco["Label"] /. rules
+    ] /; ContainsOnly[Keys[rules], qco["Parameters"]]
+
+(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[parameters : PatternSequence[p : Except[_Association], ___]] /; ! MemberQ[QuantumCircuitOperator["Properties"], p] /; Length[{parameters}] <= Length[qco["Parameters"]] :=
+    qco[AssociationThread[Take[qco["Parameters"], UpTo[Length[{parameters}]]], parameters]]
+

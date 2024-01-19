@@ -293,9 +293,12 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
 
 (* parameterization *)
 
-(qs_QuantumState ? QuantumStateQ)[ps : PatternSequence[p_, ___]] /; ! MemberQ[QuantumState["Properties"], p] && Length[{ps}] <= qs["ParameterArity"] := With[{rules = Thread[Take[qs["Parameters"], Length[{ps}]] -> {ps}]},
+(qs_QuantumState ? QuantumStateQ)[ps : PatternSequence[p : Except[_Association], ___]] /; ! MemberQ[QuantumState["Properties"], p] && Length[{ps}] <= qs["ParameterArity"] :=
+    qs[AssociationThread[Take[qs["Parameters"], UpTo[Length[{ps}]]], {ps}]]
+
+(qs_QuantumState ? QuantumStateQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qs["Parameters"]] :=
     QuantumState[
         Map[ReplaceAll[rules], qs["State"], {If[qs["VectorQ"], 1, 2]}],
-        QuantumBasis[qs["Basis"], "Label" -> qs["Label"] /. rules, "ParameterSpec" -> Drop[qs["ParameterSpec"], Length[{ps}]]]
+        QuantumBasis[qs["Basis"], "Label" -> qs["Label"] /. rules, "ParameterSpec" -> DeleteCases[qs["ParameterSpec"], {Alternatives @@ Keys[rules], __}]]
     ]
-]
+

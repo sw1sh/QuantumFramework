@@ -28,6 +28,9 @@ BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
         },
         {
             BoxForm`SummaryItem[{"Measurement Target: ", qco["Target"]}]
+        },
+        {
+            BoxForm`SummaryItem[{"Parameters: ", qco["Parameters"]}]
         }
     },
     format
