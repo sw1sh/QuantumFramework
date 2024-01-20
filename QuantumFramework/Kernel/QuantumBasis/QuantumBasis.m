@@ -79,7 +79,7 @@ QuantumBasis[picture : Alternatives @@ $QuantumBasisPictures] := QuantumBasis["C
 QuantumBasis[QuantumBasis[data_Association], picture : Alternatives @@ $QuantumBasisPictures] := QuantumBasis[<|data, "Picture" -> picture|>]
 
 QuantumBasis[QuantumBasis[data_Association], rules : OptionsPattern[]] :=
-    QuantumBasis @ KeyMap[Replace["Parameter" -> "ParameterSpec"]][<|data, Reverse @ FilterRules[{rules}, Append[$QuantumBasisDataKeys, "Parameter"]]|>]
+    QuantumBasis @ KeyMap[Replace["Parameter" | "Parameters" -> "ParameterSpec"]][<|data, Reverse @ FilterRules[{rules}, Join[$QuantumBasisDataKeys, {"Parameter", "Parameters"}]]|>]
 
 QuantumBasis[data_Association, args__] := Enclose @ Fold[ConfirmBy[QuantumBasis[##], QuantumBasisQ] &, ConfirmBy[QuantumBasis[data], QuantumBasisQ], Reverse @ {args}]
 

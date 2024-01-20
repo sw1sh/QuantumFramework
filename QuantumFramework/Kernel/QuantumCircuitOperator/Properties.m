@@ -223,7 +223,7 @@ QuantumCircuitOperatorProp[qco_, "Output"] := If[Length[qco["OutputOrder"]] > 0,
 
 QuantumCircuitOperatorProp[qco_, "Basis"] := QuantumBasis[
     "Output" -> qco["Output"], "Input" -> qco["Input"],
-    "Picture" -> First @ Commonest[Through[qco["NormalOperators"]["Picture"]]],
+    "Picture" -> If[SameQ @@ #, First[#], "Schrodinger"] & @ Through[qco["NormalOperators"]["Picture"]],
     "ParameterSpec" -> DeleteDuplicatesBy[Join @@ Through[qco["Operators"]["ParameterSpec"]], First]
 ]
 

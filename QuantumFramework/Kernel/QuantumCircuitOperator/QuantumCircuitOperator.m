@@ -29,6 +29,8 @@ QuantumCircuitOperatorQ[___] := False
 qco_QuantumCircuitOperator /; quantumCircuitOperatorQ[Unevaluated[qco]] && ! System`Private`HoldValidQ[qco] := System`Private`HoldSetValid[qco]
 
 
+Options[QuantumCircuitOperator] = {"Parameters" -> {}, "Label" -> None}
+
 (* constructors *)
 
 circuitNamePattern = name_String | {name_String, ___} | name_String[___] /; MemberQ[$QuantumCircuitOperatorNames, name]
@@ -54,8 +56,14 @@ QuantumCircuitOperator[arg_, order_ ? orderQ, args___] := QuantumCircuitOperator
 
 QuantumCircuitOperator[arg_ -> order_ ? orderQ, args___] := QuantumCircuitOperator[QuantumCircuitOperator[arg, args], order]
 
-QuantumCircuitOperator[operators_ ? ListQ, label_, ___] :=
-    Enclose @ QuantumCircuitOperator[<|"Elements" -> Confirm @* FromCircuitOperatorShorthand /@ operators, "Label" -> label|>]
+QuantumCircuitOperator[operators_ ? ListQ, opts : OptionsPattern[]] := With[{label = OptionValue["Label"], parameters = OptionValue["Parameters"]},
+    Enclose @ QuantumCircuitOperator[<|
+        "Elements" -> (Confirm[If[parameters === {} || BarrierQ[#], #, Head[#][#, "Parameters" -> parameters]] & @ FromCircuitOperatorShorthand[#]] & /@ operators),
+        "Label" -> label
+    |>]
+]
+
+QuantumCircuitOperator[operators_, label_, opts : OptionsPattern[]] := QuantumCircuitOperator[operators, "Label" -> label, opts]
 
 QuantumCircuitOperator[op : Except[_ ? QuantumCircuitOperatorQ | _ ? ListQ, _ ? QuantumFrameworkOperatorQ], args___] := QuantumCircuitOperator[{op}, args]
 
