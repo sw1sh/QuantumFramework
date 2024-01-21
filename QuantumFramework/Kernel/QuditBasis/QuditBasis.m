@@ -57,8 +57,7 @@ QuditBasis[elements_ /; ArrayQ[elements, d_ /; d > 1, NumericQ]] := QuditBasis[R
 QuditBasis[names : {Except[_Integer | (name_String | {name_String, ___} | name_String[___] /; MemberQ[$QuditBasisNames, name])] ..}] :=
     QuditBasis[names, If[Length[names] == 1, {1}, identityMatrix[Length[names]]]]
 
-QuditBasis[names_List, elements_ ? ArrayQ] :=
-    QuditBasis[AssociationThread[names, Normal @ elements]]
+QuditBasis[names_List, elements_ ? ArrayQ] /; Length[names] == Length[elements] := QuditBasis[AssociationThread[names, Normal @ elements]]
 
 QuditBasis[elements_Association] /; Not @ AllTrue[elements, SparseArrayQ[#] || AtomQ[#] || emptyTensorQ[#] &] :=
     QuditBasis[Map[If[AtomQ[#], #, SparseArray[#]] &, elements]]
