@@ -189,13 +189,13 @@ QuantumCircuitOperatorProp[qco_, "OutputOrderQuditMapping"] := Thread[# -> Range
 
 QuantumCircuitOperatorProp[qco_, "InputDimensions"] :=
     (q |-> ResourceFunction["LookupPart"][#["InputDimensions"], q /. #["InputOrderQuditMapping"], 2] & @
-        SelectFirst[qco["NormalOperators"], op |-> MemberQ[op["FullInputOrder"], q]]) /@ qco["InputOrder"]
+        SelectFirst[qco["NormalOperators"], op |-> MemberQ[op["InputOrder"], q]]) /@ qco["InputOrder"]
 
 QuantumCircuitOperatorProp[qco_, "InputDimension"] := Times @@ qco["InputDimensions"]
 
 QuantumCircuitOperatorProp[qco_, "OutputDimensions"] :=
     (q |-> ResourceFunction["LookupPart"][#["OutputDimensions"], q /. #["OutputOrderQuditMapping"], 2] & @
-        SelectFirst[Reverse @ qco["NormalOperators"], op |-> MemberQ[op["FullOutputOrder"], q]]) /@ qco["OutputOrder"]
+        SelectFirst[Reverse @ qco["NormalOperators"], op |-> MemberQ[op["OutputOrder"], q]]) /@ qco["OutputOrder"]
 
 QuantumCircuitOperatorProp[qco_, "OutputDimension"] := Times @@ qco["OutputDimensions"]
 
@@ -205,7 +205,7 @@ QuantumCircuitOperatorProp[qco_, "Input"] := If[Length[qco["InputOrder"]] > 0,
     With[{ops = qco["NormalOperators"]},
         QuantumTensorProduct[
             (q |-> #["Input"]["Extract", {q /. #["InputOrderQuditMapping"]}] & @
-                SelectFirst[ops, op |-> MemberQ[op["FullInputOrder"], q]]) /@ qco["InputOrder"]
+                SelectFirst[ops, op |-> MemberQ[op["InputOrder"], q]]) /@ qco["InputOrder"]
         ]
     ],
     QuditBasis[]
@@ -215,7 +215,7 @@ QuantumCircuitOperatorProp[qco_, "Output"] := If[Length[qco["OutputOrder"]] > 0,
     With[{ops = Reverse @ qco["NormalOperators"]},
         QuantumTensorProduct[
             (q |-> #["Output"]["Extract", {q /. #["OutputOrderQuditMapping"]}] & @
-                SelectFirst[ops, op |-> MemberQ[op["FullOutputOrder"], q]]) /@ qco["OutputOrder"]
+                SelectFirst[ops, op |-> MemberQ[op["OutputOrder"], q]]) /@ qco["OutputOrder"]
         ]
     ],
     QuditBasis[]
