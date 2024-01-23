@@ -9,6 +9,7 @@ PackageScope["stateQ"]
 PackageScope["orderQ"]
 PackageScope["autoOrderQ"]
 PackageScope["targetQ"]
+PackageScope["targetsQ"]
 PackageScope["measurementReprQ"]
 PackageScope["emptyTensorQ"]
 
@@ -65,6 +66,8 @@ orderQ[order_] := VectorQ[order, IntegerQ] && DuplicateFreeQ[order]
 autoOrderQ[order_] := MatchQ[order, _ ? orderQ | Automatic | {_ ? orderQ | Automatic, _ ? orderQ | Automatic}]
 
 targetQ[target_] := VectorQ[target, IntegerQ] && AllTrue[target, Positive]
+
+targetsQ[targets_] := VectorQ[targets, targetQ]
 
 measurementReprQ[state_] := TensorQ[state] && MemberQ[{2, 3}, TensorRank[state]]
 

@@ -6,7 +6,7 @@ PackageScope["QuantumMeasurementOperatorQ"]
 
 
 
-quantumMeasurementOperatorQ[QuantumMeasurementOperator[qo_, _ ? targetQ]] := QuantumOperatorQ[qo]
+quantumMeasurementOperatorQ[QuantumMeasurementOperator[qo_, _ ? targetsQ]] := QuantumOperatorQ[qo]
 
 quantumMeasurementOperatorQ[___] := False
 
@@ -26,7 +26,9 @@ SetAttributes[QuantumMeasurementOperator, NHoldRest]
 QuantumMeasurementOperator[arg_ -> eigenvalues_ ? VectorQ, args___] :=
     Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumBasis[arg], QuantumBasisQ] -> eigenvalues, args]
 
-QuantumMeasurementOperator[target : _ ? targetQ, args___] := QuantumMeasurementOperator[QuantumBasis[args], target]
+QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? targetQ] := QuantumMeasurementOperator[qo, {target}]
+
+QuantumMeasurementOperator[target : (_ ? targetsQ | _ ? targetQ), args___] := QuantumMeasurementOperator[QuantumBasis[args], target]
 
 QuantumMeasurementOperator[target_ -> arg_, opts___] := QuantumMeasurementOperator[QuantumBasis[arg], target, opts]
 
@@ -76,14 +78,14 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, Automatic] := QuantumMeasurem
 
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ] := QuantumMeasurementOperator[qo, Automatic]
 
-QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args__, target_ ? targetQ] :=
+QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args__, target : (_ ? targetsQ | _ ? targetQ)] :=
     QuantumMeasurementOperator[QuantumOperator[qo, {qo["OutputOrder"], qo["FullInputOrder"]}, args], target]
 
 
-QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target : _ ? targetQ, args__] :=
+QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target : (_ ? targetsQ | _ ? targetQ), args__] :=
     QuantumMeasurementOperator[QuantumOperator[qo, args], target]
 
-QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args : PatternSequence[___, Except[_ ? targetQ]]] :=
+QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args : PatternSequence[___, Except[_ ? targetsQ | _ ? targetQ]]] :=
     QuantumMeasurementOperator[QuantumOperator[qo, {qo["OutputOrder"], qo["FullInputOrder"]}, args], qo["InputOrder"]]
 
 
@@ -103,13 +105,13 @@ QuantumMeasurementOperator[tensor_ ? TensorQ /; TensorRank[tensor] == 3, target 
         args
     ]
 
-QuantumMeasurementOperator[tensor_ ? (TensorQ[#, Not @* StringQ] &) /; TensorRank[tensor] == 2, target : (_ ? targetQ) : {1}, args___] :=
+QuantumMeasurementOperator[tensor_ ? (TensorQ[#, Not @* StringQ] &) /; TensorRank[tensor] == 2, target : (_ ? targetsQ | _ ? targetQ) : {1}, args___] :=
     QuantumMeasurementOperator[
         QuantumOperator[tensor, args],
         target
     ]
 
-QuantumMeasurementOperator[tensor_ ? (TensorQ[#, Not @* StringQ] &) /; 2 <= TensorRank[tensor] <= 3, qb_ ? QuantumBasisQ, target : (_ ? targetQ) : {1}, args___] :=
+QuantumMeasurementOperator[tensor_ ? (TensorQ[#, Not @* StringQ] &) /; 2 <= TensorRank[tensor] <= 3, qb_ ? QuantumBasisQ, target : (_ ? targetsQ | _ ? targetQ) : {1}, args___] :=
     QuantumMeasurementOperator[tensor, target, qb, args]
 
 QuantumMeasurementOperator[ops : {_ ? QuantumOperatorQ..}, target : (_ ? targetQ) : {1}, args___] /;
@@ -139,7 +141,7 @@ Enclose @ Block[{
 
 QuantumMeasurementOperator[qm_ ? QuantumMeasurementQ, opts___] := QuantumMeasurementOperator[qm["QuantumOperator"], opts]
 
-QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOperatorQ | _ ? QuantumBasisQ], ___], target_ ? targetQ, opts___] :=
+QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOperatorQ | _ ? QuantumBasisQ], ___], target : (_ ? targetsQ | _ ? targetQ), opts___] :=
     Enclose @ With[{qb = ConfirmBy[QuantumBasis[args], QuantumBasisQ]}, QuantumMeasurementOperator[qb, target, opts]]
 
 QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOperatorQ], ___]] := QuantumMeasurementOperator[QuantumBasis[args]]
@@ -149,10 +151,10 @@ QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOpe
 QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, order : _ ? autoOrderQ, args___] := With[{
     op = QuantumOperator[qmo["QuantumOperator"], order]
 },
-    QuantumMeasurementOperator[op, Replace[qmo["Target"], Thread[qmo["InputOrder"] -> op["InputOrder"]], {1}], args]
+    QuantumMeasurementOperator[op, Replace[qmo["Targets"], Thread[qmo["InputOrder"] -> op["InputOrder"]], {2}], args]
 ]
 
-QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args : PatternSequence[Except[_ ? targetQ], ___]] :=
+QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args : PatternSequence[Except[_ ? targetsQ | _ ? targetQ], ___]] :=
     QuantumMeasurementOperator[QuantumOperator[qmo["Operator"], args], qmo["Target"]]
 
 QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ : Automatic, args___] := With[{
@@ -203,7 +205,7 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
         If[
             qo["OutputQudits"] < qo["InputQudits"] && qo["OutputDimension"] == qo["InputDimension"],
             bot["FullInputOrder"],
-            qmo["Target"]
+            qmo["Targets"]
         ]
     ]
 ]
@@ -238,7 +240,7 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ :
     If[ QuantumMeasurementQ[qm], QuantumMeasurement, Identity] @
         QuantumMeasurementOperator[
             result,
-            Join[qm["Target"], qmo["Target"]]
+            Join[qm["Targets"], qmo["Targets"]]
         ]
 ]
 
@@ -251,7 +253,7 @@ QuantumMeasurementOperator /: (qmo1_QuantumMeasurementOperator ? QuantumMeasurem
     qmo1["Dimension"] == qmo2["Dimension"] && qmo1["Order"] == qmo2["Order"] && qmo1["Target"] == qmo2["Target"] :=
     QuantumMeasurementOperator[
         qmo1["Operator"] + qmo2["Operator"],
-        qmo1["Target"]
+        qmo1["Targets"]
     ]
 
 QuantumMeasurementOperator /: f_Symbol[left : Except[_QuantumMeasurementOperator] ...,

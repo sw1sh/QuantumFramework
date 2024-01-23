@@ -3,7 +3,7 @@ Package["Wolfram`QuantumFramework`"]
 
 
 $QuantumMeasurementOperatorProperties = {
-    "QuantumOperator", "Target", "Targets",
+    "QuantumOperator", "Targets", "Target", "TargetCount",
     "TargetIndex",
     "Operator", "Basis", "MatrixRepresentation", "POVMElements",
     "OrderedMatrixRepresentation", "OrderedPOVMElements",
@@ -53,9 +53,11 @@ QuantumMeasurementOperatorProp[qmo_, "Properties"] :=
 
 QuantumMeasurementOperatorProp[_[op_, _], "Operator" | "QuantumOperator"] := op
 
-QuantumMeasurementOperatorProp[_[_, target_], "Target" | "TargetOrder"] := target
+QuantumMeasurementOperatorProp[_[_, targets_], "Targets"] := targets
 
-QuantumMeasurementOperatorProp[qmo_, "Arity" | "Targets"] := Length[qmo["Target"]]
+QuantumMeasurementOperatorProp[qmo_, "Target" | "TargetOrder"] := Join @@ qmo["Targets"]
+
+QuantumMeasurementOperatorProp[qmo_, "Arity" | "TargetCount"] := Length[qmo["Target"]]
 
 QuantumMeasurementOperatorProp[qmo_, "Eigenorder"] := Replace[Select[qmo["FullOutputOrder"], NonPositive], {} -> {0}]
 
@@ -97,7 +99,7 @@ QuantumMeasurementOperatorProp[qmo_, "CanonicalBasis"] :=
 canonicalEigenPermutation[qmo_] := Block[{accumIndex = PositionIndex[FoldList[Times, qmo["TargetDimensions"]]]},
 	FindPermutation @ Catenate[
         Reverse /@ TakeList[
-            Range[qmo["Targets"]],
+            Range[qmo["TargetCount"]],
             Reverse @ Differences @ Prepend[0] @ Catenate @ Lookup[accumIndex, FoldList[Times, Reverse[qmo["Eigendimensions"]]]]
         ]
     ]
@@ -116,21 +118,21 @@ QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> T
                 basis
             ]["PermuteOutput", PermutationProduct[
                 FindPermutation[Reverse[qmo["Target"]], ReverseSort[qmo["Target"]]],
-                If[TrueQ[OptionValue["Reverse"]], FindPermutation[Reverse[Range[qmo["Targets"]]]], Cycles[{}]]
+                If[TrueQ[OptionValue["Reverse"]], FindPermutation[Reverse[Range[qmo["TargetCount"]]]], Cycles[{}]]
             ]],
-            {Join[Range[- qmo["Targets"] + 1, 0], DeleteCases[qmo["OutputOrder"], _ ? NonPositive]], qmo["InputOrder"]}
+            {Join[Range[- qmo["TargetCount"] + 1, 0], DeleteCases[qmo["OutputOrder"], _ ? NonPositive]], qmo["InputOrder"]}
         ],
         Sort @ qmo["Target"]
     ]
 ]
 
-QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> True}]] /; Length[qmo["Eigenorder"]] == qmo["Targets"] := QuantumMeasurementOperator[
+QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> True}]] /; Length[qmo["Eigenorder"]] == qmo["TargetCount"] := QuantumMeasurementOperator[
         QuantumOperator[
             qmo["SuperOperator"]["State"]["PermuteOutput", PermutationProduct[
                 FindPermutation[Reverse[qmo["Target"]], ReverseSort[qmo["Target"]]],
-                If[TrueQ[OptionValue["Reverse"]], FindPermutation[Reverse[Range[qmo["Targets"]]]], Cycles[{}]]
+                If[TrueQ[OptionValue["Reverse"]], FindPermutation[Reverse[Range[qmo["TargetCount"]]]], Cycles[{}]]
             ]],
-            {Join[Range[- qmo["Targets"] + 1, 0], DeleteCases[qmo["OutputOrder"], _ ? NonPositive]], qmo["InputOrder"]}
+            {Join[Range[- qmo["TargetCount"] + 1, 0], DeleteCases[qmo["OutputOrder"], _ ? NonPositive]], qmo["InputOrder"]}
         ],
         Sort @ qmo["Target"]
     ]

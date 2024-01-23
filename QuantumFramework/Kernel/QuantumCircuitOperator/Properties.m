@@ -241,7 +241,7 @@ QuantumCircuitOperatorProp[qco_, "Target"] :=
         qco["Flatten"]["Operators"]
     ]
 
-QuantumCircuitOperatorProp[qco_, "Targets"] := Length @ qco["Target"]
+QuantumCircuitOperatorProp[qco_, "TargetCount"] := Length @ qco["Target"]
 
 QuantumCircuitOperatorProp[qco_, "TargetOrder"] := qco["InputOrder"]
 
@@ -311,7 +311,7 @@ QuantumCircuitOperatorProp[qco_, "Hypergraph", opts : OptionsPattern[QuantumCirc
 
 
 QuantumCircuitOperatorProp[qco_, "QASM"] :=
-    Enclose[StringTemplate["OPENQASM 3.0;\nqubit[``] q;\nbit[``] c;\n"][qco["Arity"], qco["Targets"]] <>
+    Enclose[StringTemplate["OPENQASM 3.0;\nqubit[``] q;\nbit[``] c;\n"][qco["Arity"], qco["TargetCount"]] <>
         StringRiffle[ConfirmBy[#["QASM"], StringQ] & /@ qco["Flatten"]["Operators"], "\n"]]
 
 

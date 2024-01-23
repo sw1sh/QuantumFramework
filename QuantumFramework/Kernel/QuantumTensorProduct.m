@@ -116,7 +116,7 @@ QuantumTensorProduct[qmo1_QuantumMeasurementOperator, qmo2_QuantumMeasurementOpe
                 qmo2["InputOrder"] - Min[qmo2["InputOrder"]] + 1 + Max[qmo1["Order"]]
             }]
         ]["Sort"],
-        Join[qmo1["Target"], qmo2["Target"]]
+        Join[qmo1["Targets"], qmo2["Targets"]]
     ]
 
 
