@@ -87,14 +87,21 @@ QuantumWignerMICTransform[qo_ ? QuantumOperatorQ, opts : OptionsPattern[]] := En
 
 QuantumWignerMICTransform[qc_ ? QuantumChannelQ, opts: OptionsPattern[]] := Enclose @ QuantumChannel[ConfirmBy[QuantumWignerMICTransform[qc["QuantumOperator"], opts], QuantumOperatorQ]]
 
-QuantumWignerMICTransform[qmo_ ? QuantumMeasurementOperatorQ, opts: OptionsPattern[]] := Enclose @ QuantumOperator[
-    QuantumTensorProduct[
+QuantumWignerMICTransform[qmo_ ? QuantumMeasurementOperatorQ, opts: OptionsPattern[]] := QuantumMeasurementOperator[
+    QuantumTensorProduct[MapThread[{tds, tos, ed, eo} |-> 
         QuantumOperator[
-            QuantumOperator["Spider"[QuantumBasis[{#}, {# ^ 2}]]],
-            QuantumBasis[{#}, QuantumWignerMICBasis[#, opts], "Label" -> "M"]
-        ] & /@ qmo["InputDimensions"]
-    ],
-    qmo["InputOrder"]
+            QuantumOperator["I"[{ed}, tds] -> #["OutputOrder"][[;; ;; 2]] -> eo]["ReverseInput"][#] & @
+                QuantumTensorProduct[
+                    With[{basis = QuantumWignerMICTransform[QuditBasis[#1], opts]},
+                        QuantumOperator["Spider"[QuantumBasis[{#1, #1 ^ 2}, {#1 ^ 2}]], QuantumBasis[QuantumTensorProduct[{QuditBasis[#1], basis}], basis]]
+                    ] & /@ tds
+                ],
+            {Prepend[eo][tos], tos}
+        ],
+        {TakeList[qmo["TargetDimensions"], Length /@ qmo["Targets"]], TakeList[qmo["TargetOrder"], Length /@ qmo["Targets"]], qmo["Eigendimensions"], qmo["Eigenorder"]}
+    ]],
+    qmo["Targets"],
+    "Label" -> "WignerMIC"
 ]
 
 QuantumWignerMICTransform[qco_ ? QuantumCircuitOperatorQ, opts: OptionsPattern[]] :=

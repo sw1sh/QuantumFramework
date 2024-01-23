@@ -101,8 +101,8 @@ QuantumOperator[{"Identity" | "I", dims : {_Integer ? Positive ...}}, args___] :
     args
 ]
 
-QuantumOperator[{"Identity" | "I", outDims : {_Integer ? Positive ...}, inDims : {_Integer ? Positive ...}}, args___] := Enclose @ QuantumOperator[
-    QuantumState[SparseArrayFlatten @ identityMatrix[ConfirmBy[Sqrt[Times @@ Join[outDims, inDims]], IntegerQ]], QuantumBasis[QuditBasis[outDims], QuditBasis[inDims], "Label" -> "I"]],
+QuantumOperator[{"Identity" | "I", outDims : {_Integer ? Positive ...}, inDims : {_Integer ? Positive ...}}, args___] := QuantumOperator[
+    QuantumState[SparseArrayFlatten @ identityMatrix[{Times @@ outDims, Times @@ inDims}], QuantumBasis[QuditBasis[outDims], QuditBasis[inDims], "Label" -> "I"]],
     args
 ]
 
@@ -565,7 +565,7 @@ QuantumOperator[{"RandomHermitian", args___}, order : (_ ? orderQ) : {1}] := Enc
 
 QuantumOperator["Permutation", opts___] := QuantumOperator[{"Permutation", 2, Cycles[{{1, 2}}]}, opts]
 
-QuantumOperator["Permutation", order_ ? orderQ, opts___] := QuantumOperator[{"Permutation", ConstantArray[2, Length[order]]}, order, opts]
+QuantumOperator["Permutation", order_ ? orderQ, opts___] := QuantumOperator[{"Permutation", ConstantArray[2, Length[order]]}, Sort[order] -> order, opts]
 
 QuantumOperator["Permutation", {out_ ? orderQ, in_ ? orderQ} | (in_ ? orderQ -> out_ ? orderQ), opts___] /; Length[out] == Length[in] :=
     QuantumOperator[{"Permutation", ConstantArray[2, Length[out]]}, {out, in}, opts]
@@ -575,10 +575,10 @@ QuantumOperator[{"Permutation", perm_Cycles : Cycles[{}]}, opts___] := QuantumOp
 QuantumOperator[{"Permutation", dim : _Integer ? Positive, perm_Cycles : Cycles[{}]}, opts___] := QuantumOperator[{"Permutation", Table[dim, Max[PermutationMax[perm], 1]], perm}, opts]
 
 QuantumOperator[{"Permutation", dims : {_Integer ? Positive..}, perm_Cycles : Cycles[{}]}, opts___] :=
-    QuantumOperator[
+    Enclose @ QuantumOperator[
         QuantumState[
             SparseArrayFlatten @ TensorTranspose[ArrayReshape[identityMatrix[Times @@ dims], Join[dims, dims]], perm],
-            QuantumBasis[QuditBasis[Permute[dims, perm]], QuditBasis[dims], "Label" -> "\[Pi]" @@ PermutationList[perm, Length[dims]]]
+            QuantumBasis[QuditBasis[ConfirmBy[Permute[dims, perm], ListQ]], QuditBasis[dims], "Label" -> "\[Pi]" @@ PermutationList[perm, Length[dims]]]
         ],
         opts
     ]
