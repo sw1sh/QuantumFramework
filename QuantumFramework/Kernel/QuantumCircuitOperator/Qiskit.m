@@ -305,12 +305,13 @@ job.result().get_unitary(qc, decimals=3)
 "]
 ]
 
-Options[qiskitInitBackend] = {"Provider" -> None, "Backend" -> Automatic}
+Options[qiskitInitBackend] = {"Provider" -> None, "Backend" -> Automatic, "FireOpal" -> False}
 
 qiskitInitBackend[qc_QiskitCircuit, OptionsPattern[]] := Enclose @ Block[{
     $pythonBytes = qc["Bytes"],
     provider, params,
     $backendName = Replace[OptionValue["Backend"], Automatic -> Null],
+    $fireOpal = TrueQ[OptionValue["FireOpal"]],
     $token = Null
 },
     {provider, params} = Replace[OptionValue["Provider"], {
@@ -388,11 +389,18 @@ else:
                 backend = provider.get_backend('simulator_statevector')
     else:
         backend = provider.get_backend(backend_name)
+if <* $fireOpal *>:
+    import fireopal
+    from fireopal.credentials import make_credentials_for_ibmq, make_credentials_for_braket
+    if isintance(provider, IBMProvider):
+        fireopal_credentials = make_credentials_for_ibmq(provider._account.token, 'open', 'ibm-q', 'main')
+    else:
+        raise ValueError('Unsupported FireOpal provider')
 "
-     ]
+    ]
 ]
 
-Options[qiskitApply] = Join[{"Shots" -> 1024, "FireOpal" -> False}, Options[qiskitInitBackend]]
+Options[qiskitApply] = Join[{"Shots" -> 1024}, Options[qiskitInitBackend]]
 
 qiskitApply[qc_QiskitCircuit, qs_QuantumState, opts : OptionsPattern[]] := Enclose @ Block[{
     $state = If[qs["Dimension"] == 1, Null, NumericArray @ N @ qs["Reverse"]["StateVector"]],
@@ -428,9 +436,8 @@ except:
 if <* $fireOpal *>:
     import fireopal
     qasm = circuit.qasm()
-    credentials = {'token': provider._account.token, 'group': 'open', 'hub': 'ibm-q', 'project': 'main', 'provider': 'ibmq'}
     validate_results = fireopal.validate(
-        circuits=[qasm], credentials=credentials, backend_name=backend.name
+        circuits=[qasm], credentials=fireopal_credentials, backend_name=backend.name
     )
     assert(validate_results['results'] == [])
     result = fireopal.execute(
@@ -545,7 +552,19 @@ from wolframclient.language import wl
 wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(transpile(qc, backend)))
 "]
 ]
-
+qc_QiskitCircuit["Validate", opts : OptionsPattern[qiskitInitBackend]]:= Enclose[
+    Confirm @ qiskitInitBackend[qc, opts, "Provider" -> "IBMProvider"];
+    PythonEvaluate["
+import fireopal
+from qiskit import transpile
+circuit = transpile(qc, backend)
+qasm = circuit.qasm()
+credentials = {'token': provider._account.token, 'group': 'open', 'hub': 'ibm-q', 'project': 'main', 'provider': 'ibmq'}
+fireopal.validate(
+    circuits=[qasm], credentials=credentials, backend_name=backend.name
+)
+"]
+]
 
 ImportQASMCircuit[file_ /; FileExistsQ[file], basisGates : {_String...} | None] := ImportQASMCircuit[Import[file, "String"], basisGates]
 
