@@ -219,7 +219,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			Map[{wireThickness[Replace[#, inDims]], Line[{{center[[1]] - size / 2, - # vGapSize}, {center[[1]] + size / 2, - vposOut[[1]] vGapSize}}]} &, vposIn]
 		},
 
-		(type : "ZSpider" | "XSpider" | "Spider")[phase_] :> {
+		(type : "ZSpider" | "XSpider" | "Spider")[phase_] :> Block[{center = If[AnyTrue[- (Range @@ MinMax[vpos]) vGapSize, # ==center[[2]] &], center + {0, size / 2}, center]}, {
 			FaceForm[Replace[type, gateBackgroundStyle]],
 			EdgeForm[Directive[wireThickness[Max[Values[inDims], Values[outDims]]], Replace[type, gateBoundaryStyle]]],
 			Disk[center, size / 5],
@@ -230,8 +230,8 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			wireStyle,
 			Map[With[{p = {center[[1]] - size / 2, - # vGapSize}}, {wireThickness[Replace[#, inDims]], Line[{center + size / 5 Normalize[p - center], p}]}] &, vposIn],
 			Map[With[{p = {center[[1]] + size / 2, - # vGapSize}}, {wireThickness[Replace[#, outDims]], Line[{center + size / 5 Normalize[p - center], p}]}] &, vposOut]
-		},
-		"WSpider" :> {
+		}],
+		"WSpider" :> Block[{center = If[AnyTrue[- (Range @@ MinMax[vpos]) vGapSize, # ==center[[2]] &], center + {0, size / 2}, center]}, {
 			wireStyle,
 			Map[With[{p = {center[[1]] - size / 2, - # vGapSize}}, {wireThickness[Replace[#, inDims]], Line[{center, p}]}] &, vposIn],
 			Map[With[{p = {center[[1]] + size / 2, - # vGapSize}}, {wireThickness[Replace[#, outDims]], Line[{center, p}]}] &, vposOut],
@@ -241,7 +241,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 				Triangle[{center + size / 4 {1/2, 1}, center + size / 4 {1/2, -1}, center + size / 4 {-1, 0}}],
 				Triangle[{center - size / 4 {1/2, 1}, center - size / 4 {1/2, -1}, center - size / 4 {-1, 0}}]
 			]
-		},
+		}],
 		"Discard" :> {
 			wireStyle,
 			Table[{
