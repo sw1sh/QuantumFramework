@@ -392,7 +392,7 @@ else:
 if <* $fireOpal *>:
     import fireopal
     from fireopal.credentials import make_credentials_for_ibmq, make_credentials_for_braket
-    if isintance(provider, IBMProvider):
+    if isinstance(provider, IBMProvider):
         fireopal_credentials = make_credentials_for_ibmq(provider._account.token, 'open', 'ibm-q', 'main')
     else:
         raise ValueError('Unsupported FireOpal provider')
@@ -553,15 +553,14 @@ wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(transpile(qc, backend)))
 "]
 ]
 qc_QiskitCircuit["Validate", opts : OptionsPattern[qiskitInitBackend]]:= Enclose[
-    Confirm @ qiskitInitBackend[qc, opts, "Provider" -> "IBMProvider"];
+    Confirm @ qiskitInitBackend[qc, opts, "FireOpal" -> True, "Provider" -> "IBMProvider"];
     PythonEvaluate["
 import fireopal
 from qiskit import transpile
 circuit = transpile(qc, backend)
 qasm = circuit.qasm()
-credentials = {'token': provider._account.token, 'group': 'open', 'hub': 'ibm-q', 'project': 'main', 'provider': 'ibmq'}
 fireopal.validate(
-    circuits=[qasm], credentials=credentials, backend_name=backend.name
+    circuits=[qasm], credentials=fireopal_credentials, backend_name=backend.name
 )
 "]
 ]
