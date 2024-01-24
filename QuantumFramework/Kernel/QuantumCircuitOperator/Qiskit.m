@@ -329,11 +329,11 @@ qiskitInitBackend[qc_QiskitCircuit, OptionsPattern[]] := Enclose @ Block[{
     Confirm @ PythonEvaluate[Context[$pythonBytes], Switch[provider,
     "IBMQ",
 "
+from qiskit.providers.ibmq.accountprovider import AccountProvider
 try:
     assert(isinstance(provider, AccountProvider))
 except:
     from qiskit import IBMQ
-    from qiskit.providers.ibmq.accountprovider import AccountProvider
     token = <* $token *>
     if token is not None:
         from qiskit_ibm_runtime import QiskitRuntimeService
@@ -342,10 +342,10 @@ except:
 ",
     "IBMProvider",
 "
+from qiskit_ibm_provider import IBMProvider
 try:
     assert(isinstance(provider, IBMProvider))
 except:
-    from qiskit_ibm_provider import IBMProvider
     token = <* $token *>
     if token is not None:
         IBMProvider.save_account(token=token, overwrite=True)
@@ -354,11 +354,9 @@ except:
     "AWSBraket",
 "
 from qiskit_braket_provider import AWSBraketProvider
-
 try:
     assert(isinstance(provider, AWSBraketProvider))
 except:
-    from qiskit_braket_provider import AWSBraketProvider
     provider = AWSBraketProvider()
 ",
     _,
@@ -370,6 +368,7 @@ provider = None
 import pickle
 from qiskit import Aer
 from qiskit_braket_provider import AWSBraketProvider
+from qiskit_ibm_provider import IBMProvider
 
 qc = pickle.loads(<* $pythonBytes *>)
 backend_name = <* $backendName *>
@@ -439,7 +438,7 @@ if <* $fireOpal *>:
     validate_results = fireopal.validate(
         circuits=[qasm], credentials=fireopal_credentials, backend_name=backend.name
     )
-    assert(validate_results['results'] == [])
+    assert validate_results['results'] == [], validate_results['results'][0]['error_message']
     result = fireopal.execute(
         circuits=[qasm],
         shot_count=<* $shots *>,
@@ -558,9 +557,8 @@ qc_QiskitCircuit["Validate", opts : OptionsPattern[qiskitInitBackend]]:= Enclose
 import fireopal
 from qiskit import transpile
 circuit = transpile(qc, backend)
-qasm = circuit.qasm()
 fireopal.validate(
-    circuits=[qasm], credentials=fireopal_credentials, backend_name=backend.name
+    circuits=[qc.qasm(), circuit.qasm()], credentials=fireopal_credentials, backend_name=backend.name
 )
 "]
 ]
