@@ -8,7 +8,7 @@ PackageScope["FromCircuitOperatorShorthand"]
 
 
 
-BarrierQ[barrier_] := MatchQ[barrier, "Barrier" | "Barrier"[_ ? orderQ] | "Barrier"[Span[_Integer, _Integer | All]]]
+BarrierQ[barrier_] := MatchQ[barrier, "Barrier" | "Barrier"[_ ? orderQ, ___] | "Barrier"[Span[_Integer, _Integer | All], ___]]
 
 quantumCircuitOperatorQ[QuantumCircuitOperator[data_Association]] /; ! AtomQ[Unevaluated[data]] :=
     QuantumCircuitOperatorQ[QuantumCircuitOperator[data]]

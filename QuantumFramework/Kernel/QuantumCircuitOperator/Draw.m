@@ -632,18 +632,21 @@ drawLabel[label_, height_, pos_, opts : OptionsPattern[]] := With[{vGapSize = Op
 	Text[Style[label, Background -> Transparent, FilterRules[{opts}, Options[Style]], FontFamily -> "Times"], {hGapSize height / 2, - vGapSize (pos - 1 / 2)}]
 ]
 
-Options[drawBarrier] = {"Size" -> .75, "VerticalGapSize" -> 1, "HorizontalGapSize" -> 1, "BarrierStyle" -> Automatic, "ShowExtraQudits" -> False}
-drawBarrier[{vposOut_, vposIn_, hpos_}, OptionsPattern[]] := Block[{
+Options[drawBarrier] = Join[{"Size" -> .75, "VerticalGapSize" -> 1, "HorizontalGapSize" -> 1, "BarrierStyle" -> Automatic, "ShowExtraQudits" -> False, "Label" -> None}, Options[Style]]
+drawBarrier[{vposOut_, vposIn_, hpos_}, opts : OptionsPattern[]] := Block[{
 	vpos = Union[vposOut, vposIn],
 	size = OptionValue["Size"], vGapSize = OptionValue["VerticalGapSize"], hGapSize = OptionValue["HorizontalGapSize"],
 	extraQuditsQ = TrueQ[OptionValue["ShowExtraQudits"]],
+	label = Replace[OptionValue["Label"], None -> ""], labelPos = Top,
 	x, y
 },
-	x = hGapSize First[hpos];
+	Replace[label, Placed[l_, p_] :> (label = l; labelPos = p)];
+	x = hGapSize Max[hpos];
 	y = If[extraQuditsQ, vpos, Select[vpos, Positive]];
 	{
 		Replace[OptionValue["BarrierStyle"], Automatic -> Directive[$DefaultGray, Dashed, Opacity[.8], Thickness[Large]]],
-		Line[Map[{x, #} &, List @@ Interval @@ (vGapSize {- # + 1 / 2, - # - 1 / 2} & /@ y), {2}]]
+		Line[Map[{x, #} &, List @@ Interval @@ (vGapSize {- # + 1 / 2, - # - 1 / 2} & /@ y), {2}]],
+		Text[Style[label, FilterRules[{opts}, Options[Style]]], {x, Replace[labelPos, {Top -> - Min[y] vGapSize + size, Bottom -> - Max[y] vGapSize - size}]}]
 	}
 ]
 
@@ -711,7 +714,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 		MapThread[
 			Which[
 				BarrierQ[#1],
-				drawBarrier[Append[Table[circuitElementPosition[#1, min, max] + min - 1, 2], #3 + 1], "ShowExtraQudits" -> extraQuditsQ, FilterRules[{opts}, Options[drawBarrier]]],
+				drawBarrier[Append[Table[circuitElementPosition[#1, min, max] + min - 1, 2], #3 + 1], "ShowExtraQudits" -> extraQuditsQ, "Label" -> Replace[#1, {"Barrier"[_, label_, ___] :> label, _ -> None}], FilterRules[{opts}, Options[drawBarrier]]],
 				QuantumCircuitOperatorQ[#1],
 				If[ level > 0,
 					Translate[
@@ -757,8 +760,8 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 
 
 circuitElementPosition["Barrier", from_, to_, ___] := Range[to - from + 1]
-circuitElementPosition["Barrier"[order_ ? orderQ], from_, to_, ___] := Select[order, Between[{from, to}]] - from + 1
-circuitElementPosition["Barrier"[span : Span[_Integer, _Integer | All]], from_, to_, ___] := Range @@ (Replace[List @@ span, {x_Integer :> Clip[x, {from ,to}], All -> to}, {1}] - from + 1)
+circuitElementPosition["Barrier"[order_ ? orderQ, ___], from_, to_, ___] := Select[order, Between[{from, to}]] - from + 1
+circuitElementPosition["Barrier"[span : Span[_Integer, _Integer | All], ___], from_, to_, ___] := Range @@ (Replace[List @@ span, {x_Integer :> Clip[x, {from ,to}], All -> to}, {1}] - from + 1)
 circuitElementPosition[order_List, from_, _] := Union[Flatten[order]] - from + 1
 circuitElementPosition[op_, from_, to_] := circuitElementPosition[op["Order"], from, to]
 

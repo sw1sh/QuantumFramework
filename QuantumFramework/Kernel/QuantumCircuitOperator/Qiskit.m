@@ -33,7 +33,7 @@ shortcutToGate = Replace[
         {"PhaseShift", k_} :> {"PhaseGate", N[Sign[k] 2 Pi / 2 ^ Abs[k]]},
         {"C", name_, controls___} :> {"Control", shortcutToGate[name], controls},
         SuperDagger[name_] :> {"Dagger", shortcutToGate[name]},
-        barrier: "Barrier" | "Barrier"[arg_] :> "Barrier",
+        barrier: "Barrier" | "Barrier"[___] :> "Barrier",
         Labeled[arr_ /; ArrayQ[arr] || NumericArrayQ[arr] -> order_, label_] :> If[
             order[[2]] === {},
             With[{state = QuantumOperator[arr, order]["State"]},
