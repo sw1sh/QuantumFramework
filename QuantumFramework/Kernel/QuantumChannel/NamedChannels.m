@@ -31,7 +31,7 @@ quantumChannel[ops_List, order : _ ? orderQ : {1}, basisArgs___] := Enclose @ Wi
                 QuantumBasis[Length[ops] ^ Length[order]],
                 QuantumBasis[QuantumBasis[basis["Output"], basis["Output"]], Length[order]]
             ],
-            "Label" -> basis["Label"]
+            basis["Meta"]
         ],
         {Prepend[order, 0], order}
     ]

@@ -276,3 +276,12 @@ FullSimplify[qmo_QuantumMeasurementOperator, args___] ^:= qmo["FullSimplify", ar
 
 Chop[qmo_QuantumMeasurementOperator, args___] ^:= qmo["Chop", args]
 
+
+(* parameterization *)
+
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[ps : PatternSequence[p : Except[_Association], ___]] /; ! MemberQ[QuantumMeasurementOperator["Properties"], p] && Length[{ps}] <= qmo["ParameterArity"] :=
+    qmo[AssociationThread[Take[qmo["Parameters"], UpTo[Length[{ps}]]], {ps}]]
+
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qmo["Parameters"]] :=
+    QuantumMeasurementOperator[qmo["Operator"][rules], qmo["Targets"]]
+

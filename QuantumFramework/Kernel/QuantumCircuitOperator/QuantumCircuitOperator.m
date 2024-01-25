@@ -192,7 +192,7 @@ Chop[qco_QuantumCircuitOperator, args___] ^:= qco["Chop", args]
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[rules_ ? AssociationQ] :=
     QuantumCircuitOperator[
-        If[BarrierQ[#], #, #[KeyTake[rules, #["Parameters"]]]] & /@ qco["Elements"],
+        If[BarrierQ[#] || #["ParameterArity"] == 0, #, #[KeyTake[rules, #["Parameters"]]]] & /@ qco["Elements"],
         qco["Label"] /. rules
     ] /; ContainsOnly[Keys[rules], qco["Parameters"]]
 

@@ -68,3 +68,12 @@ FullSimplify[qc_QuantumChannel, args___] ^:= qc["FullSimplify", args]
 
 Chop[qc_QuantumChannel, args___] ^:= qc["Chop", args]
 
+
+(* parameterization *)
+
+(qc_QuantumChannel ? QuantumChannelQ)[ps : PatternSequence[p : Except[_Association], ___]] /; ! MemberQ[QuantumChannel["Properties"], p] && Length[{ps}] <= qc["ParameterArity"] :=
+    qc[AssociationThread[Take[qc["Parameters"], UpTo[Length[{ps}]]], {ps}]]
+
+(qc_QuantumChannel ? QuantumChannelQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qc["Parameters"]] :=
+    QuantumChannel[qc["Operator"][rules]]
+
