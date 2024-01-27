@@ -53,9 +53,12 @@ QuantumWignerMICBasis[d : _Integer ? Positive : 2, opts : OptionsPattern[]] := B
     FullSimplify @ QuditBasis @ AssociationThread[
         If[ OddQ[d],
             Table[Subscript["\[ScriptCapitalM]", i], {i, d ^ 2}],
-            Join[
-                Table[Subsuperscript["\[ScriptCapitalM]", i, 1], {i, d}],
-                Table[Subsuperscript["\[ScriptCapitalM]", i, 2], {i, d (d - 1)}]
+            If[ d == 2,
+                Table[Superscript["\[ScriptCapitalM]", i], {i, {"I", "X", "Z", "-Y"}}],
+                Join[
+                    Table[Subsuperscript["\[ScriptCapitalM]", i, 1], {i, d}],
+                    Table[Subsuperscript["\[ScriptCapitalM]", i, 2], {i, d (d - 1)}]
+                ]
             ]
         ],
         Simplify @ dual
