@@ -63,7 +63,6 @@ QuantumCircuitOperator[operators_ ? ListQ, opts : OptionsPattern[]] := With[{lab
     |>]
 ]
 
-QuantumCircuitOperator[operators_, label_, opts : OptionsPattern[]] := QuantumCircuitOperator[operators, "Label" -> label, opts]
 
 QuantumCircuitOperator[op : Except[_ ? QuantumCircuitOperatorQ | _ ? ListQ, _ ? QuantumFrameworkOperatorQ], args___] := QuantumCircuitOperator[{op}, args]
 
@@ -77,6 +76,8 @@ QuantumCircuitOperator[params: Except[{Alternatives @@ $QuantumCircuitOperatorNa
 QuantumCircuitOperator[tn_ ? GraphQ, opts___] := FromTensorNetwork[tn, opts]
 
 QuantumCircuitOperator[arg : Except[_List | _Association]] := QuantumCircuitOperator[{arg}]
+
+QuantumCircuitOperator[operators_, label_, opts : OptionsPattern[]] := QuantumCircuitOperator[operators, "Label" -> label, opts]
 
 QuantumCircuitOperator[] := QuantumCircuitOperator[{}]
 
