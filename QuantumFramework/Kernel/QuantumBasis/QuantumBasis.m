@@ -91,7 +91,7 @@ QuantumBasis[elements : (a_ /; ArrayQ[a, d_ /; d > 1, NumericQ]) | _Association 
     Enclose @ QuantumBasis[<|"Output" -> ConfirmBy[QuditBasis[elements], QuditBasisQ]|>, args]
 
 
-QuantumBasis[names_List, elements_ ? ArrayQ] /; Length[names] == Length[elements] := QuantumBasis[AssociationThread[names, Normal @ elements]]
+QuantumBasis[names : {Except[_Integer] ...}, elements_ ? ArrayQ] /; Length[names] == Length[elements] := QuantumBasis[AssociationThread[names, Normal @ elements]]
 
 QuantumBasis[output : _QuditBasis | _List, input : _QuditBasis | _List, args___] :=
     Enclose @ QuantumBasis["Output" -> ConfirmBy[QuditBasis[output], QuditBasisQ], "Input" -> ConfirmBy[QuditBasis[input], QuditBasisQ]["Dual"], args]
