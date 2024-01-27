@@ -114,7 +114,7 @@ QuantumState[{"RandomPure", subsystemCount_Integer}, dimension : (_Integer ? Pos
 QuantumState["RandomPure", args : PatternSequence[Except[_ ? QuantumBasisQ], ___]] :=  QuantumState["RandomPure", QuantumBasis[args]]
 
 QuantumState["RandomPure", qb_ ? QuantumBasisQ] :=
-    QuantumState[QuantumOperator[{"RandomUnitary", qb}, Range[qb["OutputQudits"]]][], "Label" -> qb["Label"]]
+    QuantumState[QuantumOperator[{"RandomUnitary", qb}, Range[qb["OutputQudits"]]][]]
 
 QuantumState["RandomPure"] := QuantumState["RandomPure", QuantumBasis[]]
 

@@ -91,6 +91,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 	drawControlWires,
 	wireStyle = Replace[OptionValue["WireStyle"], Automatic -> Directive[CapForm[None], $DefaultGray, Opacity[.3]]],
 	wireThickness = If[TrueQ[OptionValue["DimensionWires"]], defaultWireThickness, AbsoluteThickness[1] &],
+	roundingRadius = OptionValue[RoundingRadius],
 	gateFunction, gate
 },
 	vpos = Union[vposOut, vposIn];
@@ -406,9 +407,32 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 		l : SuperDagger[subLabel_] | subLabel_ :> {
 			EdgeForm[If[thickWireQ, Directive[AbsoluteThickness[3], #] &, Identity] @ Replace[subLabel, gateBoundaryStyle]],
 			FaceForm[Replace[subLabel, gateBackgroundStyle]],
-			Rectangle[Sequence @@ corners, Sequence @@ FilterRules[{opts}, Options[Rectangle]]],
-			If[connectorsQ, {FaceForm[Directive[$DefaultGray, Opacity[1]]], Disk[#, size / 32] & /@ Join[{center[[1]] + size / 2, - vGapSize #} & /@ vposOut, {center[[1]] - size / 2, - vGapSize #} & /@ vposIn]}, Nothing],
-			If[gateLabelsQ, Rotate[Text[Style[Replace[l, OptionValue["GateLabels"]], labelStyleOpts], center], rotateLabel], Nothing]
+			Which[
+				Length[vposIn] == 0,
+				Translate[
+					RegionDilation[Triangle[{{center[[1]] + size / 2, - vGapSize Min[vposOut] + size / 2 - roundingRadius}, {center[[1]] + size / 2, - vGapSize Max[vposOut] - size / 2 + roundingRadius}, center + {size / 2 - (size - 2 roundingRadius) Sqrt[3] / 2, 0}}], roundingRadius],
+					{- roundingRadius, 0}
+				],
+				Length[vposOut] == 0,
+				Translate[
+					RegionDilation[Triangle[{{center[[1]] - size / 2, - vGapSize Max[vposIn] - size / 2 + roundingRadius}, {center[[1]] - size / 2, - vGapSize Min[vposIn] + size / 2 - roundingRadius}, center + {- size / 2 + (size - 2 roundingRadius) Sqrt[3] / 2, 0}}], roundingRadius],
+					{roundingRadius, 0}
+				],
+				True,
+				Rectangle[Sequence @@ corners, Sequence @@ FilterRules[{opts}, Options[Rectangle]]]
+			],
+			If[	connectorsQ, {FaceForm[Directive[$DefaultGray, Opacity[1]]], Disk[#, size / 32] & /@ Join[{center[[1]] + size / 2, - vGapSize #} & /@ vposOut, {center[[1]] - size / 2, - vGapSize #} & /@ vposIn]}, Nothing],
+			
+			If[	gateLabelsQ,
+				Rotate[
+					Text[
+						Style[Replace[l, OptionValue["GateLabels"]], labelStyleOpts],
+						Which[Length[vposIn] == 0, center + {size / 2 - (size + roundingRadius) / 2 / Sqrt[3], 0}, Length[vposOut] == 0, center + {- size / 2 + (size + roundingRadius) / 2 / Sqrt[3], 0}, True, center]
+					],
+					rotateLabel
+				],
+				Nothing
+			]
 		}
 	}]];
 	gate = If[gateShapeFunction =!= None,
@@ -694,7 +718,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	inputOrders = Map[If[QuantumChannelQ[#] || QuantumMeasurementOperatorQ[#], #["InputOrder"], Union @@ #["Order"]] &, circuit["Flatten"]["Operators"]];
 	extraQuditsQ = TrueQ[OptionValue["ShowExtraQudits"]] || AnyTrue[inputOrders, NonPositive, 2];
 	showMeasurementWireQ = TrueQ[OptionValue["ShowMeasurementWire"]] && ! extraQuditsQ && circuit["Measurements"] > 0;
-	labelCounter = ReplaceAll[None :> (labelCount++; Subscript["U", labelCount])];
+	labelCounter[label_, {out_, in_}] := label /. None :> (labelCount++; Subscript[If[out === {} || in === {}, "\[Psi]", "U"], labelCount]);
 	outlineMin = Which[showMeasurementWireQ, 1, AnyTrue[order, NonPositive] && extraQuditsQ, min, emptyWiresQ, 1, True, Min[inputOrders, max]];
 	positions = circuitPositions[circuit, level, MatchQ[OptionValue["GateOverlap"], Automatic | True], showMeasurementWireQ || extraQuditsQ];
 	height = Max[0, positions] + 1;
@@ -728,7 +752,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 						],
 						{hGapSize Max[#3[[circuitElementPosition[#1, min, max]]]], 0}
 					],
-					drawGate[#2, {Thread[#1["OutputOrder"] -> #1["OutputDimensions"]], Thread[#1["InputOrder"] -> #1["InputDimensions"]]}, labelCounter @ #1["Label"], FilterRules[{opts}, Options[drawGate]]]
+					drawGate[#2, {Thread[#1["OutputOrder"] -> #1["OutputDimensions"]], Thread[#1["InputOrder"] -> #1["InputDimensions"]]}, labelCounter[#1["Label"], #1["Order"]], FilterRules[{opts}, Options[drawGate]]]
 				],
 				QuantumMeasurementOperatorQ[#1] || QuantumMeasurementQ[#1],
 				drawMeasurement[#2, #1["Eigendimensions"], max, "ShowMeasurementWire" -> showMeasurementWireQ, "ShowExtraQudits" -> extraQuditsQ, "ThickWire" -> #["MatrixQ"], "Label" -> #1["Label"], FilterRules[{opts}, Options[drawMeasurement]]],
@@ -741,7 +765,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 				drawGate[
 					If[#2 === {{}, {}, {}}, {{scalarPos}, {scalarPos++}, {- hGapSize / 2}}, #2],
 					{Thread[#1["OutputOrder"] -> #1["OutputDimensions"]], Thread[#1["InputOrder"] -> #1["InputDimensions"]]},
-					labelCounter @ #1["Label"],
+					labelCounter[#1["Label"], #1["Order"]],
 					"ThickWire" -> #["MatrixQ"],
 					FilterRules[{opts}, Options[drawGate]]
 				]
