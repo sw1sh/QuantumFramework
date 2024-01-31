@@ -278,7 +278,7 @@ QuantumCircuitHypergraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]]
 	vs = Developer`FromPackedArray @ VertexList[net];
 	indices = TensorNetworkIndices[net];
 	labels = AnnotationValue[{net, vs}, VertexLabels];
-	edges = Replace[indices, Rule @@@ EdgeTags[net], {2}];
+	edges = Replace[indices, Rule @@@ Reverse /@ EdgeTags[net], {2}];
 	H`Hypergraph[Union @@ edges, edges, FilterRules[{opts}, Options[H`Hypergraph]], EdgeLabels -> Thread[edges -> labels]]
 ]
 
@@ -325,7 +325,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     res = With[{basis = circuit["Basis"]},
         QuantumState[
             SparseArrayFlatten[res],
-            QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
+            QuantumBasis[QuditBasis[basis["OutputDimensions"]], QuditBasis[basis["InputDimensions"]]]
         ]
     ];
     If[ traceOrder =!= {},

@@ -66,7 +66,7 @@ QuantumCircuitOperator[operators_ ? ListQ, opts : OptionsPattern[]] := With[{lab
 
 QuantumCircuitOperator[op : Except[_ ? QuantumCircuitOperatorQ | _ ? ListQ, _ ? QuantumFrameworkOperatorQ], args___] := QuantumCircuitOperator[{op}, args]
 
-QuantumCircuitOperator[op_ ? QuantumCircuitOperatorQ, args__] := QuantumCircuitOperator[op["Elements"], args]
+QuantumCircuitOperator[op_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]] := QuantumCircuitOperator[op["Elements"], opts, "Label" -> op["Label"]]
 
 QuantumCircuitOperator[qco_ ? QuantumCircuitOperatorQ | {qco_ ? QuantumCircuitOperatorQ}] := qco
 
@@ -89,7 +89,7 @@ QuantumCircuitOperator[] := QuantumCircuitOperator[{}]
 
 Options[quantumCircuitApply] = {Method -> Automatic}
 
-quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[]] /; qco["InputDimensions"] == qs["OutputDimensions"] := Replace[
+quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[]] /; qco["InputDimensions"] == qs["OutputDimensions"][[qco["InputOrder"] - qco["Min"] + 1]] := Replace[
     OptionValue[Method],
     {
         "Schrodinger" | "Schroedinger" | "Schrödinger" :> Fold[ReverseApplied[Construct], qs, qco["Operators"]],
@@ -109,7 +109,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qs_QuantumState ? QuantumStateQ, opts : OptionsPattern[quantumCircuitApply]] :=
     quantumCircuitApply[
-        qco /* QuantumCircuitOperator["I" -> # & /@ Union[qco["FreeOrder"], Complement[Range[qs["OutputQudits"]], qco["InputOrder"]]]],
+        qco /* QuantumCircuitOperator[MapThread["I"[#1] -> #2 &, {qs["OutputDimensions"][[#]], #}] & @ Union[qco["FreeOrder"], Complement[Range[qs["OutputQudits"]], qco["InputOrder"]]]],
         If[# === {}, qs, QuantumTensorProduct[qs, QuantumState[{"Register", #}]]] & @
             ConstantArray[2, Max[0, Length[qco["FullInputOrder"]] - qs["OutputQudits"]]],
         opts

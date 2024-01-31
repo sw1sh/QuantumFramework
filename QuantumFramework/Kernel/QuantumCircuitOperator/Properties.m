@@ -3,7 +3,7 @@ Package["Wolfram`QuantumFramework`"]
 
 
 $QuantumCircuitOperatorProperties = {
-    "Operators", "Diagram", "OperatorCount", "Orders", "CircuitOperator", "QiskitCircuit", "Label",
+    "Association", "Operators", "Diagram", "OperatorCount", "Orders", "CircuitOperator", "QiskitCircuit", "Label",
     "Depth", "Arity", "Width", "TensorNetwork", "Topology"
 };
 
@@ -24,13 +24,15 @@ QuantumCircuitOperator::undefprop = "property `` is undefined for this circuit";
 (qds_QuantumCircuitOperator[prop_ ? propQ, args___]) /; QuantumCircuitOperatorQ[qds] := With[{
     result = QuantumCircuitOperatorProp[qds, prop, args]
 },
-    If[ TrueQ[$QuantumFrameworkPropCache] && ! MemberQ[{"Elements", "Diagram", "Icon", "Qiskit", "QiskitCircuit", "QuantumOperator"}, propName[prop]],
+    If[ TrueQ[$QuantumFrameworkPropCache] && ! MemberQ[{"Association", "Elements", "Diagram", "Icon", "Qiskit", "QiskitCircuit", "QuantumOperator"}, propName[prop]],
         QuantumCircuitOperatorProp[qds, prop, args] = result,
         result
     ] /; !MatchQ[Unevaluated @ result, _QuantumCircuitOperatorProp] || Message[QuantumCircuitOperator::undefprop, prop]
 ]
 
 QuantumCircuitOperatorProp[QuantumCircuitOperator[data_Association], key_String] /; KeyExistsQ[data, key] := data[key]
+
+QuantumCircuitOperatorProp[QuantumCircuitOperator[data_Association], "Association"] := data
 
 QuantumCircuitOperatorProp[qco_, "FullElements"] := Replace[qco["Elements"], {} :> {QuantumOperator["I"]}]
 
