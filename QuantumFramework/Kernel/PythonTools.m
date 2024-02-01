@@ -6,7 +6,7 @@ PackageScope["PythonEvaluate"]
 
 
 
-$PythonPackages = {"wolframclient", "qiskit", "matplotlib", "pylatexenc", "qiskit-ibm-provider", "qiskit-braket-provider", "fire-opal"}
+$PythonPackages = {"wolframclient", "qiskit", "matplotlib", "pylatexenc", "qiskit-ibm-provider", "qiskit-braket-provider", "fire-opal", "pyzx"}
 
 $PythonSession := SelectFirst[
     ExternalSessions["Python"],

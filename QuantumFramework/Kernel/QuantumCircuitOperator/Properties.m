@@ -311,6 +311,8 @@ QuantumCircuitOperatorProp[qco_, "TensorNetwork", opts : OptionsPattern[QuantumT
 
 QuantumCircuitOperatorProp[qco_, "Hypergraph", opts : OptionsPattern[QuantumCircuitHypergraph]] := QuantumCircuitHypergraph[qco, opts]
 
+QuantumCircuitOperatorProp[qco_, "ZXTensorNetwork", opts : OptionsPattern[ZXTensorNetwork]] := ZXTensorNetwork[qco, opts]
+
 
 QuantumCircuitOperatorProp[qco_, "QASM"] :=
     Enclose[StringTemplate["OPENQASM 3.0;\nqubit[``] q;\nbit[``] c;\n"][qco["Arity"], qco["TargetCount"]] <>
