@@ -257,6 +257,14 @@ FullSimplify[qm_QuantumMeasurement, args___] ^:= qm["FullSimplify", args]
 Chop[qm_QuantumMeasurement, args___] ^:= qm["Chop", args]
 
 
+(* parameterization *)
+
+(qm_QuantumMeasurement ? QuantumMeasurementQ)[ps : PatternSequence[p : Except[_Association], ___]] /; ! MemberQ[QuantumMeasuremen["Properties"], p] && Length[{ps}] <= qm["ParameterArity"] :=
+    qm[AssociationThread[Take[qm["Parameters"], UpTo[Length[{ps}]]], {ps}]]
+
+(qm_QuantumMeasurement ? QuantumMeasurementQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qm["Parameters"]] :=
+    QuantumMeasurement[qm["QuantumOperator"][rules]]
+
 
 (* formatting *)
 
@@ -296,6 +304,10 @@ QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement ? QuantumMeasurementQ, for
         {
             {
                 BoxForm`SummaryItem[{"Entropy: ", TimeConstrained[Enclose[ConfirmQuiet[N @ qm["Entropy"]], Indeterminate &], 1]}]
+            },
+            {
+                BoxForm`SummaryItem[{"ParameterArity: ", qm["ParameterArity"]}],
+                BoxForm`SummaryItem[{"Parameters: ", qm["Parameters"]}]
             }
         },
         format,

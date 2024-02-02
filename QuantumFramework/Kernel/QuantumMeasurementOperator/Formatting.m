@@ -41,6 +41,10 @@ QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; Quantu
                 BoxForm`SummaryItem[{"Dimensions: ",
                     Row[{qmo["InputDimensions"], "\[RightArrow]", qmo["OutputDimensions"]}]}
                 ]
+            },
+            {
+                BoxForm`SummaryItem[{"ParameterArity: ", qmo["ParameterArity"]}],
+                BoxForm`SummaryItem[{"Parameters: ", qmo["Parameters"]}]
             }
         },
         format,
