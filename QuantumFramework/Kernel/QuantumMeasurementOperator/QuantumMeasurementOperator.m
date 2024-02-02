@@ -28,7 +28,10 @@ QuantumMeasurementOperator[arg_ -> eigenvalues_ ? VectorQ, args___] :=
 
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? targetQ] := QuantumMeasurementOperator[qo, {target}]
 
-QuantumMeasurementOperator[target : (_ ? targetsQ | _ ? targetQ), args___] := QuantumMeasurementOperator[QuantumBasis[args], target]
+QuantumMeasurementOperator[target : _Integer | {___Integer}, args___] := If[MatchQ[target, (_ ? targetsQ | _ ? targetQ)],
+    QuantumMeasurementOperator[QuantumBasis[args], target],
+    Failure["BadTarget", <|"MessageTemplate" -> "Measurement target should only contain positive integers."|>]
+]
 
 QuantumMeasurementOperator[target_ -> arg_, opts___] := QuantumMeasurementOperator[QuantumBasis[arg], target, opts]
 

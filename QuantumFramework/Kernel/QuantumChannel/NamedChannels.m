@@ -24,6 +24,7 @@ quantumChannel[qo_ ? QuantumOperatorQ] := Enclose @ QuantumChannel @
 quantumChannel[ops_List, order : _ ? orderQ : {1}, basisArgs___] := Enclose @ With[{
     basis = QuantumBasis[basisArgs]
 },
+    ConfirmAssert[AllTrue[order, Positive], "Channel input order should only contain positive integers."];
     quantumChannel @ Confirm @ QuantumOperator[
         QuantumState[
             Flatten[kroneckerProduct @@@ Tuples[ops, Length[order]]],

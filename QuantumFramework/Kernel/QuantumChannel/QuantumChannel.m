@@ -7,7 +7,7 @@ PackageScope["QuantumChannelQ"]
 
 
 QuantumChannelQ[QuantumChannel[qo_]] := QuantumOperatorQ[qo] &&
-    qo["OutputQudits"] - qo["InputQudits"] >= 0
+    qo["OutputQudits"] - qo["InputQudits"] >= 0 && AllTrue[Join[qo["InputOrder"], Drop[qo["OutputOrder"], qo["OutputQudits"] - qo["InputQudits"]]], Positive]
 
 QuantumChannelQ[___] := False
 
