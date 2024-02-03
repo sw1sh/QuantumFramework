@@ -317,6 +317,7 @@ qiskitInitBackend[qc_QiskitCircuit, OptionsPattern[]] := Enclose @ Block[{
     {provider, params} = Replace[OptionValue["Provider"], {
         {name_, params : OptionsPattern[]} | name_ :> {name, Flatten[{params}]}
     }];
+    If[provider === None && $fireOpal, provider = "IBMProvider"];
 
     If[ MatchQ[provider, "IBMQ" | "IBMProvider"],
         $token = Lookup[
@@ -394,17 +395,18 @@ if <* $fireOpal *>:
     if isinstance(provider, IBMProvider):
         fireopal_credentials = make_credentials_for_ibmq(provider._account.token, 'open', 'ibm-q', 'main')
     else:
-        raise ValueError('Unsupported FireOpal provider')
+        raise ValueError(f'Unsupported FireOpal provider: {provider}')
 "
     ]
 ]
 
-Options[qiskitApply] = Join[{"Shots" -> 1024}, Options[qiskitInitBackend]]
+Options[qiskitApply] = Join[{"Shots" -> 1024, "Validate" -> False}, Options[qiskitInitBackend]]
 
 qiskitApply[qc_QiskitCircuit, qs_QuantumState, opts : OptionsPattern[]] := Enclose @ Block[{
     $state = If[qs["Dimension"] == 1, Null, NumericArray @ N @ qs["Reverse"]["StateVector"]],
     $shots = OptionValue["Shots"],
     $fireOpal = TrueQ[OptionValue["FireOpal"]],
+    $validate = TrueQ[OptionValue["Validate"]],
     result
 },
     ConfirmAssert[qs["InputDimensions"] == {}];
@@ -435,14 +437,15 @@ except:
 if <* $fireOpal *>:
     import fireopal
     qasm = circuit.qasm()
-    validate_results = fireopal.validate(
-        circuits=[qasm], credentials=fireopal_credentials, backend_name=backend.name
-    )
-    assert validate_results['results'] == [], validate_results['results'][0]['error_message']
+    if <* $validate *>:
+        validate_results = fireopal.validate(
+            circuits=[qasm], credentials=fireopal_credentials, backend_name=backend.name
+        )
+        assert validate_results['results'] == [], validate_results['results'][0]['error_message']
     result = fireopal.execute(
         circuits=[qasm],
         shot_count=<* $shots *>,
-        credentials=credentials,
+        credentials=fireopal_credentials,
         backend_name=backend.name,
     )['results'][0]
     result = {k[::-1]: v for k, v in result.items()}
