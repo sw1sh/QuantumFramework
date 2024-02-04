@@ -198,5 +198,5 @@ Chop[qco_QuantumCircuitOperator, args___] ^:= qco["Chop", args]
     ] /; ContainsOnly[Keys[rules], qco["Parameters"]]
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[parameters : PatternSequence[p : Except[_Association], ___]] /; ! MemberQ[QuantumCircuitOperator["Properties"], p] /; Length[{parameters}] <= Length[qco["Parameters"]] :=
-    qco[AssociationThread[Take[qco["Parameters"], UpTo[Length[{parameters}]]], parameters]]
+    qco[AssociationThread[Take[qco["Parameters"], UpTo[Length[{parameters}]]], {parameters}]]
 
