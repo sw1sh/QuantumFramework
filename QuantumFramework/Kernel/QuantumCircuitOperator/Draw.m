@@ -720,7 +720,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	showMeasurementWireQ = TrueQ[OptionValue["ShowMeasurementWire"]] && ! extraQuditsQ && circuit["Measurements"] > 0;
 	labelCounter[label_, {out_, in_}] := label /. None :> (labelCount++; Subscript[If[out === {} || in === {}, "\[Psi]", "U"], labelCount]);
 	outlineMin = Which[showMeasurementWireQ, 1, AnyTrue[order, NonPositive] && extraQuditsQ, min, emptyWiresQ, 1, True, Min[inputOrders, max]];
-	positions = circuitPositions[circuit, level, MatchQ[OptionValue["GateOverlap"], Automatic | True], showMeasurementWireQ || extraQuditsQ];
+	positions = circuitPositions[circuit, level, MatchQ[OptionValue["GateOverlap"], Automatic | True], showMeasurementWireQ, extraQuditsQ];
 	height = Max[0, positions] + 1;
 	wires = circuitWires[circuit];
 	If[ ! emptyWiresQ,
@@ -790,7 +790,7 @@ circuitElementPosition[order_List, from_, _] := Union[Flatten[order]] - from + 1
 circuitElementPosition[op_, from_, to_] := circuitElementPosition[op["Order"], from, to]
 
 
-circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, defaultOverlapQ : True | False : False, showExtraQuditsQ : True | False : True] := With[{
+circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, defaultOverlapQ : True | False : False, showMeasurementWireQ : True | False : True, showExtraQuditsQ : True | False : True] := With[{
 	min = Min[1, circuit["Min"]],
 	max = circuit["Max"],
 	width = circuit["Width"]
@@ -810,7 +810,9 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, defaultOverl
 			fullPos = Which[
 				QuantumCircuitOperatorQ[op],
 				Range @@ MinMax[Select[pos, # + min - 1 > 0 &]],
-				(QuantumMeasurementOperatorQ[op] || QuantumChannelQ[op]) && ! showExtraQuditsQ,
+				QuantumChannelQ[op] && ! showExtraQuditsQ,
+				Rest[pos],
+				QuantumMeasurementOperatorQ[op] && ! showMeasurementWireQ && ! showExtraQuditsQ,
 				pos,
 				True,
 				Range @@ MinMax[pos]
@@ -819,7 +821,7 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, defaultOverl
 			overlapShift = Function[x, If[overlapQ, 0, NestWhile[# + 1 &, 0, ContainsAny[Lookup[ranges, x + #, {}], fullPos] &]]];
 			shift = If[
 				level > 0 && QuantumCircuitOperatorQ[op],
-				ReplacePart[ConstantArray[0, width], Thread[pos -> Max[Replace[circuitPositions[op, level - 1, defaultOverlapQ, False], {{___, {_, o_}} :> o, _ -> 0}]]]],
+				ReplacePart[ConstantArray[0, width], Thread[pos -> Max[Replace[circuitPositions[op, level - 1, defaultOverlapQ, False, False], {{___, {_, o_}} :> o, _ -> 0}]]]],
 				ReplacePart[ConstantArray[0, width], Thread[pos -> 1]]
 			];
 			{
