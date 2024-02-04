@@ -705,10 +705,12 @@ QuantumPartialTrace[
 ]]
 
 
-QuantumOperator["Discard" | {"Discard", args___}, order : _ ? orderQ : {1}] := QuantumOperator[{"Spider", QuantumBasis[args]},
+QuantumOperator[{"Discard", args___}, order : _ ? orderQ : {1}] := QuantumOperator[{"Spider", QuantumBasis[args]},
     order -> {},
     "Label" -> "Discard"
 ]
+
+QuantumOperator["Discard", args___] := QuantumOperator[{"Discard", 4}, args]
 
 
 QuantumOperator["HeisenbergWeyl", opts___] := QuantumOperartor[{"HeisenbergWeyl", 2}, opts]
