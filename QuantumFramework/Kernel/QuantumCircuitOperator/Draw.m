@@ -14,13 +14,13 @@ $GateDefaultBoundaryStyle = {
 	Subscript["R", _][_] -> RGBColor[0.528488, 0.470624, 0.701351],
 	"Measurement" -> RGBColor[0.7367, 0.358, 0.5030],
 	"Channel" -> Directive[Dotted, $DefaultGray],
-	"ZSpider" | "XSpider" | "Spider" -> Directive[CapForm[None], $DefaultGray, Opacity[.3]],
+	"ZSpider" | "XSpider" | "Spider" | "Measure" | "Encode" | "Copy" -> Directive[CapForm[None], $DefaultGray, Opacity[.3]],
 	_ -> $DefaultGray
 };
 
 $GateDefaultBackgroundStyle = Join[
 	{
-		"ZSpider" -> White, "XSpider" ->LightGray, "Spider" -> Directive[Opacity[.1], $DefaultGray],
+		"ZSpider" -> White, "XSpider" ->LightGray, "Spider" | "Measure" | "Encode" | "Copy" -> Directive[Opacity[.1], $DefaultGray],
 		"Channel" -> Directive[$DefaultGray, Opacity[.25]]
 	},
 	MapAt[Directive[#, Opacity[0.3]] &, Most[$GateDefaultBoundaryStyle], {All, 2}],
@@ -220,11 +220,11 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			Map[{wireThickness[Replace[#, inDims]], Line[{{center[[1]] - size / 2, - # vGapSize}, {center[[1]] + size / 2, - vposOut[[1]] vGapSize}}]} &, vposIn]
 		},
 
-		(type : "ZSpider" | "XSpider" | "Spider")[phase_] :> Block[{center = If[AnyTrue[- Complement[Range @@ MinMax[vpos], vpos] vGapSize, # == center[[2]] &], center + {0, size / 2}, center]}, {
+		(type : "ZSpider" | "XSpider" | "Spider")[phase_] | (type : "Measure" | "Encode" | "Copy") :> Block[{center = If[AnyTrue[- Complement[Range @@ MinMax[vpos], vpos] vGapSize, # == center[[2]] &], center + {0, size / 2}, center]}, {
 			FaceForm[Replace[type, gateBackgroundStyle]],
 			EdgeForm[Directive[wireThickness[Max[Values[inDims], Values[outDims]]], Replace[type, gateBoundaryStyle]]],
 			Disk[center, size / 5],
-			If[	phase === 0,
+			If[	{phase} === {} || phase === 0,
 				Nothing,
 				Text[Style[phase, labelStyleOpts], center]
 			],
