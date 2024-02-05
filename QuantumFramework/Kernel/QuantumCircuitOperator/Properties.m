@@ -308,10 +308,10 @@ QuantumCircuitOperatorProp[qco_, "Bend"] := QuantumCircuitOperator[
     qco["Label"]
 ]
 
-QuantumCircuitOperatorProp[qco_, "DiscardExtra"] := QuantumCircuitOperator @ Prepend[
+QuantumCircuitOperatorProp[qco_, "DiscardExtraQudits"] := QuantumCircuitOperator @ Prepend[
 	qco["Association"],
 	"Elements" -> Replace[qco["NormalElements"], {
-			qc_QuantumCircuitOperator :> qc["DiscardExtra"],
+			qc_QuantumCircuitOperator :> qc["DiscardExtraQudits"],
 			qc_QuantumChannel :> QuantumChannel[Fold[#2[#1] &, qc, MapThread[QuantumOperator["Discard"[#1], {#2}] &, {qc["TraceDimensions"], qc["TraceOrder"]}]], "Label" -> qc["Label"]],
 			qm_QuantumMeasurementOperator :> QuantumOperator[
 				Fold[#2[#1] &, qm,
