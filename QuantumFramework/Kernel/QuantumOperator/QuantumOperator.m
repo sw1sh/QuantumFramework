@@ -287,7 +287,7 @@ QuantumOperator[qo_ ? QuantumOperatorQ, order : _ ? autoOrderQ, qb_ ? QuantumBas
 Enclose @ Block[{
     newBasis
 },
-    If[qo["Basis"] == qb && qo["Order"] === order, Return[qo]];
+    If[qo["Basis"] == qb && qo["Order"] === order, Return[QuantumOperator[QuantumState[qo["State"]["State"], qb], order]]];
 
     newBasis = If[
         qb["InputDimension"] == 1 && qo["InputDimension"] > 1,
