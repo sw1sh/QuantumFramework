@@ -81,6 +81,8 @@ QuantumChannelProp[qc_, "Bend", autoShift : _Integer ? Positive : Automatic] := 
     ]
 ]
 
+QuantumChannelProp[qc_, "DiscardExtraQudits"] := QuantumChannel[Fold[#2[#1] &, qc, MapThread[QuantumOperator["Discard"[#1], {#2}] &, {qc["TraceDimensions"], qc["TraceOrder"]}]], "Label" -> qc["Label"]]
+
 
 QuantumChannelProp[qc_, "CircuitDiagram", opts___] :=
     QuantumCircuitOperator[qc]["Diagram", opts]

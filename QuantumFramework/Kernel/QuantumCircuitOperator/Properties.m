@@ -21,7 +21,7 @@ qds_QuantumCircuitOperator["ValidQ"] := QuantumCircuitOperatorQ[qds]
 
 QuantumCircuitOperator::undefprop = "property `` is undefined for this circuit";
 
-$QuantumCircuitPreventCache = {"Association", "Elements", "Diagram", "Icon", "Qiskit", "QiskitCircuit", "QuantumOperator", "Double", "Bend", "DiscardExtra"}
+$QuantumCircuitPreventCache = {"Association", "Elements", "Diagram", "Icon", "Qiskit", "QiskitCircuit", "QuantumOperator", "Double", "Bend", "DiscardExtraQudits"}
 
 (qds_QuantumCircuitOperator[prop_ ? propQ, args___]) /; QuantumCircuitOperatorQ[qds] := With[{
     result = QuantumCircuitOperatorProp[qds, prop, args]
@@ -310,24 +310,7 @@ QuantumCircuitOperatorProp[qco_, "Bend"] := QuantumCircuitOperator[
 
 QuantumCircuitOperatorProp[qco_, "DiscardExtraQudits"] := QuantumCircuitOperator @ Prepend[
 	qco["Association"],
-	"Elements" -> Replace[qco["NormalElements"], {
-			qc_QuantumCircuitOperator :> qc["DiscardExtraQudits"],
-			qc_QuantumChannel :> QuantumChannel[Fold[#2[#1] &, qc, MapThread[QuantumOperator["Discard"[#1], {#2}] &, {qc["TraceDimensions"], qc["TraceOrder"]}]], "Label" -> qc["Label"]],
-			qm_QuantumMeasurementOperator :> QuantumOperator[
-				Fold[#2[#1] &, qm,
-					With[{pauli = FirstCase[qm["Label"], "X" | "Y" | "Z" | "I", "I", All]}, Join[
-						MapThread[QuantumOperator["Marginal"[pauli[#1]], {#2}] &, {qm["TargetDimensions"], qm["TargetOrder"]}],
-						MapThread[
-                            If[IntegerQ[#1], QuantumOperator["Measure"[pauli[#1]], {#2}], Nothing] &,
-                            {Sqrt @ qm["Eigendimensions"], qm["Eigenorder"]}
-                        ]
-					]]],
-				qm["InputOrder"] -> qm["TargetOrder"],
-				"Label" -> "Measurement"[qm["Label"]]
-			]
-		},
-		{1}
-	]
+	"Elements" -> Replace[qco["NormalElements"], q : _QuantumMeasurementOperator | _QuantumChannel :> q["DiscardExtraQudits"], {1}]
 ]
 
 

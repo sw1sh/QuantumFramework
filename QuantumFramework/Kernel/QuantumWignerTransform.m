@@ -63,22 +63,7 @@ QuantumWignerTransform[qo_ ? QuantumOperatorQ, opts : OptionsPattern[]] :=
 QuantumWignerTransform[qc_ ? QuantumChannelQ, opts : OptionsPattern[]] :=
     Enclose @ QuantumChannel[ConfirmBy[QuantumWignerTransform[qc["QuantumOperator"], opts], QuantumOperatorQ]]
 
-QuantumWignerTransform[qmo_ ? QuantumMeasurementOperatorQ, opts : OptionsPattern[]] := QuantumMeasurementOperator[
-    QuantumTensorProduct[MapThread[{tds, tos, ed, eo} |-> 
-        QuantumOperator[
-            QuantumOperator["I"[{ed}, tds] -> #["OutputOrder"][[;; ;; 2]] -> eo]["ReverseInput"][#] & @
-                QuantumTensorProduct[
-                    With[{basis = QuantumWignerTransform[QuditBasis[#1], opts]},
-                        QuantumOperator["Spider"[QuantumBasis[{#1, #1 ^ 2}, {#1 ^ 2}]], QuantumBasis[QuantumTensorProduct[{QuditBasis[#1], basis}], basis]]
-                    ] & /@ tds
-                ],
-            {Prepend[eo][tos], tos}
-        ],
-        {TakeList[qmo["TargetDimensions"], Length /@ qmo["Targets"]], TakeList[qmo["TargetOrder"], Length /@ qmo["Targets"]], qmo["Eigendimensions"], qmo["Eigenorder"]}
-    ]],
-    qmo["Targets"],
-    "Label" -> "Wigner"
-]
+QuantumWignerTransform[qmo_ ? QuantumMeasurementOperatorQ, opts: OptionsPattern[]] := QuantumMeasurementOperator[qmo["Double"], QuantumWignerTransform[qmo["Basis"], opts]]
 
 QuantumWignerTransform[qco_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]] :=
     Enclose @ QuantumCircuitOperator[If[BarrierQ[#], #, Confirm @ QuantumWignerTransform[#, opts]] & /@ qco["Elements"], qco["Label"]]

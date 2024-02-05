@@ -272,6 +272,24 @@ QuantumMeasurementOperatorProp[qmo_, prop : "Conjugate" | "Dual" | "Unbend"] :=
     QuantumMeasurementOperator[qmo["SuperOperator"][prop], qmo["Target"]]
 
 
+QuantumMeasurementOperatorProp[qmo_, "DiscardExtraQudits"] := QuantumOperator[
+    Fold[
+        #2[#1] &,
+        qmo,
+        (* TODO: figure out general scheme without relying on labels *)
+        With[{pauli = FirstCase[qmo["Label"], "X" | "Y" | "Z" | "I", "I", All]}, Join[
+            MapThread[QuantumOperator["Marginal"[pauli[#1]], {#2}] &, {qmo["TargetDimensions"], qmo["TargetOrder"]}],
+            MapThread[
+                If[IntegerQ[#1], QuantumOperator["Measure"[pauli[#1]], {#2}], Nothing] &,
+                {Sqrt @ qmo["Eigendimensions"], qmo["Eigenorder"]}
+            ]
+        ]]
+    ],
+    qmo["InputOrder"] -> qmo["TargetOrder"],
+    "Label" -> "Measurement"[qmo["Label"]]
+]
+
+
 QuantumMeasurementOperatorProp[qmo_, "CircuitDiagram", opts___] :=
     QuantumCircuitOperator[qmo]["Diagram", opts]
 
