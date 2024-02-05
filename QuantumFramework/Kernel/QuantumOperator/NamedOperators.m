@@ -618,15 +618,15 @@ QuantumOperator[{name : "XSpider" | "YSpider" | "ZSpider", phase_ : 0},
 
 QuantumOperator["Spider", opts___] := QuantumOperator[{"Spider", QuantumBasis[QuditBasis[2], QuditBasis[2]]}, opts]
 
-QuantumOperator[{"Spider", args_, phase_ : 0}, opts___] := QuantumOperator[{"Spider", QuantumBasis[args], phase}, opts]
+QuantumOperator[{"Spider", args_, phase_ : 0}, opts___] := Enclose @ QuantumOperator[{"Spider", Confirm @ QuantumBasis[args], phase}, opts]
 
-QuantumOperator[{"Spider", basis_ ? QuantumBasisQ, phase_ : 0}, opts___] := Block[{
+QuantumOperator[{"Spider", basis_ ? QuantumBasisQ, phase_ : 0}, opts___] := Enclose @ Block[{
     phases, dims = Catenate[Table @@@ Catenate[FactorInteger[#] & /@ basis["Dimensions"]]], dim
 },
     dim = Max[dims, 1];
     phases = Prepend[0] @ PadRight[Flatten[{phase}], dim - 1];
     QuantumOperator[
-        QuantumState[
+        Confirm @ QuantumState[
             If[ dim <= 1,
                 {Exp[I First[phases, 0]]},
                 SparseArrayFlatten @ SparseArray[Thread[Transpose[PadRight[Range[#], dim, #] & /@ dims] -> Exp[I phases]], dims]

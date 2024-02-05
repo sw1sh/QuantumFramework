@@ -115,7 +115,7 @@ QuditBasisProp[qb_, "Elements" | "ReducedElements"] /; qb["ComputationalQ"] := W
     ]
 ]
 
-QuditBasisProp[qb_, "Elements"] := If[qb["Size"] > 0,
+QuditBasisProp[qb_, "Elements"] := If[qb["Size"] > 0 && qb["ElementDimension"] > 0,
     ArrayReshape[
         Transpose[
             Outer[Times,
@@ -130,7 +130,7 @@ QuditBasisProp[qb_, "Elements"] := If[qb["Size"] > 0,
     {}
 ]
 
-QuditBasisProp[qb_, "ReducedElements"] := If[qb["Size"] > 0,
+QuditBasisProp[qb_, "ReducedElements"] := If[qb["Size"] > 0 && qb["ElementDimension"] > 0,
     ArrayReshape[
         Transpose[
             Outer[Times,

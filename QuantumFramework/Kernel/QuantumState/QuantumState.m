@@ -113,30 +113,38 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; ! newBasis["Sort
 QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Basis"] == newBasis || qs["ComputationalQ"] && newBasis["ComputationalQ"] := QuantumState[qs["State"], newBasis]
 
 QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Dimension"] == newBasis["Dimension"] :=
-    Which[
+    Enclose[Which[
         qs["Dimension"] == 0,
         QuantumState[qs["State"], newBasis],
         qs["VectorQ"],
         QuantumState[
-            SparseArrayFlatten @ Dot[
-                SparsePseudoInverse[newBasis["Output"]["ReducedMatrix"]],
-                qs["Output"]["ReducedMatrix"] . qs["StateMatrix"] . SparsePseudoInverse[qs["Input"]["ReducedMatrix"]],
-                newBasis["Input"]["ReducedMatrix"]
+            SparseArrayFlatten @ ConfirmQuiet[
+                Dot[
+                    SparsePseudoInverse[newBasis["Output"]["ReducedMatrix"]],
+                    qs["Output"]["ReducedMatrix"] . qs["StateMatrix"] . SparsePseudoInverse[qs["Input"]["ReducedMatrix"]],
+                    newBasis["Input"]["ReducedMatrix"]
+                ],
+                Dot::dotsh
             ],
             newBasis
         ],
         qs["MatrixQ"],
         QuantumState[
-            Dot[
-                SparsePseudoInverse[newBasis["ReducedMatrix"]],
-                qs["Basis"]["ReducedMatrix"] . qs["DensityMatrix"] . SparsePseudoInverse[qs["Basis"]["ReducedMatrix"]],
-                newBasis["ReducedMatrix"]
+            ConfirmQuiet[
+                Dot[
+                    SparsePseudoInverse[newBasis["ReducedMatrix"]],
+                    qs["Basis"]["ReducedMatrix"] . qs["DensityMatrix"] . SparsePseudoInverse[qs["Basis"]["ReducedMatrix"]],
+                    newBasis["ReducedMatrix"]
+                ],
+                Dot::dotsh
             ],
             newBasis
         ],
         True,
         $Failed
-    ]
+    ],
+    (ReleaseHold[#["HeldMessageCall"]]; Throw[$Failed]) &
+]
 
 QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] := Switch[
     qs["StateType"],
