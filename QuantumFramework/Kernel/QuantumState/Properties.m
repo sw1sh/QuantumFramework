@@ -690,11 +690,7 @@ QuantumStateProp[qs_, "Trace", qudits : {_Integer...}] := QuantumPartialTrace[qs
 QuantumStateProp[qs_, "Discard", qudits : {_Integer...}] /; ContainsOnly[qudits, Range[qs["OutputQudits"]]] :=
     QuantumOperator["Discard", qudits, qs["OutputDimensions"][[qudits]]][qs]
 
-QuantumStateProp[qs_, "Dual"] := QuantumState[qs["State"], qs["Basis"]["Dual"]]
-
-QuantumStateProp[qs_, "Conjugate"] := QuantumState[Conjugate[qs["State"]], qs["Basis"]]
-
-QuantumStateProp[qs_, "Dual" | "Conjugate", args__] := QuantumState[qs["State"], qs["Basis"]["Conjugate", args]]
+QuantumStateProp[qs_, prop : "Dual" | "Conjugate", args___] := QuantumState[Conjugate[qs["State"]], qs["Basis"][prop, args]]
 
 QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := QuantumState[qs["Conjugate"]["Transpose"], "Label" -> simplifyLabel[SuperDagger[qs["Label"]]]]
 
