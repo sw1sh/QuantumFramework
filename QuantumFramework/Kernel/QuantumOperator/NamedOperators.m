@@ -23,10 +23,9 @@ $QuantumOperatorNames = {
     "Toffoli", "Deutsch",
     "RandomUnitary", "RandomHermitian",
     "Spider", "ZSpider", "XSpider", "WSpider",
-    "Measure", "Encode", "Copy",
+    "Measure", "Encode", "Copy", "Decohere", "Marginal", "Discard",
     "Cup", "Cap",
     "Switch",
-    "Discard",
     "Multiplexer",
     "WignerD", "JX", "JY", "JZ", "J+", "J-",
     "Double"
@@ -589,14 +588,15 @@ QuantumOperator[{"Permutation", dims : {_Integer ? Positive..} | Automatic : Aut
 
 QuantumOperator["Uncurry", opts___] := QuantumOperator[{"Uncurry", 2}, opts]
 
-QuantumOperator[{"Uncurry", dim : _Integer ? Positive ..}, opts___] := QuantumOperator[{"Uncurry", {dim, dim}}, opts]
+QuantumOperator[{"Uncurry", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[{"Uncurry", {basis, basis}}, opts]]
 
-QuantumOperator[{"Uncurry", dims : {_Integer ? Positive ..}}, opts___] :=
+QuantumOperator[{"Uncurry", args_List}, opts___] := With[{bases = QuditBasis /@ args},
     QuantumOperator[
-        QuantumOperator[identityMatrix[Times @@ dims], QuantumBasis[QuditBasis[Times @@ dims], QuditBasis[dims]]],
+        QuantumOperator[identityMatrix[Times @@ Through[bases["Dimension"]]], QuantumBasis[QuditBasis[Tuples[Through[bases["Names"]]]], QuantumTensorProduct[bases]]],
         opts,
         "Label" -> "Uncurry"
     ]
+]
 
 QuantumOperator[name : "Curry" | {"Curry", ___}, opts___] := QuantumOperator[QuantumOperator[name /. "Curry" -> "Uncurry"]["ConjugateTranspose"], opts, "Label" -> "Curry"]
 
@@ -664,13 +664,20 @@ QuantumOperator[{name : $Spider, args___}, order : _ ? orderQ, opts___] :=
 QuantumOperator[{name : $Spider, args___}, opts : PatternSequence[] | PatternSequence[Except[_ ? autoOrderQ], ___]] :=
     QuantumOperator[{name, args}, {{1}, {1}}, opts]
 
-QuantumOperator[name : "Measure" | "Encode" | "Copy", opts___] := QuantumOperator[{name}, opts]
+QuantumOperator[name : "Measure" | "Encode" | "Copy" | "Decohere" | "Marginal" | "Discard", opts___] := QuantumOperator[{name}, opts]
 
-QuantumOperator[{"Measure", dim_ : 2}, opts___] := QuantumOperator[{"Spider", QuantumBasis[{dim}, {dim ^ 2}]}, opts, "Label" -> "Measure"]
+QuantumOperator[{"Measure", args__ : 2}, opts___] := With[{decohere = QuantumOperator["Decohere"[args], {1, 2} -> {1}]}, QuantumOperator[decohere @ QuantumOperator["Curry"[decohere["OutputDimension"]], {1} -> {1, 2}], opts, "Label" -> "Measure"]]
 
-QuantumOperator[{"Encode", dim_ : 2}, opts___] := QuantumOperator[{"Spider", QuantumBasis[{dim ^ 2}, {dim}]}, opts, "Label" -> "Encode"]
+QuantumOperator[{"Encode", args__ : 2}, opts___] := With[{copy = QuantumOperator["Copy"[args], {1} -> {1, 2}]}, QuantumOperator[QuantumOperator["Uncurry"[copy["InputDimension"]], {1, 2} -> {1}] @ copy, opts, "Label" -> "Encode"]]
 
-QuantumOperator[{"Copy", dim_ : 2}, opts___] := QuantumOperator[{"Spider", QuantumBasis[{dim, dim}, {dim}]}, opts, "Label" -> "Copy"]
+QuantumOperator[{"Copy", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[QuantumOperator[{"Spider", QuantumBasis[QuantumTensorProduct[basis, basis["Conjugate"]], basis]}, {1} -> {1, 2}], opts, "Label" -> "Copy"]]
+
+QuantumOperator[{"Decohere", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[QuantumOperator[{"Spider", QuantumBasis[basis, QuantumTensorProduct[basis, basis["Conjugate"]]]}, {1, 2} -> {1}], opts, "Label" -> "Decohere"]]
+
+QuantumOperator[{"Marginal", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[Sqrt[basis["Dimension"]] QuantumState["UniformSuperposition", basis]["Dagger"], opts, "Label" -> "Marginal"]]
+
+QuantumOperator[{"Discard", args__ : 4}, opts___] := QuantumOperator[QuantumOperator[{"Spider", QuantumBasis[QuditBasis[1], QuditBasis[args]]}, {1} -> {}], opts, "Label" -> "Discard" ]
+
 
 QuantumOperator["Cup" | {"Cup", dim : _Integer ? Positive : 2}, order : _ ? orderQ : {1, 2}, opts___] /; Length[order] == 2 :=
     QuantumOperator[QuantumOperator[{"I", dim}]["SplitDual", 2], {order, {}}, "Label" -> "Cup", opts]
@@ -703,14 +710,6 @@ QuantumPartialTrace[
     ],
 	{q}
 ]]
-
-
-QuantumOperator[{"Discard", args___}, order : _ ? orderQ : {1}] := QuantumOperator[{"Spider", QuantumBasis[args]},
-    order -> {},
-    "Label" -> "Discard"
-]
-
-QuantumOperator["Discard", args___] := QuantumOperator[{"Discard", 4}, args]
 
 
 QuantumOperator["HeisenbergWeyl", opts___] := QuantumOperartor[{"HeisenbergWeyl", 2}, opts]

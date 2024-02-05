@@ -390,12 +390,12 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
     tensor = Confirm[
         If[
             top["VectorQ"] && bot["VectorQ"],
-            SparseArrayFlatten @ EinsteinSummation[
+            SparseArrayFlatten @ Confirm @ EinsteinSummation[
                 {Join[fullTopOut, fullTopIn], Join[fullBotOut, fullBotIn]} -> Join[out, in],
                 {top["Tensor"], bot["Tensor"]}
             ],
             ArrayReshape[
-                EinsteinSummation[
+                Confirm @ EinsteinSummation[
                     {Join[fullTopOut, 3 @@@ fullTopOut, fullTopIn, 4 @@@ fullTopIn], Join[fullBotOut, 4 @@@ fullBotOut, fullBotIn, 3 @@@ fullBotIn]} ->
                         Join[out, in, Join[3 @@@ topOut, 4 @@@ Cases[fullBotOut, 1[_]]], Join[4 @@@ Cases[fullTopIn, 2[_]], 3 @@@ botIn]],
                     {If[top["VectorQ"], top["State"]["Bend"], top]["Tensor"], If[bot["VectorQ"], bot["State"]["Bend"], bot]["Tensor"]}
@@ -423,7 +423,10 @@ orderDuplicates[xs_List] := Block[{next = Function[{ys, y}, If[MemberQ[ys, y], n
 
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qmo_ ? QuantumMeasurementOperatorQ] :=
-    QuantumMeasurementOperator[qo @ qmo["SuperOperator"], qmo["Target"]]
+    QuantumMeasurementOperator[qo @ qmo["SuperOperator"], qmo["Targets"]]
+
+(qo_QuantumOperator ? QuantumOperatorQ)[qc_ ? QuantumChannelQ] :=
+    QuantumChannel[qo @ qc["QuantumOperator"]]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qm_ ? QuantumMeasurementQ] :=
     If[QuantumMeasurementOperatorQ[#], QuantumMeasurement[#["Sort"]], #] & @ qo[qm["QuantumOperator"]]

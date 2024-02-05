@@ -62,7 +62,7 @@ QuantumChannelProp[qc_, "NEvolutionChannel"] := QuantumChannel[
     (I #)["NEvolutionOperator"] & /@  qc["UnstackOutput", 1]
 ]
 
-QuantumChannelProp[qc_, name : "Dagger" | "Conjugate" | "Dual" | "Computational" | "Sort", args___] := QuantumChannel[qc["Operator"][name, args]]
+QuantumChannelProp[qc_, name : "Dagger" | "Conjugate" | "Dual" | "Double" | "Computational" | "Sort", args___] := QuantumChannel[qc["Operator"][name, args]]
 
 QuantumChannelProp[qc_, "Shift", n : _Integer ? NonNegative : 1] := QuantumChannel[qc["Operator"]["Reorder", qc["Order"] /. k_Integer /; k > 0 :> k + n]]
 

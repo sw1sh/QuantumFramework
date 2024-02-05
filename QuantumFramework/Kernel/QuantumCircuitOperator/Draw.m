@@ -360,8 +360,8 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 				With[{a = 0.35 Pi}, Line[{# - {0, size / 4}, # + 0.5 size {Cos[a], Sin[a]} - {0, size / 4}}]]
 			} & /@ ({Max[hpos] hGapSize, - vGapSize #} & /@ vpos),
 			Replace[subLabel, {
-				Automatic | None | False :> Nothing,
-				_ :> If[gateLabelsQ, Text[Style[subLabel, labelStyleOpts], {hGapSize hpos[[1]], - vGapSize # - 2 size / 5}] & /@ vpos, Nothing]
+				Automatic | None | False | Interpretation[_, Automatic | None | False] :> Nothing,
+				Interpretation[Style[_, style___], _] | _ :> If[gateLabelsQ, Text[Style[subLabel, style, labelStyleOpts], {hGapSize hpos[[1]], - vGapSize # - 2 size / 5}] & /@ vpos, Nothing]
 			}]
 		},
 		"Channel"[subLabel_] :> {
@@ -484,7 +484,7 @@ drawMeasurement[{vpos_, _, hpos_}, eigenDims_, max_, opts : OptionsPattern[]] :=
 	corners = positionCorners[{order, Table[height, 2]}, size, vGapSize, hGapSize];
 	center = Mean[corners];
 	{
-		drawGate[{order, order, hpos}, {{}, {}}, Superscript[If[gaugeQ, "Measurement", "Channel"][label], CircleTimes[Length[order]]], FilterRules[{opts}, Options[drawGate]]],
+		drawGate[{order, order, hpos}, {{}, {}}, Superscript[MapAt[If[gaugeQ, "Measurement", "Channel"], label, Replace[label, {_Interpretation -> 2, _ -> {{}}}]], CircleTimes[Length[order]]], FilterRules[{opts}, Options[drawGate]]],
 		If[	connectorsQ, {FaceForm[Directive[$DefaultGray, Opacity[1]]], Disk[#, size / 32] & /@ {{center[[1]] - size / 2, - vGapSize #}, {center[[1]] + size / 2, - vGapSize #}} & /@ Select[vpos, Positive]}, Nothing],
 		If[	showMeasurementWireQ || extraQuditsQ, {
 			$DefaultGray,
@@ -718,7 +718,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	inputOrders = Map[If[QuantumChannelQ[#] || QuantumMeasurementOperatorQ[#], #["InputOrder"], Union @@ #["Order"]] &, circuit["Flatten"]["Operators"]];
 	extraQuditsQ = TrueQ[OptionValue["ShowExtraQudits"]] || AnyTrue[inputOrders, NonPositive, 2];
 	showMeasurementWireQ = TrueQ[OptionValue["ShowMeasurementWire"]] && ! extraQuditsQ && circuit["Measurements"] > 0;
-	labelCounter[label_, {out_, in_}] := label /. None :> (labelCount++; Subscript[If[out === {} || in === {}, "\[Psi]", "U"], labelCount]);
+	labelCounter[label_, {out_, in_}] := If[MatchQ[label, ("Measurement" | "Channel")[_]], label, label /. None :> (labelCount++; Subscript[If[out === {} || in === {}, "\[Psi]", "U"], labelCount])];
 	outlineMin = Which[showMeasurementWireQ, 1, AnyTrue[order, NonPositive] && extraQuditsQ, min, emptyWiresQ, 1, True, Min[inputOrders, max]];
 	positions = circuitPositions[circuit, level, MatchQ[OptionValue["GateOverlap"], Automatic | True], showMeasurementWireQ, extraQuditsQ];
 	height = Max[0, positions] + 1;

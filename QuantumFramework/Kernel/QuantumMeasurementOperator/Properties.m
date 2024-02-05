@@ -152,7 +152,7 @@ QuantumMeasurementOperatorProp[qmo_, "SortTarget"] := qmo["Canonical", "Reverse"
 
 
 QuantumMeasurementOperatorProp[qmo_, "Type"] := Which[
-    Count[qmo["OutputOrder"], _ ? NonPositive] == 0 && qmo["OutputDimension"] == qmo["InputDimension"],
+    Count[qmo["OutputOrder"], _ ? NonPositive] == 0 && qmo["OutputDimensions"] == qmo["InputDimensions"],
     "Projection",
     Count[qmo["OutputOrder"], _ ? NonPositive] > 0,
     "POVM",
@@ -186,7 +186,7 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
     trace = DeleteCases[qmo["FullInputOrder"], Alternatives @@ qmo["Target"]];
     traceQudits = trace - Min[qmo["FullInputOrder"]] + 1;
     If[
-        qmo["POVMQ"],
+        ! qmo["ProjectionQ"],
 
         qmo["Operator"],
 

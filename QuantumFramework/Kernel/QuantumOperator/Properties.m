@@ -498,7 +498,7 @@ QuantumOperatorProp[qo_, "Unbend"] :=
 QuantumOperatorProp[qo_, "Double"] := With[{state = qo["State"]["Double"]},
     QuantumOperator[
         QuantumState[
-            state["State"],
+            state,
             QuantumBasis[
                 "Output" -> QuantumTensorProduct[Times @@@ Partition[state["Output"]["Decompose"], 2]],
                 "Input" -> QuantumTensorProduct[Times @@@ Partition[state["Input"]["Decompose"], 2]],

@@ -316,11 +316,7 @@ EinsteinSummation[in_List, arrays_] := Module[{
 	res /; res =!= $Failed
 ]
 
-EinsteinSummation[in_List -> out_, arrays_]:=Module[{
-	res = isum[in -> out,arrays]
-},
-	res /; res =!= $Failed
-]
+EinsteinSummation[in_List -> out_, arrays_] := isum[in -> out, arrays]
 
 EinsteinSummation[s_String, arrays_] := EinsteinSummation[
 	Replace[
@@ -331,22 +327,27 @@ EinsteinSummation[s_String, arrays_] := EinsteinSummation[
 	arrays
 ]
 
-isum[in_List -> out_, arrays_List] := Catch @ Module[{
-	indices, contracted, contractions, multiplicity, tensor, transpose
+isum[in_List -> out_, arrays_List] := Enclose @ Module[{
+	indices, dimensions, contracted, contractions, multiplicity, tensor, transpose
 },
-	If[Length[in] != Length[arrays], Message[EinsteinSummation::length, Length[in], Length[arrays]];
-	Throw[$Failed]];
+	If[ Length[in] != Length[arrays],
+        Message[EinsteinSummation::length, Length[in], Length[arrays]];
+	    Confirm[$Failed]
+    ];
 	MapThread[
-		If[IntegerQ @ TensorRank[#1] && Length[#1] != TensorRank[#2],
-			Message[EinsteinSummation::shape,#1,#2]; Throw[$Failed]
+		If[ IntegerQ @ TensorRank[#1] && Length[#1] != TensorRank[#2],
+			Message[EinsteinSummation::shape, #1, #2];
+            Confirm[$Failed]
 		] &,
-		{in,arrays}
+		{in, arrays}
 	];
 	indices = Catenate[in];
+    dimensions = Catenate[Dimensions /@ arrays];
 	contracted = DeleteElements[indices, 1 -> out];
-	contractions = Flatten[Take[Position[indices, #[[1]]], #[[2]]]] & /@ Tally[contracted];
+	contractions = Flatten[Take[Position[indices, #[[1]], {1}, Heads -> False], UpTo[#[[2]]]]] & /@ Tally[contracted];
+    If[! AllTrue[contractions, Equal @@ dimensions[[#]] &], Message[EinsteinSummation::dim]; Confirm[$Failed]];
 	indices = DeleteElements[indices, 1 -> contracted];
-	If[! ContainsAll[indices, out], Message[EinsteinSummation::output]; Throw[$Failed]];
+	If[! ContainsAll[indices, out], Message[EinsteinSummation::output]; Confirm[$Failed]];
     tensor = Activate @ TensorContract[Inactive[TensorProduct] @@ arrays, contractions];
 	multiplicity = Max @ Merge[{Counts[out], Counts[indices]}, Apply[Ceiling[#1 / #2] &]];
 	If[ multiplicity > 1,
@@ -362,6 +363,7 @@ isum[in_List -> out_, arrays_List] := Catch @ Module[{
 
 EinsteinSummation::length = "Number of index specifications (`1`) does not match the number of tensors (`2`)";
 EinsteinSummation::shape = "Index specification `1` does not match the tensor rank of `2`";
+EinsteinSummation::dim = "Dimensions of contracted indices do not much";
 (*EinsteinSummation::repeat = "Index specifications `1` are repeated more than twice";*)
 EinsteinSummation::output = "The uncontracted indices can't compose the desired output";
 
