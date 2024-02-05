@@ -182,11 +182,10 @@ QuantumCircuitOperator[qc_ ? QuantumCircuitOperatorQ, order : {_ ? orderQ, _ ? o
 
 (* simplify *)
 
-Simplify[qco_QuantumCircuitOperator, args___] ^:= qco["Simplify", args]
-
-FullSimplify[qco_QuantumCircuitOperator, args___] ^:= qco["FullSimplify", args]
-
-Chop[qco_QuantumCircuitOperator, args___] ^:= qco["Chop", args]
+Scan[
+    (Symbol[#][qco_QuantumCircuitOperator, args___] ^:= qco[#, args]) &,
+    {"Simplify", "FullSimplify", "Chop", "ComplexExpand"}
+]
 
 
 (* parameterization *)

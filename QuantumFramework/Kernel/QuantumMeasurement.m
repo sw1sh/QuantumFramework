@@ -233,7 +233,7 @@ QuantumMeasurementProp[qm_, "SimulatedStateMeasurement", n_] := Part[qm["StateAs
 
 QuantumMeasurementProp[qm_, "MeanState"] := Total @ KeyValueMap[Times, qm["StateAssociation"]]
 
-QuantumMeasurementProp[qm_, prop : "Simplify" | "FullSimplify" | "Chop", args___] := QuantumMeasurement[qm["QuantumOperator"][prop, args]]
+QuantumMeasurementProp[qm_, prop : "Simplify" | "FullSimplify" | "Chop" | "ComplexExpand", args___] := QuantumMeasurement[qm["QuantumOperator"][prop, args]]
 
 
 (* qmo properties *)
@@ -250,11 +250,10 @@ QuantumMeasurement /: Equal[qms : _QuantumMeasurement ...] :=
 
 (* simplify *)
 
-Simplify[qm_QuantumMeasurement, args___] ^:= qm["Simplify", args]
-
-FullSimplify[qm_QuantumMeasurement, args___] ^:= qm["FullSimplify", args]
-
-Chop[qm_QuantumMeasurement, args___] ^:= qm["Chop", args]
+Scan[
+    (Symbol[#][qm_QuantumMeasurement, args___] ^:= qs[#, args]) &,
+    {"Simplify", "FullSimplify", "Chop", "ComplexExpand"}
+]
 
 
 (* parameterization *)

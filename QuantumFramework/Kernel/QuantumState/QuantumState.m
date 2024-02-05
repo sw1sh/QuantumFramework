@@ -242,11 +242,10 @@ SuperStar[qs_QuantumState] ^:= qs["Conjugate"]
 
 (* simplify *)
 
-Simplify[qs_QuantumState, args___] ^:= qs["Simplify", args]
-
-FullSimplify[qs_QuantumState, args___] ^:= qs["FullSimplify", args]
-
-Chop[qs_QuantumState, args___] ^:= qs["Chop", args]
+Scan[
+    (Symbol[#][qs_QuantumState, args___] ^:= qs[#, args]) &,
+    {"Simplify", "FullSimplify", "Chop", "ComplexExpand"}
+]
 
 
 (* join *)

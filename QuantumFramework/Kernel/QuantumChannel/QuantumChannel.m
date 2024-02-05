@@ -62,11 +62,10 @@ QuantumChannel /: Equal[qc : _QuantumChannel ... ] := Equal @@ (#["QuantumOperat
 
 (* simplify *)
 
-Simplify[qc_QuantumChannel, args___] ^:= qc["Simplify", args]
-
-FullSimplify[qc_QuantumChannel, args___] ^:= qc["FullSimplify", args]
-
-Chop[qc_QuantumChannel, args___] ^:= qc["Chop", args]
+Scan[
+    (Symbol[#][qc_QuantumChannel, args___] ^:= qc[#, args]) &,
+    {"Simplify", "FullSimplify", "Chop", "ComplexExpand"}
+]
 
 
 (* parameterization *)

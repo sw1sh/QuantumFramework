@@ -312,7 +312,11 @@ QuantumStateProp[qs_, "GraphRule"] := Block[{v = qs["Pure"]["StateVector"], pos}
     ]
 ]
 
-QuantumStateProp[qs_, prop : "Simplify" | "FullSimplify" | "Chop", args___] := QuantumState[Map[Symbol[prop][#, args] &, qs["State"], {If[qs["VectorQ"], 1, 2]}], qs["Basis"]]
+QuantumStateProp[qs_, prop : "Simplify" | "FullSimplify" | "Chop" | "ComplexExpand", args___] :=
+    QuantumState[Map[Symbol[prop][#, args] &, qs["State"], {If[qs["VectorQ"], 1, 2]}], qs["Basis"][prop]]
+
+(* these work on SparseArrays directly *)
+QuantumStateProp[qs_, prop : "Chop" | "ComplexExpand", args___] := QuantumState[Symbol[prop][qs["State"], args], qs["Basis"][prop]]
 
 
 (* normalization *)

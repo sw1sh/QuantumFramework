@@ -45,7 +45,7 @@ QuantumWignerMICPOVM[d : _Integer ? Positive : 2, opts : OptionsPattern[]] := Bl
 ]
 
 
-Options[QuantumWignerMICBasis] = Options[QuantumWignerMICPOVM]
+Options[QuantumWignerMICBasis] := Options[QuantumWignerMICPOVM]
 
 QuantumWignerMICBasis[d : _Integer ? Positive : 2, opts : OptionsPattern[]] := Block[{povm = QuantumWignerMICPOVM[d, opts], G, dual},
     G = Simplify @ Outer[Tr @* Dot, povm, povm, 1];

@@ -517,11 +517,10 @@ QuantumOperator /: Tr[qo_QuantumOperator] := Tr @ qo["Matrix"]
 
 (* simplify *)
 
-Simplify[qo_QuantumOperator, args___] ^:= qo["Simplify", args]
-
-FullSimplify[qo_QuantumOperator, args___] ^:= qo["FullSimplify", args]
-
-Chop[qo_QuantumOperator, args___] ^:= qo["Chop", args]
+Scan[
+    (Symbol[#][qo_QuantumOperator, args___] ^:= qo[#, args]) &,
+    {"Simplify", "FullSimplify", "Chop", "ComplexExpand"}
+]
 
 
 (* join *)

@@ -205,8 +205,7 @@ MergeParameterSpecs[objs___] := Enclose @ Block[{specs = Catenate[ConfirmBy[#["P
 
 (* simplify *)
 
-Simplify[qb_QuantumBasis] ^:= qb["Simplify"]
-
-FullSimplify[qb_QuantumBasis] ^:= qb["FullSimplify"]
-
-Chop[qb_QuantumBasis] ^:= qb["Chop"]
+Scan[
+    (Symbol[#][qb_QuantumBasis, args___] ^:= qs[#, args]) &,
+    {"Simplify", "FullSimplify", "Chop", "ComplexExpand"}
+]

@@ -273,11 +273,10 @@ QuantumMeasurementOperator /: Equal[qmo : _QuantumMeasurementOperator ... ] :=
 
 (* simplify *)
 
-Simplify[qmo_QuantumMeasurementOperator, args___] ^:= qmo["Simplify", args]
-
-FullSimplify[qmo_QuantumMeasurementOperator, args___] ^:= qmo["FullSimplify", args]
-
-Chop[qmo_QuantumMeasurementOperator, args___] ^:= qmo["Chop", args]
+Scan[
+    (Symbol[#][qmo_QuantumMeasurementOperator, args___] ^:= qmo[#, args]) &,
+    {"Simplify", "FullSimplify", "Chop", "ComplexExpand"}
+]
 
 
 (* parameterization *)
