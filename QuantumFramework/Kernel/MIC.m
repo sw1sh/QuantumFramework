@@ -80,7 +80,7 @@ QuantumWignerMICTransform[qb_ ? QuantumBasisQ, opts : OptionsPattern[]] :=
 
 QuantumWignerMICTransform[qs_ ? QuantumStateQ, opts : OptionsPattern[]] := Enclose @ Chop @ FullSimplify @ QuantumState[
     qs["Double"],
-    ConfirmBy[QuantumWignerMICTransform[qs["Basis"], opts], QuantumBasisQ]
+    ConfirmBy[QuantumWignerMICTransform[qs["Basis"], opts, "Exact" -> ! qs["NumberQ"]], QuantumBasisQ]
 ]
 
 QuantumWignerMICTransform[qo_ ? QuantumOperatorQ, opts : OptionsPattern[]] := Enclose @ QuantumOperator[
