@@ -124,7 +124,7 @@ QuantumOperator[{"Identity" | "I", dim_Integer ? Positive}, opts___] :=
 QuantumOperator[name : "XRotation" | "YRotation" | "ZRotation" | "RX" | "RY" | "RZ", opts___] :=  QuantumOperator[{name, Pi / 2}, opts]
 
 QuantumOperator[{"XRotation" | "RX", angle_, dimension : _Integer ? Positive : 2}, opts___] := QuantumOperator[
-    QuantumOperator[
+    FullSimplify @ QuantumOperator[
         Exp[- I angle / 2 QuantumOperator[{"PauliX", dimension}]],
         "Label" -> Subscript["R", "X"][angle]
     ],
@@ -132,7 +132,7 @@ QuantumOperator[{"XRotation" | "RX", angle_, dimension : _Integer ? Positive : 2
 ]
 
 QuantumOperator[{"YRotation" | "RY", angle_, dimension : _Integer ? Positive : 2}, opts___] := QuantumOperator[
-    QuantumOperator[
+    FullSimplify @ QuantumOperator[
         Exp[- I angle / 2 QuantumOperator[{"PauliY", dimension}]],
         "Label" -> Subscript["R", "Y"][angle]
     ],
@@ -140,7 +140,7 @@ QuantumOperator[{"YRotation" | "RY", angle_, dimension : _Integer ? Positive : 2
 ]
 
 QuantumOperator[{"ZRotation" | "RZ", angle_, dimension : _Integer ? Positive : 2}, opts___] := QuantumOperator[
-    QuantumOperator[
+    FullSimplify @ QuantumOperator[
         Exp[- I angle / 2 QuantumOperator[{"PauliZ", dimension}]],
         "Label" -> Subscript["R", "Z"][angle]
     ],
@@ -150,7 +150,7 @@ QuantumOperator[{"ZRotation" | "RZ", angle_, dimension : _Integer ? Positive : 2
 QuantumOperator[{"R", angle_, args__}, opts___] := Enclose @ Block[{ops = ConfirmBy[QuantumOperator[#], QuantumOperatorQ] & /@ {args}, op, orders},
     op = QuantumCircuitOperator[ops]["QuantumOperator", Method -> "Schrodinger"]["Sort"];
     orders = #["FullInputOrder"] & /@ ops;
-    QuantumOperator[
+    FullSimplify @ QuantumOperator[
         Exp[- I angle / 2 op],
         opts,
         "Label" -> Subscript["R", op["Label"]][angle]
