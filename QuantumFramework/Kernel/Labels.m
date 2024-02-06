@@ -18,7 +18,7 @@ conj = SuperDagger | SuperStar
 simplifyLabel[l_, out_ : None, in_ : None, order_ : None] := Replace[l, {
     _CircleTimes :> Map[simplifyLabel, l],
     conj[label : None | "X" | "I" | "NOT" | "SWAP" | "Cap" | "Cup"] :> label,
-    conj[label : "Y" | "Z" | "H"] /; out == in == {2} :> label,
+    conj[label : "Z" | "H"] /; out == in == {2} :> label,
     SuperStar[label: "S" | "T"] :> SuperDagger[label],
     (h : conj)[Superscript[label_, p_CircleTimes]] :> Superscript[simplifyLabel[h[label]], p],
     (h : conj)[t_CircleTimes] :> simplifyLabel @* h /@ t,

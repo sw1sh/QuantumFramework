@@ -404,7 +404,8 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			},
 			{}
 		],
-		l : SuperDagger[subLabel_] | subLabel_ :> {
+		(head : (SuperDagger | SuperStar))[subLabel_] :> (gateFunction[subLabel] /. Text[l_, args___] :> Text[head[l], args]),
+		l : subLabel_ :> {
 			EdgeForm[If[thickWireQ, Directive[AbsoluteThickness[3], #] &, Identity] @ Replace[subLabel, gateBoundaryStyle]],
 			FaceForm[Replace[subLabel, gateBackgroundStyle]],
 			Which[
