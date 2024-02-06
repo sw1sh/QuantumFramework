@@ -35,7 +35,7 @@ QuantumState["One" | "Down", args___] := QuantumState["1", args]
 QuantumState[s_String /; StringMatchQ[s, DigitCharacter..], dim : (_Integer ? Positive) : 2, args___] := With[{
     digits = Clip[Interpreter[DelimitedSequence["Digit", ""]] @ s, {0, dim - 1}]
 },
-    QuantumState[{"BasisState", digits}, dim, "Label" -> s, args]
+    QuantumState[{"BasisState", digits}, dim, args, "Label" -> s]
 ]
 
 QuantumState["Plus" | "+", args___] := QuantumState[Normalize @ {1, 1}, args, "Label" -> "+"]
