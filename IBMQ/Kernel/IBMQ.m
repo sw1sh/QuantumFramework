@@ -47,9 +47,9 @@ IBMQdata[] = {
             {"Token" -> token}
         ]
     ],
-    "RawGets" -> {"RawAccount", "RawNetwork", "RawBackends", "RawBackend", "RawJobStatus", "RawJobResults"},
+    "RawGets" -> {"RawAccount", "RawNetwork", "RawBackends", "RawBackend", "RawJobs", "RawJobStatus", "RawJobResults"},
     "RawPosts" -> {"RawRun"},
-    "Gets" -> {"Account", "Devices", "Backends", "Backend", "BackendQueue", "JobStatus", "JobResults"},
+    "Gets" -> {"Account", "Devices", "Backends", "Backend", "BackendQueue", "Jobs", "JobStatus", "JobResults"},
     "Posts" -> {"RunCircuit"},
     "Information" -> "IBMQ connection for WolframLanguage"
 }
@@ -123,6 +123,13 @@ IBMQcookeddata["RunCircuit", id_, opts : OptionsPattern[]] := Enclose @ importJs
     }
 ]
 
+IBMQdata["RawJobs"] := {
+    "URL"				-> (URLBuild[{#1, "jobs"}] &),
+    "HTTPSMethod"		-> "GET",
+    "Headers"			-> {"Content-Type" -> "application/json"},
+    "PathParameters"    -> {"RuntimeUrl"},
+    "RequiredParameters"-> {"RuntimeUrl"}
+}
 
 IBMQdata["RawJobStatus"] := {
     "URL"				-> (URLBuild[{#1, "jobs", #2}] &),
@@ -140,6 +147,12 @@ IBMQdata["RawJobResults"] := {
     "RequiredParameters"-> {"RuntimeUrl", "JobID"}
 }
 
+IBMQcookeddata["Jobs", id_, opts : OptionsPattern[]] := Enclose @ importJson @ KeyClient`rawkeydata[id,
+    "RawJobs",
+    {
+        "RuntimeUrl" -> Confirm @ getRuntimeUrl[id]
+    }
+]
 
 IBMQcookeddata["JobStatus", id_, opts : OptionsPattern[]] := Enclose @ importJson @ KeyClient`rawkeydata[id,
     "RawJobStatus",

@@ -1,6 +1,6 @@
 Paclet[
     Name -> "ServiceConnection_IBMQ",
-    Version -> "0.0.2",
+    Version -> "0.0.3",
     MathematicaVersion -> "10+",
     Extensions ->
         {
