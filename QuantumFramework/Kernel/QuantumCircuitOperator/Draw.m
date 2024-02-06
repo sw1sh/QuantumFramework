@@ -384,7 +384,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 					]
 				];
 				With[{index = First /@ PositionIndex[vpos]}, {
-					Map[drawGate[{{#}, hpos}, dims, labels[[index[#1]]], "IdentityGate" -> True, opts] &, vpos],
+					Map[drawGate[Which[vposIn === {}, {{#}, {}, hpos}, vposOut === {}, {{}, {#}, hpos}, True, {{#}, hpos}], dims, labels[[index[#]]], "IdentityGate" -> True, opts] &, vpos],
 					Dashed, drawControlWires[#, {labels[[index[#[[1]]]]], labels[[index[#[[1]]]]]}] & /@ Partition[Sort[vpos], 2, 1]
 				}]
 			} /; Length[labels] == Length[vpos]
@@ -392,7 +392,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 		Superscript[subLabel_, CircleTimes[n_Integer]] /; n == Length[vpos] :> {
 			boundaryStyle = Replace[subLabel, gateBoundaryStyle];
 			If[thickWireQ, boundaryStyle = Directive[boundaryStyle, AbsoluteThickness[3]]];
-			Map[drawGate[{{#1}, hpos}, dims, subLabel, "IdentityGate" -> True, opts] &, vpos],
+			Map[drawGate[Which[vposIn === {}, {{#}, {}, hpos}, vposOut === {}, {{}, {#}, hpos}, True, {{#}, hpos}], dims, subLabel, "IdentityGate" -> True, opts] &, vpos],
 			Dashed, drawControlWires[#, {subLabel, subLabel}] & /@ Partition[Sort[vpos], 2, 1]
 		},
 		subLabel : "GlobalPhase"[subSubLabel_] | (subSubLabel_ /; AnyTrue[hpos, LessThan[0]]) :> If[globalPhaseQ,
@@ -405,7 +405,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			{}
 		],
 		(head : (SuperDagger | SuperStar))[subLabel_] :> (gateFunction[subLabel] /. Text[l_, args___] :> Text[head[l], args]),
-		l : subLabel_ :> {
+		subLabel_ :> {
 			EdgeForm[If[thickWireQ, Directive[AbsoluteThickness[3], #] &, Identity] @ Replace[subLabel, gateBoundaryStyle]],
 			FaceForm[Replace[subLabel, gateBackgroundStyle]],
 			Which[
@@ -427,7 +427,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			If[	gateLabelsQ,
 				Rotate[
 					Text[
-						Style[Replace[l, OptionValue["GateLabels"]], labelStyleOpts],
+						Style[Replace[subLabel, OptionValue["GateLabels"]], labelStyleOpts],
 						Which[Length[vposIn] == 0, center + {size / 2 - (size + roundingRadius) / 2 / Sqrt[3], 0}, Length[vposOut] == 0, center + {- size / 2 + (size + roundingRadius) / 2 / Sqrt[3], 0}, True, center]
 					],
 					rotateLabel
