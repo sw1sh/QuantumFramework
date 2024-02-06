@@ -36,3 +36,7 @@ PacletManager`Package`loadWolframLanguageCode[
     },
     "HiddenImports" -> {}
 ];
+
+Wolfram`QuantumFramework`PackageScope`Memoize[Wolfram`QuantumFramework`PackageScope`FromOperatorShorthand];
+
+

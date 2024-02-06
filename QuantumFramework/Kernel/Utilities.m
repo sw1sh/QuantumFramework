@@ -40,6 +40,7 @@ PackageScope["QuditAdjacencyMatrix"]
 
 PackageScope["$QuantumFrameworkProfile"]
 PackageScope["profile"]
+PackageScope["Memoize"]
 
 
 
@@ -292,6 +293,13 @@ ReverseHalf[list_] /; Divisible[Length[list], 2] := Catenate @ Reverse[TakeDrop[
 
 HadamardGrayRowPermutation[n_Integer ? Positive] := FindPermutation @ Nest[Insert[#, Splice @ ReverseHalf[# + Length[#]], Length[#] / 2 + 1] &, {1, 2}, n - 1]
 
+(* TODO: WFR *)
+Memoize[f_ ? Developer`SymbolQ] := With[{g = Unique[f]},
+    DownValues[g] = MapAt[ReplaceAll[f -> g], DownValues[f], {All, 1}];
+    ResourceFunction["BlockProtected"][{f},
+        DownValues[f] = {HoldPattern[f[args___]] :> ResourceFunction["BlockProtected"][{f}, f[args] = g[args]]};
+    ]
+]
 
 MyBlockDiagonalMatrix[{m1_ ? matrixQ, m2_ ? matrixQ}] := Block[{
     r1, r2, c1, c2
