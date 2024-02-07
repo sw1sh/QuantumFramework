@@ -240,9 +240,20 @@ QuantumTensorNetwork[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
             n += 1;
             next = prev;
 			{output, input} = order;
-			next[[ Union[output, input] - min + 1 ]] = n;
+            next[[ output - min + 1 ]] = n;
+			next[[ Complement[input, output] - min + 1 ]] = None[n];
             indices = {Superscript[prev[[# - min + 1]], #], Subscript[next[[# - min + 1]], #]} & /@ input;
-			{Thread[DirectedEdge[prev[[ input - min + 1 ]], next[[ input - min + 1]], indices]], {n, next}}
+			{
+                Replace[
+                    Thread[DirectedEdge[prev[[ input - min + 1 ]], next[[ input - min + 1]], indices]],
+                    {
+                        DirectedEdge[None[_], ___] :> Nothing,
+                        DirectedEdge[from_, None[to_], tag_] :> DirectedEdge[from, to, tag /. None[i_] :> i]
+                    },
+                    {1}
+                ],
+                {n, next}
+            }
 		],
 		{1 - arity, Table[1 - arity, width]},
 		Rest[orders]
