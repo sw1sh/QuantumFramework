@@ -90,7 +90,7 @@ QuantumWignerMICTransform[qo_ ? QuantumOperatorQ, opts : OptionsPattern[]] := En
 
 QuantumWignerMICTransform[qc_ ? QuantumChannelQ, opts: OptionsPattern[]] := Enclose @ QuantumChannel[ConfirmBy[QuantumWignerMICTransform[qc["QuantumOperator"], opts], QuantumOperatorQ]]
 
-QuantumWignerMICTransform[qmo_ ? QuantumMeasurementOperatorQ, opts: OptionsPattern[]] := QuantumMeasurementOperator[qmo["Double"], QuantumWignerMICTransform[qmo["Basis"], opts]]
+QuantumWignerMICTransform[qmo_ ? QuantumMeasurementOperatorQ, opts: OptionsPattern[]] := QuantumMeasurementOperator[qmo["Double"], QuantumWignerMICTransform[qmo["POVM"]["Basis"], opts]]
 
 QuantumWignerMICTransform[qco_ ? QuantumCircuitOperatorQ, opts: OptionsPattern[]] :=
     Enclose @ QuantumCircuitOperator[If[BarrierQ[#], #, Confirm @ QuantumWignerMICTransform[#, opts]] & /@ qco["Elements"], qco["Label"]]
