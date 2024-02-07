@@ -235,6 +235,16 @@ QuantumCircuitOperatorProp[qco_, "Basis"] := QuantumBasis[
     "ParameterSpec" -> DeleteDuplicatesBy[Join @@ Through[qco["Operators"]["ParameterSpec"]], First]
 ]
 
+QuantumCircuitOperatorProp[qco_, "TensorNetworkBasis"] := Enclose @ Block[{net = qco["TensorNetwork", "PrependInitial" -> False], ops = qco["Flatten"]["NormalOperators"], indices, quditBases},
+    indices = TensorNetworkIndices[net];
+    ConfirmAssert[Length[indices] == Length[ops]];
+    quditBases = Catenate @ MapThread[Join[Thread[Cases[#1, _Superscript] -> #2["Output"]["Decompose"]], Thread[Cases[#1, _Subscript] -> #2["Input"]["Decompose"]]] &, {indices, ops}];
+    QuantumBasis @@ Normal @ Map[
+        QuantumTensorProduct[Lookup[quditBases, #]]&,
+        <|"Output" -> {}, "Input" -> {}, KeyMap[Replace[{Superscript -> "Output", Subscript -> "Input"}], GroupBy[TensorNetworkFreeIndices[net], Head]]|>
+    ]
+]
+
 QuantumCircuitOperatorProp[qco_, "Measurements"] := Count[qco["Flatten"]["Operators"], _ ? QuantumMeasurementOperatorQ]
 
 QuantumCircuitOperatorProp[qco_, "Channels"] := Count[qco["Flatten"]["Operators"], _ ? QuantumChannelQ]

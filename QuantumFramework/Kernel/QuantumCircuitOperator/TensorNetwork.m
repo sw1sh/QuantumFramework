@@ -318,7 +318,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     traceOrder, eigenOrder, basis
 },
     width = circuit["Width"];
-    basis = circuit["Basis"];
+    basis = circuit["TensorNetworkBasis"];
     phaseSpaceQ = basis["Picture"] === "PhaseSpace";
     traceOrder = circuit["TraceOrder"];
     eigenOrder = circuit["Eigenorder"];
@@ -334,7 +334,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     ];
     net = ConfirmBy[QuantumTensorNetwork[circuit, opts, "PrependInitial" -> False, "Computational" -> ! phaseSpaceQ], TensorNetworkQ];
     res = Confirm @ ContractTensorNetwork[net];
-    res = With[{basis = circuit["Basis"]},
+    res = With[{basis = circuit["TensorNetworkBasis"]},
         QuantumState[
             SparseArrayFlatten[res],
             QuantumBasis[QuditBasis[basis["OutputDimensions"]], QuditBasis[basis["InputDimensions"]]]
