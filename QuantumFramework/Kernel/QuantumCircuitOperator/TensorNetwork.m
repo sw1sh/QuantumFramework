@@ -258,7 +258,7 @@ QuantumTensorNetwork[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
 		{1 - arity, Table[1 - arity, width]},
 		Rest[orders]
 	];
-	tensors = #["Tensor"] & /@ ops;
+	tensors = If[#["MatrixQ"], #["Double"], #]["Tensor"] & /@ ops;
 	ConfirmBy[
         If[TrueQ[OptionValue["PrependInitial"]] && circuit["Arity"] > 0, Identity, VertexDelete[#, _ ? NonPositive] &] @ Graph[
             vertices,
@@ -318,7 +318,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     traceOrder, eigenOrder, basis
 },
     width = circuit["Width"];
-    basis = circuit["TensorNetworkBasis"];
+    basis = Confirm @ circuit["TensorNetworkBasis"];
     phaseSpaceQ = basis["Picture"] === "PhaseSpace";
     traceOrder = circuit["TraceOrder"];
     eigenOrder = circuit["Eigenorder"];
@@ -334,7 +334,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     ];
     net = ConfirmBy[QuantumTensorNetwork[circuit, opts, "PrependInitial" -> False, "Computational" -> ! phaseSpaceQ], TensorNetworkQ];
     res = Confirm @ ContractTensorNetwork[net];
-    res = With[{basis = circuit["TensorNetworkBasis"]},
+    res = With[{basis = Confirm @ circuit["TensorNetworkBasis"]},
         QuantumState[
             SparseArrayFlatten[res],
             QuantumBasis[QuditBasis[basis["OutputDimensions"]], QuditBasis[basis["InputDimensions"]]]

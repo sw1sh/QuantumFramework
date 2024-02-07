@@ -235,7 +235,7 @@ QuantumCircuitOperatorProp[qco_, "Basis"] := QuantumBasis[
     "ParameterSpec" -> DeleteDuplicatesBy[Join @@ Through[qco["Operators"]["ParameterSpec"]], First]
 ]
 
-QuantumCircuitOperatorProp[qco_, "TensorNetworkBasis"] := Enclose @ Block[{net = qco["TensorNetwork", "PrependInitial" -> False], ops = qco["Flatten"]["NormalOperators"], indices, quditBases},
+QuantumCircuitOperatorProp[qco_, "TensorNetworkBasis"] := Enclose @ Block[{net = Confirm @ qco["TensorNetwork", "PrependInitial" -> False], ops = qco["Flatten"]["NormalOperators"], indices, quditBases},
     indices = TensorNetworkIndices[net];
     ConfirmAssert[Length[indices] == Length[ops]];
     quditBases = Catenate @ MapThread[Join[Thread[Cases[#1, _Superscript] -> #2["Output"]["Decompose"]], Thread[Cases[#1, _Subscript] -> #2["Input"]["Decompose"]]] &, {indices, ops}];
