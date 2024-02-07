@@ -251,7 +251,7 @@ QuantumMeasurement /: Equal[qms : _QuantumMeasurement ...] :=
 (* simplify *)
 
 Scan[
-    (Symbol[#][qm_QuantumMeasurement, args___] ^:= qs[#, args]) &,
+    (Symbol[#][qm_QuantumMeasurement, args___] ^:= qm[#, args]) &,
     {"Simplify", "FullSimplify", "Chop", "ComplexExpand"}
 ]
 
