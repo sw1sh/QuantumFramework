@@ -674,7 +674,7 @@ QuantumOperator[{"Copy", args__ : 2}, opts___] := With[{basis = QuditBasis[args]
 
 QuantumOperator[{"Decohere", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[QuantumOperator[{"Spider", QuantumBasis[basis, QuantumTensorProduct[basis, basis["Conjugate"]]]}, {1, 2} -> {1}], opts, "Label" -> "Decohere"]]
 
-QuantumOperator[{"Marginal", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[Sqrt[basis["Dimension"]] QuantumState["UniformSuperposition", basis]["Dagger"], opts, "Label" -> "Marginal"]]
+QuantumOperator[{"Marginal", args__ : 4}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[Sqrt[basis["Dimension"]] QuantumState["UniformSuperposition", basis]["Dagger"], opts, "Label" -> "Marginal"]]
 
 QuantumOperator[{"Discard", args__ : 4}, opts___] := QuantumOperator[QuantumOperator[{"Spider", QuantumBasis[QuditBasis[1], QuditBasis[args]]}, {1} -> {}], opts, "Label" -> "Discard" ]
 
