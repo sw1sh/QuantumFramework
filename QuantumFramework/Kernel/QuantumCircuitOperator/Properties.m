@@ -330,7 +330,7 @@ QuantumCircuitOperatorProp[qco_, "Bend"] := QuantumCircuitOperator[
 
 QuantumCircuitOperatorProp[qco_, "DiscardExtraQudits"] := QuantumCircuitOperator @ Prepend[
 	qco["Association"],
-	"Elements" -> Replace[qco["NormalElements"], q : _QuantumMeasurementOperator | _QuantumChannel :> q["DiscardExtraQudits"], {1}]
+	"Elements" -> Replace[qco["NormalElements"], q : _QuantumMeasurementOperator | _QuantumChannel | _QuantumCircuitOperator :> q["DiscardExtraQudits"], {1}]
 ]
 
 
