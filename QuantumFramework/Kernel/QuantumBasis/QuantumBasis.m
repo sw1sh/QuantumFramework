@@ -20,7 +20,7 @@ $QuantumBasisPictures = {
 
 QuantumBasis::wrongData = "has wrong data";
 
-QuantumBasis::picture = "should have one of the following pictures " <> StringRiffle[$QuantumBasisPictures, ", "];
+QuantumBasis::picture = "should have one of the following pictures " <> StringRiffle[$QuantumBasisPictures, ", "] <> ". But got: ``";
 
 QuantumBasis::zeroDimension = "can't have zero dimension";
 
@@ -53,7 +53,7 @@ quantumBasisQ[QuantumBasis[data_Association]] := Enclose[
     ConfirmAssert[QuditBasisQ[data["Input"]]];
     ConfirmAssert[QuditBasisQ[data["Output"]]];
 
-    ConfirmAssert[MemberQ[$QuantumBasisPictures, data["Picture"]], Message[QuantumBasis::picture]];
+    ConfirmAssert[MemberQ[$QuantumBasisPictures, data["Picture"]], Message[QuantumBasis::picture, data["Picture"]]];
     (*ConfirmAssert[Length[inputElements] + Length[outputElements] > 0, Message[QuantumBasis::zeroDimension]];*)
 
     ConfirmAssert[ParameterSpecQ[data["ParameterSpec"]]];

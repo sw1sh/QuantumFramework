@@ -362,7 +362,8 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			Replace[subLabel, {
 				Automatic | None | False | Interpretation[_, Automatic | None | False] :> Nothing,
 				Interpretation[Style[_, style___], _] | _ :> If[gateLabelsQ, Text[Style[subLabel, style, labelStyleOpts], {hGapSize hpos[[1]], - vGapSize # - 2 size / 5}] & /@ vpos, Nothing]
-			}]
+			}],
+			Dashed, drawControlWires[#, {subLabel, subLabel}] & /@ Partition[Sort[vpos], 2, 1]
 		},
 		"Channel"[subLabel_] :> {
 			Map[drawGate[{{#1}, hpos}, dims, subLabel,
@@ -372,6 +373,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 				] &,
 				vpos
 			],
+			Dashed, drawControlWires[#, {subLabel, subLabel}] & /@ Partition[Sort[vpos], 2, 1],
 			If[gateLabelsQ, Text[Style[subLabel, labelStyleOpts], {hGapSize hpos[[1]], - vGapSize #}] & /@ vpos, Nothing]
 		},
 		subLabels_CircleTimes :> With[{

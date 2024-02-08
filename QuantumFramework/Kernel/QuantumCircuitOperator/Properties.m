@@ -231,17 +231,25 @@ QuantumCircuitOperatorProp[qco_, "Output"] := If[Length[qco["OutputOrder"]] > 0,
 
 QuantumCircuitOperatorProp[qco_, "Basis"] := QuantumBasis[
     "Output" -> qco["Output"], "Input" -> qco["Input"],
-    "Picture" -> If[SameQ @@ #, First[#], "Schrodinger"] & @ Through[qco["NormalOperators"]["Picture"]],
-    "ParameterSpec" -> DeleteDuplicatesBy[Join @@ Through[qco["Operators"]["ParameterSpec"]], First]
+    "Label" -> qco["Label"],
+    "Picture" -> If[Length[#] > 0 && SameQ @@ #, First[#], "Schrodinger"] & @ DeleteMissing @ Through[qco["NormalOperators"]["Picture"]],
+    "ParameterSpec" -> DeleteDuplicatesBy[Join @@ Through[qco["NormalOperators"]["ParameterSpec"]], First]
 ]
 
 QuantumCircuitOperatorProp[qco_, "TensorNetworkBasis"] := Enclose @ Block[{net = Confirm @ qco["TensorNetwork", "PrependInitial" -> False], ops = qco["Flatten"]["NormalOperators"], indices, quditBases},
     indices = TensorNetworkIndices[net];
     ConfirmAssert[Length[indices] == Length[ops]];
     quditBases = Catenate @ MapThread[Join[Thread[Cases[#1, _Superscript] -> #2["Output"]["Decompose"]], Thread[Cases[#1, _Subscript] -> #2["Input"]["Decompose"]]] &, {indices, ops}];
-    QuantumBasis @@ Normal @ Map[
-        QuantumTensorProduct[Lookup[quditBases, #]]&,
-        <|"Output" -> {}, "Input" -> {}, KeyMap[Replace[{Superscript -> "Output", Subscript -> "Input"}], GroupBy[TensorNetworkFreeIndices[net], Head]]|>
+    QuantumBasis[##,
+            "Label" -> qco["Label"],
+            "Picture" -> If[Length[#] > 0 && SameQ @@ #, First[#], "Schrodinger"] & @ DeleteMissing @ Through[ops["Picture"]],
+            "ParameterSpec" -> DeleteDuplicatesBy[Join @@ Through[ops["ParameterSpec"]], First]
+        ] & @@ Normal @ Map[
+        QuantumTensorProduct[Lookup[quditBases, #]] &,
+        <|
+            "Output" -> {}, "Input" -> {},
+            KeyMap[Replace[{Superscript -> "Output", Subscript -> "Input"}], GroupBy[TensorNetworkFreeIndices[net], Head]]
+        |>
     ]
 ]
 
