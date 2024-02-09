@@ -77,6 +77,9 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
     qmo
 ]
 
+QuantumMeasurementOperator[arg_ -> eigenvalues_List, args___] := QuantumMeasurementOperator[arg -> Ket /@ eigenvalues, args]
+
+
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, Automatic] := QuantumMeasurementOperator[qo, qo["InputOrder"]]
 
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ] := QuantumMeasurementOperator[qo, Automatic]
