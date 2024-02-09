@@ -96,7 +96,7 @@ QuantumMeasurementProp[QuantumMeasurement[qmo_], "QuantumOperator"] := qmo
 
 QuantumMeasurementProp[qm_, "Operator"] := qm["QuantumOperator"]["Operator"]
 
-QuantumMeasurementProp[qm_, prop : "Canonical" | "Computational" | "SortTarget", opts___] :=
+QuantumMeasurementProp[qm_, prop : "Canonical" | "Computational" | "SortTarget" | "ReverseEigenQudits", opts___] :=
     QuantumMeasurement @ qm["QuantumOperator"][prop, opts]
 
 QuantumMeasurementProp[qm_, prop : "Reverse"] := QuantumMeasurement[
@@ -142,7 +142,7 @@ QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
         MatchQ[qm["LabelHead"], "Computational" | Automatic],
         qm["Computational"]["Eigenstate"],
         MatchQ[qm["LabelHead"], "Eigen"],
-        qm["Eigenstate"],
+        qm["ReverseEigenQudits"]["Eigenstate"],
         True,
         qm["Canonical"]["Eigenstate"]
     ]["Probabilities"]
@@ -159,7 +159,7 @@ QuantumMeasurementProp[qm_, "Outcomes"] := Which[
     MatchQ[qm["LabelHead"], "Computational" | Automatic],
     qm["Computational"],
     MatchQ[qm["LabelHead"], "Eigen"],
-    qm,
+    qm["ReverseEigenQudits"],
     True,
     qm["Canonical"]
 ]["Eigenvalues"]

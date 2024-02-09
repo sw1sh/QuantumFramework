@@ -151,6 +151,15 @@ QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> T
 QuantumMeasurementOperatorProp[qmo_, "SortTarget"] := qmo["Canonical", "Reverse" -> False]
 
 
+QuantumMeasurementOperatorProp[qmo_, "ReverseEigenQudits"] := QuantumMeasurementOperator[
+    QuantumOperator[
+        qmo["SuperOperator"]["State"]["PermuteOutput", FindPermutation[Reverse[Range[qmo["Eigenqudits"]]]]],
+        qmo["Order"]
+    ],
+    qmo["Targets"]
+]
+
+
 QuantumMeasurementOperatorProp[qmo_, "Type"] := Which[
     Count[qmo["OutputOrder"], _ ? NonPositive] == 0 && qmo["OutputDimensions"] == qmo["InputDimensions"],
     "Projection",
