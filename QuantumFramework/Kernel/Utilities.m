@@ -141,7 +141,7 @@ eigenvectors[matrix_, OptionsPattern[]] := Map[
 Options[eigensystem] = {"Sort" -> False, "Normalize" -> False, Chop -> False}
 
 eigensystem[matrix_, OptionsPattern[]] := Module[{values, vectors},
-    {values, vectors} = FullSimplify @ Enclose[
+    {values, vectors} = Chop @ FullSimplify @ Enclose[
         ConfirmBy[
             If[ TrueQ[OptionValue[Chop]],
                 If[ Precision[matrix] === MachinePrecision,

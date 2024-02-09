@@ -301,5 +301,5 @@ QuantumBasisProp[qb_, "InitialParameters"] := qb["ParameterSpec"][[All, 2]]
 QuantumBasisProp[qb_, "FinalParameters"] := qb["ParameterSpec"][[All, 3]]
 
 
-QuantumBasisProp[qb_, prop : "Simplify" | "FullSimplify" | "Chop"] :=
+QuantumBasisProp[qb_, prop : "Simplify" | "FullSimplify" | "Chop" | "ComplexExpand"] :=
     QuantumBasis["Output" -> qb["Output"][prop], "Input" -> qb["Input"][prop], qb["Meta"]]
