@@ -141,11 +141,10 @@ QuditBasis /: Times[qb__QuditBasis ? QuditBasisQ] := QuditBasis @ Association @ 
 
 (* simplify *)
 
-Simplify[qb_QuditBasis, args___] ^:= qb["Simplify", args]
-
-FullSimplify[qb_QuditBasis, args___] ^:= qb["FullSimplify", args]
-
-Chop[qb_QuditBasis, args___] ^:= qb["Chop", args]
+Scan[
+    (Symbol[#][qb_QuditBasis, args___] ^:= qb[#, args]) &,
+    {"Simplify", "FullSimplify", "Chop", "ComplexExpand"}
+]
 
 
 (* formatting *)

@@ -199,7 +199,7 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
 
         qmo["Operator"],
 
-        tracedOperator = FullSimplify @ QuantumPartialTrace[
+        tracedOperator = Chop @ FullSimplify @ QuantumPartialTrace[
             qmo,
             If[qmo["POVMQ"], {# + qmo["OutputQudits"] - qmo["InputQudits"], #} & /@ trace, trace]
         ];

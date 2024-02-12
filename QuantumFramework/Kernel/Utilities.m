@@ -21,6 +21,7 @@ PackageScope["projector"]
 PackageScope["MatrixPartialTrace"]
 PackageScope["EinsteinSummation"]
 PackageScope["blockDiagonalMatrix"]
+PackageScope["eigenvalues"]
 PackageScope["eigenvectors"]
 PackageScope["eigensystem"]
 PackageScope["pauliMatrix"]
@@ -116,27 +117,6 @@ matrixQ[m_] := MatrixQ[m] && ! emptyTensorQ[m]
 blockDiagonalMatrix[ms : {__ ? MatrixQ}] := MyBlockDiagonalMatrix[DeleteCases[ms, _ ? emptyTensorQ]]
 
 
-Options[eigenvectors] = {"Sort" -> False, "Normalize" -> False, Chop -> False}
-
-eigenvectors[matrix_, OptionsPattern[]] := Map[
-    If[ TrueQ[OptionValue["Normalize"]], Normalize, Identity],
-    Enclose[
-        ConfirmBy[
-            If[ TrueQ[OptionValue[Chop]],
-                If[ Precision[matrix] === MachinePrecision,
-                    Eigenvectors[matrix, ZeroTest -> (Chop[#1] == 0 &)],
-                    Eigenvectors[Chop @ matrix]
-                ],
-                Eigenvectors[matrix]
-            ],
-            MatrixQ
-        ],
-        Eigenvectors[matrix] &
-    ][[
-        If[TrueQ[OptionValue["Sort"]], OrderingBy[Eigenvalues[matrix], {Abs[#], Mod[Arg[#], 2 Pi]} &], All]
-    ]]
-]
-
 
 Options[eigensystem] = {"Sort" -> False, "Normalize" -> False, Chop -> False}
 
@@ -163,6 +143,15 @@ eigensystem[matrix_, OptionsPattern[]] := Module[{values, vectors},
 
     {values, vectors}
 ]
+
+Options[eigenvalues] = Options[eigensystem]
+
+eigenvalues[matrix_, opts : OptionsPattern[]] := First @ eigensystem[matrix, opts] 
+
+Options[eigenvectors] = Options[eigensystem]
+
+eigenvectors[matrix_, opts : OptionsPattern[]] := Last @ eigensystem[matrix, opts] 
+
 
 
 pauliMatrix[n_] := pauliMatrix[n, 2]
