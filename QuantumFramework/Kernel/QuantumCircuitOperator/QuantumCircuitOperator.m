@@ -49,7 +49,7 @@ FromCircuitOperatorShorthand[arg_] := Enclose @ Replace[Confirm @ FromOperatorSh
 
 
 QuantumCircuitOperator[operators_ ? ListQ] := Enclose @ With[{ops = Confirm @* FromCircuitOperatorShorthand /@ operators},
-    QuantumCircuitOperator[<|"Elements" -> ops, "Label" -> Replace[RightComposition @@ (#["Label"] & /@ DeleteCases[ops, _ ? BarrierQ]), Identity -> "I"]|>]
+    QuantumCircuitOperator[<|"Elements" -> ops, "Label" -> Replace[Composition @@ Reverse @ Through[DeleteCases[ops, _ ? BarrierQ]["Label"]], Identity -> None]|>]
 ]
 
 QuantumCircuitOperator[arg_, order_ ? orderQ, args___] := QuantumCircuitOperator[QuantumCircuitOperator[arg, args], order]
@@ -133,13 +133,13 @@ op_QuantumMeasurementOperator[qco_QuantumCircuitOperator ? QuantumCircuitOperato
 
 
 QuantumCircuitOperator /: comp : Composition[___, _QuantumCircuitOperator ? QuantumCircuitOperatorQ, ___] := Enclose @
-With[{ops = List @@ Unevaluated[comp]},
-    QuantumCircuitOperator[Flatten[ConfirmBy[QuantumCircuitOperator[#], QuantumCircuitOperatorQ]["Elements"] & /@ Reverse @ ops, 1], Composition @@ (#["Label"] & /@ ops)]
+With[{ops = ConfirmBy[QuantumCircuitOperator[#], QuantumCircuitOperatorQ] & /@ List @@ Unevaluated[comp]},
+    QuantumCircuitOperator[Flatten[Through[Reverse[ops]["Elements"]], 1], Replace[Composition @@ DeleteCases[None] @ Through[ops["Label"]], Identity -> None]]
 ]
 
 QuantumCircuitOperator /: comp : RightComposition[___, _QuantumCircuitOperator ? QuantumCircuitOperatorQ, ___] := Enclose @
-With[{ops = List @@ Unevaluated[comp]},
-    QuantumCircuitOperator[Flatten[ConfirmBy[QuantumCircuitOperator[#], QuantumCircuitOperatorQ]["Elements"] & /@ ops, 1], RightComposition @@ Reverse @ (#["Label"] & /@ ops)]
+With[{ops = ConfirmBy[QuantumCircuitOperator[#], QuantumCircuitOperatorQ] & /@ List @@ Unevaluated[comp]},
+    QuantumCircuitOperator[Flatten[Through[ops["Elements"]], 1], Replace[Composition @@ DeleteCases[None] @ Reverse @ Through[ops["Label"]], Identity -> None]]
 ]
 
 

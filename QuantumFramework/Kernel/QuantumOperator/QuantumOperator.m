@@ -323,7 +323,7 @@ QuantumOperator[qo_ ? QuantumOperatorQ,
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qb_ ? QuantumBasisQ] := QuantumBasis[
     AssociationThread[qo["Output"]["Names"], qo[#]["StateVector"] & /@ qb["BasisStates"]],
-    "Label" -> qo["Label"] @* qb["Label"],
+    "Label" -> Replace[DeleteCases[qo["Label"] @* qb["Label"], None], Identity -> None],
     qb["Meta"]
 ]
 
@@ -375,7 +375,7 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
                 ]
             ]["Split", Length[out]],
             "Picture" -> If[MemberQ[{top["Picture"], bot["Picture"]}, "PhaseSpace"], "PhaseSpace", top["Picture"]],
-            "Label" -> top["Label"] @* bot["Label"],
+            "Label" -> Replace[DeleteCases[top["Label"] @* bot["Label"], None], Identity -> None],
             "ParameterSpec" -> MergeParameterSpecs[top, bot]
         ];
         With[{
