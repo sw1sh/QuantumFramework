@@ -640,7 +640,7 @@ drawWireLabels[wireLabels_, min_, max_, height_, opts : OptionsPattern[]] := Blo
 	labels
 },
 	labels = Replace[wireLabels, {
-		rules : {_Rule...} | _Association :> ReplacePart[Range[min, max], Cases[Normal[rules], HoldPattern[i_Integer /; min <= i <= max -> _]]],
+		rules : {_Rule...} | _Association :> Replace[Range[min, max], Cases[Normal[rules], HoldPattern[i_Integer /; min <= i <= max -> _]], {1}],
 		l : Placed[Automatic, _] :> Table[l, max - min + 1],
 		Automatic :> Range[min, max],
 		None -> {}
@@ -864,8 +864,8 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, defaultOverl
 			];
 			{
 				gatePos = SubsetMap[With[{x = Max[gatePos[[pos]]]}, overlapShift[x] + ConstantArray[x, Length[pos]]] &, gatePos, List /@ pos],
-				gatePos + shift,
-				Merge[{ranges, Max[gatePos[[pos]]] -> fullPos}, Apply[Union]]
+				gatePos = gatePos + shift,
+				Merge[{ranges, Max[gatePos[[pos]]] - 1 -> fullPos}, Apply[Union]]
 			}
 		] &,
 		{ConstantArray[0, width], ConstantArray[0, width], <|0 -> {}|>},
