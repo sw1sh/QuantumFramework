@@ -1,6 +1,8 @@
 Package["Wolfram`QuantumFramework`"]
 
-PackageScope[ZXTensorNetwork]
+PackageExport[ZXTensorNetwork]
+PackageExport[ZXTensorNetworkQuantumCircuit]
+PackageExport[ZXExpression]
 
 
 
@@ -101,4 +103,38 @@ ZXTensorNetwork[qc_, opts : OptionsPattern[]] := Enclose @ Block[{edges, types, 
 		PerformanceGoal -> "Quality"
 	]
 ]
+
+
+ZXTensorNetworkQuantumCircuit[net_ ? TensorNetworkQ] := Block[{vs = VertexList[net], angles, names, qc},
+	names = Replace[AnnotationValue[{net, vs}, VertexStyle], {Green -> "ZSpider", Red -> "XSpider", Yellow -> "H", Black -> None}, {1}];
+	angles = Replace[AnnotationValue[{net, vs}, VertexLabels], {Placed[angle_, _] :> angle, _ -> 0}, {1}];
+	qc = QuantumCircuitOperator @ AnnotationDelete[
+		Graph[
+			net,
+			VertexLabels -> Thread[vs -> MapThread[If[MatchQ[#1, "ZSpider" | "XSpider"], #1[#2], #1] &, {names, angles}]]
+		],
+		"Index"
+	];
+	
+	QuantumCircuitOperator[Select[qc["Operators"], #["Label"] =!= None &], "ZX"]
+]
+
+
+ZXExpression[qc_QuantumCircuitOperator] := Block[{net = qc["TensorNetwork"], vs, tensorProduct},
+
+	tensorProduct[] := 1;
+	tensorProduct[x_] := x;
+	tensorProduct[xs__] := CircleTimes[xs];
+	
+	vs = Developer`FromPackedArray[VertexList[net]];
+	SmallCircle @@ DeleteCases[\[FormalCapitalT][1, ___]] @ MapThread[
+		\[FormalCapitalT][
+			Replace[#1, {type_[phase_] :> Replace[type, {"ZSpider" -> \[FormalCapitalZ], "XSpider" -> \[FormalCapitalX]}][Nest[\[FormalCapitalS], 0, Round[phase / (Pi / 8)]]], type_ :> Replace[type, {"I" -> 1, "H" -> \[FormalCapitalH]}]}],
+			tensorProduct @@ #2, tensorProduct @@ #3
+		] &,
+		{AnnotationValue[{net, vs}, VertexLabels], VertexInComponent[net, #, {1}] & /@ vs, VertexOutComponent[net, #, {1}] & /@ vs}
+	]
+]
+
+ZXExpression[net_Graph] := ZXExpression[ZXTensorNetworkQuantumCircuit[net]]
 
