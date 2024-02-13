@@ -669,8 +669,6 @@ QuantumCircuitOperator[qs_QuantumState | {"QuantumState", qs_QuantumState}, opts
 QuantumCircuitOperator["QuantumState", opts___] := QuantumCircuitOperator[{"QuantumState", QuantumState[{"UniformSuperposition", 3}]}, opts]
 
 
-QuantumCircuitOperator[name : "CHSH" | "WignerCHSH"] := QuantumCircuitOperator[{name, Pi / 4}]
-
 QuantumCircuitOperator[{"CHSH", theta_ : Pi / 4}] :=
     QuantumCircuitOperator[{
         QuantumOperator["Cup" / Sqrt[2], {1, 4}, "Label" -> "Cup"],
@@ -679,8 +677,15 @@ QuantumCircuitOperator[{"CHSH", theta_ : Pi / 4}] :=
         QuantumCircuitOperator[{"I", {"C", "H"} -> {2, 1}}, "Alice"],
         QuantumCircuitOperator[{{"RY", theta} -> 4, {"C0", "H"} -> {3, 4}}, "Bob"],
         "Barrier",
-        {1, 2}, {3, 4}
+        {1}, {2}, {3}, {4}
     }]
+
+
+QuantumCircuitOperator[{"LeggettGarg", theta_ : Pi / 4}] := QuantumCircuitOperator[{
+    QuantumCircuitOperator[{"+" -> 2, "+" -> 3}, "Charlie"], "Barrier",
+    QuantumCircuitOperator[{{"C", "H"} -> {2, 1}, {1}, {"C", "H"}}, "Alice"], "Barrier", 
+    QuantumCircuitOperator[{"RY"[theta], {"C0", "H"} -> {3, 1}}, "Bob"], "Barrier", {1}, {2}, {3}}
+]
 
 QuantumCircuitOperator[{"WignerCHSH", theta_ : Pi / 4}] := Block[{
     basis = QuditBasis[CharacterRange["a", "d"], QuditBasis["WignerMIC"]["Elements"]],
