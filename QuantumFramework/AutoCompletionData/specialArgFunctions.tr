@@ -320,6 +320,7 @@
             "Multiplexer",
             "QuantumState",
             "CHSH",
+            "LeggettGarg",
             "WignerCHSH"
         }
     },

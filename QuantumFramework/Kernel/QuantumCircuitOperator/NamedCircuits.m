@@ -24,7 +24,7 @@ $QuantumCircuitOperatorNames = {
     "Magic",
     "Multiplexer",
     "QuantumState",
-    "CHSH", "WignerCHSH"
+    "CHSH", "LeggettGarg", "WignerCHSH"
 }
 
 
