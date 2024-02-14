@@ -100,7 +100,7 @@ QuditBasisProp[qb_, "NameTensor"] := ArrayReshape[qb["Names"], qb["Shape"]]
 
 computationalBasisQ[repr_] := And @@ ResourceFunction["KeyGroupBy"][repr, Last,
     With[{vs = ArrayReshape[Values @ normalRepresentations @ #, Table[Length[#], 2]]},
-        emptyTensorQ[vs] || SparseArray[vs] == IdentityMatrix[Length[vs], SparseArray]
+        emptyTensorQ[vs] || MatrixQ[vs, NumericQ] && SparseArray[vs] == IdentityMatrix[Length[vs], SparseArray]
     ] &
 ]
 
