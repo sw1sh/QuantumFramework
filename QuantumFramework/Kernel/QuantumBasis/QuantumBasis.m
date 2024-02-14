@@ -209,3 +209,18 @@ Scan[
     (Symbol[#][qb_QuantumBasis, args___] ^:= qb[#, args]) &,
     {"Simplify", "FullSimplify", "Chop", "ComplexExpand"}
 ]
+
+
+(* parameterization *)
+
+(qb_QuantumBasis ? QuantumBasisQ)[ps : PatternSequence[p : Except[_Association], ___]] /; ! MemberQ[QuantumBasis["Properties"], p] && Length[{ps}] <= qb["ParameterArity"] :=
+    qb[AssociationThread[Take[qb["Parameters"], UpTo[Length[{ps}]]], {ps}]]
+
+(qb_QuantumBasis ? QuantumBasisQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qb["Parameters"]] :=
+    QuantumBasis[
+        "Output" -> Map[Map[ReplaceAll[rules], #, {ArrayDepth[#]}] &, qb["Output"]["Representations"]],
+        "Input" -> Map[Map[ReplaceAll[rules], #, {ArrayDepth[#]}] &, qb["Input"]["Representations"]],
+        "Label" -> qb["Label"] /. rules,
+        "ParameterSpec" -> DeleteCases[qb["ParameterSpec"], {Alternatives @@ Keys[rules], __}]
+    ]
+

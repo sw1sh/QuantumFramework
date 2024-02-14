@@ -60,7 +60,6 @@ QuantumState /: MakeBoxes[qs_QuantumState /; QuantumStateQ[qs], format_] := Encl
                 Row[{"{", Row[qs["OutputDimensions"], ","], " | ", Row[Style[#, Bold] & /@ qs["InputDimensions"], ","], "}"}]}]
         },
         {
-            BoxForm`SummaryItem[{"ParameterArity: ", qs["ParameterArity"]}],
             BoxForm`SummaryItem[{"Parameters: ", qs["Parameters"]}]
         }
     },

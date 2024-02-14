@@ -39,7 +39,6 @@ QuantumChannel /: MakeBoxes[qc_QuantumChannel /; QuantumChannelQ[qc], format_] :
                 BoxForm`SummaryItem[{"Dimensions: ", Row[{qc["InputDimensions"]}]}]
             },
             {
-                BoxForm`SummaryItem[{"ParameterArity: ", qc["ParameterArity"]}],
                 BoxForm`SummaryItem[{"Parameters: ", qc["Parameters"]}]
             }
         },

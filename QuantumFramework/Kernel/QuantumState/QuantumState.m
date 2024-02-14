@@ -306,6 +306,6 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
 (qs_QuantumState ? QuantumStateQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qs["Parameters"]] :=
     QuantumState[
         Map[ReplaceAll[rules], qs["State"], {If[qs["VectorQ"], 1, 2]}],
-        QuantumBasis[qs["Basis"], "Label" -> qs["Label"] /. rules, "ParameterSpec" -> DeleteCases[qs["ParameterSpec"], {Alternatives @@ Keys[rules], __}]]
+        qs["Basis"][rules]
     ]
 

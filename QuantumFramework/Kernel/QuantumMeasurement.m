@@ -305,7 +305,6 @@ QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement ? QuantumMeasurementQ, for
                 BoxForm`SummaryItem[{"Entropy: ", TimeConstrained[Enclose[ConfirmQuiet[N @ qm["Entropy"]], Indeterminate &], 1]}]
             },
             {
-                BoxForm`SummaryItem[{"ParameterArity: ", qm["ParameterArity"]}],
                 BoxForm`SummaryItem[{"Parameters: ", qm["Parameters"]}]
             }
         },

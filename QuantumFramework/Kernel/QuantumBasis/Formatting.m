@@ -51,6 +51,9 @@ QuantumBasis /: MakeBoxes[qb_QuantumBasis ? QuantumBasisQ, format : StandardForm
         },
         {
             BoxForm`SummaryItem[{"Element dimensions: ", qb["ElementDimensions"]}]
+        },
+        {
+            BoxForm`SummaryItem[{"Parameters: ", qb["Parameters"]}]
         }
     },
     format,

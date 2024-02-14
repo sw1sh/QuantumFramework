@@ -58,7 +58,6 @@ QuantumOperator /: MakeBoxes[qo_QuantumOperator /; QuantumOperatorQ[qo], format_
                 ]
             },
             {
-                BoxForm`SummaryItem[{"ParameterArity: ", qo["ParameterArity"]}],
                 BoxForm`SummaryItem[{"Parameters: ", qo["Parameters"]}]
             }
         },
