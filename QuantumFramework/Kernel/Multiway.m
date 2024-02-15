@@ -16,11 +16,11 @@ operatorApply[op_ ? QuantumOperatorQ, states : {_ ? QuantumStateQ ...}] := Enclo
 		#[[1]] -> ReplacePart[states, Thread[outputOrder -> #[[2]]]] &,
 		Which[
 			inputOrder === outputOrder === {},
-			{FullSimplify[op["Norm"]] -> {}},
+			{Simplify[op["Norm"]] -> {}},
 			inputOrder === {},
-			op["State"]["FullSimplify"]["DecomposeWithAmplitudes", op["OutputDimensions"]],
+			op["State"]["Simplify"]["DecomposeWithAmplitudes", op["OutputDimensions"]],
 			True,
-			op["State"][QuantumTensorProduct @@ states[[inputOrder]]]["FullSimplify"]["DecomposeWithAmplitudes", op["OutputDimensions"]]
+			op["State"][QuantumTensorProduct @@ states[[inputOrder]]]["Simplify"]["DecomposeWithAmplitudes", op["OutputDimensions"]]
 		]
 	]
 ]
@@ -150,7 +150,7 @@ QuantumCircuitPathGraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]] 
 	g = VertexReplace[
 		ResourceFunction["FoldGraph"][{bot, top} |->
 			MapThread[
-				With[{amplitude = Chop @ FullSimplify[#2]}, If[amplitude == 0, Nothing, Labeled[{MapAt[# + 1 &, Join[AssociationThread[top["OutputOrder"] -> 0], bot[[1]]], {Key[#]} & /@ top["OutputOrder"]], #1}, {amplitude, top["Order"]}]]] &,
+				With[{amplitude = Chop @ Simplify[#2]}, If[amplitude == 0, Nothing, Labeled[{MapAt[# + 1 &, Join[AssociationThread[top["OutputOrder"] -> 0], bot[[1]]], {Key[#]} & /@ top["OutputOrder"]], #1}, {amplitude, top["Order"]}]]] &,
 				With[{newOp = top[bot[[2]]]["Sort"]},
 					{QuantumOperator[#, {newOp["OutputOrder"], {}}] & /@ newOp["OutputBasis"]["BasisStates"], newOp["StateVector"]}
 				]

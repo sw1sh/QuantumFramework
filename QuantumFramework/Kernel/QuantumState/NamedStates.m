@@ -154,7 +154,7 @@ wernerState[p_, qb_QuditBasis] /; qb["Qudits"] == 2 :=
         fAB = QuantumOperator[{"Permutation", qb["Dimensions"], Cycles[{{1, 2}}]}]["Matrix"];
         sym = IdentityMatrix[dim] + fAB;
         as = IdentityMatrix[dim] - fAB;
-        QuantumState[p sym 1 / (dim + d) + 1 / (dim - d) (1 - p) as // FullSimplify, qb]
+        QuantumState[p sym 1 / (dim + d) + 1 / (dim - d) (1 - p) as // Simplify, qb]
     ]
 
 QuantumState["Werner", args___] := QuantumState[{"Werner", .5, 2}, args]

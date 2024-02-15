@@ -50,7 +50,7 @@ Options[QuantumWignerMICBasis] := Options[QuantumWignerMICPOVM]
 QuantumWignerMICBasis[d : _Integer ? Positive : 2, opts : OptionsPattern[]] := Block[{povm = QuantumWignerMICPOVM[d, opts], G, dual},
     G = Simplify @ Outer[Tr @* Dot, povm, povm, 1];
     dual = Inverse[G] . povm;
-    FullSimplify @ QuditBasis @ AssociationThread[
+    Simplify @ QuditBasis @ AssociationThread[
         If[ OddQ[d],
             Table[Subscript["\[ScriptCapitalM]", i], {i, d ^ 2}],
             If[ d == 2,
@@ -68,7 +68,7 @@ QuantumWignerMICBasis[d : _Integer ? Positive : 2, opts : OptionsPattern[]] := B
 QuantumWignerMICBasis[basisArgs_, opts : OptionsPattern[]] := QuantumTensorProduct[QuantumWignerMICBasis[#, opts] & /@ QuantumBasis[basisArgs]["Dimensions"]]
 
 
-QuantumWignerMICTransform[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := FullSimplify @ QuantumTensorProduct[QuantumWignerMICBasis[#, opts] & /@ qb["Dimensions"]]
+QuantumWignerMICTransform[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := Simplify @ QuantumTensorProduct[QuantumWignerMICBasis[#, opts] & /@ qb["Dimensions"]]
 
 QuantumWignerMICTransform[qb_ ? QuantumBasisQ, opts : OptionsPattern[]] :=
     Enclose @ QuantumBasis[
@@ -78,7 +78,7 @@ QuantumWignerMICTransform[qb_ ? QuantumBasisQ, opts : OptionsPattern[]] :=
     ]
 
 
-QuantumWignerMICTransform[qs_ ? QuantumStateQ, opts : OptionsPattern[]] := Enclose @ Chop @ FullSimplify @ QuantumState[
+QuantumWignerMICTransform[qs_ ? QuantumStateQ, opts : OptionsPattern[]] := Enclose @ Chop @ Simplify @ QuantumState[
     qs["Double"],
     ConfirmBy[QuantumWignerMICTransform[qs["Basis"], opts, "Exact" -> ! qs["NumberQ"]], QuantumBasisQ]
 ]

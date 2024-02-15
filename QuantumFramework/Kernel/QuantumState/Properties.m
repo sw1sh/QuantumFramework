@@ -321,7 +321,7 @@ QuantumStateProp[qs_, prop : "Chop" | "ComplexExpand", args___] := QuantumState[
 
 (* normalization *)
 
-QuantumStateProp[qs_, "Norm"] := FullSimplify @ If[qs["StateType"] === "Vector", Norm[qs["StateVector"]], Tr @ qs["DensityMatrix"]]
+QuantumStateProp[qs_, "Norm"] := Simplify @ If[qs["StateType"] === "Vector", Norm[qs["StateVector"]], Tr @ qs["DensityMatrix"]]
 
 QuantumStateProp[qs_, "TraceNorm"] := Total @ SingularValueList @ qs["DensityMatrix"]
 

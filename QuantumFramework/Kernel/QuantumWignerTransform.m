@@ -27,7 +27,7 @@ WignerBasis[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := Block[{d, x, z},
                 Subscript["\[ScriptCapitalW]", Row[#]] & /@ Tuples[Range[0, d - 1], 2],
                 Subsuperscript["\[ScriptCapitalW]", Row[{#1, #3}], Replace[{#2, #4}, {{0, 0} -> 1, {0, 1} -> 2, {1, 0} -> 4, {1, 1} -> 3}]] & @@@ Tuples[{Range[0, d/2 - 1], {0, 1}, Range[0, d/2 - 1], {0, 1}}]
             ],
-            Chop @ FullSimplify @ Catenate[If[ OddQ[d],
+            Chop @ Simplify @ Catenate[If[ OddQ[d],
                 Table[fanoMatrix[d, 2 q, 2 p, x, z], {q, 0, d - 1}, {p, 0, d - 1}],
                 Table[2 fanoMatrix[d, q, p, x, z], {q, 0, d - 1}, {p, 0, d - 1}]
             ]]

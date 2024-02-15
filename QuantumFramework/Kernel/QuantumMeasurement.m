@@ -177,7 +177,7 @@ QuantumMeasurementProp[qm_, "NDistribution"] := CategoricalDistribution[
 
 QuantumMeasurementProp[qm_, "Distribution"] := CategoricalDistribution[
     qm["Outcomes"],
-    FullSimplify @ Normal @ qm["ProbabilitiesList"]
+    Simplify @ Normal @ qm["ProbabilitiesList"]
 ]
 
 QuantumMeasurementProp[qm_, "NMultivariateDistribution"] := CategoricalDistribution[
@@ -185,7 +185,7 @@ QuantumMeasurementProp[qm_, "NMultivariateDistribution"] := CategoricalDistribut
 ]
 
 QuantumMeasurementProp[qm_, "MultivariateDistribution"] := With[{values = Replace[qm["EigenvalueVectors"], x_ ? NumberQ :> Round[x] /; x == Round[x], {-1}]},
-    CategoricalDistribution[Thread[values -> Chop @ FullSimplify @ Normal @ qm["ProbabilitiesList"]]]
+    CategoricalDistribution[Thread[values -> Chop @ Simplify @ Normal @ qm["ProbabilitiesList"]]]
 ]
 
 QuantumMeasurementProp[qm_, "Probabilities"] := AssociationThread[

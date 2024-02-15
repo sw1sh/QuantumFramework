@@ -121,7 +121,7 @@ blockDiagonalMatrix[ms : {__ ? MatrixQ}] := MyBlockDiagonalMatrix[DeleteCases[ms
 Options[eigensystem] = {"Sort" -> False, "Normalize" -> False, Chop -> False}
 
 eigensystem[matrix_, OptionsPattern[]] := Module[{values, vectors},
-    {values, vectors} = Chop @ FullSimplify @ Enclose[
+    {values, vectors} = Chop @ Simplify @ Enclose[
         ConfirmBy[
             If[ TrueQ[OptionValue[Chop]],
                 If[ Precision[matrix] === MachinePrecision,
@@ -197,7 +197,7 @@ spinMatrix[3, dimension_] := With[{
 ]
 
 fanoMatrix[d_, q_, p_, x_ : Automatic, z_ : Automatic] :=
-    FullSimplify @
+    Simplify @
     Exp[I Pi q p / d] *
         MatrixPower[FourierMatrix[d], 2] .
             MatrixPower[Replace[z, Automatic :> ConjugateTranspose[pauliMatrix[3, d]]], q] .
