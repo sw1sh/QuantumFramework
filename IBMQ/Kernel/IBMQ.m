@@ -27,7 +27,7 @@ IBMQdata[] = {
             ConfirmMatch[
                 OAuthDialogDump`Private`MultipleKeyDialog[
                     "IBMQ",
-                    {"API token" -> "token"},
+                    {"API token" -> {"token", FieldMasked -> True}},
                     "https://quantum-computing.ibm.com/account",
                     "https://quantum-computing.ibm.com/terms/privacy"
                 ],

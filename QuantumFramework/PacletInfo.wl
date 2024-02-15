@@ -46,7 +46,7 @@ PacletObject[
       {"AutoCompletionData", "Root" -> "AutoCompletionData"},
       {"FrontEnd"},
       {"Asset", "Root" -> "Assets", "Assets" -> {
-        {"IBMQ.paclet", "ServiceConnection_IBMQ-0.0.3.paclet"},
+        {"IBMQ.paclet", "ServiceConnection_IBMQ-0.0.4.paclet"},
         {"Cotengra.paclet", "Cotengra-0.1.paclet"}
       }}
     }
