@@ -4,7 +4,7 @@ PackageScope["$QuantumMeasurementOperatorNames"]
 
 
 
-$QuantumMeasurementOperatorNames = {"RandomHermitian", "WignerMICPOVM"}
+$QuantumMeasurementOperatorNames = {"RandomHermitian", "WignerMICPOVM", "Tetrahedron"}
 
 
 QuantumMeasurementOperator[{"RandomHermitian", args___}, target : _ ? targetQ : {1}, opts___] := With[{
@@ -29,6 +29,18 @@ QuantumMeasurementOperator[{"WignerMICPOVM", args___}, target : _ ? targetQ : {1
     ],
     opts
 ]
+
+QuantumMeasurementOperator[{"Tetrahedron", ___}, opts___] :=
+    Simplify @ QuantumMeasurementOperator[
+        KroneckerProduct[#, Conjugate[#]] / 2 & /@
+        {
+            {1, 0},
+            {1, Sqrt[2]} / Sqrt[3],
+            {1, Sqrt[2] E ^ (I 2 Pi / 3)} / Sqrt[3],
+            {1, Sqrt[2] E ^ (I 4 Pi / 3)} / Sqrt[3]
+        },
+        opts
+    ]
 
 
 QuantumMeasurementOperator[name_String | name_String[args___], opts___] /; MemberQ[$QuantumMeasurementOperatorNames, name] := QuantumMeasurementOperator[{name, args}, opts]

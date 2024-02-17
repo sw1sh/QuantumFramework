@@ -10,7 +10,8 @@ $QuditBasisNames = {
     "JX", "JY", "JZ",
     "Bell",
     "Fourier",
-    "Schwinger", "Pauli", "Dirac", "Wigner", "WignerMIC"
+    "Schwinger", "Pauli", "Dirac", "Wigner", "WignerMIC",
+    "Tetrahedron"
 }
 
 $QuditBasisCache = <||>
@@ -173,6 +174,14 @@ QuditBasis[{"Wigner", basisArgs___, opts : OptionsPattern[]}, args___] := QuditB
 
 
 QuditBasis["WignerMIC" | {"WignerMIC", args___}, opts___] := QuditBasis[QuantumWignerMICBasis[args], opts]
+
+
+QuditBasis["Tetrahedron"] := QuditBasis[
+    Subscript["\[ScriptCapitalT]", #] & /@ Range[4],
+    With[{povm = Normal /@ QuantumMeasurementOperator["Tetrahedron"]["POVMElements"]},
+        Inverse[Outer[Tr @* Dot, povm, povm, 1]] . povm // Simplify
+    ]
+]
 
 
 QuditBasis[pauliString_String] := With[{chars = Characters[pauliString]},

@@ -19,7 +19,8 @@
             "Pauli",
             "Dirac",
             "Wigner",
-            "WignerMIC"
+            "WignerMIC",
+            "Tetrahedron"
         }
     },
     "QuantumBasis" -> {
@@ -42,7 +43,8 @@
             "Pauli",
             "Dirac",
             "Wigner",
-            "WignerMIC"
+            "WignerMIC",
+            "Tetrahedron"
         }
     },
     "QuantumState" -> {
@@ -94,7 +96,8 @@
             "Pauli",
             "Dirac",
             "Wigner",
-            "WignerMIC"
+            "WignerMIC",
+            "Tetrahedron"
         }
     },
     "QuantumOperator" -> {
@@ -199,7 +202,8 @@
             "Pauli",
             "Dirac",
             "Wigner",
-            "WignerMIC"
+            "WignerMIC",
+            "Tetrahedron"
         }
     },
     "QuantumMeasurementOperator" -> {
@@ -223,8 +227,10 @@
             "Dirac",
             "Wigner",
             "WignerMIC",
+            "Tetrahedron",
             "RandomHermitian",
-            "WignerMICPOVM"
+            "WignerMICPOVM",
+            "Tetrahedron"
         },
         {
             "Computational",
@@ -245,7 +251,8 @@
             "Pauli",
             "Dirac",
             "Wigner",
-            "WignerMIC"
+            "WignerMIC",
+            "Tetrahedron"
         }
     },
     "QuantumChannel" -> {
@@ -278,7 +285,8 @@
             "Pauli",
             "Dirac",
             "Wigner",
-            "WignerMIC"
+            "WignerMIC",
+            "Tetrahedron"
         }
     },
     "QuantumCircuitOperator" -> {
