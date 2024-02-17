@@ -528,71 +528,60 @@ Options[drawWires] = {"Size" -> .75,
 	"DimensionWires" -> True,
 	"ShowWireDimensions" -> False
 };
-drawWires[wires_List, OptionsPattern[]] := With[{
+drawWires[wires_List, OptionsPattern[]] := Block[{
 	size = OptionValue["Size"],
 	vGapSize = OptionValue["VerticalGapSize"],
 	hGapSize = OptionValue["HorizontalGapSize"],
 	height = Max[wires[[All, All, 2, 1]]],
 	endpointsQ = TrueQ[OptionValue["ShowWireEndpoints"]],
-	wireThickness = If[TrueQ[OptionValue["DimensionWires"]], defaultWireThickness, AbsoluteThickness[1] &]
+	wireThickness = If[TrueQ[OptionValue["DimensionWires"]], defaultWireThickness, AbsoluteThickness[1] &],
+	wireGroups = Catenate @* DeleteMissing /@ Thread @ Values @ Merge[KeyUnion[GroupBy[Take[#, 2] &] /@ wires], Identity],
+	points
 },
+	points = {
+		{#1, #2} -> {#3, If[	TrueQ[OptionValue["LongOuterWires"]],
+			{{hGapSize #1[[1]] + size / 2, - vGapSize #1[[2]]}, {hGapSize (#1[[1]] + #2[[1]]) / 2, - vGapSize #2[[2]]}},
+			Which[
+				#1[[1]] == 0,
+				{{hGapSize - size / 2, - vGapSize #1[[2]]}, {hGapSize #2[[1]] - size / 2, - vGapSize #2[[2]]}},
+				#2[[1]] == height,
+				{{hGapSize #1[[1]] + size / 2, - vGapSize #1[[2]]}, {hGapSize (#2[[1]] - 1) + size / 2, - vGapSize #2[[2]]}},
+				True,
+				{{hGapSize #1[[1]] + size / 2, - vGapSize #1[[2]]}, {hGapSize (#1[[1]] + #2[[1]]) / 2, - vGapSize #2[[2]]}}
+			]
+		]} & @@@ wires[[1]],
+		{#1, #2} -> {#3, If[ TrueQ[OptionValue["LongOuterWires"]],
+			Which[
+				#2[[1]] == height || #1[[1]] == 0,
+				{{hGapSize #1[[1]] + size / 2, - vGapSize #1[[2]]}, {hGapSize #2[[1]] - size / 2, - vGapSize #2[[2]]}},
+				True,
+				{{hGapSize (#1[[1]] + #2[[1]]) / 2, - vGapSize #1[[2]]}, {hGapSize #2[[1]] - size / 2, - vGapSize #2[[2]]}}
+			],
+			Which[
+				#1[[1]] == 0,
+				{{hGapSize - size / 2, - vGapSize #1[[2]]}, {hGapSize #2[[1]] - size / 2, - vGapSize #2[[2]]}},
+				#2[[1]] == height,
+				{{hGapSize #1[[1]] + size / 2, - vGapSize #1[[2]]}, {hGapSize (#2[[1]] - 1) + size / 2, - vGapSize #2[[2]]}},
+				True,
+				{{hGapSize (#1[[1]] + #2[[1]]) / 2, - vGapSize #1[[2]]}, {hGapSize #2[[1]] - size / 2, - vGapSize #2[[2]]}}
+			]
+		]} & @@@ wires[[2]]
+	};
+	points = Values @ Merge[
+		KeyUnion[points],
+		Which[MissingQ[#[[1]]], #[[2]], #[[1, 1]] == #[[2, 1]], {#[[1, 1]], {#[[1, 2, 1]], #[[2, 2, 2]]}}, True, Splice @ Thread[{#[[All, 1]], #[[All, 2]]}]] &
+	];
 	{
 		Replace[OptionValue["WireStyle"], Automatic -> Directive[CapForm[None], $DefaultGray, Opacity[.3]]],
-		MapApply[
-			With[{
-				points = If[TrueQ[OptionValue["LongOuterWires"]],
-					{{hGapSize #1[[1]] + size / 2, - vGapSize #1[[2]]}, {hGapSize (#1[[1]] + #2[[1]]) / 2, - vGapSize #2[[2]]}},
-					Which[
-						#1[[1]] == 0,
-						{{hGapSize - size / 2, - vGapSize #1[[2]]}, {hGapSize #2[[1]] - size / 2, - vGapSize #2[[2]]}},
-						#2[[1]] == height,
-						{{hGapSize #1[[1]] + size / 2, - vGapSize #1[[2]]}, {hGapSize (#2[[1]] - 1) + size / 2, - vGapSize #2[[2]]}},
-						True,
-						{{hGapSize #1[[1]] + size / 2, - vGapSize #1[[2]]}, {hGapSize (#1[[1]] + #2[[1]]) / 2, - vGapSize #2[[2]]}}
-					]
-				]
-			},
-				If[	Subtract @@ points != {0, 0},
-					{
-						wireThickness[#3],
-						If[TrueQ[OptionValue["ShowWireDimensions"]], Text[Style[#3, Opacity[1]], Mean[points], {0, -1}], Nothing],
-						Line[points],
-						If[endpointsQ, {Opacity[1], PointSize[Scaled[0.003]], Point /@ points} , Nothing]
-					}
-				]
-			] &,
-			wires[[1]]
-		],
-		MapApply[
-			With[{
-				points = If[ TrueQ[OptionValue["LongOuterWires"]],
-					Which[
-						#2[[1]] == height || #1[[1]] == 0,
-						{{hGapSize #1[[1]] + size / 2, - vGapSize #1[[2]]}, {hGapSize #2[[1]] - size / 2, - vGapSize #2[[2]]}},
-						True,
-						{{hGapSize (#1[[1]] + #2[[1]]) / 2, - vGapSize #1[[2]]}, {hGapSize #2[[1]] - size / 2, - vGapSize #2[[2]]}}
-					],
-					Which[
-						#1[[1]] == 0,
-						{{hGapSize - size / 2, - vGapSize #1[[2]]}, {hGapSize #2[[1]] - size / 2, - vGapSize #2[[2]]}},
-						#2[[1]] == height,
-						{{hGapSize #1[[1]] + size / 2, - vGapSize #1[[2]]}, {hGapSize (#2[[1]] - 1) + size / 2, - vGapSize #2[[2]]}},
-						True,
-						{{hGapSize (#1[[1]] + #2[[1]]) / 2, - vGapSize #1[[2]]}, {hGapSize #2[[1]] - size / 2, - vGapSize #2[[2]]}}
-					]]
-			},
-				If[	Subtract @@ points != {0, 0},
-					{
-						wireThickness[#3],
-						If[TrueQ[OptionValue["ShowWireDimensions"]], Text[Style[#3, Opacity[1]], Mean[points], {0, -1}], Nothing],
-						Line[points],
-						If[endpointsQ, {Opacity[1], PointSize[Scaled[0.003]], Point /@ points} , Nothing]
-					}
-				]
-		 	] &,
-			wires[[2]]
+		If[	Subtract @@ #2 != {0, 0},
+			{
+				wireThickness[#1],
+				If[TrueQ[OptionValue["ShowWireDimensions"]], Text[Style[#1, Opacity[1]], Mean[#2], {0, -1}], Nothing],
+				Line[#2],
+				If[endpointsQ, {Opacity[1], PointSize[Scaled[0.003]], Point /@ #2} , Nothing]
+			}
 		]
-	}
+	} & @@@ points
 ]
 
 Options[drawMeasurementWire] = Join[{
