@@ -30,11 +30,10 @@ QuantumMeasurementOperator[{"WignerMICPOVM", args___}, target : _ ? targetQ : {1
     opts
 ]
 
-QuantumMeasurementOperator[{"TetrahedronSICPOVM", ___}, opts___] :=
+QuantumMeasurementOperator[{"TetrahedronSICPOVM", HoldPattern[angles : PatternSequence[__] : Sequence[0, 0, 0]]}, opts___] :=
     Simplify @ QuantumMeasurementOperator[
         QuantumMeasurementOperator[
-            KroneckerProduct[#, Conjugate[#]] / 2 & /@
-            {
+            KroneckerProduct[#, Conjugate[#]] / 2 & [QuantumOperator["U"[angles]]["Matrix"] . #] & /@ {
                 {1, 0},
                 {1, Sqrt[2]} / Sqrt[3],
                 {1, Sqrt[2] E ^ (I 2 Pi / 3)} / Sqrt[3],

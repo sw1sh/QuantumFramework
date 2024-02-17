@@ -176,9 +176,9 @@ QuditBasis[{"Wigner", basisArgs___, opts : OptionsPattern[]}, args___] := QuditB
 QuditBasis["WignerMIC" | {"WignerMIC", args___}, opts___] := QuditBasis[QuantumWignerMICBasis[args], opts]
 
 
-QuditBasis["Tetrahedron"] := QuditBasis[
+QuditBasis["Tetrahedron" | {"Tetrahedron", args___}] := QuditBasis[
     Subscript["\[ScriptCapitalT]", #] & /@ Range[4],
-    With[{povm = Normal /@ QuantumMeasurementOperator["TetrahedronSICPOVM"]["POVMElements"]},
+    With[{povm = Normal /@ QuantumMeasurementOperator["TetrahedronSICPOVM"[args]]["POVMElements"]},
         Inverse[Outer[Tr @* Dot, povm, povm, 1]] . povm // Simplify
     ]
 ]
