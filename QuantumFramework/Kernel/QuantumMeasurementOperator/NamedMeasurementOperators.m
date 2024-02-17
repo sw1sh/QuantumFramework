@@ -4,7 +4,7 @@ PackageScope["$QuantumMeasurementOperatorNames"]
 
 
 
-$QuantumMeasurementOperatorNames = {"RandomHermitian", "WignerMICPOVM", "Tetrahedron"}
+$QuantumMeasurementOperatorNames = {"RandomHermitian", "WignerMICPOVM", "TetrahedronSICPOVM"}
 
 
 QuantumMeasurementOperator[{"RandomHermitian", args___}, target : _ ? targetQ : {1}, opts___] := With[{
@@ -30,15 +30,18 @@ QuantumMeasurementOperator[{"WignerMICPOVM", args___}, target : _ ? targetQ : {1
     opts
 ]
 
-QuantumMeasurementOperator[{"Tetrahedron", ___}, opts___] :=
+QuantumMeasurementOperator[{"TetrahedronSICPOVM", ___}, opts___] :=
     Simplify @ QuantumMeasurementOperator[
-        KroneckerProduct[#, Conjugate[#]] / 2 & /@
-        {
-            {1, 0},
-            {1, Sqrt[2]} / Sqrt[3],
-            {1, Sqrt[2] E ^ (I 2 Pi / 3)} / Sqrt[3],
-            {1, Sqrt[2] E ^ (I 4 Pi / 3)} / Sqrt[3]
-        },
+        QuantumMeasurementOperator[
+            KroneckerProduct[#, Conjugate[#]] / 2 & /@
+            {
+                {1, 0},
+                {1, Sqrt[2]} / Sqrt[3],
+                {1, Sqrt[2] E ^ (I 2 Pi / 3)} / Sqrt[3],
+                {1, Sqrt[2] E ^ (I 4 Pi / 3)} / Sqrt[3]
+            },
+            QuantumBasis[QuantumTensorProduct[QuditBasis[Subscript["\[ScriptCapitalT]", #] & /@ Range[4]], QuditBasis[2]], QuditBasis[2], "Label" -> "TetrahedronSIC"]
+        ],
         opts
     ]
 

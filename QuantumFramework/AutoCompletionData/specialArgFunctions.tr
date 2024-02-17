@@ -230,7 +230,7 @@
             "Tetrahedron",
             "RandomHermitian",
             "WignerMICPOVM",
-            "Tetrahedron"
+            "TetrahedronSICPOVM"
         },
         {
             "Computational",

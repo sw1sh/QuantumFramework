@@ -154,23 +154,27 @@ QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOpe
 
 (* mutation *)
 
-QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, order : _ ? autoOrderQ, args___] := With[{
-    op = QuantumOperator[qmo["QuantumOperator"], order]
-},
-    QuantumMeasurementOperator[op, Replace[qmo["Targets"], Thread[qmo["InputOrder"] -> op["InputOrder"]], {2}], args]
-]
-
 QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, args : PatternSequence[Except[_ ? targetsQ | _ ? targetQ], ___]] :=
     QuantumMeasurementOperator[QuantumOperator[qmo["Operator"], args], qmo["Target"]]
 
 QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, t : _ ? targetQ : Automatic, args___] := With[{
+    oldTarget = qmo["Target"],
     target = Replace[t, Automatic -> qmo["Target"]],
     inputOrder = qmo["Operator"]["InputOrder"]
 },
     QuantumMeasurementOperator[
-        If[inputOrder === {} || ContainsAll[inputOrder, target], QuantumOperator[qmo["Operator"], args], QuantumOperator[qmo["Operator"], target, args]],
+        If[ inputOrder === {} || ContainsAll[inputOrder, target],
+            QuantumOperator[qmo["Operator"], args],
+            QuantumOperator[qmo["Operator"], Replace[qmo["Order"], Thread[Take[oldTarget, UpTo[Length[target]]] -> Take[target, UpTo[Length[oldTarget]]]], {2}], args]
+        ],
         target
     ]
+]
+
+QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, order : _ ? autoOrderQ, args___] := With[{
+    op = QuantumOperator[qmo["QuantumOperator"], order]
+},
+    QuantumMeasurementOperator[op, Replace[qmo["Targets"], Thread[qmo["InputOrder"] -> op["InputOrder"]], {2}], args]
 ]
 
 (* auto reassign bad target *)
