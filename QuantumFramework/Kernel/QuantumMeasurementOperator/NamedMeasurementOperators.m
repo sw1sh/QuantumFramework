@@ -35,9 +35,9 @@ QuantumMeasurementOperator[{"TetrahedronSICPOVM", HoldPattern[angles : PatternSe
         QuantumMeasurementOperator[
             KroneckerProduct[#, Conjugate[#]] / 2 & [QuantumOperator["U"[angles]]["Matrix"] . #] & /@ {
                 {1, 0},
-                {1, Sqrt[2]} / Sqrt[3],
+                {1, Sqrt[2] E ^ (I 4 Pi / 3)} / Sqrt[3],
                 {1, Sqrt[2] E ^ (I 2 Pi / 3)} / Sqrt[3],
-                {1, Sqrt[2] E ^ (I 4 Pi / 3)} / Sqrt[3]
+                {1, Sqrt[2]} / Sqrt[3]
             },
             QuantumBasis[QuantumTensorProduct[QuditBasis[Subscript["\[ScriptCapitalT]", #] & /@ Range[4]], QuditBasis[2]], QuditBasis[2], "Label" -> "TetrahedronSIC"]
         ],
