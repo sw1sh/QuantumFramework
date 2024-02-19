@@ -338,13 +338,13 @@ hadamardProduct[indices_, arrays_] := Block[{
     {
         Keys[dims],
         Times @@ MapThread[
-            SparseArray @ PadRight[
-                Normal @ ArrayReshape[
-                    Transpose[#3, FindPermutation[#1, #2]],
-                    ReplacePart[ConstantArray[1, Length[posIndex]], Thread[Lookup[posIndex, #2, {}] -> Dimensions[#3]]]
-                ],
-                Values[dims],
+            ArrayPad[
+                #,
+                {0, #} & /@ (Values[dims] - Dimensions[#]),
                 "Fixed"
+            ] & @ ArrayReshape[
+                Transpose[#3, FindPermutation[#1, #2]],
+                ReplacePart[ConstantArray[1, Length[posIndex]], Thread[Lookup[posIndex, #2, {}] -> Dimensions[#3]]]
             ] &,
             {indices, newIndices, arrays}
         ]
