@@ -329,8 +329,31 @@ EinsteinSummation[s_String, arrays_] := EinsteinSummation[
 	arrays
 ]
 
+hadamardProduct[indices_, arrays_] := Block[{
+    dims = DeleteDuplicatesBy[Catenate @ MapThread[Thread[#1 -> Dimensions[#2]] &, {indices, arrays}], First],
+    newIndices, posIndex
+},
+    newIndices = (is |-> Select[Keys[dims], MemberQ[is, #] &]) /@ indices;
+    posIndex = First /@ PositionIndex[Keys[dims]];
+    {
+        Keys[dims],
+        Times @@ MapThread[
+            PadRight[
+                ArrayReshape[
+                    Transpose[#3, FindPermutation[#1, #2]],
+                    ReplacePart[ConstantArray[1, Length[posIndex]], Thread[Lookup[posIndex, #2, {}] -> Dimensions[#3]]]
+                ],
+                Values[dims],
+                "Fixed"
+            ] &,
+            {indices, newIndices, arrays}
+        ]
+    }
+]
+
 isum[in_List -> out_, arrays_List] := Enclose @ Module[{
-	indices, dimensions, contracted, contractions, multiplicity, tensor, transpose
+	nonFreePos, freePos, nonFreeIn, nonFreeArray,
+    newArrays, newIn, indices, dimensions, contracted, contractions, multiplicity, tensor, transpose
 },
 	If[ Length[in] != Length[arrays],
         Message[EinsteinSummation::length, Length[in], Length[arrays]];
@@ -343,14 +366,24 @@ isum[in_List -> out_, arrays_List] := Enclose @ Module[{
 		] &,
 		{in, arrays}
 	];
-	indices = Catenate[in];
-    dimensions = Catenate[Dimensions /@ arrays];
+    nonFreePos = Catenate @ Position[in, _ ? (ContainsAny[out]), {1}, Heads -> False];
+    freePos = Complement[Range[Length[in]], nonFreePos];
+    If[ Length[nonFreePos] > 0,
+        {nonFreeIn, nonFreeArray} = hadamardProduct[in[[nonFreePos]], arrays[[nonFreePos]]];
+        newArrays = Prepend[arrays[[freePos]], nonFreeArray];
+        newIn = Prepend[in[[freePos]], nonFreeIn]
+        ,
+        newArrays = arrays;
+        newIn = in
+    ];
+	indices = Catenate[newIn];
+    dimensions = Catenate[Dimensions /@ newArrays];
 	contracted = DeleteElements[indices, 1 -> out];
 	contractions = Flatten[Take[Position[indices, #[[1]], {1}, Heads -> False], UpTo[#[[2]]]]] & /@ Tally[contracted];
     If[! AllTrue[contractions, Equal @@ dimensions[[#]] &], Message[EinsteinSummation::dim]; Confirm[$Failed]];
 	indices = DeleteElements[indices, 1 -> contracted];
 	If[! ContainsAll[indices, out], Message[EinsteinSummation::output]; Confirm[$Failed]];
-    tensor = Activate @ TensorContract[Inactive[TensorProduct] @@ arrays, contractions];
+    tensor = Activate @ TensorContract[Inactive[TensorProduct] @@ newArrays, contractions];
 	multiplicity = Max @ Merge[{Counts[out], Counts[indices]}, Apply[Ceiling[#1 / #2] &]];
 	If[ multiplicity > 1,
 		indices = Catenate @ ConstantArray[indices, multiplicity];
