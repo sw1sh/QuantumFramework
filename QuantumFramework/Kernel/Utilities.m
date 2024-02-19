@@ -338,8 +338,8 @@ hadamardProduct[indices_, arrays_] := Block[{
     {
         Keys[dims],
         Times @@ MapThread[
-            PadRight[
-                ArrayReshape[
+            SparseArray @ PadRight[
+                Normal @ ArrayReshape[
                     Transpose[#3, FindPermutation[#1, #2]],
                     ReplacePart[ConstantArray[1, Length[posIndex]], Thread[Lookup[posIndex, #2, {}] -> Dimensions[#3]]]
                 ],
@@ -366,9 +366,9 @@ isum[in_List -> out_, arrays_List] := Enclose @ Module[{
 		] &,
 		{in, arrays}
 	];
-    nonFreePos = Catenate @ Position[in, _ ? (ContainsAny[out]), {1}, Heads -> False];
-    freePos = Complement[Range[Length[in]], nonFreePos];
-    If[ Length[nonFreePos] > 0,
+    If[ AnyTrue[out, Count[in, {___, #, ___}] > 1 &],
+        nonFreePos = Catenate @ Position[in, _ ? (ContainsAny[out]), {1}, Heads -> False];
+        freePos = Complement[Range[Length[in]], nonFreePos];
         {nonFreeIn, nonFreeArray} = hadamardProduct[in[[nonFreePos]], arrays[[nonFreePos]]];
         newArrays = Prepend[arrays[[freePos]], nonFreeArray];
         newIn = Prepend[in[[freePos]], nonFreeIn]
