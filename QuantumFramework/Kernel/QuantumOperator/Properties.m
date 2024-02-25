@@ -478,8 +478,8 @@ QuantumOperatorProp[qo_, "Transpose", order : {(List | Rule)[_Integer, _Integer]
 ]
 
 
-QuantumOperatorProp[qo_, "Dagger" | "ConjugateTranspose"] := simplifyLabel @ QuantumOperator[
-    qo["State"]["Dagger"], {qo["InputOrder"], qo["OutputOrder"]}]
+QuantumOperatorProp[qo_, prop : "Dagger" | "ConjugateTranspose" | "Inverse"] := simplifyLabel @ QuantumOperator[
+    qo["State"][prop], {qo["InputOrder"], qo["OutputOrder"]}]
 
 QuantumOperatorProp[qo_, prop : "Conjugate" | "Dual"] := QuantumOperator[qo["State"][prop], qo["Order"]]
 

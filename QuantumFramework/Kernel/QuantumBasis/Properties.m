@@ -27,7 +27,7 @@ $QuantumBasisProperties = {
     "FullQudits", "FullInputQudits", "FullOutputQudits",
     "InputBasis", "OutputBasis",
     "ComputationalQ",
-    "Dual", "Transpose", "ConjugateTranspose",
+    "Dual", "Transpose", "ConjugateTranspose", "Inverse",
     "Label", "LabelHead",
     "Picture",
     "Diagram",
@@ -233,6 +233,11 @@ QuantumBasisProp[qb_, prop : "Dual" | "Conjugate"] := qb[prop, Range[qb["Qudits"
 QuantumBasisProp[qb_, "Transpose"] := QuantumBasis[qb,
     "Input" -> qb["Output"]["Dual"], "Output" -> qb["Input"]["Dual"],
     "Label" -> simplifyLabel[Superscript[qb["Label"], "T"]]
+]
+
+QuantumBasisProp[qb_, "Inverse"] := QuantumBasis[qb,
+    "Input" -> qb["Output"]["Inverse"]["Dual"], "Output" -> qb["Input"]["Inverse"]["Dual"],
+    "Label" -> simplifyLabel[Superscript[qb["Label"], "-1"]]
 ]
 
 QuantumBasisProp[qb_, "Permute", perm_Cycles] :=

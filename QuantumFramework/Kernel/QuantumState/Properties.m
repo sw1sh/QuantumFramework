@@ -23,7 +23,7 @@ $QuantumStateProperties = {
     "Purify", "Unpurify",
     "Bend", "BendDual", "Unbend", "Double",
     "Pure", "Mixed",
-    "Trace", "Transpose", "Conjugate", "ConjugateTranspose",
+    "Trace", "Transpose", "Conjugate", "ConjugateTranspose", "Inverse",
     "Physical",
     "ReverseOutput", "ReverseInput", "Reverse",
     "TensorReverseOutput", "TensorReverseInput",
@@ -785,6 +785,8 @@ QuantumStateProp[qs_, "Split", n_Integer : 0] := With[{basis = qs["Basis"]["Spli
 QuantumStateProp[qs_, "SplitDual", n_Integer : 0] := With[{basis = qs["Basis"]["SplitDual", n]},
     QuantumState[qs["State"], basis]
 ]
+
+QuantumStateProp[qs_, "Inverse"] := QuantumState[qs["State"], qs["Basis"]["Inverse"]]
 
 
 QuantumStateProp[qs_, "UnstackOutput", n_Integer : 1] /; 1 <= n <= qs["OutputQudits"] :=

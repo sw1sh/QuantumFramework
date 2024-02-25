@@ -167,7 +167,7 @@ QuantumState /: Equal[qs : _QuantumState ...] :=
         And @@ (#["MatrixStateQ"] & /@ {qs}),
         Thread[Equal @@ (Chop @ SetPrecisionNumeric[SparseArrayFlatten @ #["NormalizedMatrixRepresentation"]] & /@ {qs})],
         True,
-        Thread[Equal @@ Through[{qs}]["MatrixState"]]
+        Thread[Equal @@ Through[{qs}["MatrixState"]]]
     ]
 
 

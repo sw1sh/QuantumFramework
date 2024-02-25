@@ -11,7 +11,7 @@ QuditBasis["Properties"] = {
     "MatrixDimensions", "TensorDimensions",
     "ElementsDimensions",
     "Matrix", "Tensor",
-    "Dual", "Conjugate", "Reverse"
+    "Dual", "Conjugate", "Inverse", "Reverse"
 }
 
 
@@ -207,6 +207,8 @@ QuditBasisProp[qb_, "Conjugate"] := QuditBasis[Conjugate /@ qb["Representations"
 QuditBasisProp[qb_, "Conjugate", qudits : {___Integer}] := With[{index = Lookup[MapIndexed[First[#2] -> #1 &, qb["Index"]], qudits, Nothing]},
     QuditBasis @ Association @ KeyValueMap[#1 -> If[MemberQ[index, #1[[2]]], Conjugate[#2], #2] &, qb["Representations"]]
 ]
+
+QuditBasisProp[qb_, "Inverse"] := QuditBasis[Map[OverBar, Normal /@ qb["Names"], {2}], ArrayReshape[#, qb["ElementDimensions"]] & /@ SparsePseudoInverse[qb["ReducedMatrix"]]]
 
 
 QuditBasisProp[qb_, "SortedQ"] := OrderedQ[Last /@ Keys @ qb["Representations"]]
