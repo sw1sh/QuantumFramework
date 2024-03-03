@@ -10,7 +10,7 @@ $QuditBasisNames = {
     "JX", "JY", "JZ",
     "Bell",
     "Fourier",
-    "Schwinger", "Pauli", "Dirac", "Wigner", "WignerMIC",
+    "Schwinger", "Pauli", "Dirac", "Wigner", "WignerMIC", "GellMann",
     "Tetrahedron"
 }
 
@@ -173,10 +173,16 @@ QuditBasis[{"Wigner", qb_QuditBasis /; QuditBasisQ[qb], opts : OptionsPattern[Wi
 QuditBasis[{"Wigner", basisArgs___, opts : OptionsPattern[]}, args___] := QuditBasis[{"Wigner", QuditBasis[basisArgs], opts}, args]
 
 
-QuditBasis["WignerMIC" | {"WignerMIC", args___}, opts___] := QuditBasis[QuantumWignerMICBasis[args], opts]
+QuditBasis[{"WignerMIC", args___}, opts___] := QuditBasis[QuantumWignerMICBasis[args], opts]
 
+QuditBasis[{"GellMann", d : _Integer ? Positive : 2}] := QuditBasis[
+    Subscript["\[ScriptCapitalG]", #] & /@ Range[d ^ 2],
+    With[{povm = Normal /@ GellMannMICPOVM[d]},
+        Inverse[Outer[Tr @* Dot, povm, povm, 1]] . povm // Simplify
+    ]
+]
 
-QuditBasis["Tetrahedron" | {"Tetrahedron", args___}] := QuditBasis[
+QuditBasis[{"Tetrahedron", args___}] := QuditBasis[
     Subscript["\[ScriptCapitalT]", #] & /@ Range[4],
     With[{povm = Normal /@ QuantumMeasurementOperator["TetrahedronSICPOVM"[args]]["POVMElements"]},
         Inverse[Outer[Tr @* Dot, povm, povm, 1]] . povm // Simplify
@@ -195,5 +201,5 @@ QuditBasis[pauliString_String[dimension_Integer ? Positive]] := With[{chars = Ch
 QuditBasis[nameArg_ ? nameQ, args___] /; ! FreeQ[nameArg, _String ? (StringContainsQ["Basis"])] :=
     QuditBasis[nameArg /. name_String :> StringDelete[name, "Basis"], args]
 
-QuditBasis[name_String[args___], opts___] := QuditBasis[{name, args}, opts]
+QuditBasis[name_String[args___] | name_String, opts___] /; MemberQ[$QuditBasisNames, name] := QuditBasis[{name, args}, opts]
 

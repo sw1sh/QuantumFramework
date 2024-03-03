@@ -189,8 +189,9 @@ QuantumState[{"Graph", graph : _ ? GraphQ}, args___] := Module[{
 
 QuantumState["BlochVector", args___] := QuantumState[{"BlochVector", {0, 0, 1}}, args]
 
-QuantumState[{"BlochVector", r_ /; VectorQ[r] && Length[r] == 3}, args___] :=
-    QuantumState[1 / 2 (identityMatrix[2] + r . Table[PauliMatrix[i], {i, 3}]), args]
+QuantumState[{"BlochVector", r_ /; VectorQ[r]}, args___] := With[{d = Ceiling[Sqrt[Length[r] + 1]]},
+    QuantumState[IdentityMatrix[d, SparseArray] / d + Sqrt[(d - 1) / 2 / d] PadRight[r, d ^ 2 - 1] . GellMannMatrices[d], QuantumBasis[d, args]]
+]
 
 
 QuantumState[{"Dicke", n_Integer ? Positive, k_Integer}, args___] /; n >= k := QuantumState[{"Dicke", {n - k, k}}, args]

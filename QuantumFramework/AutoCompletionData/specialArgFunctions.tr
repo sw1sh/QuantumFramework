@@ -20,6 +20,7 @@
             "Dirac",
             "Wigner",
             "WignerMIC",
+            "GellMann",
             "Tetrahedron"
         }
     },
@@ -44,6 +45,7 @@
             "Dirac",
             "Wigner",
             "WignerMIC",
+            "GellMann",
             "Tetrahedron"
         }
     },
@@ -97,6 +99,7 @@
             "Dirac",
             "Wigner",
             "WignerMIC",
+            "GellMann",
             "Tetrahedron"
         }
     },
@@ -203,6 +206,7 @@
             "Dirac",
             "Wigner",
             "WignerMIC",
+            "GellMann",
             "Tetrahedron"
         }
     },
@@ -227,9 +231,11 @@
             "Dirac",
             "Wigner",
             "WignerMIC",
+            "GellMann",
             "Tetrahedron",
             "RandomHermitian",
             "WignerMICPOVM",
+            "GellMannMICPOVM",
             "TetrahedronSICPOVM"
         },
         {
@@ -252,6 +258,7 @@
             "Dirac",
             "Wigner",
             "WignerMIC",
+            "GellMann",
             "Tetrahedron"
         }
     },
@@ -286,6 +293,7 @@
             "Dirac",
             "Wigner",
             "WignerMIC",
+            "GellMann",
             "Tetrahedron"
         }
     },

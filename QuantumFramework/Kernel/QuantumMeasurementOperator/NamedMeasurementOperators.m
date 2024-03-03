@@ -4,7 +4,7 @@ PackageScope["$QuantumMeasurementOperatorNames"]
 
 
 
-$QuantumMeasurementOperatorNames = {"RandomHermitian", "WignerMICPOVM", "TetrahedronSICPOVM"}
+$QuantumMeasurementOperatorNames = {"RandomHermitian", "WignerMICPOVM", "GellMannMICPOVM", "TetrahedronSICPOVM"}
 
 
 QuantumMeasurementOperator[{"RandomHermitian", args___}, target : _ ? targetQ : {1}, opts___] := With[{
@@ -29,6 +29,15 @@ QuantumMeasurementOperator[{"WignerMICPOVM", args___}, target : _ ? targetQ : {1
     ],
     opts
 ]
+
+QuantumMeasurementOperator[{"GellMannMICPOVM", d : _Integer ? Positive : 2}, opts___] := 
+    QuantumMeasurementOperator[
+        QuantumMeasurementOperator[
+            GellMannMICPOVM[d],
+            QuantumBasis[QuantumTensorProduct[QuditBasis[Subscript["\[ScriptCapitalG]", #] & /@ Range[d ^ 2]], QuditBasis[d]], QuditBasis[d], "Label" -> "GellMannMIC"]
+        ],
+        opts
+    ]
 
 QuantumMeasurementOperator[{"TetrahedronSICPOVM", HoldPattern[angles : PatternSequence[__] : Sequence[0, 0, 0]]}, opts___] :=
     Simplify @ QuantumMeasurementOperator[

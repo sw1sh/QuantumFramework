@@ -854,7 +854,11 @@ QuantumStateProp[qs_, "BlochSphericalCoordinates"] /; qs["Dimension"] == 2 := Wi
     ]
 ]
 
-QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 :=  With[{
+QuantumStateProp[qs_, "BlochVector"] := With[{d = qs["Dimension"], rho = qs["Computational"]["DensityMatrix"]},
+    If[d > 1, Sqrt[d / 2 / (d - 1)], 1] (Chop[Tr[rho . #]] & /@ GellMannMatrices[d])
+]
+
+QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 := With[{
     state = Simplify @ Normal[qs["Computational"]["NormalizedStateVector"]],
     matrix = Simplify @ Normal[qs["Computational"]["NormalizedDensityMatrix"]]
 },

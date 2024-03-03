@@ -27,6 +27,9 @@ PackageScope["eigensystem"]
 PackageScope["pauliMatrix"]
 PackageScope["spinMatrix"]
 PackageScope["fanoMatrix"]
+PackageScope["GellMannMatrices"]
+PackageScope["GellMannMICPOVM"]
+PackageScope["RegularSimplex"]
 
 PackageScope["toggleSwap"]
 PackageScope["toggleShift"]
@@ -202,6 +205,38 @@ fanoMatrix[d_, q_, p_, x_ : Automatic, z_ : Automatic] :=
         MatrixPower[FourierMatrix[d], 2] .
             MatrixPower[Replace[z, Automatic :> ConjugateTranspose[pauliMatrix[3, d]]], q] .
                     MatrixPower[Replace[x, Automatic :> ConjugateTranspose[pauliMatrix[1, d]]], p]
+
+
+f[d_, k_, j_] := Piecewise[{{SparseArray[{{k, j} -> 1, {j, k} -> 1}, {d, d}], k < j}, {SparseArray[{{k, j} -> I, {j, k} -> -I}, {d, d}], k > j}}]
+h[d_, k_] := Piecewise[{
+    {IdentityMatrix[d, SparseArray], k == 1},
+    {BlockDiagonalMatrix[{h[d - 1, k], {{0}}}], 1 < k < d},
+    {Sqrt[2 / d / (d - 1)] BlockDiagonalMatrix[{IdentityMatrix[d - 1, SparseArray], {{1 - d}}}], k == d}
+}]
+
+GellMannMatrices[1] := {}
+GellMannMatrices[d_Integer ? Positive] := Catenate @ Riffle[
+	Catenate /@ Partition[
+        Thread[{
+            Catenate @ Table[f[d, k, j], {k, d - 1}, {j, k + 1, d}],
+            Catenate @ Table[f[d, k, j], {k, 2, d}, {j, k - 1}]
+        }],
+        UpTo[Ceiling[d / 2]],
+        Ceiling[d / 2],
+        {-1, 1}
+    ],
+	Table[{h[d, k]}, {k, 2, d}]
+]
+
+RegularSimplex[d_Integer ? Positive] := 1 / Sqrt[d + 1] (Append[identityMatrix[d], ConstantArray[1 / d (1 + Sqrt[d + 1]), d]] - 1 / d (1 + 1 / Sqrt[d + 1]))
+
+
+GellMannMICPOVM[d_] := With[{
+    sigma = GellMannMatrices[d],
+    simplex = RegularSimplex[d ^ 2 - 1]
+},
+    identityMatrix[d] / d ^ 2 + 1 / d Sqrt[(d - 1) / 2 / d] # . sigma & /@ simplex // Normal // Simplify
+]
 
 (* optimization *)
 
