@@ -4,7 +4,7 @@ PackageScope["$QuantumMeasurementOperatorNames"]
 
 
 
-$QuantumMeasurementOperatorNames = {"RandomHermitian", "WignerMICPOVM", "GellMannMICPOVM", "TetrahedronSICPOVM"}
+$QuantumMeasurementOperatorNames = {"RandomHermitian", "WignerMICPOVM", "GellMannMICPOVM", "TetrahedronSICPOVM", "RandomPOVM"}
 
 
 QuantumMeasurementOperator[{"RandomHermitian", args___}, target : _ ? targetQ : {1}, opts___] := With[{
@@ -35,6 +35,20 @@ QuantumMeasurementOperator[{"GellMannMICPOVM", d : _Integer ? Positive : 2}, opt
         QuantumMeasurementOperator[
             GellMannMICPOVM[d],
             QuantumBasis[QuantumTensorProduct[QuditBasis[Subscript["\[ScriptCapitalG]", #] & /@ Range[d ^ 2]], QuditBasis[d]], QuditBasis[d], "Label" -> "GellMannMIC"]
+        ],
+        opts
+    ]
+
+QuantumMeasurementOperator[{"RandomPOVM", d : _Integer ? Positive : 2, methodOpts : OptionsPattern[]}, opts___] := 
+    Enclose @ QuantumMeasurementOperator[
+        With[{
+            povm = ConfirmBy[Replace[OptionValue[{methodOpts, Method -> "Haar"}, Method], {name_, args___} | name_ :>
+                Switch[name, "Haar", RandomHaarPOVM, "Bloch", RandomBlochMICPOVM][d, args]], TensorQ]
+        },
+            QuantumMeasurementOperator[
+                povm,
+                QuantumBasis[QuantumTensorProduct[QuditBasis[Subscript["\[ScriptCapitalR]", #] & /@ Range[Length[povm]]], QuditBasis[d]], QuditBasis[d], "Label" -> "RandomMIC"]
+            ]
         ],
         opts
     ]

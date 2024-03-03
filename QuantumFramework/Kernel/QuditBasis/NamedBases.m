@@ -11,13 +11,13 @@ $QuditBasisNames = {
     "Bell",
     "Fourier",
     "Schwinger", "Pauli", "Dirac", "Wigner", "WignerMIC", "GellMann",
-    "Tetrahedron"
+    "Tetrahedron", "RandomMIC"
 }
 
 $QuditBasisCache = <||>
 $QuditBasisCaching = True
 
-QuditBasis[args___] /; $QuditBasisCaching := Lookup[
+QuditBasis[args___] /; $QuditBasisCaching && FreeQ[{args}, "RandomMIC"] := Lookup[
     $QuditBasisCache, Key[{args}],
     $QuditBasisCache[{args}] = Block[{$QuditBasisCaching = False}, QuditBasis[args]]
 ]
@@ -179,6 +179,19 @@ QuditBasis[{"GellMann", d : _Integer ? Positive : 2}] := QuditBasis[
     Subscript["\[ScriptCapitalG]", #] & /@ Range[d ^ 2],
     With[{povm = Normal /@ GellMannMICPOVM[d]},
         Inverse[Outer[Tr @* Dot, povm, povm, 1]] . povm // Simplify
+    ]
+]
+
+QuditBasis[{"RandomMIC", d : _Integer ? Positive : 2, methodOpts : OptionsPattern[]}] := Enclose @ With[{
+    povm = Normal /@ ConfirmBy[
+        Replace[OptionValue[{methodOpts, Method -> "Haar"}, Method], {name_, args___} | name_ :>
+            Switch[name, "Haar", RandomHaarPOVM, "Bloch", RandomBlochMICPOVM][d, args]],
+        TensorQ
+    ]
+},
+    QuditBasis[
+        Subscript["\[ScriptCapitalR]", #] & /@ Range[Length[povm]],
+        Inverse[Outer[Tr @* Dot, povm, povm, 1]] . povm // Chop
     ]
 ]
 

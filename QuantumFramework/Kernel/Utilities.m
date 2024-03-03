@@ -29,6 +29,8 @@ PackageScope["spinMatrix"]
 PackageScope["fanoMatrix"]
 PackageScope["GellMannMatrices"]
 PackageScope["GellMannMICPOVM"]
+PackageScope["RandomHaarPOVM"]
+PackageScope["RandomBlochMICPOVM"]
 PackageScope["RegularSimplex"]
 
 PackageScope["toggleSwap"]
@@ -237,6 +239,24 @@ GellMannMICPOVM[d_] := With[{
 },
     identityMatrix[d] / d ^ 2 + 1 / d Sqrt[(d - 1) / 2 / d] # . sigma & /@ simplex // Normal // Simplify
 ]
+
+RandomGinibre[shape_List, realQ : True | False] := If[realQ, RandomReal[1 / Sqrt[2], shape], RandomComplex[{0, (1 + I) / Sqrt[2]}, shape]]
+
+RandomHaarPOVM[d : _Integer ? Positive, k : _Integer ? Positive | Automatic : Automatic, n : _Integer ? Positive : 1, OptionsPattern[{"Real" -> False}]] := Block[{
+    realQ = TrueQ[OptionValue["Real"]], povm, S
+},
+	povm = # . ConjugateTranspose[#] & /@ RandomGinibre[{Replace[k, Automatic :> If[realQ, d (d + 1) / 2, d ^ 2]], d, n}, realQ];
+	S = MatrixPower[Total[povm], - 1 / 2];
+	S . # . S & /@ povm
+]
+
+RandomBlochMICPOVM[d_] := With[{
+    sigma = GellMannMatrices[d],
+    simplex = AffineTransform[RandomReal[1, {d ^ 2 - 1, d ^ 2 - 1}]] @ RegularSimplex[d ^ 2 - 1]
+},
+    identityMatrix[d] / d ^ 2 + 1 / d Sqrt[(d - 1) / 2 / d] # . sigma & /@ simplex // Normal
+]
+
 
 (* optimization *)
 
