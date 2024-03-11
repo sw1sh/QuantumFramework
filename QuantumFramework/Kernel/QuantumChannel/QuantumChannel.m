@@ -60,6 +60,11 @@ QuantumChannel[qm : _ ? QuantumMeasurementOperatorQ | _ ? QuantumMeasurementQ] :
 QuantumChannel /: Equal[qc : _QuantumChannel ... ] := Equal @@ (#["QuantumOperator"] & /@ {qc})
 
 
+(* dagger *)
+
+SuperDagger[qc_QuantumChannel] ^:= qc["Adjoint"]
+
+
 (* simplify *)
 
 Scan[

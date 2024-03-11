@@ -263,6 +263,8 @@ QuditBasisProp[qb_, "Split", n_Integer ? Negative] := qb["Split", Mod[n, qb["Qud
 
 QuditBasisProp[qb_, "Split", _] := qb["Split", qb["Qudits"]]
 
+QuditBasisProp[qb_, "SplitDual", args___] := MapAt[#["Dual"] &, qb["Split", args], {2}]
+
 
 QuditBasisProp[qb_, "TakeDimension", dim_Integer ? NonNegative] := If[dim <= 1,
     QuditBasis[dim],

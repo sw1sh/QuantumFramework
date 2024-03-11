@@ -241,8 +241,8 @@ QuantumBasisProp[qb_, "Inverse"] := QuantumBasis[qb,
 ]
 
 QuantumBasisProp[qb_, "Permute", perm_Cycles] :=
-    QuantumBasis @@ Thread[{"Output", "Input"} -> QuantumTensorProduct[qb["Output"], qb["Input"]]["Permute", perm][
-        "Split", toggleShift[PermutationList[perm, qb["Qudits"]], qb["OutputQudits"]]
+    QuantumBasis @@ Thread[{"Output", "Input"} -> QuantumTensorProduct[qb["Output"], qb["Input"]["Dual"]]["Permute", perm][
+        "SplitDual", toggleShift[PermutationList[perm, qb["Qudits"]], qb["OutputQudits"]]
     ]]
 
 QuantumBasisProp[qb_, "Reverse"] := QuantumBasis[qb,

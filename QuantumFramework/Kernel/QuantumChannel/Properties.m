@@ -48,6 +48,8 @@ QuantumChannelProp[qc_, "TraceDimensions"] := MapThread[If[Positive[#1], Nothing
 
 QuantumChannelProp[qc_, "TraceQudits"] := Length @ qc["TraceOrder"]
 
+QuantumChannelProp[qc_, "TraceBasis"] := qc["Output"]["Extract", Range[qc["TraceQudits"]]]
+
 QuantumChannelProp[qc_, "Trace"] := QuantumOperator @ QuantumPartialTrace[QuantumCircuitOperator[{qc["Operator"]["Dagger"], qc["Operator"]}], qc["TraceOrder"]]
 
 QuantumChannelProp[qc_, "TracePreservingQ"] := With[{m = Chop @ qc["Trace"]["MatrixRepresentation"]},
@@ -63,6 +65,14 @@ QuantumChannelProp[qc_, "NEvolutionChannel"] := QuantumChannel[
 ]
 
 QuantumChannelProp[qc_, name : "Dagger" | "Conjugate" | "Dual" | "Double" | "Computational" | "Sort", args___] := QuantumChannel[qc["Operator"][name, args]]
+
+QuantumChannelProp[qc_, "Adjoint"] := QuantumChannel @ QuantumOperator[
+    qc["State"]["Conjugate"]["Permute",
+        FindPermutation[Join[Range[qc["TraceQudits"]], qc["TraceQudits"] + qc["InputQudits"] + Range[qc["InputQudits"]], qc["TraceQudits"] + Range[qc["InputQudits"]]]]
+    ],
+    qc["Order"],
+    "Label" -> SuperDagger[qc["Label"]]
+]
 
 QuantumChannelProp[qc_, "Shift", n : _Integer ? NonNegative : 1] := QuantumChannel[qc["Operator"]["Reorder", qc["Order"] /. k_Integer /; k > 0 :> k + n]]
 
@@ -81,7 +91,7 @@ QuantumChannelProp[qc_, "Bend", autoShift : _Integer ? Positive : Automatic] := 
     ]
 ]
 
-QuantumChannelProp[qc_, "DiscardExtraQudits"] := QuantumChannel[Fold[#2[#1] &, qc, MapThread[QuantumOperator["Discard"[#1], {#2}] &, {qc["TraceDimensions"], qc["TraceOrder"]}]], "Label" -> qc["Label"]]
+QuantumChannelProp[qc_, "DiscardExtraQudits"] := QuantumChannel[Fold[#2[#1] &, qc, MapThread[QuantumOperator["Marginal"[#1], {#2}] &, {qc["TraceBasis"]["Decompose"], qc["TraceOrder"]}]], "Label" -> qc["Label"]]
 
 
 QuantumChannelProp[qc_, "CircuitDiagram", opts___] :=

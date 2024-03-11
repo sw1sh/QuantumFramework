@@ -472,7 +472,7 @@ QuantumOperatorProp[qo_, "Transpose", order : {(List | Rule)[_Integer, _Integer]
         Replace[Keys[inputMap], Append[qo["InputOrderQuditMapping"], _ -> Nothing], {1}] + qo["OutputQudits"]
     ];
     QuantumOperator[
-        QuantumState[qo["State"], qo["Basis"]["Dual", qudits]]["Permute", FindPermutation[map, Join[out, in]]],
+        QuantumState[qo["State"], qo["Basis"]]["Permute", FindPermutation[map, Join[out, in]]],
         Map[First, {out, in}, {2}]
     ]
 ]
