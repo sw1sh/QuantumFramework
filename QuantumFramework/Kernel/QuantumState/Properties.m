@@ -670,13 +670,13 @@ QuantumStateProp[qs_, "VectorState"] := If[qs["VectorQ"], qs, QuantumState[qs["S
 QuantumStateProp[qs_, "MatrixState"] := If[qs["MatrixQ"], qs, QuantumState[qs["DensityMatrix"], qs["Basis"]]]
 
 QuantumStateProp[qs_, "Transpose"] := With[{qb = qs["Basis"]["Transpose"]},
-    QuantumState[If[qs["VectorQ"], SparseArrayFlatten @ Transpose[qs["StateMatrix"]], ArrayReshape[Transpose[qs["DensityMatrixTensor"], {2, 1, 4, 3}], qb["MatrixNameDimensions"] ^ 2]], qb]
+    QuantumState[If[qs["VectorQ"], SparseArrayFlatten @ Transpose[qs["StateMatrix"]], ArrayReshape[Transpose[qs["DensityMatrixTensor"], {2, 1, 4, 3}], qb["MatrixDimensions"]]], qb]
 ]
 
 QuantumStateProp[qs_, "Transpose", qudits : {_Integer...}] := QuantumState[
     ArrayReshape[
         Transpose[ArrayReshape[qs["DensityMatrix"], Join[qs["Dimensions"], qs["Dimensions"]]], Cycles[{#, # + qs["Qudits"]} & /@ qudits]],
-        {qs["Dimension"], qs["Dimension"]}
+        qs["MatrixDimensions"]
     ],
     qs["Basis"]
 ]
