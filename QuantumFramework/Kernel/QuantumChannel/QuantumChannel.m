@@ -66,6 +66,8 @@ QuantumChannel /: Equal[qc : _QuantumChannel ... ] := Equal @@ (#["QuantumOperat
 
 SuperDagger[qc_QuantumChannel] ^:= qc["Adjoint"]
 
+Transpose[qc_QuantumChannel] ^:= qc["Adjoint"]["Conjugate"]
+
 
 (* simplify *)
 

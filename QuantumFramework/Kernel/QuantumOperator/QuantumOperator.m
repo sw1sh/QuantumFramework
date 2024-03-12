@@ -509,6 +509,12 @@ QuantumOperator /: D[op : _QuantumOperator, args___] := QuantumOperator[D[op["St
 
 SuperDagger[qo_QuantumOperator] ^:= qo["Dagger"]
 
+SuperStar[qo_QuantumOperator] ^:= qo["Conjugate"]
+
+Transpose[qo_QuantumOperator, args___] ^:= qo["Transpose", args]
+
+Inverse[qo_QuantumOperator] ^:= qo ^ -1
+
 
 (* Trace *)
 

@@ -237,7 +237,12 @@ QuantumState /: D[qs : _QuantumState, args___] := QuantumState[D[qs["State"], ar
 (* duals *)
 
 SuperDagger[qs_QuantumState] ^:= qs["Dagger"]
+
 SuperStar[qs_QuantumState] ^:= qs["Conjugate"]
+
+Transpose[qs_QuantumState, args___] ^:= qs["Transpose", args]
+
+Inverse[qs_QuantumState] ^:= qs ^ -1
 
 
 (* simplify *)
