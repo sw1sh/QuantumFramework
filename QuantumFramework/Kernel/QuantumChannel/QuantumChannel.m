@@ -26,6 +26,8 @@ QuantumChannel[opArgs_List, args___] := Enclose @ Block[{ops = QuantumOperator[#
     ]
 ]
 
+QuantumChannel[qo_ ? QuantumOperatorQ] /; ! qo["SortedQ"] := QuantumChannel[qo["Sort"]]
+
 QuantumChannel[qc_ ? QuantumChannelQ, args___] := QuantumChannel[QuantumOperator[qc["QuantumOperator"], args]]
 
 QuantumChannel[qm : _ ? QuantumMeasurementOperatorQ | _ ? QuantumMeasurementQ] := QuantumChannel[QuantumOperator[qm["POVM"]]]

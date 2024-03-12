@@ -64,7 +64,8 @@ QuantumChannelProp[qc_, "NEvolutionChannel"] := QuantumChannel[
     (I #)["NEvolutionOperator"] & /@  qc["UnstackOutput", 1]
 ]
 
-QuantumChannelProp[qc_, name : "Dagger" | "Conjugate" | "Dual" | "Double" | "Computational" | "Sort", args___] := QuantumChannel[qc["Operator"][name, args]]
+QuantumChannelProp[qc_, name : "Dagger" | "Conjugate" | "Dual" | "Double" | "Computational" | "Sort" |
+    "Chop" | "ComplexExpand" | "Simplify" | "FullSimplify", args___] := QuantumChannel[qc["Operator"][name, args]]
 
 QuantumChannelProp[qc_, "Adjoint"] := QuantumChannel @ QuantumOperator[
     qc["State"]["Conjugate"]["Permute",

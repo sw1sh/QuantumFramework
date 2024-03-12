@@ -272,6 +272,8 @@ QuantumOperatorProp[qo_, "Sort"] := QuantumOperator[
     }]
 ]
 
+QuantumOperatorProp[qo_, "SortedQ"] := AllTrue[qo["Order"], OrderedQ]
+
 
 QuantumOperatorProp[qo_, "ReverseOutput"] := QuantumOperator[qo["State"], {Reverse @ qo["OutputOrder"], qo["InputOrder"]}]
 
