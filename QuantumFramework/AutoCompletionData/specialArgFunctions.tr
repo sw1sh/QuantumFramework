@@ -21,7 +21,8 @@
             "Wigner",
             "WignerMIC",
             "GellMann",
-            "Tetrahedron"
+            "Tetrahedron",
+            "RandomMIC"
         }
     },
     "QuantumBasis" -> {
@@ -46,7 +47,8 @@
             "Wigner",
             "WignerMIC",
             "GellMann",
-            "Tetrahedron"
+            "Tetrahedron",
+            "RandomMIC"
         }
     },
     "QuantumState" -> {
@@ -100,7 +102,8 @@
             "Wigner",
             "WignerMIC",
             "GellMann",
-            "Tetrahedron"
+            "Tetrahedron",
+            "RandomMIC"
         }
     },
     "QuantumOperator" -> {
@@ -207,7 +210,8 @@
             "Wigner",
             "WignerMIC",
             "GellMann",
-            "Tetrahedron"
+            "Tetrahedron",
+            "RandomMIC"
         }
     },
     "QuantumMeasurementOperator" -> {
@@ -233,10 +237,12 @@
             "WignerMIC",
             "GellMann",
             "Tetrahedron",
+            "RandomMIC",
             "RandomHermitian",
             "WignerMICPOVM",
             "GellMannMICPOVM",
-            "TetrahedronSICPOVM"
+            "TetrahedronSICPOVM",
+            "RandomPOVM"
         },
         {
             "Computational",
@@ -259,7 +265,8 @@
             "Wigner",
             "WignerMIC",
             "GellMann",
-            "Tetrahedron"
+            "Tetrahedron",
+            "RandomMIC"
         }
     },
     "QuantumChannel" -> {
@@ -294,7 +301,8 @@
             "Wigner",
             "WignerMIC",
             "GellMann",
-            "Tetrahedron"
+            "Tetrahedron",
+            "RandomMIC"
         }
     },
     "QuantumCircuitOperator" -> {
