@@ -298,7 +298,7 @@ TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
     circuit = qco["Sort"], res
 },
     If[ qs["Qudits"] > 0,
-        circuit = {qs -> circuit["InputOrder"]} /* circuit
+        circuit = {qs -> circuit["FullInputOrder"]} /* circuit
     ];
     res = TensorNetworkCompile[circuit];
     Which[

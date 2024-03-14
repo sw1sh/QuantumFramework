@@ -89,7 +89,7 @@ QuantumCircuitOperator[] := QuantumCircuitOperator[{}]
 
 Options[quantumCircuitApply] = {Method -> Automatic}
 
-quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[]] /; qco["InputDimensions"] == qs["OutputDimensions"][[# - Min[#] + 1 & @ qco["InputOrder"]]] := Replace[
+quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[]] /; qco["InputDimensions"] == qs["OutputDimensions"] := Replace[
     OptionValue[Method],
     {
         "Schrodinger" | "Schroedinger" | "Schrödinger" :> Fold[ReverseApplied[Construct], qs, qco["Operators"]],
@@ -109,7 +109,10 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qs_QuantumState ? QuantumStateQ, opts : OptionsPattern[quantumCircuitApply]] :=
     quantumCircuitApply[
-        qco /* QuantumCircuitOperator[Map["I"[qs["Output"]["Extract", {#}]] -> # &] @ Union[qco["FreeOrder"], Complement[Range[qs["OutputQudits"]], qco["InputOrder"]]]],
+        qco /* QuantumCircuitOperator[MapIndexed[
+            If[#2 <= qs["OutputQudits"], "I"[qs["Output"]["Extract", #2]], "I"] -> #1 &,
+            Union[qco["FreeOrder"], Max[qco["Order"]] + Range[Max[0, qs["OutputQudits"] - Length[qco["FullInputOrder"]]]]]
+        ]],
         If[# === {}, qs, QuantumTensorProduct[qs, QuantumState[{"Register", #}]]] & @
             ConstantArray[2, Max[0, Length[qco["FullInputOrder"]] - qs["OutputQudits"]]],
         opts
@@ -122,7 +125,12 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
     "QuEST",
     QuESTApply[qco, QuantumState[{"Register", qco["InputDimensions"]}]],
     _,
-    (QuantumCircuitOperator[MapThread[QuantumState["Register", #2, "Label" -> Ket[{"0"}]] -> {#1} &, {qco["InputOrder"], qco["InputDimensions"]}]] /* qco)[QuantumState[1, 1], opts]
+    (QuantumCircuitOperator[
+        Join[
+            MapThread[QuantumState["Register", #2, "Label" -> Ket[{"0"}]] -> {#1} &, {qco["InputOrder"], qco["InputDimensions"]}],
+            Map[QuantumState["Register", 2, "Label" -> Ket[{"0"}]] -> {#1} &, qco["FreeOrder"]]
+        ]
+    ] /* qco)[QuantumState[1, 1], opts]
 ]
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qm_QuantumMeasurement, opts : OptionsPattern[]] :=
