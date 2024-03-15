@@ -134,7 +134,7 @@ QuditBasis /: Plus[qb__QuditBasis ? QuditBasisQ] := Module[{
 (* multiplication *)
 
 QuditBasis /: Times[qb__QuditBasis ? QuditBasisQ] := QuditBasis @ Association @ Values @ Merge[
-    ResourceFunction["KeyGroupBy"][#, Last] & /@ Through[{qb}["Representations"]],
+    ResourceFunction["KeyGroupBy"][#["Canonical"]["Representations"], Last] & /@ {qb},
     {QuantumTensorProduct[#[[All, 1, 1]]], #[[1, 1, -1]]} -> TensorProduct @@ #[[All, 2]] & /@ Tuples[Normal[#]] &
 ]
 

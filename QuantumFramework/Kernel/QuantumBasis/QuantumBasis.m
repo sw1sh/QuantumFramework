@@ -91,7 +91,7 @@ QuantumBasis[elements : (a_ /; ArrayQ[a, d_ /; d > 1, NumericQ]) | _Association 
     Enclose @ QuantumBasis[<|"Output" -> ConfirmBy[QuditBasis[elements], QuditBasisQ]|>, args]
 
 
-QuantumBasis[names : {Except[_Integer] ...}, elements_ ? ArrayQ] /; Length[names] == Length[elements] := QuantumBasis[AssociationThread[names, Normal @ elements]]
+QuantumBasis[names : {Except[_Integer] ...}, elements_ ? ArrayQ] /; Length[names] == Length[elements] && ArrayDepth[elements] > 1 := QuantumBasis[AssociationThread[names, Normal @ elements]]
 
 QuantumBasis[output : _QuditBasis | _List, input : _QuditBasis | _List, args___] :=
     Enclose @ QuantumBasis["Output" -> ConfirmBy[QuditBasis[output], QuditBasisQ], "Input" -> ConfirmBy[QuditBasis[input], QuditBasisQ]["Dual"], args]
@@ -100,7 +100,7 @@ QuantumBasis[output_QuditBasis ? QuditBasisQ, args___] := QuantumBasis["Output" 
 
 QuantumBasis[arg : {(_QuditName | _Integer | _ ? propQ) ..}, args___] := Enclose @ QuantumBasis["Output" -> ConfirmBy[QuditBasis[arg], QuditBasisQ], args]
 
-QuantumBasis[params_List, args___] := Enclose @ QuantumTensorProduct[ConfirmBy[QuantumBasis[#, args], QuantumBasisQ] & /@ params]
+QuantumBasis[params_List, args : PatternSequence[Except[_List], ___]] := Enclose @ QuantumTensorProduct[ConfirmBy[QuantumBasis[#, args], QuantumBasisQ] & /@ params]
 
 QuantumBasis[{}, args___] := QuantumBasis[QuditBasis[{}], args]
 

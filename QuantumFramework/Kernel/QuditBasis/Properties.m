@@ -235,7 +235,9 @@ QuditBasisProp[qb_, "Ordered", qudits_Integer, order_ ? orderQ] := If[qb["Dimens
     ]
 ]
 
-QuditBasisProp[qb_, "Canonical"] := QuditBasis @ Which[
+canonicalizeKeys[assoc_] := Join @@ MapIndexed[KeyMap[ReplacePart[-1 -> #2[[1]]], #1] &, Values @ ResourceFunction["KeyGroupBy"][assoc, Last]]
+
+QuditBasisProp[qb_, "Canonical"] := QuditBasis @ canonicalizeKeys @ Which[
     qb["Dimension"] > 1,
     Select[qb["Representations"], Times @@ Dimensions[#] > 1 &],
     qb["Dimension"] == 0,
