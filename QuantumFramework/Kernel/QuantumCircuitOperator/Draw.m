@@ -96,7 +96,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 },
 	vpos = Union[vposOut, vposIn];
 	vposIndex = PositionIndex[Developer`ToList[vpos]];
-	rotateLabel = Replace[OptionValue["RotateGateLabel"], {True | Automatic -> If[Length[vpos] > 1, Pi / 2, 0], False | None -> 0}];
+	rotateLabel = Replace[OptionValue["RotateGateLabel"], {True | Automatic -> If[Length[vpos] > 1, - Pi / 2, 0], False | None -> 0}];
 	corners = positionCorners[{vpos, hpos}, size, vGapSize, hGapSize];
 	center = Mean[corners];
 	backgroundStyle = Replace[label, gateBackgroundStyle];
