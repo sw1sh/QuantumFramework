@@ -109,10 +109,18 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[qs_QuantumState ? QuantumStateQ, opts : OptionsPattern[quantumCircuitApply]] :=
     quantumCircuitApply[
-        qco /* QuantumCircuitOperator[MapIndexed[
-            If[#2 <= qs["OutputQudits"], "I"[qs["Output"]["Extract", #2]], "I"] -> #1 &,
-            Union[qco["FreeOrder"], Max[qco["Order"]] + Range[Max[0, qs["OutputQudits"] - Length[qco["FullInputOrder"]]]]]
-        ]],
+        qco /* QuantumCircuitOperator[
+            Join[
+                MapIndexed[
+                    If[#2[[1]] <= qs["OutputQudits"], "I"[qs["Output"]["Extract", #2]], "I"] -> #1 &,
+                    qco["FreeOrder"]
+                ],
+                MapIndexed[
+                    If[#2[[1]] <= qs["OutputQudits"], "I"[qs["Output"]["Extract", #2 + Length[qco["FullInputOrder"]]]], "I"] -> #1 &,
+                    Max[qco["Order"]] + Range[Max[0, qs["OutputQudits"] - Length[qco["FullInputOrder"]]]]
+                ]
+            ]
+        ],
         If[# === {}, qs, QuantumTensorProduct[qs, QuantumState[{"Register", #}]]] & @
             ConstantArray[2, Max[0, Length[qco["FullInputOrder"]] - qs["OutputQudits"]]],
         opts

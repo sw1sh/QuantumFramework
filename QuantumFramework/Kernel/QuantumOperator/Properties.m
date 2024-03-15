@@ -437,13 +437,13 @@ QuantumOperatorProp[qo_, "HermitianQ"] := HermitianMatrixQ[qo["Matrix"]]
 
 QuantumOperatorProp[qo_, "UnitaryQ"] := UnitaryMatrixQ[N[qo["Matrix"]]]
 
-QuantumOperatorProp[qo_, "Eigenvalues"] /; qo["SquareQ"] := Eigenvalues[qo["MatrixRepresentation"]]
+QuantumOperatorProp[qo_, "Eigenvalues", opts___] /; qo["SquareQ"] := eigenvalues[qo["MatrixRepresentation"], opts, "Sort" -> False, "Normalize" -> True]
 
 QuantumOperatorProp[qo_, "Eigenvectors", opts___] /; qo["SquareQ"] := eigenvectors[qo["MatrixRepresentation"], opts, "Sort" -> False, "Normalize" -> True]
 
 QuantumOperatorProp[qo_, "Eigensystem", opts___] /; qo["SquareQ"] := eigensystem[qo["MatrixRepresentation"], opts, "Sort" -> False, "Normalize" -> True]
 
-QuantumOperatorProp[qo_, "Eigenbasis", opts___] /; qo["SquareQ"] := With[{vecs = qo["Eigenvectors", opts, "Sort" -> True]},
+QuantumOperatorProp[qo_, "Eigenbasis", opts___] /; qo["SquareQ"] := With[{vecs = qo["Eigenvectors", opts, "Sort" -> False]},
     QuantumBasis[AssociationThread[Symbol["\[FormalV]" <> ToString[#]] & /@ Range[Length[vectors]], vectors]]
 ]
 

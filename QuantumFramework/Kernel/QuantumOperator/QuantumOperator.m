@@ -331,8 +331,9 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qs_ ? QuantumStateQ, opts___] := QuantumCircuitOperator[qo][qs, opts]
 
+(qo1_QuantumOperator ? QuantumOperatorQ)[qo2_ ? QuantumOperatorQ] := QuantumOperator @ QuantumCircuitOperator[{qo2, qo1}]
 
-(qo1_QuantumOperator ? QuantumOperatorQ)[qo2_ ? QuantumOperatorQ] := Enclose @ Block[{
+(* (qo1_QuantumOperator ? QuantumOperatorQ)[qo2_ ? QuantumOperatorQ] := Enclose @ Block[{
     top = qo1["Sort"], bot = qo2["Sort"], computationalQ = False,
     fullTopOut, fullBotIn, fullTopIn, fullBotOut, topOut, botIn, out, in,
     basis, tensor
@@ -419,7 +420,7 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
         ],
         orderDuplicates /@ Map[First, {out, in}, {2}]
     ]
-]
+] *)
 
 orderDuplicates[xs_List] := Block[{next = Function[{ys, y}, If[MemberQ[ys, y], next[ys, y + 1], y]]}, Fold[Append[#1, next[#1, #2]] &, {}, xs]]
 
