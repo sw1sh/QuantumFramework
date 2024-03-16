@@ -55,7 +55,13 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
                 QuantumBasis[Prepend[basis["Dimensions"], basis["Dimension"]], basis["Dimensions"]]
             ],
             QuantumBasis[
-                QuantumTensorProduct[QuditBasis[Table[Subscript["\[ScriptCapitalE]", i], {i, PadRight[eigenvalues, basis["Dimension"]]}]], basis["Output"]],
+                QuantumTensorProduct[
+                    QuditBasis[MapIndexed[
+                        Interpretation[Tooltip[Style[Subscript["\[ScriptCapitalE]", #1], Bold], StringTemplate["Eigenvalue ``"][First @ #2]], {#1, #2}] &,
+                        PadRight[eigenvalues, basis["Dimension"]]
+                    ]],
+                    basis["Output"]
+                ],
                 basis["Output"],
                 basis["Meta"]
             ]
