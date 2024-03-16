@@ -222,7 +222,7 @@ QuantumBasisProp[qb_, "BasisMaps" | "BasisOperators"] :=
     ]
 
 QuantumBasisProp[qb_, prop : "Dual" | "Conjugate", out : {___Integer}, in : {___Integer}] :=
-    QuantumBasis[qb, "Output" -> qb["Output"][prop, out], "Input" -> qb["Input"][prop, in], "Label" -> simplifyLabel[SuperStar[qb["Label"]]]]
+    simplifyLabel @ QuantumBasis[qb, "Output" -> qb["Output"][prop, out], "Input" -> qb["Input"][prop, in], "Label" -> SuperStar[qb["Label"]]]
 
 QuantumBasisProp[qb_, prop: "Dual" | "Conjugate", qudits : {___Integer}] :=
     qb[prop, Sequence @@ (MapAt[# - qb["OutputQudits"] &, 2] @ PadRight[GatherBy[qudits, LessEqualThan[qb["OutputQudits"]]], 2, {{}}])]
@@ -230,14 +230,14 @@ QuantumBasisProp[qb_, prop: "Dual" | "Conjugate", qudits : {___Integer}] :=
 QuantumBasisProp[qb_, prop : "Dual" | "Conjugate"] := qb[prop, Range[qb["Qudits"]]]
 
 
-QuantumBasisProp[qb_, "Transpose"] := QuantumBasis[qb,
+QuantumBasisProp[qb_, "Transpose"] := simplifyLabel @ QuantumBasis[qb,
     "Input" -> qb["Output"]["Dual"], "Output" -> qb["Input"]["Dual"],
-    "Label" -> simplifyLabel[Superscript[qb["Label"], "T"]]
+    "Label" -> Superscript[qb["Label"], "T"]
 ]
 
-QuantumBasisProp[qb_, "Inverse"] := QuantumBasis[qb,
+QuantumBasisProp[qb_, "Inverse"] := simplifyLabel @ QuantumBasis[qb,
     "Input" -> qb["Output"]["Inverse"]["Dual"], "Output" -> qb["Input"]["Inverse"]["Dual"],
-    "Label" -> simplifyLabel[Superscript[qb["Label"], "-1"]]
+    "Label" -> Superscript[qb["Label"], "-1"]
 ]
 
 QuantumBasisProp[qb_, "Permute", perm_Cycles] :=
@@ -268,9 +268,9 @@ QuantumBasisProp[qb_, "SplitDual", n_Integer ? Negative] := qb["SplitDual", Mod[
 QuantumBasisProp[qb_, "SplitDual", _] := qb["SplitDual", qb["Qudits"]]
 
 
-QuantumBasisProp[qb_, "Dagger" | "ConjugateTranspose"] := QuantumBasis[qb,
+QuantumBasisProp[qb_, "Dagger" | "ConjugateTranspose"] := simplifyLabel @ QuantumBasis[qb,
     "Input" -> qb["Output"]["Dual"]["Conjugate"], "Output" -> qb["Input"]["Dual"]["Conjugate"],
-    "Label" -> simplifyLabel[SuperDagger[qb["Label"]]]
+    "Label" -> SuperDagger[qb["Label"]]
 ]
 
 QuantumBasisProp[qb_, "PermuteInput", perm_Cycles] := QuantumBasis[qb, "Input" -> qb["Input"]["Permute", perm]]

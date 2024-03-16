@@ -302,10 +302,10 @@ QuantumCircuitOperatorProp[qco_, "Shift", n : _Integer : 1] :=
 
 
 QuantumCircuitOperatorProp[qco_, "Dagger"] :=
-    QuantumCircuitOperator[If[BarrierQ[#], #, #["Dagger"]] & /@ Reverse @ qco["NormalOperators", True], simplifyLabel[SuperDagger[qco["Label"]]]]
+    simplifyLabel @ QuantumCircuitOperator[If[BarrierQ[#], #, #["Dagger"]] & /@ Reverse @ qco["NormalOperators", True], SuperDagger[qco["Label"]]]
 
 QuantumCircuitOperatorProp[qco_, prop : "Conjugate" | "Dual" | "Double"] :=
-    QuantumCircuitOperator[If[BarrierQ[#], #, #[prop]] & /@ qco["Elements"], Switch[prop, "Double", Style[#, Bold] &, _, SuperStar][qco["Label"]]]
+    simplifyLabel @ QuantumCircuitOperator[If[BarrierQ[#], #, #[prop]] & /@ qco["Elements"], Switch[prop, "Double", Style[#, Bold] &, _, SuperStar][qco["Label"]]]
 
 QuantumCircuitOperatorProp[qco_, prop : "Computational" | "Simplify" | "FullSimplify" | "Chop" | "ComplexExpand", args___] :=
     QuantumCircuitOperator[If[BarrierQ[#], #, #[prop, args]] & /@ qco["Elements"], qco["Label"]]
@@ -316,7 +316,7 @@ QuantumCircuitOperatorProp[qco_, "Bend"] :=
         Map[
             If[ #["MatrixQ"],
                 If[QuantumMeasurementOperatorQ[#], QuantumMeasurementOperator, Identity] @ QuantumOperator[#]["Bend", qco["Width"]], 
-                With[{op = QuantumOperator[#]}, Splice[If[QuantumChannelQ[#], Map[QuantumChannel], Identity] @ {op, op["Conjugate"]["Shift", qco["Width"]]}]]
+                With[{op = QuantumOperator[#]}, Splice[If[QuantumChannelQ[#] || QuantumMeasurementOperatorQ[#], MapAt[Head[#], {1}], Identity] @ {op, op["Conjugate"]["Shift", qco["Width"]]}]]
             ] &,
             qco["NormalOperators"]
         ],

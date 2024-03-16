@@ -10,7 +10,11 @@ PackageScope["sortLabel"]
 
 
 
-simplifyLabel[x : _QuantumBasis | _QuantumState | _QuantumOperator] := QuantumOperator[x, "Label" -> simplifyLabel[x["Label"], x["OutputDimensions"], x["InputDimensions"], x["Order"]]]
+simplifyLabel[x : _QuantumBasis | _QuantumState] :=
+    Head[x][x, "Label" -> simplifyLabel[x["Label"], x["OutputDimensions"], x["InputDimensions"]]]
+
+simplifyLabel[x : _QuantumOperator | _QuantumMeasurementOperator | _QuantumMeasurement | _QuantumChannel | _QuantumCircuitOperator] :=
+    Head[x][x, "Label" -> simplifyLabel[x["Label"], x["OutputDimensions"], x["InputDimensions"], x["Order"]]]
 
 conj = SuperDagger | SuperStar
 

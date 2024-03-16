@@ -624,9 +624,9 @@ QuantumStateProp[qs_, "Normalized" | "NormalizedState" | "Normalize"] :=
     QuantumState[If[qs["StateType"] === "Vector", qs["NormalizedStateVector"], qs["NormalizedDensityMatrix"]], qs["Basis"]]
 
 
-QuantumStateProp[qs_, "Bend"] := QuantumState[qs["DensityVector"], QuantumTensorProduct[qs["Basis"], qs["Basis"]["Conjugate"]], "Label" -> simplifyLabel[CircleTimes[qs["Label"], SuperStar[qs["Label"]]]]]
+QuantumStateProp[qs_, "Bend"] := simplifyLabel @ QuantumState[qs["DensityVector"], QuantumTensorProduct[qs["Basis"], qs["Basis"]["Conjugate"]], "Label" -> CircleTimes[qs["Label"], SuperStar[qs["Label"]]]]
 
-QuantumStateProp[qs_, "BendDual"] := QuantumState[qs["DensityVector"], QuantumTensorProduct[qs["Basis"], qs["Basis"]["Conjugate"]["Dual"]], "Label" -> simplifyLabel[CircleTimes[qs["Label"], SuperStar[qs["Label"]]]]]
+QuantumStateProp[qs_, "BendDual"] := simplifyLabel @ QuantumState[qs["DensityVector"], QuantumTensorProduct[qs["Basis"], qs["Basis"]["Conjugate"]["Dual"]], "Label" -> CircleTimes[qs["Label"], SuperStar[qs["Label"]]]]
 
 
 QuantumStateProp[qs_, "Double"] := With[{out = qs["OutputQudits"], in = qs["InputQudits"]},
@@ -696,7 +696,7 @@ QuantumStateProp[qs_, "Discard", qudits : {_Integer...}] /; ContainsOnly[qudits,
 
 QuantumStateProp[qs_, prop : "Dual" | "Conjugate", args___] := QuantumState[Conjugate[qs["State"]], qs["Basis"][prop, args]]
 
-QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := QuantumState[qs["Conjugate"]["Transpose"], "Label" -> simplifyLabel[SuperDagger[qs["Label"]]]]
+QuantumStateProp[qs_, "ConjugateTranspose" | "Dagger"] := simplifyLabel @ QuantumState[qs["Conjugate"]["Transpose"], "Label" -> SuperDagger[qs["Label"]]]
 
 QuantumStateProp[qs_, "Physical"] := If[qs["PhysicalQ"], qs,
 	Block[{d, u},
