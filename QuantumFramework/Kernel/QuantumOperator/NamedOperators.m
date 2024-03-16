@@ -56,6 +56,7 @@ FromOperatorShorthand[f_Symbol[
 ] /; MemberQ[Attributes[f], NumericFunction] :=
     With[{qo = QuantumOperator[Unevaluated[op]]}, FromOperatorShorthand[Unevaluated[f[left, qo, right]]]]
 FromOperatorShorthand[op_ ? QuantumFrameworkOperatorQ] := op
+FromOperatorShorthand[qm_ ? QuantumMeasurementQ] := qm["QuantumOperator"]
 FromOperatorShorthand[target_ ? targetQ] := QuantumMeasurementOperator[target]
 FromOperatorShorthand[target_ ? targetQ -> {arg_, opts___} | arg_] := QuantumMeasurementOperator[arg, target, opts]
 FromOperatorShorthand[target_Integer ? Positive -> {arg_, opts___} | arg_] := QuantumMeasurementOperator[arg, {target}, opts]

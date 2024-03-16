@@ -294,24 +294,7 @@ QuantumCircuitHypergraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]]
 ]
 
 
-TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState] := Block[{
-    circuit = qco["Sort"], res
-},
-    If[ qs["Qudits"] > 0,
-        circuit = {qs -> circuit["FullInputOrder"]} /* circuit
-    ];
-    res = TensorNetworkCompile[circuit];
-    Which[
-        QuantumMeasurementOperatorQ[res],
-        If[ContainsAll[res["OutputOrder"], res["TargetOrder"]], QuantumMeasurement[res], res],
-        QuantumOperatorQ[res],
-        res["State"],
-        True,
-        res
-    ]
-]
-
-Options[TensorNetworkCompile] = Options[QuantumTensorNetwork]
+Options[TensorNetworkCompile] = Join[{"ReturnCircuit" -> False}, Options[QuantumTensorNetwork]]
 
 TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
     circuit = qco["Normal"], width, net, phaseSpaceQ, bendQ, order, res,
@@ -332,7 +315,8 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
             circuit = circuit /* MapThread[{"Cap", #2} -> {#1, #1 + width} &, {circuit["TraceOrder"], circuit["TraceDimensions"]}];
         ]
     ];
-    net = ConfirmBy[QuantumTensorNetwork[circuit, opts, "PrependInitial" -> False, "Computational" -> ! phaseSpaceQ], TensorNetworkQ];
+    If[TrueQ[OptionValue["ReturnCircuit"]], Return[circuit]];
+    net = ConfirmBy[QuantumTensorNetwork[circuit, FilterRules[{opts}, Options[QuantumTensorNetwork]], "PrependInitial" -> False, "Computational" -> ! phaseSpaceQ], TensorNetworkQ];
     res = Confirm @ ContractTensorNetwork[net];
     res = With[{basis = Confirm @ circuit["TensorNetworkBasis"]},
         QuantumState[
@@ -364,6 +348,24 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     res
 ]
 
+Options[TensorNetworkApply] = Options[TensorNetworkCompile]
+
+TensorNetworkApply[qco_QuantumCircuitOperator, qs_QuantumState, opts : OptionsPattern[]] := Block[{
+    circuit = qco["Sort"], res
+},
+    If[ qs["Qudits"] > 0,
+        circuit = {qs -> circuit["FullInputOrder"]} /* circuit
+    ];
+    res = TensorNetworkCompile[circuit, opts];
+    Which[
+        QuantumMeasurementOperatorQ[res],
+        If[ContainsAll[res["OutputOrder"], res["TargetOrder"]], QuantumMeasurement[res], res],
+        QuantumOperatorQ[res],
+        res["State"],
+        True,
+        res
+    ]
+]
 
 Options[FromTensorNetwork] = {Method -> "Random"}
 

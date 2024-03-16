@@ -162,7 +162,7 @@ QuantumBasis[output : _ ? nameQ | _Integer, input  : _ ? nameQ | _Integer, args_
     Enclose @ QuantumBasis[<|"Output" -> ConfirmBy[QuditBasis[output], QuditBasisQ], "Input" -> ConfirmBy[QuditBasis[input], QuditBasisQ]["Dual"]|>, args]
 
 QuantumBasis[output : _ ? nameQ | _Integer, args___] :=
-    Enclose @ QuantumBasis[<|"Output" -> ConfirmBy[QuditBasis[output], QuditBasisQ], "Label" -> Replace[output, {{name_String, ___} | name_String :> name}]|>, args]
+    Enclose @ QuantumBasis[<|"Output" -> ConfirmBy[QuditBasis[output], QuditBasisQ], "Label" -> Replace[output, {{name_String, ___} | name_String :> name, 2 -> "I", i_Integer :> "I"[i]}]|>, args]
 
 QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) | OptionsPattern[]) ...] :=
     QuantumBasis["Computational", args, "Label" -> None]

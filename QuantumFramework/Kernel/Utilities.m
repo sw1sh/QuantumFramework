@@ -62,9 +62,9 @@ basisMultiplicity[dim_, size_] := Quiet[Replace[Ceiling @ Log[size, dim], Except
 
 nameQ[name_] := MatchQ[name, _String | {_String, ___} | _String[___]]
 
-propQ[prop_] := MatchQ[prop, _String | {_String, ___} | (_String -> _)]
+propQ[prop_] := MatchQ[prop, _String | {_String, ___}]
 
-propName[prop_] := Replace[prop, name_String | {name_String, ___} | (name_String -> _) :> name]
+propName[prop_] := Replace[prop, name_String | {name_String, ___} :> name]
 
 stateQ[state_] := ! MatchQ[state, name_String | {_nameString, ___} /; MemberQ[$QuantumStateNames, name]] && VectorQ[state] && Length[state] >= 0 || SquareMatrixQ[state]
 

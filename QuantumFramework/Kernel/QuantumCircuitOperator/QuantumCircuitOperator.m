@@ -87,15 +87,15 @@ QuantumCircuitOperator[] := QuantumCircuitOperator[{}]
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[op_ ? QuantumFrameworkOperatorQ] :=
     QuantumCircuitOperator[Prepend[qco["Elements"], op], qco["Label"][op["Label"]]]
 
-Options[quantumCircuitApply] = {Method -> Automatic}
+Options[quantumCircuitApply] := Join[{Method -> Automatic}, Options[TensorNetworkApply]]
 
-quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[]] /; qco["InputDimensions"] == qs["OutputDimensions"] := Replace[
+quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, opts : OptionsPattern[]] /; qco["InputDimensions"] == qs["OutputDimensions"] := Replace[
     OptionValue[Method],
     {
         "Schrodinger" | "Schroedinger" | "Schrödinger" :> Fold[ReverseApplied[Construct], qs, qco["Operators"]],
-        Automatic | "TensorNetwork" :> TensorNetworkApply[qco["Flatten"], qs],
+        Automatic | "TensorNetwork" :> TensorNetworkApply[qco["Flatten"], qs, FilterRules[{opts}, Options[TensorNetworkApply]]],
         "QuEST" :> QuESTApply[qco, qs],
-        "Qiskit" | {"Qiskit", opts___} :> qco["Qiskit"][qs, opts],
+        "Qiskit" | {"Qiskit", subOpts___} :> qco["Qiskit"][qs, subOpts],
         "Stabilizer" :> PauliStabilizerApply[qco, qs],
         _ -> $Failed
     }
@@ -126,8 +126,8 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
         opts
     ]
 
-(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[quantumCircuitApply]] := Switch[
-    OptionValue[{opts}, Method],
+(qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[opts : OptionsPattern[]] := Switch[
+    OptionValue[quantumCircuitApply, {opts}, Method],
     "Stabilizer",
     PauliStabilizerApply[qco, Automatic],
     "QuEST",

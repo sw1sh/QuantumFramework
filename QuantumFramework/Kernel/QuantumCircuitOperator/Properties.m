@@ -45,22 +45,13 @@ QuantumCircuitOperatorProp[qco_, "NormalOperators", elementsQ : True | False : F
         Which[
             BarrierQ[#],
             #,
-            QuantumMeasurementOperatorQ[#],
-            If[ #["State"]["MatrixStateQ"] && #["InputOrder"] === {},
-                QuantumMeasurementOperator[
-                    QuantumOperator[
-                        #["Sort"]["POVM"]["State"]["Bend"],
-                        #2
-                    ],
-                    #1["Target"]
+            QuantumMeasurementOperatorQ[#] || QuantumMeasurementQ[#],
+            QuantumMeasurementOperator[
+                QuantumOperator[
+                    #["Sort"]["POVM"]["State"],
+                    #2
                 ],
-                QuantumMeasurementOperator[
-                    QuantumOperator[
-                        #["Sort"]["POVM"]["State"],
-                        #2
-                    ],
-                    #1["Target"]
-                ]
+                #1["Target"]
             ],
             QuantumChannelQ[#],
             QuantumChannel[#, #2],
@@ -320,13 +311,17 @@ QuantumCircuitOperatorProp[qco_, prop : "Computational" | "Simplify" | "FullSimp
     QuantumCircuitOperator[If[BarrierQ[#], #, #[prop, args]] & /@ qco["Elements"], qco["Label"]]
 
 
-QuantumCircuitOperatorProp[qco_, "Bend"] := QuantumCircuitOperator[
-    Map[
-        If[#["MatrixQ"], #["Bend", qco["Width"]], With[{op = QuantumOperator[#]}, Splice[If[QuantumChannelQ[#], Map[QuantumChannel], Identity] @ {op, op["Conjugate"]["Shift", qco["Width"]]}]]] &,
-        qco["NormalOperators"]
-    ],
-    qco["Label"]
-]
+QuantumCircuitOperatorProp[qco_, "Bend"] :=
+    QuantumCircuitOperator[
+        Map[
+            If[ #["MatrixQ"],
+                If[QuantumMeasurementOperatorQ[#], QuantumMeasurementOperator, Identity] @ QuantumOperator[#]["Bend", qco["Width"]], 
+                With[{op = QuantumOperator[#]}, Splice[If[QuantumChannelQ[#], Map[QuantumChannel], Identity] @ {op, op["Conjugate"]["Shift", qco["Width"]]}]]
+            ] &,
+            qco["NormalOperators"]
+        ],
+        qco["Label"]
+    ]
 
 QuantumCircuitOperatorProp[qco_, "DiscardExtraQudits"] := QuantumCircuitOperator @ Prepend[
 	qco["Association"],

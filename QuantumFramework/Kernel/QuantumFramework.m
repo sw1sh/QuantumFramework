@@ -9,7 +9,6 @@ PackageImport["DocumentationSearch`"]
 
 QuantumFrameworkOperatorQ[op_] := QuantumOperatorQ[Unevaluated @ op] ||
     QuantumMeasurementOperatorQ[Unevaluated @ op] ||
-    QuantumMeasurementQ[Unevaluated @ op] ||
     QuantumChannelQ[Unevaluated @ op] ||
     QuantumCircuitOperatorQ[Unevaluated @ op]
 

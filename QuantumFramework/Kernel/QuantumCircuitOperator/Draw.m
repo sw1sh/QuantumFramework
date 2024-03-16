@@ -360,7 +360,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 				With[{a = 0.35 Pi}, Line[{# - {0, size / 4}, # + 0.5 size {Cos[a], Sin[a]} - {0, size / 4}}]]
 			} & /@ ({Max[hpos] hGapSize, - vGapSize #} & /@ vpos),
 			Replace[subLabel, {
-				Automatic | None | False | Interpretation[_, Automatic | None | False] :> Nothing,
+				Automatic | None | False | "I" | Interpretation[_, Automatic | None | False | "I"] :> Nothing,
 				Interpretation[Style[_, style___], _] | _ :> If[gateLabelsQ, Text[Style[subLabel, style, labelStyleOpts], {hGapSize hpos[[1]], - vGapSize # - 2 size / 5}] & /@ vpos, Nothing]
 			}],
 			Dashed, drawControlWires[#, {subLabel, subLabel}] & /@ Partition[Sort[vpos], 2, 1]
@@ -781,7 +781,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 					],
 					drawGate[#2, {Thread[#1["OutputOrder"] -> #1["OutputDimensions"]], Thread[#1["InputOrder"] -> #1["InputDimensions"]]}, labelCounter[#1["Label"], #1["Order"]], FilterRules[{opts}, Options[drawGate]]]
 				],
-				QuantumMeasurementOperatorQ[#1] || QuantumMeasurementQ[#1],
+				QuantumMeasurementOperatorQ[#1],
 				drawMeasurement[#2, #1["Eigendimensions"], max, "ShowMeasurementWire" -> showMeasurementWireQ, "ShowExtraQudits" -> extraQuditsQ, "ThickWire" -> #["MatrixQ"], "Label" -> #1["Label"], FilterRules[{opts}, Options[drawMeasurement]]],
 				QuantumChannelQ[#1],
 				drawMeasurement[#2, #1["TraceDimensions"], max, "ShowMeasurementWire" -> False,

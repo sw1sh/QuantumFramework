@@ -194,8 +194,13 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, order : _ ? autoO
 
 (* composition *)
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[args___] := QuantumCircuitOperator[qmo][args]
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qs_QuantumState, args___] := QuantumCircuitOperator[qmo][qs, args]
 
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qm_QuantumMeasurement, args___] := QuantumCircuitOperator[{qm, qmo}][args]
+
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[args___] := QuantumCircuitOperator[qmo][args]["QuantumOperator"]
+
+(* 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qo_ ? QuantumOperatorQ] := Enclose @ With[{
     top = qmo["SuperOperator"]["Sort"], bot = qo["Sort"]
 },
@@ -252,7 +257,7 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, order : _ ? autoO
             result,
             Join[qm["Targets"], qmo["Targets"]]
         ]
-]
+] *)
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ] :=
     QuantumCircuitOperator[Append[qco["Operators"], qmo]]
