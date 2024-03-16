@@ -39,7 +39,7 @@ QuantumMeasurementOperator[target_Integer, args___] := QuantumMeasurementOperato
 
 QuantumMeasurementOperator[] := QuantumMeasurementOperator[{1}]
 
-QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target : (_ ? targetQ) : Automatic, args___] := Enclose @ Module[{
+QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target : (_ ? targetQ) : Automatic, args___] /; qb["InputQudits"] == 0 && Length[eigenvalues] > 0 := Enclose @ Block[{
     basis, op, order, newTarget, qmo
 },
     basis = If[ target === Automatic,
@@ -47,22 +47,25 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
         QuantumBasis[qb, Ceiling[Length[target] / Max[1, qb["Qudits"]]]]
     ];
     basis = QuantumBasis[basis, Ceiling[Length[eigenvalues] / basis["Dimension"]]];
-
+    order = # - Min[#, 1] + 1 &[Max[Replace[target, Automatic -> 0]] - Reverse @ Range[Max[1, basis["Qudits"]]] + 1];
     op = ConfirmBy[
         QuantumOperator[
             QuantumOperator[
-                PadRight[SparseArray @ eigenvalues, basis["Dimension"]] . basis["Projectors"],
-                # - Min[#, 1] + 1 &[Max[Replace[target, Automatic -> 0]] - Reverse @ Range[Max[1, basis["Qudits"]]] + 1],
-                QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
+                basis["Projectors"],
+                QuantumBasis[Prepend[basis["Dimensions"], basis["Dimension"]], basis["Dimensions"]]
             ],
-            basis
+            QuantumBasis[
+                QuantumTensorProduct[QuditBasis[Table[Subscript["\[ScriptCapitalE]", i], {i, PadRight[eigenvalues, basis["Dimension"]]}]], basis["Output"]],
+                basis["Output"],
+                basis["Meta"]
+            ]
         ],
         QuantumOperatorQ
     ];
-    newTarget = Replace[target, Automatic -> op["FullInputOrder"]];
-    order = PadRight[newTarget, Max[1, op["InputQudits"]], DeleteCases[op["FullInputOrder"], Alternatives @@ newTarget]];
+    newTarget = Replace[target, Automatic -> order];
+    order = PadRight[newTarget, Max[1, op["InputQudits"]], DeleteElements[order, newTarget]];
     qmo = QuantumMeasurementOperator[
-        QuantumOperator[op["State"], {Automatic, Sort @ order}],
+        QuantumOperator[op["State"], {Prepend[#, 0], #} & @ Sort @ order],
         order[[;; Length @ newTarget]],
         args
     ];
