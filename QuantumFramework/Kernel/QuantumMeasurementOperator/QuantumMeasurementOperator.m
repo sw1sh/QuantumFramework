@@ -50,16 +50,16 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
     order = # - Min[#, 1] + 1 &[Max[Replace[target, Automatic -> 0]] - Reverse @ Range[Max[1, basis["Qudits"]]] + 1];
     op = ConfirmBy[
         QuantumOperator[
-            QuantumOperator[
-                basis["Projectors"],
-                QuantumBasis[Prepend[basis["Dimensions"], basis["Dimension"]], basis["Dimensions"]]
-            ],
+            QuantumOperator["Copy"[basis["Output"]]],
             QuantumBasis[
                 QuantumTensorProduct[
-                    QuditBasis[MapIndexed[
-                        Interpretation[Tooltip[Style[Subscript["\[ScriptCapitalE]", #1], Bold], StringTemplate["Eigenvalue ``"][First @ #2]], {#1, #2}] &,
-                        PadRight[eigenvalues, basis["Dimension"]]
-                    ]],
+                    QuditBasis[
+                        MapIndexed[
+                            Interpretation[Tooltip[Style[Subscript["\[ScriptCapitalE]", #1], Bold], StringTemplate["Eigenvalue ``"][First @ #2]], {#1, #2}] &,
+                            PadRight[eigenvalues, basis["Dimension"]]
+                        ],
+                        basis["Output"]["Elements"]
+                    ],
                     basis["Output"]
                 ],
                 basis["Output"],
