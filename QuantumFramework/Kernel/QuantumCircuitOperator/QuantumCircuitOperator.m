@@ -89,7 +89,7 @@ QuantumCircuitOperator[] := QuantumCircuitOperator[{}]
 
 Options[quantumCircuitApply] := Join[{Method -> Automatic}, Options[TensorNetworkApply]]
 
-quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, opts : OptionsPattern[]] /; qco["InputDimensions"] == qs["OutputDimensions"] := Replace[
+quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, opts : OptionsPattern[]] /; qco["InputDimensions"][[Ordering[qco["InputOrder"]]]] == qs["OutputDimensions"] := Replace[
     OptionValue[Method],
     {
         "Schrodinger" | "Schroedinger" | "Schrödinger" :> Fold[ReverseApplied[Construct], qs, qco["Operators"]],

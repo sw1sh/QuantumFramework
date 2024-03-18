@@ -152,6 +152,8 @@ QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> T
 
 QuantumMeasurementOperatorProp[qmo_, "SortTarget"] := qmo["Canonical", "Reverse" -> False]
 
+QuantumMeasurementOperatorProp[qmo_, "Sort", args___] := QuantumMeasurementOperator[qmo["QuantumOperator"]["Sort", args], qmo["Target"]]["SortTarget"]
+
 
 QuantumMeasurementOperatorProp[qmo_, "ReverseEigenQudits"] := QuantumMeasurementOperator[
     QuantumOperator[
@@ -307,7 +309,7 @@ QuantumMeasurementOperatorProp[qmo_, "CircuitDiagram", opts___] :=
 
 (* operator properties *)
 
-QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | "Sort" | "SortOutput" | "SortInput" | "Computational" | "Simplify" | "FullSimplify" | "Chop" | "ComplexExpand", args___] :=
+QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | "SortOutput" | "SortInput" | "Computational" | "Simplify" | "FullSimplify" | "Chop" | "ComplexExpand", args___] :=
     QuantumMeasurementOperator[qmo["QuantumOperator"][prop, args], qmo["Target"]]
 
 QuantumMeasurementOperatorProp[qmo_, prop : "Dagger", args___] :=

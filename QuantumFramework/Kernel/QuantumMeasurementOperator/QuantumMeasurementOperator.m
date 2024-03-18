@@ -40,7 +40,7 @@ QuantumMeasurementOperator[target_Integer, args___] := QuantumMeasurementOperato
 QuantumMeasurementOperator[] := QuantumMeasurementOperator[{1}]
 
 QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target : (_ ? targetQ) : Automatic, args___] /; qb["InputQudits"] == 0 && Length[eigenvalues] > 0 := Enclose @ Block[{
-    basis, op, order, newTarget, qmo
+    basis, state, order, newTarget, qmo
 },
     basis = If[ target === Automatic,
         qb,
@@ -48,9 +48,9 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
     ];
     basis = QuantumBasis[basis, Ceiling[Length[eigenvalues] / basis["Dimension"]]];
     order = # - Min[#, 1] + 1 &[Max[Replace[target, Automatic -> 0]] - Reverse @ Range[Max[1, basis["Qudits"]]] + 1];
-    op = ConfirmBy[
-        QuantumOperator[
-            QuantumOperator["Copy"[basis["Output"]]],
+    state = ConfirmBy[
+        QuantumState[
+            QuantumTensorProduct[QuantumOperator["Copy"[#]] & /@ basis["OutputDimensions"]]["PermuteOutput", FindPermutation[Join[Range[1, 2 basis["Qudits"], 2], Range[2, 2 basis["Qudits"], 2]]]]["StateVector"],
             QuantumBasis[
                 QuantumTensorProduct[
                     QuditBasis[
@@ -66,12 +66,12 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
                 basis["Meta"]
             ]
         ],
-        QuantumOperatorQ
+        QuantumStateQ
     ];
     newTarget = Replace[target, Automatic -> order];
-    order = PadRight[newTarget, Max[1, op["InputQudits"]], DeleteElements[order, newTarget]];
+    order = PadRight[newTarget, Max[1, state["InputQudits"]], DeleteElements[order, newTarget]];
     qmo = QuantumMeasurementOperator[
-        QuantumOperator[op["State"], {Prepend[#, 0], #} & @ Sort @ order],
+        QuantumOperator[state, {Prepend[#, 0], #} & @ order],
         order[[;; Length @ newTarget]],
         args
     ];
