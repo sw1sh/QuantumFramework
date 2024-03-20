@@ -107,7 +107,7 @@ canonicalEigenPermutation[qmo_] := Block[{accumIndex = PositionIndex[FoldList[Ti
     ]
 ]
 
-QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> True}]] /; qmo["Eigendimension"] == qmo["TargetDimension"] := With[{
+QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> True, "CanonicalBasis" -> True}]] /; qmo["Eigendimension"] == qmo["TargetDimension"] && TrueQ[OptionValue["CanonicalBasis"]] := With[{
     basis = qmo["CanonicalBasis"], perm = canonicalEigenPermutation[qmo]
 },
     QuantumMeasurementOperator[
@@ -128,7 +128,7 @@ QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> T
     ]
 ]
 
-QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> True}]] /; Length[qmo["Eigenorder"]] == qmo["TargetCount"] := QuantumMeasurementOperator[
+QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> True, "CanonicalBasis" -> False}]] /; Length[qmo["Eigenorder"]] == qmo["TargetCount"] := QuantumMeasurementOperator[
         QuantumOperator[
             qmo["SuperOperator"]["State"]["PermuteOutput", PermutationProduct[
                 FindPermutation[Reverse[qmo["Target"]], ReverseSort[qmo["Target"]]],
@@ -139,7 +139,8 @@ QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> T
         Sort @ qmo["Target"]
     ]
 
-QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> True}]] := QuantumMeasurementOperator[
+(* TODO: sort target by modifying eigenbasis *)
+QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> True, "CanonicalBasis" -> False}]] := QuantumMeasurementOperator[
         QuantumOperator[
             qmo["SuperOperator"]["State"]["PermuteOutput",
                 If[TrueQ[OptionValue["Reverse"]], FindPermutation[Reverse[Range[qmo["Eigenqudits"]]]], Cycles[{}]]
@@ -150,7 +151,7 @@ QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> T
     ]
 
 
-QuantumMeasurementOperatorProp[qmo_, "SortTarget"] := qmo["Canonical", "Reverse" -> False]
+QuantumMeasurementOperatorProp[qmo_, "SortTarget"] := qmo["Canonical", "Reverse" -> False, "CanonicalBasis" -> False]
 
 QuantumMeasurementOperatorProp[qmo_, "Sort", args___] := QuantumMeasurementOperator[qmo["QuantumOperator"]["Sort", args], qmo["Target"]]["SortTarget"]
 
