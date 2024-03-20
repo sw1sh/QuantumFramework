@@ -7,7 +7,8 @@ $QuantumMeasurementOperatorProperties = {
     "TargetIndex",
     "Operator", "Basis", "MatrixRepresentation", "POVMElements",
     "OrderedMatrixRepresentation", "OrderedPOVMElements",
-    "Arity", "Eigenqudits", "Dimensions", "Order", "HermitianQ", "UnitaryQ", "Eigenvalues", "Eigenvectors",
+    "Arity", "Eigenqudits", "Dimensions", "Order", "HermitianQ", "UnitaryQ",
+    "Eigenvalues", "EigenvalueVectors", "Eigenvectors",
     "Eigendimensions", "Eigendimension",
     "StateDimensions", "StateDimension",
     "TargetDimensions", "TargetDimension",
@@ -82,6 +83,10 @@ QuantumMeasurementOperatorProp[qmo_, "Eigendimensions"] :=
 QuantumMeasurementOperatorProp[qmo_, "Eigendimension"] := Times @@ qmo["Eigendimensions"]
 
 QuantumMeasurementOperatorProp[qmo_, "Eigenbasis"] := qmo["Output"]["Extract", qmo["Eigenindex"]]
+
+QuantumMeasurementOperatorProp[qmo_, "Eigenvalues"] := qmo["Eigenbasis"]["Names"]
+
+QuantumMeasurementOperatorProp[qmo_, "EigenvalueVectors"] := Replace[Normal /@ qmo["Eigenvalues"], {Interpretation[_, {v_, _}] :> Replace[v, _List :> Splice[v]], v_ :> Ket[{v}]}, {2}]
 
 QuantumMeasurementOperatorProp[qmo_, "StateQudits"] := qmo["OutputQudits"] - qmo["ExtraQudits"]
 

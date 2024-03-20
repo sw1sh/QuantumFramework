@@ -60,7 +60,6 @@ $QuantumMeasurementProperties = {
     "Mean", "States", "StateAssociation",
     "Entropy",
     "PostMeasurementState",
-    "Eigenvalues", "EigenvalueVectors",
     "Eigenvectors", "Projectors",
     "SimulatedMeasurement", "SimulatedCounts"
 };
@@ -146,10 +145,6 @@ QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
         True,
         qm["Canonical"]["Eigenstate"]
     ]["Probabilities"]
-
-QuantumMeasurementProp[qm_, "Eigenvalues"] := qm["Eigenstate"]["Names"]
-
-QuantumMeasurementProp[qm_, "EigenvalueVectors"] := Replace[Normal /@ qm["Eigenvalues"], {Interpretation[_, {v_, _}] :> Replace[v, _List :> Splice[v]], v_ :> Ket[v]}, {2}]
 
 QuantumMeasurementProp[qm_, "Eigenvectors"] := qm["Eigenstate"]["Eigenvectors"]
 

@@ -207,7 +207,7 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, order : _ ? autoO
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qm_QuantumMeasurement, args___] := QuantumCircuitOperator[{qm, qmo}][args]
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[args___] := QuantumCircuitOperator[qmo][args]["QuantumOperator"]
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[args___] := QuantumMeasurement @ QuantumCircuitOperator[qmo][args]["QuantumOperator"]
 
 (* 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qo_ ? QuantumOperatorQ] := Enclose @ With[{
