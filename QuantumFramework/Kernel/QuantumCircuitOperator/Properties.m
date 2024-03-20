@@ -372,6 +372,9 @@ QuantumCircuitOperatorProp[qco_, "Topology", opts___] := CircuitTopology[qco, op
 
 QuantumCircuitOperatorProp[qco_, "Parameters"] := DeleteDuplicates[Join @@ Through[qco["Operators"]["Parameters"]]]
 
+QuantumCircuitOperatorProp[qco_, "ParameterArity"] := Length[qco["Parameters"]]
+
+
 (* operator properties *)
 
 QuantumCircuitOperatorProp[qco_, args : PatternSequence[prop_String, ___] | PatternSequence[{prop_String, ___}, ___]] /;
