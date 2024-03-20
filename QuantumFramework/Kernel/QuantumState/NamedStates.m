@@ -85,16 +85,16 @@ QuantumState[{"Register", 0, ___}, args___] := QuantumState[1, 1, args]
 QuantumState[{"Register", dims : {__Integer ? Positive}, state : _Integer ? NonNegative : 0}, args___] :=
     QuantumState[SparseArray[{{state + 1} -> 1}, {Times @@ dims}], dims, args, "Label" -> state]
 
-QuantumState[{"Register", basisArgs_, state : _Integer ? NonNegative : 0}, args___] := With[{qb = QuantumBasis[basisArgs]},
+QuantumState[{"Register", basisArgs_, state : _Integer ? NonNegative : 0}, args___] := Enclose @ With[{qb = ConfirmBy[QuantumBasis[basisArgs], QuantumBasisQ]},
     QuantumState[SparseArray[{{state + 1} -> 1}, qb["Dimension"]], qb, args, "Label" -> state]
 ]
 
 
-QuantumState["UniformSuperposition", args___] := With[{basis = QuantumBasis[args]},
+QuantumState["UniformSuperposition", args___] := Enclose @ With[{basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ]},
     QuantumState[ConstantArray[1, basis["Dimension"]], basis]["Normalized"]
 ]
 
-QuantumState[{"UniformSuperposition", subsystemCount_Integer}, args___] := With[{basis = QuantumBasis[args]},
+QuantumState[{"UniformSuperposition", subsystemCount_Integer}, args___] := Enclose @ With[{basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ]},
     QuantumState[ConstantArray[1, basis["Dimension"] ^ subsystemCount], basis]["Normalized"]
 ]
 
@@ -111,7 +111,7 @@ QuantumState[{"UniformMixture", subsystemCount_Integer}, dimension : (_Integer ?
 QuantumState[{"RandomPure", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
     QuantumState["RandomPure", dimension, subsystemCount, args]
 
-QuantumState["RandomPure", args : PatternSequence[Except[_ ? QuantumBasisQ], ___]] :=  QuantumState["RandomPure", QuantumBasis[args]]
+QuantumState["RandomPure", args : PatternSequence[Except[_ ? QuantumBasisQ], ___]] := Enclose @ QuantumState["RandomPure", ConfirmBy[QuantumBasis[args], QuantumBasisQ]]
 
 QuantumState["RandomPure", qb_ ? QuantumBasisQ] :=
     QuantumState[QuantumOperator[{"RandomUnitary", qb["Dimensions"]}, Range[qb["OutputQudits"]]][], qb]
@@ -124,7 +124,7 @@ QuantumState[{"RandomMixed", subsystemCount_Integer}, dimension : (_Integer ? Po
         QuantumState[m . ConjugateTranspose[m], dimension, args]["Normalized"]
     ]
 
-QuantumState["RandomMixed", args : PatternSequence[Except[_ ? QuantumBasisQ], ___]] :=  QuantumState["RandomMixed", QuantumBasis[args]]
+QuantumState["RandomMixed", args : PatternSequence[Except[_ ? QuantumBasisQ], ___]] := Enclose @  QuantumState["RandomMixed", ConfirmBy[QuantumBasis[args], QuantumBasisQ]]
 
 QuantumState["RandomMixed", qb_ ? QuantumBasisQ] :=
     With[{m = RandomComplex[{-1 - I, 1 + I}, Table[qb["Dimension"], 2]]},
@@ -159,7 +159,7 @@ wernerState[p_, qb_QuditBasis] /; qb["Qudits"] == 2 :=
 
 QuantumState["Werner", args___] := QuantumState[{"Werner", .5, 2}, args]
 
-QuantumState[{"Werner", p_, param_ : 2}, args___] := QuantumState[{"Werner", p, QuditBasis[param]}, args]
+QuantumState[{"Werner", p_, param_ : 2}, args___] := Enclose @ QuantumState[{"Werner", p, ConfirmBy[QuditBasis[param], QuditBasisQ]}, args]
 
 QuantumState[{"Werner", p_, qb_ ? QuditBasisQ}, args___] := With[{
     basis = QuditBasis[qb, 2]
@@ -189,8 +189,8 @@ QuantumState[{"Graph", graph : _ ? GraphQ}, args___] := Module[{
 
 QuantumState["BlochVector", args___] := QuantumState[{"BlochVector", {0, 0, 1}}, args]
 
-QuantumState[{"BlochVector", r_ /; VectorQ[r]}, args___] := With[{d = Ceiling[Sqrt[Length[r] + 1]]},
-    QuantumState[IdentityMatrix[d, SparseArray] / d + Sqrt[(d - 1) / 2 / d] PadRight[r, d ^ 2 - 1] . GellMannMatrices[d], QuantumBasis[d, args]]
+QuantumState[{"BlochVector", r_ /; VectorQ[r]}, args___] := Enclose @ With[{d = Ceiling[Sqrt[Length[r] + 1]]},
+    QuantumState[IdentityMatrix[d, SparseArray] / d + Sqrt[(d - 1) / 2 / d] PadRight[r, d ^ 2 - 1] . GellMannMatrices[d], ConfirmBy[QuantumBasis[d, args], QuantumBasisQ]]
 ]
 
 
