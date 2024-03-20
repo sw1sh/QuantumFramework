@@ -112,7 +112,9 @@ canonicalEigenPermutation[qmo_] := Block[{accumIndex = PositionIndex[FoldList[Ti
     ]
 ]
 
-QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> True, "CanonicalBasis" -> True}]] /; qmo["Eigendimension"] == qmo["TargetDimension"] && TrueQ[OptionValue["CanonicalBasis"]] := With[{
+
+
+QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> True, "CanonicalBasis" -> True}]] /; qmo["Eigendimension"] == qmo["TargetDimension"] := With[{
     basis = qmo["CanonicalBasis"], perm = canonicalEigenPermutation[qmo]
 },
     QuantumMeasurementOperator[
@@ -130,7 +132,7 @@ QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> T
             {Join[Range[- qmo["TargetCount"] + 1, 0], DeleteCases[qmo["OutputOrder"], _ ? NonPositive]], qmo["InputOrder"]}
         ],
         Sort @ qmo["Target"]
-    ]
+    ] /; TrueQ[OptionValue["CanonicalBasis"]]
 ]
 
 QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> True, "CanonicalBasis" -> False}]] /; Length[qmo["Eigenorder"]] == qmo["TargetCount"] := QuantumMeasurementOperator[
