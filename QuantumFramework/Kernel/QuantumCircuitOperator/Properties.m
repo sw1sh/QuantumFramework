@@ -310,6 +310,7 @@ QuantumCircuitOperatorProp[qco_, prop : "Conjugate" | "Dual" | "Double"] :=
 QuantumCircuitOperatorProp[qco_, prop : "Computational" | "Simplify" | "FullSimplify" | "Chop" | "ComplexExpand", args___] :=
     QuantumCircuitOperator[If[BarrierQ[#], #, #[prop, args]] & /@ qco["Elements"], qco["Label"]]
 
+QuantumCircuitOperatorProp[qco_, "Transpose"] := qco["Dagger"]["Conjugate"]
 
 QuantumCircuitOperatorProp[qco_, "Bend"] :=
     QuantumCircuitOperator[

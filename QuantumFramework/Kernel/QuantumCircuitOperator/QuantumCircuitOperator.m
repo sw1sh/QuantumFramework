@@ -163,6 +163,10 @@ With[{ops = ConfirmBy[QuantumCircuitOperator[#], QuantumCircuitOperatorQ] & /@ L
 
 SuperDagger[qco_QuantumCircuitOperator] ^:= qco["Dagger"]
 
+SuperStar[qco_QuantumCircuitOperator] ^:= qco["Conjugate"]
+
+Transpose[qco_QuantumCircuitOperator] ^:= qco["Transpose"]
+
 
 (* equality *)
 
