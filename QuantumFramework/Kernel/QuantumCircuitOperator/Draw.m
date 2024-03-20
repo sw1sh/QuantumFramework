@@ -528,11 +528,10 @@ Options[drawWires] = {"Size" -> .75,
 	"DimensionWires" -> True,
 	"ShowWireDimensions" -> False
 };
-drawWires[wires_List, OptionsPattern[]] := Block[{
+drawWires[wires_List, height_, OptionsPattern[]] := Block[{
 	size = OptionValue["Size"],
 	vGapSize = OptionValue["VerticalGapSize"],
 	hGapSize = OptionValue["HorizontalGapSize"],
-	height = Max[wires[[All, All, 2, 1]]],
 	endpointsQ = TrueQ[OptionValue["ShowWireEndpoints"]],
 	wireThickness = If[TrueQ[OptionValue["DimensionWires"]], defaultWireThickness, AbsoluteThickness[1] &],
 	wireGroups = Catenate @* DeleteMissing /@ Thread @ Values @ Merge[KeyUnion[GroupBy[Take[#, 2] &] /@ wires], Identity],
@@ -760,7 +759,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 	wires = Replace[{outWires, inWires}, _[left_, right_, {pos_, dim_}] :> {{If[left == 0, 0, positions[[left, 2, pos - min + 1]]], pos}, {If[right == -1, height, positions[[right, 1, pos - min + 1]] + 1], pos}, dim}, {2}];
 	{
 		If[TrueQ[OptionValue["ShowOutline"]], drawOutline[outlineMin, max, height, FilterRules[{opts}, Options[drawOutline]]], Nothing],
-		If[TrueQ[OptionValue["ShowWires"]], drawWires[wires, FilterRules[{opts}, Options[drawWires]]], Nothing],
+		If[TrueQ[OptionValue["ShowWires"]], drawWires[wires, height, FilterRules[{opts}, Options[drawWires]]], Nothing],
 		If[showMeasurementWireQ, drawMeasurementWire[height, max, FilterRules[{opts}, Options[drawMeasurementWire]]], Nothing],
 		MapThread[
 			Which[
