@@ -255,7 +255,7 @@ QuantumCircuitOperatorProp[qco_, "Target"] :=
             If[Equal @@ Sort /@ #2["Order"] || ContainsNone[#2["InputOrder"], 1 - #1], #1, {}]
         ] &,
         {},
-        qco["Flatten"]["Operators"]
+        qco["Flatten"]["NormalOperators"]
     ]
 
 QuantumCircuitOperatorProp[qco_, "TargetCount"] := Length @ qco["Target"]

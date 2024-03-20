@@ -33,13 +33,13 @@ QuantumChannel[qc_ ? QuantumChannelQ, args___] := QuantumChannel[QuantumOperator
 QuantumChannel[qm : _ ? QuantumMeasurementOperatorQ | _ ? QuantumMeasurementQ] := QuantumChannel[QuantumOperator[qm["POVM"]]]
 
 
-(qc_QuantumChannel ? QuantumChannelQ)[opts___] := QuantumCircuitOperator[qc][opts]
+(qc_QuantumChannel ? QuantumChannelQ)[qm_QuantumMeasurement, args___] := QuantumMeasurement @ QuantumCircuitOperator[{qm, qc}][args]
 
-(qc_QuantumChannel ? QuantumChannelQ)[qs_ ? QuantumStateQ, opts___] := QuantumPartialTrace[qc["Operator"][qs, opts], Range @ qc["TraceQudits"]]
+(qc_QuantumChannel ? QuantumChannelQ)[op_ ? QuantumFrameworkOperatorQ] := QuantumCircuitOperator[{op, qc}]["QuantumOperator", "Trace" -> False]
 
-(qc_QuantumChannel ? QuantumChannelQ)[qo_ ? QuantumOperatorQ] := QuantumChannel[qc["Operator"] @ qo]
+(qc_QuantumChannel ? QuantumChannelQ)[args___] := QuantumCircuitOperator[qc][args]
 
-(qc1_QuantumChannel ? QuantumChannelQ)[qc2_ ? QuantumChannelQ] := Enclose @ Module[{
+(* (qc1_QuantumChannel ? QuantumChannelQ)[qc2_ ? QuantumChannelQ] := Enclose @ Module[{
     top, bottom, traceQudits, result
 },
     top = qc1["SortOutput"];
@@ -54,7 +54,7 @@ QuantumChannel[qm : _ ? QuantumMeasurementOperatorQ | _ ? QuantumMeasurementQ] :
     ];
     result = top[bottom]["SortOutput"];
     QuantumChannel[result]
-]
+] *)
 
 
 (* equality *)

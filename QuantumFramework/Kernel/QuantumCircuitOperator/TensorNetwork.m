@@ -294,7 +294,7 @@ QuantumCircuitHypergraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]]
 ]
 
 
-Options[TensorNetworkCompile] = Join[{"ReturnCircuit" -> False}, Options[QuantumTensorNetwork]]
+Options[TensorNetworkCompile] = Join[{"ReturnCircuit" -> False, "Trace" -> True}, Options[QuantumTensorNetwork]]
 
 TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
     circuit = qco["Normal"], width, net, phaseSpaceQ, bendQ, order, res,
@@ -311,7 +311,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
         (* TODO: handle this case somehow *)
         (* ConfirmAssert[AllTrue[Join[DeleteElements[order[[1]], Join[traceOrder, eigenOrder]], order[[2]]], Positive]]; *)
         circuit = circuit["Bend"];
-        If[ circuit["TraceQudits"] > 0,
+        If[ TrueQ[OptionValue["Trace"]] && circuit["TraceQudits"] > 0,
             circuit = circuit /* MapThread[{"Cap", #2} -> {#1, #1 + width} &, {circuit["TraceOrder"], circuit["TraceDimensions"]}];
         ]
     ];
@@ -324,7 +324,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
             QuantumBasis[QuditBasis[basis["OutputDimensions"]], QuditBasis[basis["InputDimensions"]]]
         ]
     ];
-    If[ traceOrder =!= {},
+    If[ TrueQ[OptionValue["Trace"]] && traceOrder =!= {},
         If[ bendQ,
             basis = QuantumPartialTrace[basis, traceOrder - qco["Min"] + 1],
 
@@ -342,6 +342,8 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     res = Which[
         eigenOrder =!= {},
         QuantumMeasurementOperator[QuantumOperator[res, order], qco["Target"]],
+        ! TrueQ[OptionValue["Trace"]] && traceOrder =!= {},
+        QuantumChannel[QuantumOperator[res, order]],
         True,
         QuantumOperator[res, order]
     ];
