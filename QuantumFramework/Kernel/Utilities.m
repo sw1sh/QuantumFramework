@@ -344,9 +344,10 @@ HadamardGrayRowPermutation[n_Integer ? Positive] := FindPermutation @ Nest[Inser
 
 (* TODO: WFR *)
 Memoize[f_ ? Developer`SymbolQ] := With[{g = Unique[f]},
+    SetAttributes[g, HoldAll];
     DownValues[g] = MapAt[ReplaceAll[f -> g], DownValues[f], {All, 1}];
     ResourceFunction["BlockProtected"][{f},
-        DownValues[f] = {HoldPattern[f[args___]] :> ResourceFunction["BlockProtected"][{f}, f[args] = g[args]]};
+        DownValues[f] = {HoldPattern[f[args___]] :> ResourceFunction["BlockProtected"][{f}, With[{res = g[args]}, AppendTo[DownValues[f], HoldPattern[f[args]] -> res]; res]]};
     ]
 ]
 
