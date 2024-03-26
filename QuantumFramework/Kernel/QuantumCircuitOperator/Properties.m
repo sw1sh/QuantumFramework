@@ -316,7 +316,7 @@ QuantumCircuitOperatorProp[qco_, "Bend"] :=
     QuantumCircuitOperator[
         Map[
             If[ #["MatrixQ"],
-                If[QuantumMeasurementOperatorQ[#], QuantumMeasurementOperator, Identity] @ QuantumOperator[#]["Bend", qco["Width"]], 
+                Which[QuantumChannelQ[#], QuantumChannel, QuantumMeasurementOperatorQ[#], QuantumMeasurementOperator, True, Identity] @ QuantumOperator[#]["Bend", qco["Width"]], 
                 With[{op = QuantumOperator[#]}, Splice[If[QuantumChannelQ[#] || QuantumMeasurementOperatorQ[#], MapAt[Head[#], {1}], Identity] @ {op, op["Conjugate"]["Shift", qco["Width"]]}]]
             ] &,
             qco["NormalOperators"]
