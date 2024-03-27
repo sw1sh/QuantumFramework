@@ -733,7 +733,7 @@ QuantumStateProp[qs_, "Permute", perm_Cycles] := If[
     perm === Cycles[{}],
     qs,
     QuantumState[
-        If[ qs["PureStateQ"],
+        If[ qs["VectorQ"],
             SparseArrayFlatten @ Transpose[qs["StateTensor"], perm],
             ArrayReshape[
                 Transpose[qs["StateTensor"], PermutationCycles[With[{list = PermutationList[perm, qs["Qudits"]]}, Join[list, list + qs["Qudits"]]]]],
