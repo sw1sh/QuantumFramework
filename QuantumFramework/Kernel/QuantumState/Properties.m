@@ -881,7 +881,7 @@ QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 := Wi
 ]
 
 
-Options[BlochPlot] = Join[{"ShowLabels" -> True, "ShowGreatCircles" -> True, "ShowAxes" -> True}, Options[Graphics3D]]
+Options[BlochPlot] = Join[{"ShowLabels" -> True, "ShowGreatCircles" -> True, "ShowAxes" -> True, "ShowArrow" -> True}, Options[Graphics3D]]
 
 BlochPlot[qs_, opts : OptionsPattern[]] := Module[{
     greatCircles, referenceStates, u, v, w
@@ -909,7 +909,10 @@ BlochPlot[qs_, opts : OptionsPattern[]] := Module[{
             },
             Nothing
         ],
-        Red, Arrowheads[0.05], Arrow[Tube[{{0, 0, 0}, {u, v, w}}, 0.03], {0, -0.01}]
+        If[ TrueQ[OptionValue["ShowArrow"]],
+            Splice @ {Red, Arrowheads[0.05], Arrow[Tube[{{0, 0, 0}, {u, v, w}}, 0.03], {0, -0.01}]},
+            Nothing
+        ]
     }
     ];
     {u, v, w} = qs["BlochCartesianCoordinates"];
