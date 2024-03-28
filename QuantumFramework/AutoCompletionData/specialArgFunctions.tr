@@ -21,6 +21,8 @@
             "Wigner",
             "WignerMIC",
             "GellMann",
+            "Wooters",
+            "Feynman",
             "Tetrahedron",
             "RandomMIC"
         }
@@ -47,6 +49,8 @@
             "Wigner",
             "WignerMIC",
             "GellMann",
+            "Wooters",
+            "Feynman",
             "Tetrahedron",
             "RandomMIC"
         }
@@ -102,6 +106,8 @@
             "Wigner",
             "WignerMIC",
             "GellMann",
+            "Wooters",
+            "Feynman",
             "Tetrahedron",
             "RandomMIC"
         }
@@ -210,6 +216,8 @@
             "Wigner",
             "WignerMIC",
             "GellMann",
+            "Wooters",
+            "Feynman",
             "Tetrahedron",
             "RandomMIC"
         }
@@ -236,6 +244,8 @@
             "Wigner",
             "WignerMIC",
             "GellMann",
+            "Wooters",
+            "Feynman",
             "Tetrahedron",
             "RandomMIC",
             "RandomHermitian",
@@ -265,6 +275,8 @@
             "Wigner",
             "WignerMIC",
             "GellMann",
+            "Wooters",
+            "Feynman",
             "Tetrahedron",
             "RandomMIC"
         }
@@ -301,6 +313,8 @@
             "Wigner",
             "WignerMIC",
             "GellMann",
+            "Wooters",
+            "Feynman",
             "Tetrahedron",
             "RandomMIC"
         }

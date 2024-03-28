@@ -166,7 +166,11 @@ eigenvectors[matrix_, opts : OptionsPattern[]] := Last @ eigensystem[matrix, opt
 
 pauliMatrix[n_] := pauliMatrix[n, 2]
 
+spinMatrix[n_] := spinMatrix[n, 2]
+
 pauliMatrix[0, dimension_] := identityMatrix[dimension]
+
+spinMatrix[0, dimension_] := identityMatrix[dimension]
 
 pauliMatrix[1, dimension_] := SparseArray[Table[{n, Mod[n - 1, dimension]} + 1 -> 1, {n, 0, dimension - 1}], {dimension, dimension}]
 
