@@ -229,10 +229,10 @@ QuantumStateProp[qs_, "TransitionPhaseSpace"] /; qs["Picture"] === "PhaseSpace" 
 QuantumStateProp[qs_, prop : "EvenPhaseSpace" | "EvenTransitionPhaseSpace", opts___] := QuantumWignerTransform[qs, opts][prop]
 
 QuantumStateProp[qs_, "PhaseSpace"] :=
-    QuantumState[qs["Double"], If[qs["NumberQ"], N, Identity] @ QuantumBasis["Wooters"[qs["Dimension"]], "Picture" -> "PhaseSpace"]]["PhaseSpace"]
+    QuantumState[qs["Double"], If[qs["NumberQ"], N, Identity] @ QuantumBasis["Wootters"[qs["Dimension"]], "Picture" -> "PhaseSpace"]]["PhaseSpace"]
 
 QuantumStateProp[qs_, "TransitionPhaseSpace"] :=
-    QuantumState[qs["Double"], If[qs["NumberQ"], N, Identity] @ QuantumBasis["Wooters"[qs["Dimension"]], "Picture" -> "PhaseSpace"]]["TransitionPhaseSpace"]
+    QuantumState[qs["Double"], If[qs["NumberQ"], N, Identity] @ QuantumBasis["Wootters"[qs["Dimension"]], "Picture" -> "PhaseSpace"]]["TransitionPhaseSpace"]
 
 
 QuantumStateProp[qs_, "PositiveTransitionQuasiProbability", opts___] := UnitStep[#] # - Transpose[UnitStep[- #] #] & @ qs["TransitionQuasiProbability", opts]
