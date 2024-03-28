@@ -159,7 +159,7 @@ QuantumStateProp[qs_, "ProbabilityAssociation" | "Probability"] := With[{proba =
 
 QuantumStateProp[qs_, "Distribution"] := CategoricalDistribution[qs["Names"], qs["Probabilities"]]
 
-QuantumStateProp[qs_, "PhaseSpace"] /; qs["Picture"] === "PhaseSpace" := Enclose @ With[{dims = ConfirmBy[Sqrt[qs["Dimensions"]], AllTrue[IntegerQ]]},
+QuantumStateProp[qs_, "EvenPhaseSpace"] /; qs["Picture"] === "PhaseSpace" := Enclose @ With[{dims = ConfirmBy[Sqrt[qs["Dimensions"]], AllTrue[IntegerQ]]},
     Fold[
         With[{ds = Dimensions[#1][[#2]] {1, 1}, lds = Dimensions[#1][[;; #2 - 1]], rds = Dimensions[#1][[#2 + 2 ;;]]},
             If[ EvenQ[ds[[1]]],
@@ -179,7 +179,7 @@ QuantumStateProp[qs_, "PhaseSpace"] /; qs["Picture"] === "PhaseSpace" := Enclose
     ]
 ]
 
-QuantumStateProp[qs_, "TransitionPhaseSpace"] /; qs["Picture"] === "PhaseSpace" := Enclose @ With[{dims = ConfirmBy[Sqrt[qs["Dimensions"]], AllTrue[IntegerQ]]},
+QuantumStateProp[qs_, "EvenTransitionPhaseSpace"] /; qs["Picture"] === "PhaseSpace" := Enclose @ With[{dims = ConfirmBy[Sqrt[qs["Dimensions"]], AllTrue[IntegerQ]]},
     SparseArray @ Fold[
         With[{ds = Dimensions[#1][[#2]] {1, 1}, lds = Dimensions[#1][[;; #2 - 1]], rds = Dimensions[#1][[#2 + 2 ;;]]}, {d = ds[[1]]},
             Map[
@@ -210,7 +210,30 @@ QuantumStateProp[qs_, "TransitionPhaseSpace"] /; qs["Picture"] === "PhaseSpace" 
     ]
 ]
 
-QuantumStateProp[qs_, prop : "PhaseSpace" | "TransitionPhaseSpace", opts___] := QuantumWignerTransform[qs, opts][prop]
+QuantumStateProp[qs_, "PhaseSpace"] /; qs["Picture"] === "PhaseSpace" := Enclose @ With[{dims = ConfirmBy[Sqrt[qs["Dimensions"]], AllTrue[IntegerQ]]},
+    Chop @ ArrayReshape[qs["StateVector"], Catenate[{#, #} & /@ dims]]
+]
+
+QuantumStateProp[qs_, "TransitionPhaseSpace"] /; qs["Picture"] === "PhaseSpace" := Enclose @ With[{dims = ConfirmBy[Sqrt[qs["Dimensions"]], AllTrue[IntegerQ]]},
+    SparseArray @ Chop @ Fold[
+        Join[
+            Join[ConstantArray[0, Dimensions[#1]], #1, #2 + 1],
+            Join[ConstantArray[0, Dimensions[#1]], ConstantArray[0, Dimensions[#1]], #2 + 1],
+            #2
+        ] &,
+        ArrayReshape[qs["StateVector"], Catenate[{#, #} & /@ dims]],
+        2 Range[qs["Qudits"]] - 1
+    ]
+]
+
+QuantumStateProp[qs_, prop : "EvenPhaseSpace" | "EvenTransitionPhaseSpace", opts___] := QuantumWignerTransform[qs, opts][prop]
+
+QuantumStateProp[qs_, "PhaseSpace"] :=
+    QuantumState[qs["Double"], If[qs["NumberQ"], N, Identity] @ QuantumBasis["Wooters"[qs["Dimension"]], "Picture" -> "PhaseSpace"]]["PhaseSpace"]
+
+QuantumStateProp[qs_, "TransitionPhaseSpace"] :=
+    QuantumState[qs["Double"], If[qs["NumberQ"], N, Identity] @ QuantumBasis["Wooters"[qs["Dimension"]], "Picture" -> "PhaseSpace"]]["TransitionPhaseSpace"]
+
 
 QuantumStateProp[qs_, "PositiveTransitionQuasiProbability", opts___] := UnitStep[#] # - Transpose[UnitStep[- #] #] & @ qs["TransitionQuasiProbability", opts]
 
@@ -264,17 +287,15 @@ QuantumStateProp[qs_, "FullTransitionGraph", opts : OptionsPattern[Join[{"Positi
 ]
 
 
-QuantumStateProp[qs_, "QuasiProbability", opts___] :=
-    ArrayReshape[
-        QuantumWignerTransform[QuantumState[qs["Split", qs["Qudits"]], qs["Dimension"]], opts, "Exact" -> ! qs["NumberQ"]]["PhaseSpace"],
-        If[EvenQ[qs["Dimension"]], 2, 1] {1, 1} qs["Dimension"]
-    ]
+QuantumStateProp[qs_, "QuasiProbability"] := ArrayReshape[
+    Transpose[qs["PhaseSpace"], FindPermutation[Join[Range[1, 2 qs["Qudits"], 2], Range[2, 2 qs["Qudits"] - 1, 2]]]],
+    {1, 1} qs["Dimension"]
+]
 
-QuantumStateProp[qs_, "TransitionQuasiProbability", opts___] :=
-    ArrayReshape[
-        QuantumWignerTransform[QuantumState[qs["Split", qs["Qudits"]], qs["Dimension"]], opts, "Exact" -> ! qs["NumberQ"]]["TransitionPhaseSpace"],
-        2 {1, 1} qs["Dimension"]
-    ]
+QuantumStateProp[qs_, "TransitionQuasiProbability"] := ArrayReshape[
+    Transpose[qs["TransitionPhaseSpace"], FindPermutation[Join[Range[1, 2 qs["Qudits"], 2], Range[2, 2 qs["Qudits"] - 1, 2]]]],
+    2 {1, 1} qs["Dimension"]
+]
 
 QuantumStateProp[qs_, "Formula", OptionsPattern[]] /; qs["DegenerateStateQ"] := RawBoxes[0]
 

@@ -186,13 +186,13 @@ QuditBasis[{"GellMann", d : _Integer ? Positive : 2}] := QuditBasis[
 
 WootersBasis[d_] := With[{w = Exp[2 Pi I / d]}, 
     Catenate @ Table[
-        Sum[w ^ (k  l / d + q  l - p  k) MatrixPower[pauliMatrix[1, d], k] . MatrixPower[pauliMatrix[3, d], l], {k, 0, d - 1}, {l, 0, d - 1}] / d,
-        {q, 0, d - 1}, {p, 0, d - 1}
+        Sum[w ^ ((d - 1) k l / 2 + q  l - p  k) MatrixPower[pauliMatrix[1, d], k] . MatrixPower[pauliMatrix[3, d], l], {k, 0, d - 1}, {l, 0, d - 1}] / d,
+        {p, 0, d - 1}, {q, 0, d - 1}
     ]
 ]
 
 QuditBasis[{"Wooters", d : _Integer ? Positive : 2}] := With[{factors = Catenate[Table @@@ FactorInteger[d]]},
-    QuantumTensorProduct[QuditBasis[Tuples[{Subscript["\[ScriptCapitalQ]", #] & /@ Range[#], Subscript["\[ScriptCapitalP]", #] & /@ Range[#]}], WootersBasis[#]] & /@ factors]
+    Simplify @ QuantumTensorProduct[QuditBasis[Subscript["\[ScriptCapitalW]", Row[{##}]] & @@@ Tuples[Range[0, # - 1], 2], WootersBasis[#]] & /@ factors]
 ]
 
 QuditBasis[{"Feynman", d : _Integer ? Positive : 2}] :=
