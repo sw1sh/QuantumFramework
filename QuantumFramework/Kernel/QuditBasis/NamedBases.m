@@ -11,7 +11,7 @@ $QuditBasisNames = {
     "Bell",
     "Fourier",
     "Schwinger", "Pauli", "Dirac", "Wigner", "WignerMIC", "GellMann",
-    "Wooters", "Feynman",
+    "Wootters", "Feynman",
     "Tetrahedron", "RandomMIC"
 }
 
@@ -184,19 +184,19 @@ QuditBasis[{"GellMann", d : _Integer ? Positive : 2}] := QuditBasis[
 ]
 
 
-WootersBasis[d_] := With[{w = Exp[2 Pi I / d]}, 
+WoottersBasis[d_] := With[{w = Exp[2 Pi I / d]}, 
     Catenate @ Table[
         Sum[w ^ ((d - 1) k l / 2 + q  l - p  k) MatrixPower[pauliMatrix[1, d], k] . MatrixPower[pauliMatrix[3, d], l], {k, 0, d - 1}, {l, 0, d - 1}] / d,
         {p, 0, d - 1}, {q, 0, d - 1}
     ]
 ]
 
-QuditBasis[{"Wooters", d : _Integer ? Positive : 2}] := With[{factors = Catenate[Table @@@ FactorInteger[d]]},
-    Simplify @ QuantumTensorProduct[QuditBasis[Subscript["\[ScriptCapitalW]", Row[{##}]] & @@@ Tuples[Range[0, # - 1], 2], WootersBasis[#]] & /@ factors]
+QuditBasis[{"Wootters", d : _Integer ? Positive : 2}] := With[{factors = Catenate[Table @@@ FactorInteger[d]]},
+    Simplify @ QuantumTensorProduct[QuditBasis[Subscript["\[ScriptCapitalW]", Row[{##}]] & @@@ Tuples[Range[0, # - 1], 2], WoottersBasis[#]] & /@ factors]
 ]
 
 QuditBasis[{"Feynman", d : _Integer ? Positive : 2}] :=
-    QuditBasis[Subscript["\[ScriptCapitalF]", #] & /@ Range[d ^ 2], WootersBasis[d]]
+    QuditBasis[Subscript["\[ScriptCapitalF]", #] & /@ Range[d ^ 2], WoottersBasis[d]]
 
 
 QuditBasis[{"RandomMIC", d : _Integer ? Positive : 2, methodOpts : OptionsPattern[]}] := Enclose @ With[{
