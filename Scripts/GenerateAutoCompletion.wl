@@ -4,6 +4,7 @@ Begin["Wolfram`QuantumFramework`PackageScope`"]
 
 $AutoCompletionData = With[{
     basisNames = $QuditBasisNames,
+    phaseSpaceBasisNames = $QuditPhaseSpaceBasisNames,
     stateNames = $QuantumStateNames,
     operatorNames = $QuantumOperatorNames,
     measurementOperatorNames = $QuantumMeasurementOperatorNames,
@@ -24,7 +25,8 @@ $AutoCompletionData = With[{
         "QuantumCircuitOperator" -> {circuitNames},
         "QuantumEntanglementMonotone" -> {0, entanglementMonotones, entanglementMonotones},
         "QuantumDistance" -> {0, 0, distances},
-        "PauliStabilizer" -> {stabilizerNames}
+        "PauliStabilizer" -> {stabilizerNames},
+        "QuantumPhaseSpaceTransform" -> {0, phaseSpaceBasisNames}
     }
 ]
 

@@ -1,6 +1,8 @@
 Package["Wolfram`QuantumFramework`"]
 
 PackageScope["$QuditBasisNames"]
+PackageScope["$QuditPhaseSpaceBasisNames"]
+
 
 
 $QuditBasisNames = {
@@ -14,6 +16,8 @@ $QuditBasisNames = {
     "Wootters", "Feynman",
     "Tetrahedron", "RandomMIC"
 }
+
+$QuditPhaseSpaceBasisNames = {"Wigner", "Wootters", "Tetrahedron", "Pauli", "GellMann", "Feynman", "WignerMIC", "RandomMIC"}
 
 $QuditBasisCache = <||>
 $QuditBasisCaching = True

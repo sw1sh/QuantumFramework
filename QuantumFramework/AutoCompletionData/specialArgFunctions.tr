@@ -395,5 +395,18 @@
         }
     },
     "PauliStabilizer" -> { { "5QubitCode", "5QubitCode1", "9QubitCode", \
-"9QubitCode1", "Random" } }
+"9QubitCode1", "Random" } },
+    "QuantumPhaseSpaceTransform" -> {
+        0,
+        {
+            "Wigner",
+            "Wootters",
+            "Tetrahedron",
+            "Pauli",
+            "GellMann",
+            "Feynman",
+            "WignerMIC",
+            "RandomMIC"
+        }
+    }
 }

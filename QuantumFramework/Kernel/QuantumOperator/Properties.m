@@ -447,6 +447,22 @@ QuantumOperatorProp[qo_, "Eigenbasis", opts___] /; qo["SquareQ"] := With[{vecs =
     QuantumBasis[AssociationThread[Symbol["\[FormalV]" <> ToString[#]] & /@ Range[Length[vectors]], vectors]]
 ]
 
+QuantumOperatorProp[qo_, "SplitBasis"] := With[{
+    output = Thread[{qo["FullOutputOrder"], qo["Output"]["Decompose"]}],
+    input = Thread[{qo["FullInputOrder"], qo["Input"]["Decompose"]}]
+},
+    {
+        QuantumBasis[
+            "Output" -> QuantumTensorProduct @ Select[output, NonPositive[#[[1]]] &][[All, 2]],
+            "Input" -> QuantumTensorProduct @ Select[input, NonPositive[#[[1]]] &][[All, 2]]
+        ],
+        QuantumBasis[
+            "Output" -> QuantumTensorProduct @ Select[output, Positive[#[[1]]] &][[All, 2]],
+            "Input" -> QuantumTensorProduct @ Select[input, Positive[#[[1]]] &][[All, 2]]
+        ]
+    }
+]
+
 QuantumOperatorProp[qo_, "Projectors", opts___] /; qo["SquareQ"] := projector /@ SparseArray @ Chop @ qo["Eigenvectors", opts]
 
 QuantumOperatorProp[qo_, "Diagonalize", opts___] /; qo["SquareQ"] := Block[{vectors, values},
