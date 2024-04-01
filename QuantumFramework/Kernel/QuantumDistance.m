@@ -5,7 +5,7 @@ PackageScope["$QuantumDistances"]
 
 
 
-$QuantumDistances = {"Fidelity", "RelativeEntropy", "Trace", "Bures", "BuresAngle", "HilbertSchmidt", "Bloch"}
+$QuantumDistances = {"Fidelity", "RelativeEntropy", "RelativePurity", "Trace", "Bures", "BuresAngle", "HilbertSchmidt", "Bloch"}
 
 
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ] := QuantumDistance[qs1, qs2, "Fidelity"]
@@ -21,6 +21,13 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativeEntropy"] :
     t = qs2["Computational"]["DensityMatrix"]
 },
     Quantity[Chop[Tr[s . (MatrixLog[s, Method -> "Jordan"] - MatrixLog[t, Method -> "Jordan"])]] / Log[2], "Bits"]
+]
+
+QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativePurity"] := With[{
+    s = qs1["Computational"]["DensityMatrix"],
+    t = qs2["Computational"]["DensityMatrix"]
+},
+    Chop[Tr[s . t]]
 ]
 
 
