@@ -180,9 +180,9 @@ QuditBasis[{"Wigner", basisArgs___, opts : OptionsPattern[]}, args___] := QuditB
 
 QuditBasis[{"WignerMIC", args___}, opts___] := QuditBasis[QuantumWignerMICBasis[args], opts]
 
-QuditBasis[{"GellMann", d : _Integer ? Positive : 2}] := QuditBasis[
+QuditBasis[{"GellMann", d : _Integer ? Positive : 2, s_ : 0}] := QuditBasis[
     Subscript["\[ScriptCapitalG]", #] & /@ Range[d ^ 2],
-    With[{povm = Normal /@ GellMannMICPOVM[d]},
+    With[{povm = Normal /@ GellMannMICPOVM[d, s]},
         Inverse[Outer[Tr @* Dot, povm, povm, 1]] . povm // Simplify
     ]
 ]

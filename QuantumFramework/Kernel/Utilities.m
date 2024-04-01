@@ -237,11 +237,11 @@ GellMannMatrices[d_Integer ? Positive] := Catenate @ Riffle[
 RegularSimplex[d_Integer ? Positive] := 1 / Sqrt[d + 1] (Append[identityMatrix[d], ConstantArray[1 / d (1 + Sqrt[d + 1]), d]] - 1 / d (1 + 1 / Sqrt[d + 1]))
 
 
-GellMannMICPOVM[d_] := With[{
+GellMannMICPOVM[d_, s_ : 0] := With[{
     sigma = GellMannMatrices[d],
     simplex = RegularSimplex[d ^ 2 - 1]
 },
-    identityMatrix[d] / d ^ 2 + 1 / d Sqrt[(d - 1) / 2 / d] # . sigma & /@ simplex // Normal // Simplify
+    identityMatrix[d] / d ^ 2 + 1 / d Sqrt[(d - 1) ^ (1 + s) / 2 / d] # . sigma & /@ simplex // Normal // Simplify
 ]
 
 RandomGinibre[shape_List, realQ : True | False] := If[realQ, RandomReal[1 / Sqrt[2], shape], RandomComplex[{0, (1 + I) / Sqrt[2]}, shape]]

@@ -30,10 +30,10 @@ QuantumMeasurementOperator[{"WignerMICPOVM", args___}, target : _ ? targetQ : {1
     opts
 ]
 
-QuantumMeasurementOperator[{"GellMannMICPOVM", d : _Integer ? Positive : 2}, opts___] := 
+QuantumMeasurementOperator[{"GellMannMICPOVM", d : _Integer ? Positive : 2, s_ : 0}, opts___] := 
     QuantumMeasurementOperator[
         QuantumMeasurementOperator[
-            GellMannMICPOVM[d],
+            GellMannMICPOVM[d, s],
             QuantumBasis[QuantumTensorProduct[QuditBasis[Subscript["\[ScriptCapitalG]", #] & /@ Range[d ^ 2]], QuditBasis[d]], QuditBasis[d], "Label" -> "GellMannMIC"]
         ],
         opts
