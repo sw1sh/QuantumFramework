@@ -12,12 +12,14 @@ $QuditBasisNames = {
     "JX", "JY", "JZ",
     "Bell",
     "Fourier",
-    "Schwinger", "Pauli", "Dirac", "Wigner", "WignerMIC", "GellMann",
+    "Schwinger", "Dirac",
+    "Wigner", "WignerMIC",
+    "Pauli", "GellMann", "GellMannMIC", "Bloch", "GellMannBloch", "GellMannBlochMIC",
     "Wootters", "Feynman",
     "Tetrahedron", "RandomMIC"
 }
 
-$QuditPhaseSpaceBasisNames = {"Wigner", "Wootters", "Tetrahedron", "Pauli", "GellMann", "Feynman", "WignerMIC", "RandomMIC"}
+$QuditPhaseSpaceBasisNames = Last @ SequenceSplit[$QuditBasisNames, x : {"Wigner", ___} :> x]
 
 $QuditBasisCache = <||>
 $QuditBasisCaching = True
@@ -180,11 +182,32 @@ QuditBasis[{"Wigner", basisArgs___, opts : OptionsPattern[]}, args___] := QuditB
 
 QuditBasis[{"WignerMIC", args___}, opts___] := QuditBasis[QuantumWignerMICBasis[args], opts]
 
-QuditBasis[{"GellMann", d : _Integer ? Positive : 2, s_ : 0}] := QuditBasis[
+
+QuditBasis[{"GellMann", d : _Integer ? Positive : 2}] := QuditBasis[
+    Subscript["\[ScriptCapitalG]", #] & /@ Range[d ^ 2],
+    Prepend[IdentityMatrix[d]] @ GellMannMatrices[d]
+]
+
+QuditBasis[{"GellMannMIC", d : _Integer ? Positive : 2, s_ : 0}] := QuditBasis[
     Subscript["\[ScriptCapitalG]", #] & /@ Range[d ^ 2],
     With[{povm = Normal /@ GellMannMICPOVM[d, s]},
         Inverse[Outer[Tr @* Dot, povm, povm, 1]] . povm // Simplify
     ]
+]
+
+QuditBasis[{"Bloch", d : _Integer ? Positive : 2}] := QuditBasis[
+    Subscript["\[ScriptCapitalB]", #] & /@ Prepend["r"] @ Range[1, d ^ 2 - 1],
+    Sqrt[(d - 1) / (2 d)] Prepend[Sqrt[2 d (d + 1)] IdentityMatrix[d]] @ GellMannMatrices[d]
+]
+
+QuditBasis[{"GellMannBloch", d : _Integer ? Positive : 2}] := QuditBasis[
+    Subscript["\[ScriptCapitalB]", #] & /@ Range[d ^ 2],
+    Prepend[IdentityMatrix[d]][GellMannMatrices[d] Sqrt[d (d + 1) (d - 1) ^ 2 / 2]]
+]
+
+QuditBasis[{"GellMannBlochMIC", d : _Integer ? Positive : 2}] := QuditBasis[
+    Subscript["\[ScriptCapitalB]", #] & /@ Range[d ^ 2],
+    RotationMatrix[{UnitVector[d ^ 2, 1], ConstantArray[1, d ^ 2]}] . QuditBasis["GellMannBloch"[d]]["Elements"]
 ]
 
 
