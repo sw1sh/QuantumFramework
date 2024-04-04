@@ -31,6 +31,7 @@ PackageScope["GellMannMatrices"]
 PackageScope["GellMannMICPOVM"]
 PackageScope["RandomHaarPOVM"]
 PackageScope["RandomBlochMICPOVM"]
+PackageScope["QBismSICPOVM"]
 PackageScope["RegularSimplex"]
 
 PackageScope["toggleSwap"]
@@ -261,6 +262,21 @@ RandomBlochMICPOVM[d_] := With[{
     identityMatrix[d] / d ^ 2 + 1 / d Sqrt[(d - 1) / 2 / d] # . sigma & /@ simplex // Normal
 ]
 
+QBismSICPOVM[d : _Integer : 2] := Enclose @ With[{
+	fiducial = Normalize[ConfirmBy[
+		DeleteCases[{}] @ Confirm @ Import[
+			StringTemplate["https://raw.githubusercontent.com/heyredhat/qbism/master/qbism/sic_povms/d``.txt"][d],
+			"Table"
+		],
+		MatrixQ[#, NumericQ] &
+	] . {1, I}]
+},
+	1 / d KroneckerProduct[#, Conjugate[#]] & /@ Catenate @ Table[
+        (- Exp[I Pi/ d]) ^ (a b) *
+            MatrixPower[pauliMatrix[1, d], b] . MatrixPower[pauliMatrix[3, d], a] . fiducial,
+        {b, 0, d - 1}, {a, 0, d - 1}
+    ]
+]
 
 (* optimization *)
 

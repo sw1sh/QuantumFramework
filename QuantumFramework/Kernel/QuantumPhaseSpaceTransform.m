@@ -4,7 +4,7 @@ PackageExport["QuantumPhaseSpaceTransform"]
 
 
 
-QuantumPhaseSpaceTransform[qb_ ? QuditBasisQ, args__] := With[{exactQ = TrueQ[OptionValue[Select[{args}, OptionQ], "Exact"]]},
+QuantumPhaseSpaceTransform[qb_ ? QuditBasisQ, args__] := With[{exactQ = TrueQ[OptionValue[Select[{args, "Exact" -> True}, OptionQ], "Exact"]]},
     Enclose @ With[{
         phaseSpaceBasis = ConfirmBy[QuditBasis @@ DeleteCases[{args}, "Exact" -> _], QuditBasisQ]
     },

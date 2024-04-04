@@ -28,7 +28,8 @@
             "Wootters",
             "Feynman",
             "Tetrahedron",
-            "RandomMIC"
+            "RandomMIC",
+            "QBismSIC"
         }
     },
     "QuantumBasis" -> {
@@ -60,7 +61,8 @@
             "Wootters",
             "Feynman",
             "Tetrahedron",
-            "RandomMIC"
+            "RandomMIC",
+            "QBismSIC"
         }
     },
     "QuantumState" -> {
@@ -121,7 +123,8 @@
             "Wootters",
             "Feynman",
             "Tetrahedron",
-            "RandomMIC"
+            "RandomMIC",
+            "QBismSIC"
         }
     },
     "QuantumOperator" -> {
@@ -235,7 +238,8 @@
             "Wootters",
             "Feynman",
             "Tetrahedron",
-            "RandomMIC"
+            "RandomMIC",
+            "QBismSIC"
         }
     },
     "QuantumMeasurementOperator" -> {
@@ -268,10 +272,12 @@
             "Feynman",
             "Tetrahedron",
             "RandomMIC",
+            "QBismSIC",
             "RandomHermitian",
             "WignerMICPOVM",
             "GellMannMICPOVM",
             "TetrahedronSICPOVM",
+            "QBismSICPOVM",
             "RandomPOVM"
         },
         {
@@ -302,7 +308,8 @@
             "Wootters",
             "Feynman",
             "Tetrahedron",
-            "RandomMIC"
+            "RandomMIC",
+            "QBismSIC"
         }
     },
     "QuantumChannel" -> {
@@ -344,7 +351,8 @@
             "Wootters",
             "Feynman",
             "Tetrahedron",
-            "RandomMIC"
+            "RandomMIC",
+            "QBismSIC"
         }
     },
     "QuantumCircuitOperator" -> {
@@ -439,7 +447,8 @@
             "Wootters",
             "Feynman",
             "Tetrahedron",
-            "RandomMIC"
+            "RandomMIC",
+            "QBismSIC"
         }
     }
 }

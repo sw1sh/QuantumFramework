@@ -60,6 +60,7 @@ $QuantumMeasurementProperties = {
     "Mean", "States", "StateAssociation",
     "Entropy",
     "PostMeasurementState",
+    "Eigenvalues", "EigenvalueVectors",
     "Eigenvectors", "Projectors",
     "SimulatedMeasurement", "SimulatedCounts"
 };

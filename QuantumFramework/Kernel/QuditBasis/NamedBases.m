@@ -16,7 +16,8 @@ $QuditBasisNames = {
     "Wigner", "WignerMIC",
     "Pauli", "GellMann", "GellMannMIC", "Bloch", "GellMannBloch", "GellMannBlochMIC",
     "Wootters", "Feynman",
-    "Tetrahedron", "RandomMIC"
+    "Tetrahedron", "RandomMIC",
+    "QBismSIC"
 }
 
 $QuditPhaseSpaceBasisNames = Last @ SequenceSplit[$QuditBasisNames, x : {"Wigner", ___} :> x]
@@ -244,6 +245,12 @@ QuditBasis[{"Tetrahedron", args___}] := QuditBasis[
     With[{povm = Normal /@ QuantumMeasurementOperator["TetrahedronSICPOVM"[args]]["POVMElements"]},
         Inverse[Outer[Tr @* Dot, povm, povm, 1]] . povm // Simplify
     ]
+]
+
+
+QuditBasis[{"QBismSIC", d : _Integer : 2}] := Enclose @ QuditBasis[
+    Subscript["\[ScriptCapitalQ]", #] & /@ Range[d ^ 2],
+    Inverse[Outer[Tr @* Dot, #, #, 1]] . # & @ Confirm @ QBismSICPOVM[d]
 ]
 
 
