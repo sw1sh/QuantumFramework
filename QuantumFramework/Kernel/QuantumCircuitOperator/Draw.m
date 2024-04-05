@@ -9,7 +9,7 @@ $DefaultGray = RGBColor[0.537254, 0.537254, 0.537254];
 $GateDefaultBoundaryStyle = {
 	"H" -> RGBColor[0.368417, 0.506779, 0.709798],
 	"T" | "S" -> RGBColor[0.922526, 0.385626, 0.209179],
-	"I" | "X" | "Y" | "Z" | "Pauli" | "NOT" | "0" | "1" -> RGBColor[0.880722, 0.611041, 0.142051],
+	"X" | "Y" | "Z" | "Pauli" | "NOT" | "0" | "1" -> RGBColor[0.880722, 0.611041, 0.142051],
 	"P"[_] | (Superscript | Power)["P"[_], _] | "PhaseShift"[_] | _Integer -> RGBColor[0.560181, 0.691569, 0.194885],
 	Subscript["R", _][_] -> RGBColor[0.528488, 0.470624, 0.701351],
 	"Measurement" -> RGBColor[0.7367, 0.358, 0.5030],
@@ -201,12 +201,12 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			wireStyle,
 			MapThread[{wireThickness[Replace[#1, inDims]], Line[{{center[[1]] - size / 2, - #1 vGapSize}, {center[[1]] + size / 2, - #2 vGapSize}}]} &, {vposIn, vposOut}]
 		},
-		"Cup" | ("I" /; vposIn === {}) :> {
+		"Cup" | ("I" /; Length[vposOut] == 2 && vposIn === {}) :> {
 			wireStyle,
 			wireThickness[Replace[First[vposOut], outDims]],
 			Circle[{center[[1]] + size / 2, center[[2]]}, {vGapSize / 2, (Max[vpos] - Min[vpos]) vGapSize / 2}, {Pi / 2, 3 Pi / 2}]
 		},
-		"Cap" | ("I" /; vposOut === {}) :> {
+		"Cap" | ("I" /; Length[vposIn] == 2 && vposOut === {}) :> {
 			wireStyle,
 			wireThickness[Replace[First[vposIn], inDims]],
 			Circle[{center[[1]] - size / 2, center[[2]]}, {vGapSize / 2, (Max[vpos] - Min[vpos]) vGapSize / 2}, {- Pi / 2, Pi / 2}]
