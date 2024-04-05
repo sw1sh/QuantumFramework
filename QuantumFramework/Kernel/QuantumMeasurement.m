@@ -138,7 +138,7 @@ QuantumMeasurementProp[qm_, "MixedStates"] := With[{rep = If[qm["PureStateQ"], 1
 QuantumMeasurementProp[qm_, "States"] := If[qm["PureStateQ"], qm["MixedStates"], Plus @@@ Partition[qm["MixedStates"], qm["Eigendimension"] qm["InputDimension"]]]
 
 QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
-    Which[
+    Normal @ Which[
         MatchQ[qm["LabelHead"], "Computational" | Automatic],
         qm["Computational"]["Eigenstate"],
         MatchQ[qm["LabelHead"], "Eigen"],
@@ -168,25 +168,25 @@ QuantumMeasurementProp[qm_, "MixedOutcomes"] := If[
 
 QuantumMeasurementProp[qm_, "NDistribution"] := CategoricalDistribution[
     qm["Outcomes"],
-    Chop @ N @ Normal @ qm["ProbabilitiesList"]
+    Chop @ N @ qm["ProbabilitiesList"]
 ]
 
 QuantumMeasurementProp[qm_, "Distribution"] := CategoricalDistribution[
     qm["Outcomes"],
-    Simplify @ Normal @ qm["ProbabilitiesList"]
+    Simplify @ qm["ProbabilitiesList"]
 ]
 
 QuantumMeasurementProp[qm_, "NMultivariateDistribution"] := CategoricalDistribution[
-    Thread[qm["EigenvalueVectors"] -> Chop @ N @ Normal @ qm["ProbabilitiesList"]]
+    Thread[qm["EigenvalueVectors"] -> Chop @ N @ qm["ProbabilitiesList"]]
 ]
 
 QuantumMeasurementProp[qm_, "MultivariateDistribution"] := With[{values = Replace[qm["EigenvalueVectors"], x_ ? NumberQ :> Round[x] /; x == Round[x], {-1}]},
-    CategoricalDistribution[Thread[values -> Chop @ Simplify @ Normal @ qm["ProbabilitiesList"]]]
+    CategoricalDistribution[Thread[values -> Chop @ Simplify @ qm["ProbabilitiesList"]]]
 ]
 
 QuantumMeasurementProp[qm_, "Probabilities"] := AssociationThread[
     qm["Outcomes"],
-    Normal @ qm["ProbabilitiesList"]
+    qm["ProbabilitiesList"]
 ]
 
 QuantumMeasurementProp[qm_, "DistributionInformation", args___] := Information[qm["Distribution"], args]
