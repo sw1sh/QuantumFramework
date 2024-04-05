@@ -82,7 +82,7 @@ QuantumMeasurementOperatorProp[qmo_, "Eigendimensions"] :=
 
 QuantumMeasurementOperatorProp[qmo_, "Eigendimension"] := Times @@ qmo["Eigendimensions"]
 
-QuantumMeasurementOperatorProp[qmo_, "Eigenbasis"] := qmo["Output"]["Extract", qmo["Eigenindex"]]
+QuantumMeasurementOperatorProp[qmo_, "Eigenbasis"] := With[{povm = qmo["POVM"]}, povm["Output"]["Extract", povm["Eigenindex"]]]
 
 QuantumMeasurementOperatorProp[qmo_, "Eigenvalues"] := qmo["Eigenbasis"]["Names"]
 

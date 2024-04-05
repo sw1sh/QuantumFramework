@@ -10,7 +10,7 @@ QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; Quantu
         qmo["Dimension"] < 2 ^ 9,
         ComplexArrayPlot[
             Map[Replace[{x_ ? (Not @* NumericQ) :> BlockRandom[RandomComplex[], RandomSeeding -> Hash[x]], x_ :> N[x]}],
-                qmo["Sort"]["MatrixRepresentation"],
+                If[qmo["ProjectionQ"], QuantumOperator, Identity][qmo]["Sort"]["MatrixRepresentation"],
                 {2}
             ],
             ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]},

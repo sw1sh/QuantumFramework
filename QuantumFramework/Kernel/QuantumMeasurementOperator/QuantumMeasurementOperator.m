@@ -23,17 +23,10 @@ qmo_QuantumMeasurementOperator /; quantumMeasurementOperatorQ[Unevaluated[qmo]] 
 
 SetAttributes[QuantumMeasurementOperator, NHoldRest]
 
-QuantumMeasurementOperator[arg_ -> eigenvalues_ ? VectorQ, args___] :=
-    Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumBasis[arg], QuantumBasisQ] -> eigenvalues, args]
+QuantumMeasurementOperator[basisArg : Except[_ ? QuantumBasisQ | _ ? QuantumOperatorQ] -> eigenvalues_ ? VectorQ, args___] :=
+    Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumBasis[basisArg], QuantumBasisQ] -> eigenvalues, args]
 
-QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? targetQ] := QuantumMeasurementOperator[qo, {target}]
-
-QuantumMeasurementOperator[target : _Integer | {___Integer}, args___] := If[MatchQ[target, (_ ? targetsQ | _ ? targetQ)],
-    QuantumMeasurementOperator[QuantumBasis[args], target],
-    Failure["BadTarget", <|"MessageTemplate" -> "Measurement target should only contain positive integers."|>]
-]
-
-QuantumMeasurementOperator[target_ -> arg_, opts___] := QuantumMeasurementOperator[QuantumBasis[arg], target, opts]
+QuantumMeasurementOperator[target : (_ ? targetsQ | _ ? targetQ), args___] := Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumBasis[args], QuantumBasisQ], target]
 
 QuantumMeasurementOperator[target_Integer, args___] := QuantumMeasurementOperator[{target}, args]
 
@@ -86,8 +79,10 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
     qmo
 ]
 
-QuantumMeasurementOperator[arg_ -> eigenvalues_List, args___] := QuantumMeasurementOperator[arg -> Ket /@ eigenvalues, args]
 
+QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? targetQ] := QuantumMeasurementOperator[qo, {target}]
+
+QuantumMeasurementOperator[qo_ ? QuantumOperatorQ -> eigenvalues_, args___] := Enclose @ QuantumMeasurementOperator[qo["Output"] -> eigenvalues, args]
 
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, Automatic] := QuantumMeasurementOperator[qo, qo["InputOrder"]]
 
