@@ -28,11 +28,8 @@ PackageScope["pauliMatrix"]
 PackageScope["spinMatrix"]
 PackageScope["fanoMatrix"]
 PackageScope["GellMannMatrices"]
-PackageScope["GellMannMICPOVM"]
-PackageScope["RandomHaarPOVM"]
-PackageScope["RandomBlochMICPOVM"]
-PackageScope["QBismSICPOVM"]
 PackageScope["RegularSimplex"]
+PackageScope["GramDual"]
 
 PackageScope["toggleSwap"]
 PackageScope["toggleShift"]
@@ -238,45 +235,8 @@ GellMannMatrices[d_Integer ? Positive] := Catenate @ Riffle[
 RegularSimplex[d_Integer ? Positive] := 1 / Sqrt[d + 1] (Append[identityMatrix[d], ConstantArray[1 / d (1 + Sqrt[d + 1]), d]] - 1 / d (1 + 1 / Sqrt[d + 1]))
 
 
-GellMannMICPOVM[d_, s_ : 0] := With[{
-    sigma = GellMannMatrices[d],
-    simplex = RegularSimplex[d ^ 2 - 1]
-},
-    identityMatrix[d] / d ^ 2 + 1 / d Sqrt[(d - 1) ^ (1 + s) / 2 / d] # . sigma & /@ simplex // Normal // Simplify
-]
+GramDual[x_] := Inverse[Outer[Tr @* Dot, x, x, 1]] . x
 
-RandomGinibre[shape_List, realQ : True | False] := If[realQ, RandomReal[1 / Sqrt[2], shape], RandomComplex[{0, (1 + I) / Sqrt[2]}, shape]]
-
-RandomHaarPOVM[d : _Integer ? Positive, k : _Integer ? Positive | Automatic : Automatic, n : _Integer ? Positive : 1, OptionsPattern[{"Real" -> False}]] := Block[{
-    realQ = TrueQ[OptionValue["Real"]], povm, S
-},
-	povm = # . ConjugateTranspose[#] & /@ RandomGinibre[{Replace[k, Automatic :> If[realQ, d (d + 1) / 2, d ^ 2]], d, n}, realQ];
-	S = MatrixPower[Total[povm], - 1 / 2];
-	S . # . S & /@ povm
-]
-
-RandomBlochMICPOVM[d_] := With[{
-    sigma = GellMannMatrices[d],
-    simplex = AffineTransform[RandomReal[1, {d ^ 2 - 1, d ^ 2 - 1}]] @ RegularSimplex[d ^ 2 - 1]
-},
-    identityMatrix[d] / d ^ 2 + 1 / d Sqrt[(d - 1) / 2 / d] # . sigma & /@ simplex // Normal
-]
-
-QBismSICPOVM[d : _Integer : 2] := Enclose @ With[{
-	fiducial = Normalize[ConfirmBy[
-		DeleteCases[{}] @ Confirm @ Import[
-			StringTemplate["https://raw.githubusercontent.com/heyredhat/qbism/master/qbism/sic_povms/d``.txt"][d],
-			"Table"
-		],
-		MatrixQ[#, NumericQ] &
-	] . {1, I}]
-},
-	1 / d KroneckerProduct[#, Conjugate[#]] & /@ Catenate @ Table[
-        (- Exp[I Pi/ d]) ^ (a b) *
-            MatrixPower[pauliMatrix[1, d], b] . MatrixPower[pauliMatrix[3, d], a] . fiducial,
-        {b, 0, d - 1}, {a, 0, d - 1}
-    ]
-]
 
 (* optimization *)
 

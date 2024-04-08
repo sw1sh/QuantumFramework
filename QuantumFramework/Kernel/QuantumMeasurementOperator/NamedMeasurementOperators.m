@@ -4,7 +4,7 @@ PackageScope["$QuantumMeasurementOperatorNames"]
 
 
 
-$QuantumMeasurementOperatorNames = {"RandomHermitian", "WignerMICPOVM", "GellMannMICPOVM", "TetrahedronSICPOVM", "QBismSICPOVM", "RandomPOVM"}
+$QuantumMeasurementOperatorNames = {"RandomHermitian", "WignerMICPOVM", "GellMannMICPOVM", "TetrahedronSICPOVM", "QBismSICPOVM", "HesseSICPOVM", "HoggarSICPOVM", "RandomPOVM"}
 
 
 QuantumMeasurementOperator[{"RandomHermitian", args___}, target : _ ? targetQ : {1}, opts___] := With[{
@@ -71,6 +71,22 @@ QuantumMeasurementOperator[{"QBismSICPOVM", d : _Integer : 2}, opts___] := Enclo
     QuantumMeasurementOperator[
         Confirm @ QBismSICPOVM[d],
         QuantumBasis[QuantumTensorProduct[QuditBasis[Subscript["\[ScriptCapitalQ]", #] & /@ Range[d ^ 2]], QuditBasis[d]], QuditBasis[d], "Label" -> "QBismSIC"]
+    ],
+    opts
+]
+
+QuantumMeasurementOperator[{"HesseSICPOVM"}, opts___] := Enclose @ QuantumMeasurementOperator[
+    QuantumMeasurementOperator[
+        Confirm @ HesseSICPOVM[],
+        QuantumBasis[QuantumTensorProduct[QuditBasis[Subscript["\[ScriptCapitalH]", #] & /@ Range[9]], QuditBasis[3]], QuditBasis[3], "Label" -> "HesseSIC"]
+    ],
+    opts
+]
+
+QuantumMeasurementOperator[{"HoggarSICPOVM"}, opts___] := Enclose @ QuantumMeasurementOperator[
+    QuantumMeasurementOperator[
+        Confirm @ HoggarSICPOVM[],
+        QuantumBasis[QuantumTensorProduct[QuditBasis[Subscript["\[ScriptCapitalH]", #] & /@ Range[64]], QuditBasis[8]], QuditBasis[8], "Label" -> "HoggarSIC"]
     ],
     opts
 ]

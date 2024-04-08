@@ -225,7 +225,7 @@ HamiltonianTransitionRate[H_QuantumOperator, MICQ_ : False] /; H["OutputDimensio
 },
     If[ TrueQ[MICQ],
         A = QuditBasis["WignerMIC"[d, "Exact" -> ! H["NumberQ"]]]["Elements"];
-        G = Inverse[Outer[Tr @* Dot, A, A, 1]] . A;
+        G = GramDual[A];
         h = Chop @ Table[I  Tr[h . (A[[l]] . G[[k]] - G[[k]] . A[[l]])], {l, d ^ 2}, {k, d ^ 2}];
         h = If[ OddQ[d],
             SymmetrizedArray[h, Automatic, Antisymmetric[{1, 2}]],

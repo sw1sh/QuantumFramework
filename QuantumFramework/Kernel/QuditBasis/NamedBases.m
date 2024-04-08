@@ -17,7 +17,7 @@ $QuditBasisNames = {
     "Pauli", "GellMann", "GellMannMIC", "Bloch", "GellMannBloch", "GellMannBlochMIC",
     "Wootters", "Feynman",
     "Tetrahedron", "RandomMIC",
-    "QBismSIC"
+    "QBismSIC", "HesseSIC", "HoggarSIC"
 }
 
 $QuditPhaseSpaceBasisNames = Last @ SequenceSplit[$QuditBasisNames, x : {"Wigner", ___} :> x]
@@ -173,6 +173,8 @@ QuditBasis["Dirac", args___] := Module[{
 ]
 
 
+(* phase space *)
+
 QuditBasis["Wigner", args___] := QuditBasis[{"Wigner", 2}, args]
 
 QuditBasis[{"Wigner", qb_QuditBasis /; QuditBasisQ[qb], opts : OptionsPattern[WignerBasis]}, args___] :=
@@ -192,7 +194,7 @@ QuditBasis[{"GellMann", d : _Integer ? Positive : 2}] := QuditBasis[
 QuditBasis[{"GellMannMIC", d : _Integer ? Positive : 2, s_ : 0}] := QuditBasis[
     Subscript["\[ScriptCapitalG]", #] & /@ Range[d ^ 2],
     With[{povm = Normal /@ GellMannMICPOVM[d, s]},
-        Inverse[Outer[Tr @* Dot, povm, povm, 1]] . povm // Simplify
+        Simplify @ GramDual[povm]
     ]
 ]
 
@@ -212,13 +214,6 @@ QuditBasis[{"GellMannBlochMIC", d : _Integer ? Positive : 2}] := QuditBasis[
 ]
 
 
-WoottersBasis[d_] := With[{w = Exp[2 Pi I / d]}, 
-    Catenate @ Table[
-        Sum[w ^ ((d - 1) k l / 2 + q  l - p  k) MatrixPower[pauliMatrix[1, d], k] . MatrixPower[pauliMatrix[3, d], l], {k, 0, d - 1}, {l, 0, d - 1}] / d,
-        {p, 0, d - 1}, {q, 0, d - 1}
-    ]
-]
-
 QuditBasis[{"Wootters", d : _Integer ? Positive : 2}] := With[{factors = Catenate[Table @@@ FactorInteger[d]]},
     Simplify @ QuantumTensorProduct[QuditBasis[Subscript["\[ScriptCapitalW]", Row[{##}]] & @@@ Tuples[Range[0, # - 1], 2], WoottersBasis[#]] & /@ factors]
 ]
@@ -236,23 +231,40 @@ QuditBasis[{"RandomMIC", d : _Integer ? Positive : 2, methodOpts : OptionsPatter
 },
     QuditBasis[
         Subscript["\[ScriptCapitalR]", #] & /@ Range[Length[povm]],
-        Inverse[Outer[Tr @* Dot, povm, povm, 1]] . povm // Chop
+        Chop @ GramDual[povm]
     ]
 ]
+
+(* SICs *)
 
 QuditBasis[{"Tetrahedron", args___}] := QuditBasis[
     Subscript["\[ScriptCapitalT]", #] & /@ Range[4],
     With[{povm = Normal /@ QuantumMeasurementOperator["TetrahedronSICPOVM"[args]]["POVMElements"]},
-        Inverse[Outer[Tr @* Dot, povm, povm, 1]] . povm // Simplify
+        Simplify @ GramDual[povm]
+    ]
+]
+
+QuditBasis[{"QBismSIC", d : _Integer : 2}] := Enclose @ QuditBasis[
+    Subscript["\[ScriptCapitalQ]", #] & /@ Range[d ^ 2],
+    Chop @ GramDual[Confirm @ QBismSICPOVM[d]]
+]
+
+QuditBasis[{"HesseSIC"}] := Enclose @ With[{basis = Simplify @ GramDual[Confirm @ HesseSICPOVM[]]},
+    QuditBasis[
+        Subscript["\[ScriptCapitalH]", #] & /@ Range[Length[basis]],
+        basis
+    ]
+]
+
+QuditBasis[{"HoggarSIC"}] := Enclose @ With[{basis = Simplify @ GramDual[Confirm @ HoggarSICPOVM[]]},
+    QuditBasis[
+        Subscript["\[ScriptCapitalH]", #] & /@ Range[Length[basis]],
+        basis
     ]
 ]
 
 
-QuditBasis[{"QBismSIC", d : _Integer : 2}] := Enclose @ QuditBasis[
-    Subscript["\[ScriptCapitalQ]", #] & /@ Range[d ^ 2],
-    Inverse[Outer[Tr @* Dot, #, #, 1]] . # & @ Confirm @ QBismSICPOVM[d]
-]
-
+(* complex patterns *)
 
 QuditBasis[pauliString_String] := With[{chars = Characters[pauliString]},
     QuditBasis[chars] /; Length[chars] > 1 && ContainsOnly[chars, {"I", "X", "Y", "Z"}]

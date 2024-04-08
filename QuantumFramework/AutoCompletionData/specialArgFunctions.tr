@@ -29,7 +29,9 @@
             "Feynman",
             "Tetrahedron",
             "RandomMIC",
-            "QBismSIC"
+            "QBismSIC",
+            "HesseSIC",
+            "HoggarSIC"
         }
     },
     "QuantumBasis" -> {
@@ -62,7 +64,9 @@
             "Feynman",
             "Tetrahedron",
             "RandomMIC",
-            "QBismSIC"
+            "QBismSIC",
+            "HesseSIC",
+            "HoggarSIC"
         }
     },
     "QuantumState" -> {
@@ -124,7 +128,9 @@
             "Feynman",
             "Tetrahedron",
             "RandomMIC",
-            "QBismSIC"
+            "QBismSIC",
+            "HesseSIC",
+            "HoggarSIC"
         }
     },
     "QuantumOperator" -> {
@@ -239,7 +245,9 @@
             "Feynman",
             "Tetrahedron",
             "RandomMIC",
-            "QBismSIC"
+            "QBismSIC",
+            "HesseSIC",
+            "HoggarSIC"
         }
     },
     "QuantumMeasurementOperator" -> {
@@ -273,11 +281,15 @@
             "Tetrahedron",
             "RandomMIC",
             "QBismSIC",
+            "HesseSIC",
+            "HoggarSIC",
             "RandomHermitian",
             "WignerMICPOVM",
             "GellMannMICPOVM",
             "TetrahedronSICPOVM",
             "QBismSICPOVM",
+            "HesseSICPOVM",
+            "HoggarSICPOVM",
             "RandomPOVM"
         },
         {
@@ -309,7 +321,9 @@
             "Feynman",
             "Tetrahedron",
             "RandomMIC",
-            "QBismSIC"
+            "QBismSIC",
+            "HesseSIC",
+            "HoggarSIC"
         }
     },
     "QuantumChannel" -> {
@@ -352,7 +366,9 @@
             "Feynman",
             "Tetrahedron",
             "RandomMIC",
-            "QBismSIC"
+            "QBismSIC",
+            "HesseSIC",
+            "HoggarSIC"
         }
     },
     "QuantumCircuitOperator" -> {
@@ -448,7 +464,9 @@
             "Feynman",
             "Tetrahedron",
             "RandomMIC",
-            "QBismSIC"
+            "QBismSIC",
+            "HesseSIC",
+            "HoggarSIC"
         }
     }
 }
