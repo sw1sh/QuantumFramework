@@ -24,15 +24,12 @@ QuantumEvolve[
     numericQ, solution,
     rhs, init,
     equations, return, param,
-    phaseSpaceQ = False, MICQ = False,
+    phaseSpaceQ = False,
     mergeQ = TrueQ[OptionValue["MergeInterpolatingFunctions"]]
 },
     If[ defaultState =!= None,
         state = Replace[defaultState, Automatic :> QuantumState[{"Register", hamiltonian["InputDimensions"]}]];
-        phaseSpaceQ = state["Picture"] === "PhaseSpace" && AllTrue[Sqrt[state["Dimensions"]], IntegerQ];
-        If[ phaseSpaceQ,
-            MICQ = (state["Output"] == QuditBasis["WignerMIC"[hamiltonian["InputDimensions"]]])
-        ]
+        phaseSpaceQ = state["Picture"] === "PhaseSpace" && AllTrue[Sqrt[state["Dimensions"]], IntegerQ]
     ];
     ConfirmAssert[hamiltonian["OutputDimensions"] == hamiltonian["InputDimensions"]];
     ConfirmAssert[state === None || phaseSpaceQ || hamiltonian["InputDimension"] == state["Dimension"]];
@@ -46,10 +43,11 @@ QuantumEvolve[
     ConfirmAssert[Developer`SymbolQ[parameter]];
     numericQ = MatchQ[defaultParameter, {_Symbol, _ ? NumericQ, _ ? NumericQ}];
     (* TrigToExp helps with some examples *)
+    basis = If[state =!= None && phaseSpaceQ, state["Basis"], hamiltonian["OutputBasis"]];
     matrix = Progress`EvaluateWithProgress[
         TrigToExp @ Confirm @ If[mergeQ, MergeInterpolatingFunctions, Identity][
             If[ phaseSpaceQ,
-                HamiltonianTransitionRate[hamiltonian, MICQ],
+                HamiltonianTransitionRate[hamiltonian, basis],
                 hamiltonian["Matrix"] / I
             ]
         ],
@@ -60,11 +58,10 @@ QuantumEvolve[
         matrix . \[FormalS][parameter],
         matrix . \[FormalS][parameter] - \[FormalS][parameter] . matrix
     ];
-    basis = If[state =!= None && phaseSpaceQ, state["Basis"], hamiltonian["OutputBasis"]];
     If[ state =!= None,
         If[ phaseSpaceQ,
             (* always treat state as a single system in phase-space *)
-            state = If[MICQ, QuantumWignerMICTransform, QuantumWignerTransform][QuantumState[QuantumWeylTransform[state], Sqrt[state["Dimension"]]]],
+            state = QuantumPhaseSpaceTransform[QuantumState[QuantumWeylTransform[state], Sqrt[state["Dimension"]]], basis],
             state = QuantumState[state["Split", state["Qudits"]], hamiltonian["Input"]]
         ]
     ];
@@ -153,7 +150,7 @@ QuantumEvolve[
         If[ state =!= None && phaseSpaceQ,
             QuantumState[
                 QuantumState[
-                    QuantumWeylTransform[QuantumState[solution, If[MICQ, "WignerMIC", "Wigner"][Sqrt[state["Dimension"]]], "Picture" -> "PhaseSpace"]],
+                    QuantumWeylTransform[QuantumState[solution, basis, "Picture" -> "PhaseSpace"]],
                     Sqrt[basis["Dimensions"]]
                 ]["Double"],
                 basis,
@@ -220,22 +217,15 @@ ExpandInterpolatingFunction[array_ ? ArrayQ] := ExpandInterpolatingFunction[Merg
 ExpandInterpolatingFunction[qs_QuantumState] := QuantumState[ExpandInterpolatingFunction @ qs["State"], qs["Basis"]]
 
 
-HamiltonianTransitionRate[H_QuantumOperator, MICQ_ : False] /; H["OutputDimension"] == H["InputDimension"] := Block[{
+HamiltonianTransitionRate[H_QuantumOperator, basis_] /; H["OutputDimension"] == H["InputDimension"] := Block[{
     d = H["OutputDimension"], A, G, h = H["MatrixRepresentation"]
 },
-    If[ TrueQ[MICQ],
-        A = QuditBasis["WignerMIC"[d, "Exact" -> ! H["NumberQ"]]]["Elements"];
-        G = GramDual[A];
-        h = Chop @ Table[I  Tr[h . (A[[l]] . G[[k]] - G[[k]] . A[[l]])], {l, d ^ 2}, {k, d ^ 2}];
-        h = If[ OddQ[d],
-            SymmetrizedArray[h, Automatic, Antisymmetric[{1, 2}]],
-            - Transpose[h]
-        ]
-        ,
-        A = QuditBasis["Wigner"[d, "Exact" -> ! H["NumberQ"]]]["Elements"];
-        G = Simplify[2 Im[Map[Tr, Outer[Dot, A, A, A, 1], {3}] / d]] / If[EvenQ[d], 4, 1];
-        h = SymmetrizedArray[Transpose[G . QuantumWignerTransform[QuantumState[H["MatrixRepresentation"], d]]["StateVector"]], Automatic, Antisymmetric[{1, 2}]]
-    ];
-    h
+    A = basis["Elements"];
+    G = GramDual[A];
+    h = Chop @ Table[I  Tr[h . (A[[l]] . G[[k]] - G[[k]] . A[[l]])], {l, d ^ 2}, {k, d ^ 2}];
+    h = If[ OddQ[d],
+        SymmetrizedArray[h, Automatic, Antisymmetric[{1, 2}]],
+        - Transpose[h]
+    ]
 ]
 
