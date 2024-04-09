@@ -19,7 +19,8 @@ PacletObject[
           {
             "Wolfram`QuantumFramework`",
             "QuantumFrameworkMain.m"
-          }
+          },
+          "Wolfram`QuantumFramework`ExampleRepository`"
         },
         "Symbols" -> {
           "Wolfram`QuantumFramework`QuditName",
