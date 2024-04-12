@@ -310,7 +310,7 @@ CFlipSign[state_String ? BinaryStringQ]:=Module[{result,positions},
 
 	result=If[
 		StringMatchQ[state,__~~"1"],
-			QuantumOperator[{"C",{"C","Z",positions[[1]],positions[[3]],positions[[2]]},{1}}],
+			QuantumCircuitOperator[{"C",{"C","Z",positions[[1]],positions[[3]],positions[[2]]},{1}}],
 			QuantumCircuitOperator[{"C",{"X"->positions[[1]],{"C","Z",positions[[1]],positions[[3]],positions[[2]]},"X"->positions[[1]]},{1}}]
 	];
 	
