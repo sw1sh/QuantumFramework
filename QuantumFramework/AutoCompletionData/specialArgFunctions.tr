@@ -155,6 +155,7 @@
             "Diagonal",
             "GlobalPhase",
             "PhaseShift",
+            "FlipSign",
             "SUM",
             "RootNOT",
             "X",

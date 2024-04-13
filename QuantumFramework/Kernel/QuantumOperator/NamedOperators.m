@@ -12,7 +12,7 @@ $QuantumOperatorNames = {
     "Fourier", "InverseFourier",
     "XRotation", "YRotation", "ZRotation", "U", "Phase", "P", "RX", "RY", "RZ", "R",
     "Diagonal", "GlobalPhase",
-    "PhaseShift",
+    "PhaseShift", "FlipSign",
     "SUM", "RootNOT",
     "X", "Y", "Z", "PauliX", "PauliY", "PauliZ", "Shift", "ShiftPhase",
     "H", "Hadamard", "NOT",
@@ -223,6 +223,30 @@ QuantumOperator[{"Diagonal", x_List, dimension : _Integer ? Positive : 2}, order
         opts
     ]
 ]
+
+QuantumOperator["FlipSign", opts___] := QuantumOperator[{"FlipSign", {1, 1, 1}, 2}, opts]
+
+QuantumOperator[{"FlipSign", digits : {__Integer}, dim : _Integer ? Positive | Automatic : Automatic}, opts___] := With[{
+    d = Replace[dim, Automatic :> Max[digits] + 1],
+    n = Length[digits]
+},
+    QuantumOperator[
+        QuantumOperator[
+            DiagonalMatrix[ReplacePart[ConstantArray[1, d ^ n], FromDigits[digits, d] + 1 -> -1]], d, 
+            "Label" -> If[
+                d == 2, 
+                With[{index = PositionIndex[Most[digits]]}, 
+                    Subscript["C", ToString[Last[digits]]][Lookup[index, 1, {}], 
+                    Lookup[index, 0, {}]]
+                ],
+                "FlipSign"[Row[digits]]
+            ]
+        ],
+        opts
+    ] /; AllTrue[digits, Between[{0, d - 1}]]
+]
+
+QuantumOperator[{"FlipSign", s_String, args___}, opts___] := QuantumOperator[{"FlipSign", FromDigits /@ Characters[s], args}, opts]
 
 
 QuantumOperator["S", opts___] := QuantumOperator[QuantumOperator[{"Phase", Pi / 2}, "Label" -> "S"], opts]
