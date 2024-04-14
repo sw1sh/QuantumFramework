@@ -150,6 +150,8 @@ QuantumStateProp[qs_, "Weights"] := Which[
 
 QuantumStateProp[qs_, "Probabilities"] := Re @ Normalize[qs["Weights"], Total]
 
+QuantumStateProp[qs_, "ProbabilitiesList"] := Normal @ qs["Probabilities"]
+
 QuantumStateProp[qs_, "ProbabilityAssociation" | "Probability"] := With[{proba = Chop @ SparseArray @ qs["Probabilities"]},
     AssociationThread[
         qs["Names", QuotientRemainder[Catenate @ proba["ExplicitPositions"] - 1, qs["InputDimension"]] + 1],

@@ -211,13 +211,10 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
 
         qmo["Operator"],
 
-        tracedOperator = Chop @ Simplify @ QuantumPartialTrace[
-            qmo,
-            If[qmo["POVMQ"], {# + qmo["OutputQudits"] - qmo["InputQudits"], #} & /@ trace, trace]
-        ];
+        tracedOperator = Chop @ Simplify @ QuantumPartialTrace[qmo, trace];
 
         {eigenvalues, eigenvectors} = profile["Eigensystem"] @ Simplify @ tracedOperator["Eigensystem", "Sort" -> True];
-        projectors = Simplify /@ Normal /@ tracedOperator["Projectors", "Sort" -> True];
+        projectors = projector /@ eigenvectors;
 
         eigenBasis = QuditBasis[
             MapIndexed[
