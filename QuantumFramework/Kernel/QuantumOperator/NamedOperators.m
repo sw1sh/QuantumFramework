@@ -227,7 +227,7 @@ QuantumOperator[{"Diagonal", x_List, dimension : _Integer ? Positive : 2}, order
 QuantumOperator["FlipSign", opts___] := QuantumOperator[{"FlipSign", {1, 1, 1}, 2}, opts]
 
 QuantumOperator[{"FlipSign", digits : {__Integer}, dim : _Integer ? Positive | Automatic : Automatic}, opts___] := With[{
-    d = Replace[dim, Automatic :> Max[digits] + 1],
+    d = Replace[dim, Automatic :> Max[Max[digits] + 1, 2]],
     n = Length[digits]
 },
     QuantumOperator[
