@@ -382,6 +382,7 @@
             "GroverPhaseDiffusion0",
             "BooleanOracle",
             "PhaseOracle",
+            "GrayOracle",
             "DeutschJozsaPhaseOracle",
             "DeutschJozsaBooleanOracle",
             "DeutschJozsaPhase",
