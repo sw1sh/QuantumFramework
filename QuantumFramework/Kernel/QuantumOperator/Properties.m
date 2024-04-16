@@ -399,7 +399,7 @@ QuantumOperatorProp[qo_, "Reorder", order : {_ ? orderQ | Automatic, _ ? orderQ 
         Thread[
             Take[
                 If[ TrueQ[controlQ],
-                    Join[#, Complement[qo["FullInputOrder"], #]] & @ Join[qo["ControlOrder"], qo["TargetOrder"]],
+                    Join[#, Complement[qo["FullInputOrder"], #]] & @ Join[Sort @ qo["ControlOrder"], qo["TargetOrder"]],
                     Take[qo["FullInputOrder"], UpTo[Length[qo["FullInputOrder"]]]]
                 ],
                 UpTo[Length[input]]
