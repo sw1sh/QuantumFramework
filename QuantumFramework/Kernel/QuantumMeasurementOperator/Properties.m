@@ -86,6 +86,8 @@ QuantumMeasurementOperatorProp[qmo_, "Eigenbasis"] := With[{povm = qmo["POVM"]},
 
 QuantumMeasurementOperatorProp[qmo_, "Eigenvalues"] := qmo["Eigenbasis"]["Names"]
 
+QuantumMeasurementOperatorProp[qmo_, "Eigenvectors"] := qmo["Eigenbasis"]["Elements"]
+
 QuantumMeasurementOperatorProp[qmo_, "EigenvalueVectors"] := Replace[Normal /@ qmo["Eigenvalues"], {Interpretation[_, {v_, _}] :> Replace[v, _List :> Splice[v]], v_ :> Ket[{v}]}, {2}]
 
 QuantumMeasurementOperatorProp[qmo_, "StateQudits"] := qmo["OutputQudits"] - qmo["ExtraQudits"]
