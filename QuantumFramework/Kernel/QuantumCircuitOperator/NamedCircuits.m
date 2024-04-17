@@ -719,7 +719,7 @@ QuantumCircuitOperator[qs_QuantumState | {"QuantumState", qs_QuantumState}, opts
 QuantumCircuitOperator["QuantumState", opts___] := QuantumCircuitOperator[{"QuantumState", QuantumState[{"UniformSuperposition", 3}]}, opts]
 
 
-QuantumCircuitOperator[{"CHSH", theta_ : Pi / 4}, opts] :=
+QuantumCircuitOperator[{"CHSH", theta_ : Pi / 4}, opts___] :=
     QuantumCircuitOperator[{
         QuantumOperator["Cup" / Sqrt[2], {1, 4}, "Label" -> "Cup"],
         QuantumCircuitOperator[{"+" -> 2, "+" -> 3}, "Charlie"],
