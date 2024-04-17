@@ -12,7 +12,6 @@ $QuantumStateProperties = {
     "Kind", "Scalar",
     "Norm", "TraceNorm", "NormalizedQ",
     "BlochSphericalCoordinates", "BlochCartesianCoordinates",
-    "BlochPlot",
     "Projector", "NormalizedProjector",
     "Operator", "NormalizedOperator",
     "Eigenvalues", "Eigenvectors", "Eigenstates",
@@ -31,7 +30,8 @@ $QuantumStateProperties = {
     "Bipartition",
     "Disentangle", "Decompose", "DecomposeWithAmplitudes", "DecomposeWithProbabilities",
     "SchmidtDecompose",
-    "Formula", "Simplify", "FullSimplify"
+    "Formula", "Simplify", "FullSimplify",
+    "BlochPlot", "AmplitudePlot", "ProbabilityPlot"
 };
 
 QuantumState["Properties"] := Union @ Join[$QuantumStateProperties, QuantumBasis["Properties"]]
@@ -802,6 +802,8 @@ QuantumStateProp[qs_, "PermuteInput", perm_Cycles] := If[
     ]
 ]
 
+QuantumStateProp[qs_, prop : "Permute" | "PermuteOutput" | "PermuteInput", list_List] := qs[prop, FindPermutation[list]]
+
 
 QuantumStateProp[qs_, "Split", n_Integer : 0] := With[{basis = qs["Basis"]["Split", n]},
     QuantumState[qs["State"], basis]
@@ -907,52 +909,12 @@ QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 := Wi
 ]
 
 
-Options[BlochPlot] = Join[{"ShowLabels" -> True, "ShowGreatCircles" -> True, "ShowAxes" -> True, "ShowArrow" -> True}, Options[Graphics3D]]
+QuantumStateProp[qs_, "BlochPlot" | "BlochSpherePlot", opts : OptionsPattern[BlochPlot]] /; qs["Dimension"] == 2 := BlochPlot[qs["BlochCartesianCoordinates"], opts]
 
-BlochPlot[qs_, opts : OptionsPattern[]] := Module[{
-    greatCircles, referenceStates, u, v, w
-},
-    greatCircles = If[
-        TrueQ[OptionValue["ShowGreatCircles"]],
-        ParametricPlot3D[
-            {{Cos[t], Sin[t], 0}, {0, Cos[t], Sin[t]}, {Cos[t], 0, Sin[t]}},
-            {t, 0, 2 Pi},
-            PlotStyle -> ConstantArray[{Black, Thin}, 3]
-        ],
-        Nothing
-    ];
-    referenceStates = Graphics3D[{
-        Opacity[0.4], Sphere[],Black, Thickness[0.0125], Opacity[1.0],
-        If[ TrueQ[OptionValue["ShowAxes"]],
-            Splice @ {Line[{{0, 1, 0}, {0, -1, 0}}], Line[{{0, 0, 1}, {0, 0, -1}}], Line[{{1, 0, 0}, {-1, 0, 0}}]},
-            Nothing
-        ],
-        If[ TrueQ[OptionValue["ShowLabels"]],
-            Splice @ {
-                Text[Ket[{0}], {0, 0, 1.3}],  Text[Ket[{1}], {0, 0, -1.3}],
-                Text[Ket[{"R"}], {0, 1.3, 0}], Text[Ket[{"L"}], {0, -1.3, 0}],
-                Text[Ket[{"+"}], {1.3, 0, 0}], Text[Ket[{"-"}], {-1.3, 0, 0}]
-            },
-            Nothing
-        ],
-        If[ TrueQ[OptionValue["ShowArrow"]],
-            Splice @ {Red, Arrowheads[0.05], Arrow[Tube[{{0, 0, 0}, {u, v, w}}, 0.03], {0, -0.01}]},
-            Nothing
-        ]
-    }
-    ];
-    {u, v, w} = qs["BlochCartesianCoordinates"];
-    Show[{greatCircles, referenceStates},
-        FilterRules[{opts}, Options[Graphics3D]],
-        PlotRange -> All,
-        ViewPoint -> {1, 1, 1},
-        Axes -> False,
-        Boxed -> False,
-        PlotRange -> {{-1.7, 1.7}, {-1.7, 1.7}, {-1.7, 1.7}}
-    ]
-]
+QuantumStateProp[qs_, "AmplitudePlot" | "AmplitudeChart", opts : OptionsPattern[AmplitudeChart]] := AmplitudeChart[qs["Amplitudes"], opts]
 
-QuantumStateProp[qs_, "BlochPlot" | "BlochSpherePlot", opts : OptionsPattern[BlochPlot]] /; qs["Dimension"] == 2 := BlochPlot[qs, opts]
+QuantumStateProp[qs_, "ProbabilityPlot" | "ProbabilityChart", opts : OptionsPattern[ProbabilityChart]] := ProbabilityChart[qs["Probability"], opts]
+
 
 (* basis properties *)
 
