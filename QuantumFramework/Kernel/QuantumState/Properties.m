@@ -137,29 +137,35 @@ QuantumStateProp[qs_, "StateVector"] := Module[{result},
     result /; !FailureQ[result]
 ]
 
+QuantumStateProp[qs_, "AmplitudeList"] := Values @ qs["Amplitude"]
+
+QuantumStateProp[qs_, "AmplitudesList"] := Normal @ qs["StateVector"]
+
 QuantumStateProp[qs_, "Scalar" | "Number"] /; qs["Kind"] === "Scalar" := First[Flatten[qs["State"]]]
 
 QuantumStateProp[qs_, "Weights"] := Which[
     qs["PureStateQ"] || qs["VectorQ"] && ! qs["NumericQ"],
     Abs[qs["StateVector"]] ^ 2,
     qs["PhysicalQ"] || ! qs["NumericQ"],
-    Diagonal @ qs["DensityMatrix"],
+    Abs @ Diagonal @ qs["DensityMatrix"],
     True,
     qs["Physical"]["Weights"]
 ]
 
-QuantumStateProp[qs_, "Probabilities"] := Re @ Normalize[qs["Weights"], Total]
+QuantumStateProp[qs_, "Weight"] := Normalize[qs["Weights"], Total]
 
-QuantumStateProp[qs_, "ProbabilitiesList"] := Normal @ qs["Probabilities"]
+QuantumStateProp[qs_, "Probabilities"] := AssociationThread[qs["Names"], qs["ProbabilityList"]]
 
-QuantumStateProp[qs_, "ProbabilityAssociation" | "Probability"] := With[{proba = Chop @ SparseArray @ qs["Probabilities"]},
+QuantumStateProp[qs_, "ProbabilityList" | "ProbabilitiesList"] := Normal @ qs["Weight"]
+
+QuantumStateProp[qs_, "ProbabilityAssociation" | "Probability"] := With[{proba = Chop @ SparseArray @ qs["Weight"]},
     AssociationThread[
         qs["Names", QuotientRemainder[Catenate @ proba["ExplicitPositions"] - 1, qs["InputDimension"]] + 1],
         proba["ExplicitValues"]
     ]
 ]
 
-QuantumStateProp[qs_, "Distribution"] := CategoricalDistribution[qs["Names"], qs["Probabilities"]]
+QuantumStateProp[qs_, "Distribution"] := CategoricalDistribution[qs["Names"], qs["ProbabilitiesList"]]
 
 QuantumStateProp[qs_, "PhaseSpace"] /; qs["Picture"] === "PhaseSpace" := Enclose @ With[{dims = ConfirmBy[Sqrt[qs["Dimensions"]], AllTrue[IntegerQ]]},
     Fold[
@@ -911,10 +917,13 @@ QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 := Wi
 
 QuantumStateProp[qs_, "BlochPlot" | "BlochSpherePlot", opts : OptionsPattern[BlochPlot]] /; qs["Dimension"] == 2 := BlochPlot[qs["BlochCartesianCoordinates"], opts]
 
-QuantumStateProp[qs_, "AmplitudePlot" | "AmplitudeChart", opts : OptionsPattern[AmplitudeChart]] := AmplitudeChart[qs["Amplitudes"], opts]
+QuantumStateProp[qs_, "AmplitudePlot" | "AmplitudeChart", opts : OptionsPattern[AmplitudeChart]] := AmplitudeChart[qs["Amplitude"], opts]
 
 QuantumStateProp[qs_, "ProbabilityPlot" | "ProbabilityChart", opts : OptionsPattern[ProbabilityChart]] := ProbabilityChart[qs["Probability"], opts]
 
+QuantumStateProp[qs_, "AmplitudesPlot" | "AmplitudesChart", opts : OptionsPattern[AmplitudeChart]] := AmplitudeChart[qs["Amplitudes"], opts]
+
+QuantumStateProp[qs_, "ProbabilitiesPlot" | "ProbabilitiesChart", opts : OptionsPattern[ProbabilityChart]] := ProbabilityChart[qs["Probabilities"], opts]
 
 (* basis properties *)
 

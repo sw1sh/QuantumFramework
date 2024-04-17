@@ -51,11 +51,12 @@ BlochPlot[{u_, v_, w_}, opts : OptionsPattern[]] := Block[{
 ]
 
 
-Options[AmplitudeChart] = Join[{"Sort" -> None, "LabelsAngle" -> 0}, Options[BarChart]];
+Options[AmplitudeChart] = Join[{"Sort" -> None, "LabelsAngle" -> 0, "Range" -> {0, 1}}, Options[BarChart]];
 
 AmplitudeChart[amplitudes_Association, opts : OptionsPattern[]] := Block[{amps, absArg, legend, chart},
 	amps = Replace[OptionValue["Sort"], {False | None :> amplitudes, True | Automatic :> SortBy[amplitudes, Abs], f_ :> SortBy[amplitudes, f]}];
 	absArg = MapAt[Mod[#, 2 Pi] &, AbsArg[amps], {All, 2}];
+    absArg = Select[absArg, First /* Between[OptionValue["Range"]]];
 	chart = BarChart[
 		KeyValueMap[Tooltip[#2[[1]], Grid[{{#1, ""}, {#2, ""}, {"Abs:", #2[[1]]}, {"\!\(\*SuperscriptBox[\(Abs\), \(2\)]\):", #2[[1]] ^ 2}, {"Arg:", #2[[2]]}}, Alignment -> Left]] &, absArg],
 		FilterRules[FilterRules[{opts}, Options[BarChart]], Except[ChartLegends]],
@@ -77,9 +78,12 @@ AmplitudeChart[amplitudes_Association, opts : OptionsPattern[]] := Block[{amps, 
 ]
 
 
-Options[ProbabilityChart] = Join[{"LabelsAngle" -> 0}, Options[BarChart]];
+Options[ProbabilityChart] = Join[{"Sort" -> None, "LabelsAngle" -> 0,  "Range" -> {0, 1}}, Options[BarChart]];
 
-ProbabilityChart[probabilities_Association, opts : OptionsPattern[]] :=
-    BarChart[probabilities, opts, ChartLabels -> (Rotate[#, OptionValue["LabelsAngle"]] & /@ Keys[probabilities])]
+ProbabilityChart[probabilities_Association, opts : OptionsPattern[]] := Block[{proba = probabilities},
+    proba = Replace[OptionValue["Sort"], {False | None :> proba, True | Automatic :> Sort[proba], f_ :> SortBy[proba, f]}];
+    proba = Select[proba, Between[OptionValue["Range"]]];
+    BarChart[Values[proba], FilterRules[{opts}, Options[BarChart]], ChartLabels -> (Rotate[#, OptionValue["LabelsAngle"]] & /@ Keys[proba])]
+]
 
 
