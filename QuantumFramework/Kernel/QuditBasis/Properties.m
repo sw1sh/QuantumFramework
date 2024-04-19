@@ -337,3 +337,10 @@ QuditBasisProp[qb_, prop : "DimensionSplit" | "DimensionSplitDual", splits : {_I
 QuditBasisProp[qb_, prop : "Simplify" | "FullSimplify", args___] := With[{f = Symbol[prop]}, QuditBasis @ Map[Map[f[#, args] &, #, {ArrayDepth[#]}] &, qb["Representations"]]]
 
 QuditBasisProp[qb_, prop : "Chop" | "ComplexExpand", args___] := With[{f = Symbol[prop]}, QuditBasis @ Map[f[#, args] &, qb["Representations"]]]
+
+
+
+QuditBasisProp[qb_, "NumericQ"] := ArrayQ[Replace[Values[qb["Representations"]], sa_ ? SparseArrayQ :> sa["ExplicitValues"], {1}], _, NumericQ]
+
+QuditBasisProp[qb_, "NumberQ"] := ArrayQ[Replace[Values[qb["Representations"]], sa_ ? SparseArrayQ :> sa["ExplicitValues"], {1}], _, MachineNumberQ]
+
