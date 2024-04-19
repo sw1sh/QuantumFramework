@@ -7,8 +7,8 @@ PackageExport["QuantumPhaseSpaceTransform"]
 QuantumPhaseSpaceTransform[qb_ ? QuditBasisQ, phaseSpaceBasis_ ? QuditBasisQ] :=
     Enclose @ If[phaseSpaceBasis["Dimension"] == qb["Dimension"] ^ 2, phaseSpaceBasis, QuditBasis[qb["Dimension"] ^ 2]]
 
-QuantumPhaseSpaceTransform[qb : _ ? QuditBasisQ | _ ? QuantumBasisQ, args : PatternSequence[] | PatternSequence[Except[_ ? QuditBasisQ | _ ? QuantumBasisQ], ___]] :=
-    QuantumPhaseSpaceTransform[qb, QuditBasis["Wigner"[qb["Dimension"], args, "Exact" -> ! qb["NumberQ"]]]]
+QuantumPhaseSpaceTransform[qb : _ ? QuditBasisQ | _ ? QuantumBasisQ] :=
+    QuantumPhaseSpaceTransform[qb, QuditBasis["Wigner"[qb["Dimension"], "Exact" -> ! qb["NumberQ"]]]]
 
 QuantumPhaseSpaceTransform[qb_ ? QuditBasisQ, args__] := QuantumPhaseSpaceTransform[qb, QuditBasis[args]]
 
@@ -37,7 +37,7 @@ QuantumPhaseSpaceTransform[qb_ ? QuantumBasisQ, args__] := Enclose @ Block[{
 
 QuantumPhaseSpaceTransform[qs_ ? QuantumStateQ, args___] := Enclose @ Chop @ Simplify @ QuantumState[
     ConfirmBy[qs["Double"], QuantumStateQ],
-    ConfirmBy[QuantumPhaseSpaceTransform[qs["Basis"], args, "Exact" -> ! qs["NumberQ"]], QuantumBasisQ]
+    ConfirmBy[QuantumPhaseSpaceTransform[qs["Basis"], args], QuantumBasisQ]
 ]
 
 QuantumPhaseSpaceTransform[qo_ ? QuantumOperatorQ, args___] := Enclose @ QuantumOperator[
