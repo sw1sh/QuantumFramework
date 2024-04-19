@@ -7,14 +7,13 @@ PackageExport["QuantumPhaseSpaceTransform"]
 QuantumPhaseSpaceTransform[qb_ ? QuditBasisQ, phaseSpaceBasis_ ? QuditBasisQ] :=
     Enclose @ If[phaseSpaceBasis["Dimension"] == qb["Dimension"] ^ 2, phaseSpaceBasis, QuditBasis[qb["Dimension"] ^ 2]]
 
-QuantumPhaseSpaceTransform[qb_ ? QuditBasisQ] := QuantumPhaseSpaceTransform[qb, "Wigner"[qb["Dimension"]]]
+QuantumPhaseSpaceTransform[qb : _ ? QuditBasisQ | _ ? QuantumBasisQ, args : PatternSequence[] | PatternSequence[Except[_ ? QuditBasisQ | _ ? QuantumBasisQ], ___]] :=
+    QuantumPhaseSpaceTransform[qb, QuditBasis["Wigner"[qb["Dimension"], args, "Exact" -> ! qb["NumberQ"]]]]
 
 QuantumPhaseSpaceTransform[qb_ ? QuditBasisQ, args__] := QuantumPhaseSpaceTransform[qb, QuditBasis[args]]
 
 QuantumPhaseSpaceTransform[qb_ ? QuantumBasisQ, args__] := Enclose @ Block[{
-    basis = QuantumBasis @@ DeleteCases[{args}, "Exact" -> _],
-    exactQ = TrueQ[OptionValue[Select[{args, "Exact" -> True}, OptionQ], "Exact"]],
-    newBasis
+    basis = QuantumBasis[args], newBasis
 },
 
     newBasis = If[
@@ -29,8 +28,8 @@ QuantumPhaseSpaceTransform[qb_ ? QuantumBasisQ, args__] := Enclose @ Block[{
     ];
 
     Enclose @ QuantumBasis[
-        QuantumTensorProduct @ MapThread[If[exactQ, Identity, N] @ ConfirmBy[QuantumPhaseSpaceTransform[#1, #2], QuditBasisQ] &, {qb["Output"]["Decompose"], newBasis["Output"]["Decompose"]}],
-        QuantumTensorProduct @ MapThread[If[exactQ, Identity, N] @ ConfirmBy[QuantumPhaseSpaceTransform[#1, #2], QuditBasisQ] &, {qb["Input"]["Decompose"], newBasis["Input"]["Decompose"]}],
+        QuantumPhaseSpaceTransform[qb["Output"], newBasis["Output"]],
+        QuantumPhaseSpaceTransform[qb["Input"], newBasis["Input"]],
         "Picture" -> "PhaseSpace",
         qb["Meta"]
     ]
