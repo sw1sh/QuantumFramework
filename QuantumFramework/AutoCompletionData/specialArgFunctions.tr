@@ -207,6 +207,7 @@
             "Discard",
             "Cup",
             "Cap",
+            "Trace",
             "Switch",
             "Multiplexer",
             "WignerD",

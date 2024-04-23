@@ -24,7 +24,7 @@ $QuantumOperatorNames = {
     "RandomUnitary", "RandomHermitian",
     "Spider", "ZSpider", "XSpider", "WSpider",
     "Measure", "Encode", "Copy", "Decohere", "Marginal", "Discard",
-    "Cup", "Cap",
+    "Cup", "Cap", "Trace",
     "Switch",
     "Multiplexer",
     "WignerD", "JX", "JY", "JZ", "J+", "J-",
@@ -689,7 +689,7 @@ QuantumOperator[{name : $Spider, args___}, order : _ ? orderQ, opts___] :=
 QuantumOperator[{name : $Spider, args___}, opts : PatternSequence[] | PatternSequence[Except[_ ? autoOrderQ], ___]] :=
     QuantumOperator[{name, args}, {{1}, {1}}, opts]
 
-QuantumOperator[name : "Measure" | "Encode" | "Copy" | "Decohere" | "Marginal" | "Discard", opts___] := QuantumOperator[{name}, opts]
+QuantumOperator[name : "Measure" | "Encode" | "Copy" | "Decohere" | "Marginal" | "Discard" | "Trace", opts___] := QuantumOperator[{name}, opts]
 
 QuantumOperator[{"Measure", args__ : 2}, opts___] := With[{decohere = QuantumOperator["Decohere"[args], {1, 2} -> {1}]}, QuantumOperator[decohere @ QuantumOperator["Curry"[decohere["OutputDimension"]], {1} -> {1, 2}], opts, "Label" -> "Measure"]]
 
@@ -702,6 +702,8 @@ QuantumOperator[{"Decohere", args__ : 2}, opts___] := With[{basis = QuditBasis[a
 QuantumOperator[{"Marginal", args__ : 4}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[Sqrt[basis["Dimension"]] QuantumState["UniformSuperposition", basis]["Dagger"], opts, "Label" -> "Marginal"]]
 
 QuantumOperator[{"Discard", args__ : 4}, opts___] := QuantumOperator[QuantumOperator[{"Spider", QuantumBasis[QuditBasis[1], QuditBasis[args]]}, {1} -> {}], opts, "Label" -> "Discard" ]
+
+QuantumOperator[{"Trace", d : _Integer ? Positive : 2}, opts___] := QuantumOperator[QuantumState[IdentityMatrix[d], d]["Dagger"], opts, "Label" -> "Trace"]
 
 
 QuantumOperator["Cup" | {"Cup", dim : _Integer ? Positive : 2}, order : _ ? orderQ : {1, 2}, opts___] /; Length[order] == 2 :=
