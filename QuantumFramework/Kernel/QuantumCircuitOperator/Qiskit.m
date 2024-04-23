@@ -221,39 +221,15 @@ def gate_to_QuantumOperator(gate, order):
             else:
                 xs.append(x)
     if gate.name == 'x':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('X', order)
-    elif gate.name == 'y':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('Y', order)
-    elif gate.name == 'z':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('Z', order)
-    elif gate.name == 'h':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('H', order)
-    elif gate.name == 'p':
-        return wl.Wolfram.QuantumFramework.QuantumOperator(['Phase', xs[0]], order)
-    elif gate.name == 'u':
-        return wl.Wolfram.QuantumFramework.QuantumOperator(['U', *xs], order)
-    elif gate.name == 'u1':
-        return wl.Wolfram.QuantumFramework.QuantumOperator(['U1', *xs], order)
-    elif gate.name == 'u2':
-        return wl.Wolfram.QuantumFramework.QuantumOperator(['U2', *xs], order)
-    elif gate.name == 'u3':
-        return wl.Wolfram.QuantumFramework.QuantumOperator(['U3', *xs], order)
-    elif gate.name == 'rx':
-        return wl.Wolfram.QuantumFramework.QuantumOperator(['RX', *xs], order)
-    elif gate.name == 'ry':
-        return wl.Wolfram.QuantumFramework.QuantumOperator(['RY', *xs], order)
-    elif gate.name == 'rz':
-        return wl.Wolfram.QuantumFramework.QuantumOperator(['RZ', *xs], order)
-    elif gate.name == 't':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('T', order)
+        return wl.Wolfram.QuantumFramework.QuantumOperator('NOT', order)
+    elif gate.name in ['y', 'z', 'h', 't', 's', 'swap']:
+        return wl.Wolfram.QuantumFramework.QuantumOperator(gate.name.upper(), order)
+    elif gate.name in ['p', 'u', 'u1', 'u2', 'u3', 'rx', 'ry', 'rz']:
+        return wl.Wolfram.QuantumFramework.QuantumOperator([gate.name.upper(), *xs], order)
     elif gate.name == 'tdg':
         return wl.Wolfram.QuantumFramework.QuantumOperator('T', order)('Dagger')
-    elif gate.name == 's':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('S', order)
     elif gate.name == 'sdg':
         return wl.Wolfram.QuantumFramework.QuantumOperator('S', order)('Dagger')
-    elif gate.name == 'swap':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('SWAP', order)
     elif gate.name == 'unitary':
         return wl.Wolfram.QuantumFramework.QuantumOperator(*xs, [order, order], wl.Rule('Label', gate.label))
     elif gate.name == 'measure':
@@ -277,11 +253,11 @@ for gate, qubits, clbits in qc:
     for q in qubits:
         size = 0
         for r in qc.qubits:
-            if r.register.name == q.register.name:
-                order.append(size + q.index + 1)
+            if r._register._name == q._register._name:
+                order.append(size + q._index + 1)
                 break
             else:
-                size = r.index + 1
+                size = r._index + 1
     ops.append(gate_to_QuantumOperator(gate, order))
 
 wl.Wolfram.QuantumFramework.QuantumCircuitOperator(ops)
@@ -480,7 +456,7 @@ result
     ]
 ]
 
-qc_QiskitCircuit["Decompose", n : _Integer ? Positive : 1] := Nest[QiskitCircuit[#["EvalBytes", "decompose"]] &, qc, n]
+qc_QiskitCircuit["Decompose", n : _Integer ? Positive : 1] := QiskitCircuit[qc["EvalBytes", "decompose", "reps" -> n]]
 
 qc_QiskitCircuit["QuantumOperator"] := Enclose @ Module[{mat = Chop @ Normal[ConfirmBy[qiskitMatrix[qc], NumericArrayQ]]},
     ConfirmAssert[SquareMatrixQ[mat]];
