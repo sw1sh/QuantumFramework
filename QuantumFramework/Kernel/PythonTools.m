@@ -8,8 +8,10 @@ PackageScope["PythonEvaluate"]
 
 $PythonPackages = {
     "wolframclient", "matplotlib", "pylatexenc",
-    "qiskit", "qiskit-aer", "qiskit-ibm-provider", "qiskit-braket-provider",
-    "fire-opal",
+    "qiskit>=1.0",
+    "qiskit-aer", "qiskit-ibm-provider", "qiskit-braket-provider",
+    "classiq>=0.40.0",
+    (* "fire-opal", *)
     "git+https://github.com/Quantomatic/pyzx.git"
 }
 

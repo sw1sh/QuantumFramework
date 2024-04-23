@@ -696,7 +696,17 @@ stateEvolution[qs_] := With[{n = qs["Qudits"]},
     FoldList[multiplexer[#1, n, #2] &, qs, Range[n - 1, 0, -1]]
 ]
 
-QuantumCircuitOperator[qs_QuantumState | {"QuantumState", qs_QuantumState}, opts___] /; MatchQ[qs["Dimensions"], {2 ..}] := Block[{
+
+Options[QuantumStatePreparation] = Join[{Method -> Automatic}, Options[QuantumStateMultiplexer], Options[ClassiqQuantumState]]
+
+QuantumStatePreparation[qs_QuantumState, opts: OptionsPattern[]] /; MatchQ[qs["Dimensions"], {2 ..}] := Switch[OptionValue[Method],
+    Automatic,
+    QuantumStateMultiplexer[qs, FilterRules[{opts}, Options[QuantumStateMultiplexer]]],
+    "Classiq",
+    ClassiqQuantumState[qs, FilterRules[{opts}, Options[ClassiqQuantumState]]]
+]
+
+QuantumStateMultiplexer[qs_QuantumState]  := Block[{
     operators, phases, phase, n = qs["Qudits"]
 },
     {operators, phases} = Reap[stateEvolution[qs["Split", n]], {"Operators", "Phase"}][[2, All, 1]];
@@ -713,8 +723,14 @@ QuantumCircuitOperator[qs_QuantumState | {"QuantumState", qs_QuantumState}, opts
             "Cap" -> {qs["OutputQudits"] + #, n + #} & /@ Range[qs["InputQudits"]]
         ]
     ];
-    QuantumCircuitOperator[operators, opts, "Label" -> qs["Label"]]["Flatten"]
+    QuantumCircuitOperator[operators, "Label" -> qs["Label"]]["Flatten"]
 ]
+
+QuantumCircuitOperator[qs_QuantumState | {"QuantumState", qs_QuantumState}, opts___] /; MatchQ[qs["Dimensions"], {2 ..}] :=
+    Enclose @ QuantumCircuitOperator[
+        ConfirmBy[QuantumStatePreparation[qs, FilterRules[{opts}, Options[QuantumStatePreparation]]], QuantumCircuitOperatorQ],
+        FilterRules[{opts}, Except[Options[QuantumStatePreparation]]]
+    ]
 
 QuantumCircuitOperator["QuantumState", opts___] := QuantumCircuitOperator[{"QuantumState", QuantumState[{"UniformSuperposition", 3}]}, opts]
 
