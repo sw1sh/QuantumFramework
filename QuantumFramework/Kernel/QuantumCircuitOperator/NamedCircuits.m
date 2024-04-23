@@ -241,7 +241,7 @@ QuantumCircuitOperator[{"BooleanOracleR",
     formula_ : BooleanFunction[2 ^ 6, 3],
     varSpec : _List | _Association | Automatic : Automatic,
     n : _Integer ? NonNegative | Automatic : Automatic,
-    rotationGate : {"RY" | "RZ", _ ? NumericQ} : {"RZ", Pi}
+    rotationGate : {"RX" | "RY" | "RZ", _ ? NumericQ} : {"RZ", Pi}
 }, opts___] := Enclose @ Block[{
     esopFormula, esop, vars, order, indices, negIndices, isNegative = False, l, angles, targetQubit
 },
@@ -288,7 +288,7 @@ QuantumCircuitOperator[{"GrayOracle",
     fangles : _Function | _List,
     prec : _Integer ? Positive : 4,
     n : _Integer ? NonNegative | Automatic : Automatic,
-    rotationGate : {"RX" | "RY" | "RZ"} : "RY"
+    rotationGate : "RX" | "RY" | "RZ" : "RY"
 }, opts___] := Enclose @ Block[{
     order, angles, targetQubit
 },
