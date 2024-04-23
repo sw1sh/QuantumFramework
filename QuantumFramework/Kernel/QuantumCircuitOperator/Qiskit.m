@@ -59,7 +59,6 @@ from wolframclient.language import wl
 from wolframclient.language.expression import WLFunction
 
 from qiskit import QuantumCircuit
-from qiskit.extensions import UnitaryGate
 from qiskit.circuit.gate import Gate
 from qiskit.circuit.library import *
 
@@ -92,7 +91,7 @@ def make_gate(gate_spec):
         base_gate = make_gate(args[0])[0]
         gate = base_gate.inverse()
     elif name == 'Unitary':
-        gate = UnitaryGate(args[0], label=args[1])
+        gate = UnitaryGate(args[0], label=args[1], check_input=False)
         assert(all(i == j for i, j in zip(args[2][0], args[2][1])))
         order = list(args[2][0])
     elif name == 'Barrier':
@@ -292,16 +291,13 @@ wl.Wolfram.QuantumFramework.QuantumCircuitOperator(ops)
 
 qiskitMatrix[qc_QiskitCircuit] := Block[{$pythonBytes = qc["Bytes"]},
     PythonEvaluate[Context[$pythonBytes], "
-from qiskit import BasicAer, transpile
+from qiskit.quantum_info import Operator
 
 import pickle
 
 qc = pickle.loads(<* $pythonBytes *>)
 
-backend = BasicAer.get_backend('unitary_simulator')
-
-job = backend.run(transpile(qc, backend))
-job.result().get_unitary(qc, decimals=3)
+Operator(qc).data
 "]
 ]
 
@@ -367,26 +363,22 @@ provider = None
     ];
     PythonEvaluate[Context[$pythonBytes], "
 import pickle
-from qiskit import Aer
+from qiskit.providers.basic_provider import BasicProvider
+from qiskit_aer import AerSimulator
 from qiskit_braket_provider import AWSBraketProvider
 from qiskit_ibm_provider import IBMProvider
 
 qc = pickle.loads(<* $pythonBytes *>)
 backend_name = <* $backendName *>
 if provider is None:
-    if qc.num_clbits > 0:
-        backend = Aer.get_backend('qasm_simulator' if backend_name is None else backend_name)
-    else:
-        backend = Aer.get_backend('statevector_simulator')
+    provider = BasicProvider()
+    backend = AerSimulator()
 else:
     if backend_name is None:
         if isinstance(provider, AWSBraketProvider):
             backend = provider.get_backend('SV1')
         else:
-            if qc.num_clbits > 0:
-                backend = provider.get_backend('ibmq_qasm_simulator')
-            else:
-                backend = provider.get_backend('simulator_statevector')
+            backend = provider.get_backend('ibmq_qasm_simulator')
     else:
         backend = provider.get_backend(backend_name)
 if <* $fireOpal *>:
@@ -450,15 +442,17 @@ if <* $fireOpal *>:
     )['results'][0]
     result = {k[::-1]: v for k, v in result.items()}
 else:
-    result = backend.run(circuit, shots = <* $shots *>).result()
 
     if isinstance(provider, AWSBraketProvider):
+        result = backend.run(circuit, shots = <* $shots *>).result()
         result = result.get_counts()
     else:
         if qc.num_clbits > 0:
+            result = backend.run(circuit, shots = <* $shots *>).result()
             result = result.get_counts(circuit)
         else:
-            result = result.get_statevector().data
+            from qiskit.quantum_info import Statevector
+            result = Statevector(qc).data
 result
 "];
     Which[
