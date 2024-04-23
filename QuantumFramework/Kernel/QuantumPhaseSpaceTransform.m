@@ -7,8 +7,11 @@ PackageExport["QuantumPhaseSpaceTransform"]
 QuantumPhaseSpaceTransform[qb_ ? QuditBasisQ, phaseSpaceBasis_ ? QuditBasisQ] :=
     Enclose @ If[phaseSpaceBasis["Dimension"] == qb["Dimension"] ^ 2, phaseSpaceBasis, QuditBasis[qb["Dimension"] ^ 2]]
 
-QuantumPhaseSpaceTransform[qb : _ ? QuditBasisQ | _ ? QuantumBasisQ] :=
-    QuantumPhaseSpaceTransform[qb, QuditBasis["Wigner"[qb["Dimension"], "Exact" -> ! qb["NumberQ"]]]]
+QuantumPhaseSpaceTransform[qb_ ? QuditBasisQ] :=
+    QuantumPhaseSpaceTransform[qb, QuditBasis["Wigner"[qb["Dimensions"], "Exact" -> ! qb["NumberQ"]]]]
+
+QuantumPhaseSpaceTransform[qb_ ? QuantumBasisQ] :=
+    QuantumPhaseSpaceTransform[qb, QuantumBasis["Wigner"[qb["OutputDimensions"], "Exact" -> ! qb["NumberQ"]], "Wigner"[qb["InputDimensions"], "Exact" -> ! qb["NumberQ"]]]]
 
 QuantumPhaseSpaceTransform[qb_ ? QuditBasisQ, args__] := QuantumPhaseSpaceTransform[qb, QuditBasis[args]]
 
