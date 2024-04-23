@@ -93,7 +93,7 @@ def make_gate(gate_spec):
     elif name == 'Unitary':
         gate = UnitaryGate(args[0], label=args[1], check_input=False)
         assert(all(i == j for i, j in zip(args[2][0], args[2][1])))
-        order = list(args[2][0])
+        order = list(args[2][0])[::-1]
     elif name == 'Barrier':
         gate = Barrier(len(order))
     elif name == 'Measure':
@@ -296,7 +296,7 @@ from qiskit.quantum_info import Operator
 import pickle
 
 qc = pickle.loads(<* $pythonBytes *>)
-
+qc.remove_final_measurements()
 Operator(qc).data
 "]
 ]
