@@ -149,7 +149,7 @@ QuantumMPO[qo_QuantumOperator, m : _Integer | Infinity : Infinity, OptionsPatter
 		MapAt[
 			If[
 				ContainsAll[#["OutputOrder"], {-1 ,0}],
-				QuantumOperator[{"Uncurry", Replace[{-1, 0}, #["OutputOrderDimensions"], {1}]}, {-1, 0} -> {0}][#],
+				QuantumOperator[{"Curry", Replace[{-1, 0}, #["OutputOrderDimensions"], {1}]}, {-1, 0} -> {0}][#],
 				QuantumOperator[#["State"], {#["OutputOrder"] /. -1 -> 0, #["InputOrder"]}]
 			] &,
 			{;; -2}
@@ -157,7 +157,7 @@ QuantumMPO[qo_QuantumOperator, m : _Integer | Infinity : Infinity, OptionsPatter
 		MapAt[
 			If[
 				ContainsAll[#["InputOrder"], {-1 ,0}],
-				#[QuantumOperator[{"Curry", Replace[{-1, 0}, #["InputOrderDimensions"], {1}]}, {0} -> {-1, 0}]],
+				#[QuantumOperator[{"Uncurry", Replace[{-1, 0}, #["InputOrderDimensions"], {1}]}, {0} -> {-1, 0}]],
 				QuantumOperator[#["State"], {#["OutputOrder"], #["InputOrder"] /. -1 -> 0}]
 			] &,
 		 	{2 ;;}

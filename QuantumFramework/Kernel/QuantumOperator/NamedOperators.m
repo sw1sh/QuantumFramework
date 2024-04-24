@@ -8,7 +8,7 @@ PackageScope["FromOperatorShorthand"]
 
 
 $QuantumOperatorNames = {
-    "Identity", "I", "Permutation", "Curry", "Uncurry",
+    "Identity", "I", "Permutation", "Uncurry", "Curry",
     "Fourier", "InverseFourier",
     "XRotation", "YRotation", "ZRotation", "U", "Phase", "P", "RX", "RY", "RZ", "R",
     "Diagonal", "GlobalPhase",
@@ -611,19 +611,19 @@ QuantumOperator[{"Permutation", dims : {_Integer ? Positive..} | Automatic : Aut
     QuantumOperator[{"Permutation", Replace[dims, Automatic :> ConstantArray[2, Length[perm]]], PermutationCycles[perm]}, opts]
 
 
-QuantumOperator["Uncurry", opts___] := QuantumOperator[{"Uncurry", 2}, opts]
+QuantumOperator["Curry", opts___] := QuantumOperator[{"Curry", 2}, opts]
 
-QuantumOperator[{"Uncurry", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[{"Uncurry", {basis, basis}}, opts]]
+QuantumOperator[{"Curry", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[{"Curry", {basis, basis}}, opts]]
 
-QuantumOperator[{"Uncurry", args_List}, opts___] := With[{bases = QuditBasis /@ args},
+QuantumOperator[{"Curry", args_List}, opts___] := With[{bases = QuditBasis /@ args},
     QuantumOperator[
         QuantumOperator[identityMatrix[Times @@ Through[bases["Dimension"]]], QuantumBasis[QuditBasis[Tuples[Through[bases["Names"]]]], QuantumTensorProduct[bases]]],
         opts,
-        "Label" -> "Uncurry"
+        "Label" -> "Curry"
     ]
 ]
 
-QuantumOperator[name : "Curry" | {"Curry", ___}, opts___] := QuantumOperator[QuantumOperator[name /. "Curry" -> "Uncurry"]["ConjugateTranspose"], opts, "Label" -> "Curry"]
+QuantumOperator[name : "Uncurry" | {"Uncurry", ___}, opts___] := QuantumOperator[QuantumOperator[name /. "Uncurry" -> "Curry"]["ConjugateTranspose"], opts, "Label" -> "Uncurry"]
 
 
 QuantumOperator[{name : "XSpider" | "YSpider" | "ZSpider", phase_ : 0},
@@ -691,9 +691,9 @@ QuantumOperator[{name : $Spider, args___}, opts : PatternSequence[] | PatternSeq
 
 QuantumOperator[name : "Measure" | "Encode" | "Copy" | "Decohere" | "Marginal" | "Discard" | "Trace", opts___] := QuantumOperator[{name}, opts]
 
-QuantumOperator[{"Measure", args__ : 2}, opts___] := With[{decohere = QuantumOperator["Decohere"[args], {1, 2} -> {1}]}, QuantumOperator[decohere @ QuantumOperator["Curry"[decohere["OutputDimension"]], {1} -> {1, 2}], opts, "Label" -> "Measure"]]
+QuantumOperator[{"Measure", args__ : 2}, opts___] := With[{decohere = QuantumOperator["Decohere"[args], {1, 2} -> {1}]}, QuantumOperator[decohere @ QuantumOperator["Uncurry"[decohere["OutputDimension"]], {1} -> {1, 2}], opts, "Label" -> "Measure"]]
 
-QuantumOperator[{"Encode", args__ : 2}, opts___] := With[{copy = QuantumOperator["Copy"[args], {1} -> {1, 2}]}, QuantumOperator[QuantumOperator["Uncurry"[copy["InputDimension"]], {1, 2} -> {1}] @ copy, opts, "Label" -> "Encode"]]
+QuantumOperator[{"Encode", args__ : 2}, opts___] := With[{copy = QuantumOperator["Copy"[args], {1} -> {1, 2}]}, QuantumOperator[QuantumOperator["Curry"[copy["InputDimension"]], {1, 2} -> {1}] @ copy, opts, "Label" -> "Encode"]]
 
 QuantumOperator[{"Copy", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[QuantumOperator[{"Spider", QuantumBasis[QuantumTensorProduct[basis, basis["Conjugate"]], basis]}, {1} -> {1, 2}], opts, "Label" -> "Copy"]]
 
@@ -770,9 +770,9 @@ jZ[j_] := DiagonalMatrix[Table[m, {m, j, -j, -1}]]
 
 QuantumOperator[name : "WignerD" | "JX" | "AngularMomentumX" | "JY" | "AngularMomentumY" | "JZ" | "AngularMomentumZ" | "J+" | "J-", opts___] := QuantumOperator[{name, 1 / 2}, opts]
 
-QuantumOperator[{"WignerD", j_, {a_, b_, c_}}, opts___] :=  QuantumOperator[QuantumOperator[wignerD[j, {a, b, c}], 2 j + 1], opts, "Label" -> "WignerD"]
+QuantumOperator[{"WignerD", j_, {a_, b_, c_}}, opts___] :=  QuantumOperator[QuantumOperator[wignerD[j, {a, b, c}], 2 j + 1], opts, "Label" -> "WignerD"[a, b, c]]
 
-QuantumOperator[{"WignerD", j_, b_ : 0}, opts___] := QuantumOperator[QuantumOperator[wignerD[j, b], 2 j + 1], opts, "Label" -> "WignerD"]
+QuantumOperator[{"WignerD", j_, b_ : 0}, opts___] := QuantumOperator[QuantumOperator[wignerD[j, b], 2 j + 1], opts, "Label" -> "WignerD"[b]]
 
 QuantumOperator[{"JX" | "AngularMomentumX", j_}, opts___] := QuantumOperator[QuantumOperator[jX[j], 2 j + 1], opts, "Label" -> "JX"]
 

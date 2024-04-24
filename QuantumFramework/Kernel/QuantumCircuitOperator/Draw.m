@@ -211,11 +211,11 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			wireThickness[Replace[First[vposIn], inDims]],
 			Circle[{center[[1]] - size / 2, center[[2]]}, {vGapSize / 2, (Max[vpos] - Min[vpos]) vGapSize / 2}, {- Pi / 2, Pi / 2}]
 		},
-		"Curry" :> {
+		"Uncurry" :> {
 			wireStyle,
 			Map[{wireThickness[Replace[#, outDims]], Line[{{center[[1]] - size / 2, - vposIn[[1]] vGapSize}, {center[[1]] + size / 2, - # vGapSize}}]} &, vposOut]
 		},
-		"Uncurry" :> {
+		"Curry" :> {
 			wireStyle,
 			Map[{wireThickness[Replace[#, inDims]], Line[{{center[[1]] - size / 2, - # vGapSize}, {center[[1]] + size / 2, - vposOut[[1]] vGapSize}}]} &, vposIn]
 		},
