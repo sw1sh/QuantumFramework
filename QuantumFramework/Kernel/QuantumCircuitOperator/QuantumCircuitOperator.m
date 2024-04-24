@@ -13,7 +13,7 @@ BarrierQ[barrier_] := MatchQ[barrier, "Barrier" | "Barrier"[_ ? orderQ, ___] | "
 quantumCircuitOperatorQ[QuantumCircuitOperator[data_Association]] /; ! AtomQ[Unevaluated[data]] :=
     QuantumCircuitOperatorQ[QuantumCircuitOperator[data]]
 
-quantumCircuitOperatorQ[QuantumCircuitOperator[KeyValuePattern[{"Elements" -> elements_, "Label" -> _}]]] :=
+quantumCircuitOperatorQ[QuantumCircuitOperator[KeyValuePattern[{"Elements" -> elements_, "Label" -> _, "Expand" -> True | False}]]] :=
     AllTrue[elements,
         BarrierQ[#] ||
         QuantumFrameworkOperatorQ[#] &
@@ -29,7 +29,7 @@ QuantumCircuitOperatorQ[___] := False
 qco_QuantumCircuitOperator /; quantumCircuitOperatorQ[Unevaluated[qco]] && ! System`Private`HoldValidQ[qco] := System`Private`HoldSetValid[qco]
 
 
-Options[QuantumCircuitOperator] = {"Parameters" -> {}, "Label" -> None}
+Options[QuantumCircuitOperator] = {"Parameters" -> {}, "Label" -> None, "Expand" -> False}
 
 (* constructors *)
 
@@ -49,17 +49,18 @@ FromCircuitOperatorShorthand[arg_] := Enclose @ Replace[Confirm @ FromOperatorSh
 
 
 QuantumCircuitOperator[operators_ ? ListQ] := Enclose @ With[{ops = Confirm @* FromCircuitOperatorShorthand /@ operators},
-    QuantumCircuitOperator[<|"Elements" -> ops, "Label" -> Replace[Composition @@ Reverse @ Through[DeleteCases[ops, _ ? BarrierQ]["Label"]], Identity -> None]|>]
+    QuantumCircuitOperator[<|"Elements" -> ops, "Label" -> Replace[Composition @@ Reverse @ Through[DeleteCases[ops, _ ? BarrierQ]["Label"]], Identity -> None], "Expand" -> False|>]
 ]
 
 QuantumCircuitOperator[arg_, order_ ? orderQ, args___] := QuantumCircuitOperator[QuantumCircuitOperator[arg, args], order]
 
 QuantumCircuitOperator[arg_ -> order_ ? orderQ, args___] := QuantumCircuitOperator[QuantumCircuitOperator[arg, args], order]
 
-QuantumCircuitOperator[operators_ ? ListQ, opts : OptionsPattern[]] := With[{label = OptionValue["Label"], parameters = OptionValue["Parameters"]},
+QuantumCircuitOperator[operators_ ? ListQ, opts : OptionsPattern[]] := With[{parameters = OptionValue["Parameters"]},
     Enclose @ QuantumCircuitOperator[<|
         "Elements" -> (Confirm[If[parameters === {} || BarrierQ[#], #, Head[#][#, "Parameters" -> parameters]] & @ FromCircuitOperatorShorthand[#]] & /@ operators),
-        "Label" -> label
+        "Label" -> OptionValue["Label"],
+        "Expand" -> OptionValue["Expand"]
     |>]
 ]
 

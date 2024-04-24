@@ -310,7 +310,10 @@ alignDimensions[xs : {_Integer..}, ys : {_Integer..}] := Module[{
 TranscendentalRecognize[num_ ? NumericQ, basis : _ ? VectorQ : {Pi}] := Module[{lr, ans},
   lr = FindIntegerNullVector[Prepend[N[basis, Precision[num]], num]];
   ans = Rest[lr] . basis / First[lr];
-  Sign[N[ans]] Sign[num] ans
+  If[Numerator[ans] > 1*^3 || Denominator[ans] > 1*^3,
+    num,
+    Sign[N[ans]] Sign[num] ans
+  ]
 ]
 
 

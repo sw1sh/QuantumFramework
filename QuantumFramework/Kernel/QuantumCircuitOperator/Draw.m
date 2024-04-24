@@ -716,7 +716,7 @@ Options[circuitDraw] := DeleteDuplicatesBy[First] @ Join[
 	Options[drawOutline], Options[drawBarrier],
 	Options[Style]
 ];
-circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
+circuitDraw[circuit_QuantumCircuitOperator, Dynamic[qc_Symbol], position_List, opts : OptionsPattern[]] := Block[{
 	numGates = circuit["GateCount"],
 	order = Union @@ circuit["Order"],
 	freeOrder = circuit["FreeOrder"],
@@ -766,19 +766,24 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 				BarrierQ[#1],
 				drawBarrier[Append[Table[circuitElementPosition[#1, min, max] + min - 1, 2], #3 + 1], "ShowExtraQudits" -> extraQuditsQ, "Label" -> Replace[#1, {"Barrier"[_, label_, ___] :> label, _ -> None}], FilterRules[{opts}, Options[drawBarrier]]],
 				QuantumCircuitOperatorQ[#1],
-				If[ level > 0,
-					Translate[
-						circuitDraw[#1,
-							OptionValue["SubcircuitOptions"],
-							"SubcircuitLevel" -> level - 1,
-							"WireLabels" -> None, "ShowOutline" -> True, "ShowLabel" -> True,
-							"ShowMeasurementWire" -> False, "ShowEmptyWires" -> False, "LongOuterWires" -> False,
-							"ShowExtraQudits" -> False, "ShowGlobalPhase" -> False,
-							opts
+				EventHandler[
+					If[ level > 0 || TrueQ[#1["Expand"]],
+						Translate[
+							circuitDraw[#1, Dynamic[qc], Append[position, #4],
+								OptionValue["SubcircuitOptions"],
+								"SubcircuitLevel" -> level - 1,
+								"WireLabels" -> None, "ShowOutline" -> True, "ShowLabel" -> True,
+								"ShowMeasurementWire" -> False, "ShowEmptyWires" -> False, "LongOuterWires" -> False,
+								"ShowExtraQudits" -> False, "ShowGlobalPhase" -> False,
+								opts
+							],
+							{hGapSize Max[#3[[circuitElementPosition[#1, min, max]]]], 0}
 						],
-						{hGapSize Max[#3[[circuitElementPosition[#1, min, max]]]], 0}
+							drawGate[#2, {Thread[#1["OutputOrder"] -> #1["OutputDimensions"]], Thread[#1["InputOrder"] -> #1["InputDimensions"]]}, labelCounter[#1["Label"], #1["Order"]], FilterRules[{opts}, Options[drawGate]]]
 					],
-					drawGate[#2, {Thread[#1["OutputOrder"] -> #1["OutputDimensions"]], Thread[#1["InputOrder"] -> #1["InputDimensions"]]}, labelCounter[#1["Label"], #1["Order"]], FilterRules[{opts}, Options[drawGate]]]
+					{"MouseClicked" :> (qc = qc["ToggleExpand", Append[position, #4]])},
+					PassEventsDown -> True,
+					PassEventsUp -> False
 				],
 				QuantumMeasurementOperatorQ[#1],
 				drawMeasurement[#2, #1["Eigendimensions"], max, "ShowMeasurementWire" -> showMeasurementWireQ, "ShowExtraQudits" -> extraQuditsQ, "ThickWire" -> #["MatrixQ"], "Label" -> #1["Label"], FilterRules[{opts}, Options[drawMeasurement]]],
@@ -796,7 +801,7 @@ circuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Block[{
 					FilterRules[{opts}, Options[drawGate]]
 				]
 			] &,
-			{circuit["NormalOperators", True], gatePositions, positions[[All, 1]]}
+			{circuit["NormalOperators", True], gatePositions, positions[[All, 1]], Range[Length[gatePositions]]}
 		],
 		drawWireLabels[
 			OptionValue["WireLabels"],
@@ -846,7 +851,7 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, defaultOverl
 			overlapQ = defaultOverlapQ || QuantumOperatorQ[op] && MatchQ[op["Label"], "I" | "Permutation" | "Cap" | "Cup"];
 			overlapShift = Function[x, If[overlapQ, 0, NestWhile[# + 1 &, 0, ContainsAny[Lookup[ranges, x + #, {}], fullPos] &]]];
 			shift = If[
-				level > 0 && QuantumCircuitOperatorQ[op],
+				QuantumCircuitOperatorQ[op] && (level > 0 || TrueQ[op["Expand"]]),
 				ReplacePart[ConstantArray[0, width], Thread[pos -> Max[Replace[circuitPositions[op, level - 1, defaultOverlapQ, False, False], {{___, {_, o_}} :> o, _ -> 0}]]]],
 				ReplacePart[ConstantArray[0, width], Thread[pos -> 1]]
 			];
@@ -895,12 +900,31 @@ circuitWires[circuit_QuantumCircuitOperator] := Block[{
 	{outWires, inWires}
 ]
 
-Options[CircuitDraw] := Join[Options[circuitDraw], Options[Graphics]];
-CircuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Graphics[
-	circuitDraw[
-		circuit,
-		FilterRules[{opts}, Options[circuitDraw]],
-		RoundingRadius -> 0.1
+Options[CircuitDraw] := Join[{"Dynamic" -> False}, Options[circuitDraw], Options[Graphics]];
+CircuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := If[TrueQ[OptionValue["Dynamic"]],
+	DynamicModule[{qc = circuit},
+		Dynamic[
+			Graphics[
+				circuitDraw[
+					qc, Dynamic[qc], {},
+					FilterRules[{opts}, Options[circuitDraw]],
+					"SubcircuitLevel" -> 0,
+					RoundingRadius -> 0.1
+				],
+				FilterRules[{opts}, Options[Graphics]]
+			],
+			TrackedSymbols :> {qc}
+		]
 	],
-	FilterRules[{opts}, Options[Graphics]]
+	Module[{qc = circuit},
+		Graphics[
+			circuitDraw[
+				circuit, Dynamic[qc], {},
+				FilterRules[{opts}, Options[circuitDraw]],
+				RoundingRadius -> 0.1
+			],
+			FilterRules[{opts}, Options[Graphics]]
+		]
+	]
 ]
+

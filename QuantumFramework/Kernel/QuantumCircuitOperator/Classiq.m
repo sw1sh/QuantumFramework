@@ -41,5 +41,5 @@ qprog = synthesize(model)
 
 json.loads(qprog)['outputs']['qasm']
 "];
-    ImportQASMCircuit[qasm]["Decompose", 10]["QuantumCircuit"]
+    ImportQASMCircuit[qasm]["QuantumCircuit"]
 ]
