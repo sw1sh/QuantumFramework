@@ -81,12 +81,11 @@ QuantumState[{"Register", subsystemCount: _Integer ? Positive : 1, state : _Inte
     QuantumState[SparseArray[{{state + 1} -> 1}, dimension], basis]
 ]
 
+QuantumState[{"Register", 0, ___}, args___] := QuantumState[1, 1, args]
+
 QuantumState[{"Register", basisArg_, state : _Integer ? NonNegative : 0}, args___] := With[{basis = QuantumBasis[basisArg, args]},
     QuantumState[{"Register", basis["Qudits"], state}, basis]
 ]
-
-
-QuantumState[{"Register", 0, ___}, args___] := QuantumState[1, 1, args]
 
 
 QuantumState[{"UniformSuperposition", subsystemCount : _Integer ? Positive : 1}, args___] := Enclose @ Block[{basis},
