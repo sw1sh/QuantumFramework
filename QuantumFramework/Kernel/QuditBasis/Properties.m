@@ -202,10 +202,19 @@ QuditBasisProp[qb_, "Dual", qudits : {___Integer}] := With[{index = Lookup[MapIn
 QuditBasisProp[qb_, "DualQ"] := AllTrue[Keys[qb["Canonical"]["Representations"]][[All, 1]], #["DualQ"] &]
 
 
-QuditBasisProp[qb_, "Conjugate"] := QuditBasis[Conjugate /@ qb["Representations"]]
+QuditBasisProp[qb_, "Conjugate"] := qb["Conjugate", Range[qb["Qudits"]]]
 
 QuditBasisProp[qb_, "Conjugate", qudits : {___Integer}] := With[{index = Lookup[MapIndexed[First[#2] -> #1 &, qb["Index"]], qudits, Nothing]},
-    QuditBasis @ Association @ KeyValueMap[#1 -> If[MemberQ[index, #1[[2]]], Conjugate[#2], #2] &, qb["Representations"]]
+    QuditBasis @ Association @ KeyValueMap[
+        Rule @@ {
+            If[ FreeQ[Normal[#2], _Complex, {-1}],
+                #1,
+                MapAt[QuditName @* Map[Replace[SuperStar[SuperStar[x_]] :> x] @* SuperStar] @* Normal, #1, {1}]
+            ],
+            If[MemberQ[index, #1[[2]]], Conjugate[#2], #2]
+        } &,
+        qb["Representations"]
+    ]
 ]
 
 QuditBasisProp[qb_, "Inverse"] := QuditBasis[Map[OverBar, Normal /@ qb["Names"], {2}], ArrayReshape[#, qb["ElementDimensions"]] & /@ SparsePseudoInverse[qb["ReducedMatrix"]]]
