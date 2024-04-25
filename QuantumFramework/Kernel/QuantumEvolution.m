@@ -245,14 +245,17 @@ HamiltonianTransitionRate[H_QuantumOperator, basis_QuantumBasis] /; H["OutputDim
 
 
 LindbladTransitionRates[L : {__QuantumOperator} : {}, basis_QuantumBasis] := Enclose @ Block[{
-    d = First[L]["OutputDimension"], A, G, ls = Through[L["MatrixRepresentation"]]
+    d = First[L]["OutputDimension"], wigner, m, im, A, G, ls = Through[L["MatrixRepresentation"]]
 },
-    A = basis["Elements"];
+    wigner = QuditBasis["Wigner"[d, "Exact" -> ! basis["NumberQ"]]];
+    m = Inverse[basis["Matrix"]] . wigner["Matrix"];
+    im = Inverse[m];
+    A = wigner["Elements"];
     G = ConfirmBy[GramDual[A], ArrayQ];
     Chop @ MapThread[
-        Plus,
+        m . (#1 + #2) . im &,
         {   Table[- 1 / 2 Tr[ConjugateTranspose[l] . l . (A[[i]] . G[[j]] + G[[j]] . A[[i]])], {l, ls}, {i, d ^ 2}, {j, d ^ 2}],
-            QuantumOperator[#["Double"], basis]["Matrix"] & /@ L
+            QuantumPhaseSpaceTransform[#, wigner]["Matrix"] & /@ L
         }
     ]
 ]
