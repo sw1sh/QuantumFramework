@@ -77,7 +77,7 @@ QuantumCircuitOperatorProp[qco_, "NormalElements"] := qco["NormalOperators", Tru
 
 
 collectCircuitOperator[flatOps_, elements_List, elementsQ_] := Block[{x, xs = elements, ops = flatOps, newElements = {}, op},
-    If[Length[xs] == Length[ops], Return[{xs, {}}]];
+    If[Length[xs] == Length[ops], Return[{ops, {}}]];
     While[xs =!= {} && ops =!= {},
         {{x}, xs} = TakeDrop[xs, 1];
         If[ QuantumCircuitOperatorQ[x],
