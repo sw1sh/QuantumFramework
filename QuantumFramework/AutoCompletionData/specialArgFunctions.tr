@@ -217,7 +217,7 @@
             "J+",
             "J-",
             "Double",
-            "Lindblad"
+            "Liouvillian"
         },
         {
             "Computational",

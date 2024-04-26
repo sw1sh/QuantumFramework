@@ -1,8 +1,8 @@
 Package["Wolfram`QuantumFramework`"]
 
-PackageExport["QuantumEvolve"]
-PackageExport["HamiltonianTransitionRate"]
-PackageExport["LindbladTransitionRates"]
+PackageExport[QuantumEvolve]
+PackageExport[HamiltonianTransitionRate]
+PackageExport[LindbladTransitionRates]
 
 
 

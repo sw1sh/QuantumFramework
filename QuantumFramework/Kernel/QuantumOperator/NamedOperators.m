@@ -29,7 +29,7 @@ $QuantumOperatorNames = {
     "Multiplexer",
     "WignerD", "JX", "JY", "JZ", "J+", "J-",
     "Double",
-    "Lindblad"
+    "Liouvillian"
 }
 
 
@@ -789,12 +789,12 @@ QuantumOperator[{"J-", j_}, opts___] := QuantumOperator[QuantumOperator[jDown[j]
 QuantumOperator[{"Double", args___}, opts___] := QuantumOperator[args, opts]["Double"]
 
 
-QuantumOperator[{"Lindblad", H_QuantumOperator, Ls : {___QuantumOperator} : {}, gammas_List : {}}] := Enclose[
+QuantumOperator[{"Liouvillian", H_QuantumOperator, Ls : {___QuantumOperator} : {}, gammas_List : {}}] := Enclose[
 	ConfirmAssert[SameQ @@ Join[{H["OutputDimension"], H["InputDimension"]}, Through[Ls["OutputDimension"]], Through[Ls["InputDimension"]]]];
 	QuantumOperator[
         QuantumWeylTransform @ QuantumOperator[
             I (HamiltonianTransitionRate[H] + PadRight[gammas, Length[Ls], 1] . LindbladTransitionRates[Ls]),
-            QuantumBasis["Wigner"[H["OutputDimension"], "Exact" -> ! Or @@ Join[{H["NumberQ"]}, Through[Ls["NumberQ"]], NumberQ / gammas]], "Label" -> "Lindblad"]
+            QuantumBasis["Wigner"[H["OutputDimension"], "Exact" -> ! Or @@ Join[{H["NumberQ"]}, Through[Ls["NumberQ"]], NumberQ / gammas]], "Label" -> "Liouvillian"]
         ],
         H["Basis"]
     ]
