@@ -459,7 +459,7 @@ QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOpera
         ConfirmBy[
             If[MemberQ[{Minus, Times}, f], f[left, #, right] &, matrixFunction[f[left, #, right] &, #] &] @ op["Matrix"],
             MatrixQ
-        ],
+        ] // If[op["MatrixQ"], QuantumState, Identity],
         op["Order"], op["Basis"], "Label" -> f[left, op["Label"], right]
     ]
 ]
