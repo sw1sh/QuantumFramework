@@ -138,8 +138,8 @@
             "Identity",
             "I",
             "Permutation",
-            "Curry",
             "Uncurry",
+            "Curry",
             "Fourier",
             "InverseFourier",
             "XRotation",
@@ -216,7 +216,8 @@
             "JZ",
             "J+",
             "J-",
-            "Double"
+            "Double",
+            "Lindblad"
         },
         {
             "Computational",
