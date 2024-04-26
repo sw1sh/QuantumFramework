@@ -253,7 +253,7 @@ HamiltonianTransitionRate[H_QuantumOperator] := Enclose @ Block[{
     d = H["OutputDimension"], A, G, h = H["MatrixRepresentation"], basis
 },
     ConfirmAssert[H["OutputDimension"] == H["InputDimension"]];
-    basis = QuditBasis["Wigner"[d, "Exact" -> ! Or @@ Through[L["NumberQ"]]]];
+    basis = QuditBasis["Wigner"[d, "Exact" -> ! H["NumberQ"]]];
     A = basis["Elements"];
     G = ConfirmBy[GramDual[A], ArrayQ];
     Chop @ Table[I Tr[h . (A[[i]] . G[[j]] - G[[j]] . A[[i]])], {i, d ^ 2}, {j, d ^ 2}]
@@ -268,7 +268,7 @@ HamiltonianTransitionRate[H_QuantumOperator, basisArgs__] := Enclose @ Block[{
     If[ Sqrt[basis["Dimension"]] != d,
         basis = If[basis["Dimension"] == d, QuantumBasis[basis, 2], Return[rate]]
     ];
-    wigner = QuditBasis["Wigner"[d, "Exact" -> ! H["NumberQ"] || ! basis["NumberQ"]]];
+    wigner = QuditBasis["Wigner"[d, "Exact" -> ! H["NumberQ"] && ! basis["NumberQ"]]];
     m = Inverse[basis["Matrix"]] . wigner["Matrix"];
     im = Inverse[m];
     m . rate . im

@@ -40,7 +40,7 @@ QuantumPhaseSpaceTransform[qb_ ? QuantumBasisQ, args__] := Enclose @ Block[{
 
 QuantumPhaseSpaceTransform[qs_ ? QuantumStateQ, args___] := Enclose @ Chop @ Simplify @ QuantumState[
     ConfirmBy[qs["Double"], QuantumStateQ],
-    ConfirmBy[QuantumPhaseSpaceTransform[qs["Basis"], args], QuantumBasisQ]
+    ConfirmBy[QuantumPhaseSpaceTransform[If[qs["NumberQ"], N, Identity] @ qs["Basis"], args], QuantumBasisQ]
 ]
 
 QuantumPhaseSpaceTransform[qo_ ? QuantumOperatorQ, args___] := Enclose @ QuantumOperator[
