@@ -22,11 +22,11 @@ PackageExport["CFlipSign"]
 
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Example specific functions *)
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Quantum Natural Gradient Descent*)
 
 
@@ -38,7 +38,7 @@ FubiniStudyMetricTensor[qstate_QuantumState, var_List]:=Module[{stateMatrix,resu
 	
 	result=Table[
 			Re[ConjugateTranspose[derivatives[[i]]] . derivatives[[j]]]-(ConjugateTranspose[derivatives[[i]]] . stateMatrix)(ConjugateTranspose[stateMatrix] . derivatives[[j]]),
-			{i,1,4},{j,1,4}
+			{i,Length@derivatives},{j,Length@derivatives}
 			];
 	
 	Flatten/@result
@@ -277,43 +277,3 @@ centralFiniteDifference[f_[vars__],var_,val_]:=With[{h=10.^-3},
 			1/(2 h) ((f[vars]/.var->val+h)-(f[vars]/.var->val-h))
 			
 		]
-
-
-(* ::Section:: *)
-(*QuantumGates*)
-
-
-BinaryStringQ[s_String]:=StringMatchQ[s,StringExpression[("0"|"1")..]];
-
-FlipSign[state_String ? BinaryStringQ]:=Module[{positions},
-	positions={
-		{StringLength[#]},
-		(StringPosition[StringDrop[#,-1],"0"][[All,1]]),
-		(StringPosition[StringDrop[#,-1],"1"][[All,1]])
-		}&@state;
-
-	If[
-		StringMatchQ[state,__~~"1"],
-			QuantumCircuitOperator[{{"C","Z",positions[[1]],positions[[3]],positions[[2]]}},"Label"->"FlipSign"],
-			QuantumCircuitOperator[{"X"->positions[[1]],{"C","Z",positions[[1]],positions[[3]],positions[[2]]},"X"->positions[[1]]},"Label"->"FlipSign"]
-	]
-]
-
-
-CFlipSign[state_String ? BinaryStringQ]:=Module[{result,positions},
-
-	positions={
-		{StringLength[#]+1},
-		(StringPosition[StringDrop[#,-1],"0"][[All,1]]+1),
-		(StringPosition[StringDrop[#,-1],"1"][[All,1]]+1)
-		}&@state;
-
-	result=If[
-		StringMatchQ[state,__~~"1"],
-			QuantumCircuitOperator[{"C",{"C","Z",positions[[1]],positions[[3]],positions[[2]]},{1}}],
-			QuantumCircuitOperator[{"C",{"X"->positions[[1]],{"C","Z",positions[[1]],positions[[3]],positions[[2]]},"X"->positions[[1]]},{1}}]
-	];
-	
-	QuantumCircuitOperator[result,"Label"->"\!\(\*SubscriptBox[\(C\), \(FlipSign\)]\)"]
-	
-]
