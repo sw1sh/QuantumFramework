@@ -791,10 +791,13 @@ QuantumOperator[{"Double", args___}, opts___] := QuantumOperator[args, opts]["Do
 
 QuantumOperator[{"Lindblad", H_QuantumOperator, Ls : {___QuantumOperator} : {}, gammas_List : {}}] := Enclose[
 	ConfirmAssert[SameQ @@ Join[{H["OutputDimension"], H["InputDimension"]}, Through[Ls["OutputDimension"]], Through[Ls["InputDimension"]]]];
-	QuantumWeylTransform @ QuantumOperator[
-		HamiltonianTransitionRate[H] + PadRight[gammas, Length[Ls], 1] . LindbladTransitionRates[Ls],
-		QuantumBasis["Wigner"[H["OutputDimension"], "Exact" -> ! Or @@ Join[{H["NumberQ"]}, Through[Ls["NumberQ"]], NumberQ / gammas]], "Label" -> "Lindblad"]
-	]
+	QuantumOperator[
+        QuantumWeylTransform @ QuantumOperator[
+            I (HamiltonianTransitionRate[H] + PadRight[gammas, Length[Ls], 1] . LindbladTransitionRates[Ls]),
+            QuantumBasis["Wigner"[H["OutputDimension"], "Exact" -> ! Or @@ Join[{H["NumberQ"]}, Through[Ls["NumberQ"]], NumberQ / gammas]], "Label" -> "Lindblad"]
+        ],
+        H["Basis"]
+    ]
 ]
 
 

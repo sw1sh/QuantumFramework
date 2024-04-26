@@ -35,7 +35,7 @@ QuantumEvolve[
         phaseSpaceQ = state["Picture"] === "PhaseSpace" && state["VectorQ"] && AllTrue[Sqrt[state["Dimensions"]], IntegerQ]
     ];
     ConfirmAssert[hamiltonian["OutputDimensions"] == hamiltonian["InputDimensions"]];
-    ConfirmAssert[AllTrue[lindblad, #["OutputDimensions"] == #["InputDimensions"] == hamiltonian["InputDimensions"] &]];
+    ConfirmAssert[AllTrue[lindblad, #["OutputDimensions"] == #["InputDimensions"] &]];
     ConfirmAssert[state === None || phaseSpaceQ || hamiltonian["InputDimension"] == state["Dimension"]];
     If[ defaultParameter === Automatic,
         parameter = First[Join[hamiltonian["Parameters"], Catenate[Through[lindblad["Parameters"]]]], \[FormalT]];
@@ -50,7 +50,7 @@ QuantumEvolve[
     basis = If[state =!= None && phaseSpaceQ, state["Basis"], hamiltonian["OutputBasis"]];
     matrix = Progress`EvaluateWithProgress[
         TrigToExp @ Confirm @ If[mergeQ, MergeInterpolatingFunctions, Identity][
-            If[ phaseSpaceQ,
+            If[ phaseSpaceQ && ! hamiltonian["MatrixQ"],
                 HamiltonianTransitionRate[hamiltonian, basis],
                 QuantumOperator[hamiltonian, basis]["Matrix"] / I
             ]
@@ -59,7 +59,7 @@ QuantumEvolve[
     ];
     jumps = Progress`EvaluateWithProgress[
         TrigToExp @ Confirm @ If[mergeQ, Map[MergeInterpolatingFunctions], Identity][
-            If[ phaseSpaceQ,
+            If[ phaseSpaceQ && lindblad =!= {} && ! First[lindblad]["MatrixQ"],
                 PadRight[gammas, Length[lindblad], 1] * LindbladTransitionRates[lindblad, basis],
                 PadRight[Sqrt[gammas], Length[lindblad], 1] * (QuantumOperator[#, basis]["Matrix"] & /@ lindblad)
             ]
@@ -68,12 +68,12 @@ QuantumEvolve[
     ];
     If[ jumps =!= {},
         If[ phaseSpaceQ,
-            matrix += jumps,
+            matrix += Total[jumps],
             If[state =!= None, state = state["MatrixState"]]
         ]
     ];
     rhs = With[{s = \[FormalS][parameter]}, Which[
-        state === None && jumps === {} || phaseSpaceQ,
+        (state === None || hamiltonian["MatrixQ"]) && jumps === {} || phaseSpaceQ,
         matrix . s,
         state === None,
         (* this is not correct *)
@@ -85,7 +85,12 @@ QuantumEvolve[
         If[ phaseSpaceQ,
             (* always treat state as a single system in phase-space *)
             state = QuantumPhaseSpaceTransform[QuantumState[QuantumWeylTransform[state], Sqrt[state["Dimension"]]], basis],
-            state = QuantumState[state["Split", state["Qudits"]], hamiltonian["Input"]]
+
+            state = state["Split", state["Qudits"]];
+            If[ hamiltonian["MatrixQ"],
+                state = QuantumState[state["Double"], hamiltonian["QuditBasis"]],
+                state = QuantumState[state, hamiltonian["Input"]]
+            ]
         ]
     ];
     init = If[defaultState === None, IdentityMatrix[Length[matrix], SparseArray], state["State"]];
@@ -187,7 +192,7 @@ QuantumEvolve[
                 basis,
                 "ParameterSpec" -> Append[basis["ParameterSpec"], parameterSpec]
             ],
-            QuantumState[solution, basis, "ParameterSpec" -> Append[basis["ParameterSpec"], parameterSpec]]
+            If[hamiltonian["MatrixQ"], #["Undouble"], #] & @ QuantumState[solution, basis, "ParameterSpec" -> Append[basis["ParameterSpec"], parameterSpec]]
         ],
         True,
         Message[QuantumEvolve::error];
