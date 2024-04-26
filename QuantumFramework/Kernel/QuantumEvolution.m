@@ -46,11 +46,11 @@ QuantumEvolve[
     ];
     ConfirmAssert[Developer`SymbolQ[parameter]];
     numericQ = MatchQ[defaultParameter, {_Symbol, _ ? NumericQ, _ ? NumericQ}];
-    (* TrigToExp helps with some examples *)
     basis = If[state =!= None && phaseSpaceQ, state["Basis"], hamiltonian["OutputBasis"]];
     matrix = Progress`EvaluateWithProgress[
+        (* TrigToExp helps with some examples *)
         TrigToExp @ Confirm @ If[mergeQ, MergeInterpolatingFunctions, Identity][
-            If[ phaseSpaceQ && ! hamiltonian["MatrixQ"],
+            If[ (phaseSpaceQ || state === None && lindblad =!= {}) && ! hamiltonian["MatrixQ"],
                 HamiltonianTransitionRate[hamiltonian, basis],
                 QuantumOperator[hamiltonian, basis]["Matrix"] / I
             ]
@@ -59,7 +59,7 @@ QuantumEvolve[
     ];
     jumps = Progress`EvaluateWithProgress[
         TrigToExp @ Confirm @ If[mergeQ, Map[MergeInterpolatingFunctions], Identity][
-            If[ phaseSpaceQ && lindblad =!= {} && ! First[lindblad]["MatrixQ"],
+            If[ (phaseSpaceQ || state === None) && lindblad =!= {} && ! First[lindblad]["MatrixQ"],
                 PadRight[gammas, Length[lindblad], 1] * LindbladTransitionRates[lindblad, basis],
                 PadRight[Sqrt[gammas], Length[lindblad], 1] * (QuantumOperator[#, basis]["Matrix"] & /@ lindblad)
             ]
@@ -67,18 +67,14 @@ QuantumEvolve[
         <|"Text" -> "Preparing Lindblad jumps"|>
     ];
     If[ jumps =!= {},
-        If[ phaseSpaceQ,
+        If[ phaseSpaceQ || state === None,
             matrix += Total[jumps],
-            If[state =!= None, state = state["MatrixState"]]
+            state = state["MatrixState"]
         ]
     ];
-    rhs = With[{s = \[FormalS][parameter]}, Which[
-        (state === None || hamiltonian["MatrixQ"]) && jumps === {} || phaseSpaceQ,
+    rhs = With[{s = \[FormalS][parameter]}, If[
+        phaseSpaceQ || state === None || jumps === {} && (state["VectorQ"] || hamiltonian["MatrixQ"]),
         matrix . s,
-        state === None,
-        (* this is not correct *)
-        matrix . s + Total[With[{L = #, Ldg = ConjugateTranspose[#]}, L . s - 1 / 2 (L . s + s . Ldg)] & /@ jumps],
-        True,
         matrix . s - s . matrix + Total[With[{L = #, Ldg = ConjugateTranspose[#]}, L . s . Ldg - 1 / 2 (Ldg . L . s + s . Ldg . L)] & /@ jumps]
     ]];
     If[ state =!= None,
@@ -170,7 +166,7 @@ QuantumEvolve[
         state === None && SquareMatrixQ[solution],
         QuantumOperator[
             QuantumState[
-                If[ hamiltonian["MatrixQ"],
+                If[ Dimensions[solution] == hamiltonian["MatrixNameDimensions"] ^ 2,
                     ArrayReshape[
                         Transpose[ArrayReshape[solution, Join[#, #] & @ hamiltonian["MatrixNameDimensions"]], 2 <-> 3],
                         hamiltonian["MatrixNameDimensions"] ^ 2
@@ -253,14 +249,29 @@ ExpandInterpolatingFunction[array_ ? ArrayQ] := ExpandInterpolatingFunction[Merg
 ExpandInterpolatingFunction[qs_QuantumState] := QuantumState[ExpandInterpolatingFunction @ qs["State"], qs["Basis"]]
 
 
-HamiltonianTransitionRate[H_QuantumOperator, basisArgs___] := Enclose @ Block[{
+HamiltonianTransitionRate[H_QuantumOperator] := Enclose @ Block[{
     d = H["OutputDimension"], A, G, h = H["MatrixRepresentation"], basis
 },
-    basis = If[{basisArgs} === {}, QuantumBasis["Wigner"[d, "Exact" -> ! H["NumberQ"]]], QuantumBasis[basisArgs]];
-    ConfirmAssert[H["OutputDimension"] == H["InputDimension"] == Sqrt[basis["Dimension"]]];
+    ConfirmAssert[H["OutputDimension"] == H["InputDimension"]];
+    basis = QuditBasis["Wigner"[d, "Exact" -> ! Or @@ Through[L["NumberQ"]]]];
     A = basis["Elements"];
     G = ConfirmBy[GramDual[A], ArrayQ];
     Chop @ Table[I Tr[h . (A[[i]] . G[[j]] - G[[j]] . A[[i]])], {i, d ^ 2}, {j, d ^ 2}]
+]
+
+HamiltonianTransitionRate[H_QuantumOperator, basisArgs__] := Enclose @ Block[{
+    d = H["OutputDimension"], A, G, h = H["MatrixRepresentation"], basis, rate, wigner, m, im
+},
+    basis = QuantumBasis[basisArgs];
+    ConfirmAssert[H["OutputDimension"] == H["InputDimension"]];
+    rate = HamiltonianTransitionRate[H];
+    If[ Sqrt[basis["Dimension"]] != d,
+        basis = If[basis["Dimension"] == d, QuantumBasis[basis, 2], Return[rate]]
+    ];
+    wigner = QuditBasis["Wigner"[d, "Exact" -> ! H["NumberQ"] || ! basis["NumberQ"]]];
+    m = Inverse[basis["Matrix"]] . wigner["Matrix"];
+    im = Inverse[m];
+    m . rate . im
 ]
 
 
@@ -285,8 +296,12 @@ LindbladTransitionRates[L : {__QuantumOperator}, basisArgs__] := Enclose @ Block
     d = First[L]["OutputDimension"], wigner, m, im, A, G, ls = Through[L["MatrixRepresentation"]],
     basis = QuantumBasis[basisArgs], rates
 },
-    ConfirmAssert[SameQ @@ Append[Join[Through[L["OutputDimension"]], Through[L["InputDimension"]]], Sqrt[basis["Dimension"]]]];
+    ConfirmAssert[SameQ @@ Append[Join[Through[L["OutputDimension"]], Through[L["InputDimension"]]]]];
+    basis = QuantumBasis[basisArgs];
     rates = Confirm @ LindbladTransitionRates[L];
+    If[ Sqrt[basis["Dimension"]] != d,
+        If[basis["Dimension"] == d, basis = QuantumBasis[basis, 2], Return[rates]]
+    ];
     wigner = QuditBasis["Wigner"[d, "Exact" -> ! Or @@ Append[Through[L["NumberQ"]], basis["NumberQ"]]]];
     m = Inverse[basis["Matrix"]] . wigner["Matrix"];
     im = Inverse[m];
