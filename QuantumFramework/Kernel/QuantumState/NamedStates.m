@@ -67,7 +67,7 @@ QuantumState[{"BasisState", basisElement_List : {1}}, args___] := Enclose @ Bloc
     basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ];
     basis = QuantumBasis[basis, Ceiling[Length[basisElement] / basis["Qudits"]]];
     dimension = basis["Dimension"];
-    elementPosition = FromDigits[basisElement, dimension] + 1;
+    elementPosition = FromDigits[basisElement, First[basis["Dimensions"]]] + 1;
     ConfirmAssert[1 <= elementPosition <= dimension];
     QuantumState[SparseArray[{elementPosition} -> 1, dimension], basis]
 ]
