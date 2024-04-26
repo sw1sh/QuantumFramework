@@ -72,9 +72,13 @@ QuantumEvolve[
             If[state =!= None, state = state["MatrixState"]]
         ]
     ];
-    rhs = With[{s = \[FormalS][parameter]}, If[
-        phaseSpaceQ || jumps === {} && state =!= None && state["VectorQ"],
+    rhs = With[{s = \[FormalS][parameter]}, Which[
+        state === None && jumps === {} || phaseSpaceQ,
         matrix . s,
+        state === None,
+        (* this is not correct *)
+        matrix . s + Total[With[{L = #, Ldg = ConjugateTranspose[#]}, L . s - 1 / 2 (L . s + s . Ldg)] & /@ jumps],
+        True,
         matrix . s - s . matrix + Total[With[{L = #, Ldg = ConjugateTranspose[#]}, L . s . Ldg - 1 / 2 (Ldg . L . s + s . Ldg . L)] & /@ jumps]
     ]];
     If[ state =!= None,
@@ -84,7 +88,7 @@ QuantumEvolve[
             state = QuantumState[state["Split", state["Qudits"]], hamiltonian["Input"]]
         ]
     ];
-    init = If[defaultState === None, IdentityMatrix[hamiltonian["InputDimension"], SparseArray], state["State"]];
+    init = If[defaultState === None, IdentityMatrix[Length[matrix], SparseArray], state["State"]];
     equations = Join[
         {
             \[FormalS]'[parameter] == rhs,
@@ -160,10 +164,18 @@ QuantumEvolve[
     Which[
         state === None && SquareMatrixQ[solution],
         QuantumOperator[
-            solution,
+            QuantumState[
+                If[ hamiltonian["MatrixQ"],
+                    ArrayReshape[
+                        Transpose[ArrayReshape[solution, Join[#, #] & @ hamiltonian["MatrixNameDimensions"]], 2 <-> 3],
+                        hamiltonian["MatrixNameDimensions"] ^ 2
+                    ],
+                    Flatten @ solution
+                ],
+                hamiltonian["Basis"]
+            ],
             hamiltonian["Order"],
-            hamiltonian["Basis"],
-            "ParameterSpec" -> parameterSpec
+            "ParameterSpec" -> Append[hamiltonian["ParameterSpec"], parameterSpec]
         ],
         stateQ[solution],
         If[ state =!= None && phaseSpaceQ,
@@ -173,9 +185,9 @@ QuantumEvolve[
                     Sqrt[basis["Dimensions"]]
                 ]["Double"],
                 basis,
-                "ParameterSpec" -> parameterSpec
+                "ParameterSpec" -> Append[basis["ParameterSpec"], parameterSpec]
             ],
-            QuantumState[solution, basis, "ParameterSpec" -> parameterSpec]
+            QuantumState[solution, basis, "ParameterSpec" -> Append[basis["ParameterSpec"], parameterSpec]]
         ],
         True,
         Message[QuantumEvolve::error];
