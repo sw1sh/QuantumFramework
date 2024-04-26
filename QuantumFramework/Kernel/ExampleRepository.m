@@ -16,13 +16,17 @@ PackageExport["FubiniStudyMetricTensor"]
 
 PackageExport["FubiniStudyMetricTensorLayers"]
 
+PackageExport["FlipSign"]
+
+PackageExport["CFlipSign"]
 
 
-(* ::Section::Closed:: *)
+
+(* ::Section:: *)
 (*Example specific functions *)
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Quantum Natural Gradient Descent*)
 
 
@@ -34,7 +38,7 @@ FubiniStudyMetricTensor[qstate_QuantumState, var_List]:=Module[{stateMatrix,resu
 	
 	result=Table[
 			Re[ConjugateTranspose[derivatives[[i]]] . derivatives[[j]]]-(ConjugateTranspose[derivatives[[i]]] . stateMatrix)(ConjugateTranspose[stateMatrix] . derivatives[[j]]),
-			{i,1,4},{j,1,4}
+			{i,Length@derivatives},{j,Length@derivatives}
 			];
 	
 	Flatten/@result
