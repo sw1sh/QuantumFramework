@@ -789,14 +789,14 @@ QuantumOperator[{"J-", j_}, opts___] := QuantumOperator[QuantumOperator[jDown[j]
 QuantumOperator[{"Double", args___}, opts___] := QuantumOperator[args, opts]["Double"]
 
 
-QuantumOperator[{"Liouvillian", H_QuantumOperator, Ls : {___QuantumOperator} : {}, gammas_List : {}}] := Enclose[
+QuantumOperator[{"Liouvillian", H_QuantumOperator, Ls : {___QuantumOperator} : {}, gammas_List : {}}, opts___] := Enclose[
 	ConfirmAssert[SameQ @@ Join[{H["OutputDimension"], H["InputDimension"]}, Through[Ls["OutputDimension"]], Through[Ls["InputDimension"]]]];
 	QuantumOperator[
         QuantumWeylTransform @ QuantumOperator[
             I (HamiltonianTransitionRate[H] + PadRight[gammas, Length[Ls], 1] . LindbladTransitionRates[Ls]),
-            QuantumBasis["Wigner"[H["OutputDimension"], "Exact" -> ! Or @@ Join[{H["NumberQ"]}, Through[Ls["NumberQ"]], NumberQ / gammas]], "Label" -> "Liouvillian"]
+            QuantumBasis["Wigner"[H["OutputDimension"], "Exact" -> ! Or @@ Join[{H["NumberQ"]}, Through[Ls["NumberQ"]], NumberQ / gammas]]]
         ],
-        H["Basis"]
+        QuantumBasis[H["Basis"], opts, "Label" -> "Liouvillian"]
     ]
 ]
 
