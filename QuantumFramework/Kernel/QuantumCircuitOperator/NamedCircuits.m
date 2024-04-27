@@ -706,7 +706,7 @@ QuantumStatePreparation[qs_QuantumState, opts: OptionsPattern[]] /; MatchQ[qs["D
     ClassiqQuantumState[qs, FilterRules[{opts}, Options[ClassiqQuantumState]]]
 ]
 
-QuantumStateMultiplexer[qs_QuantumState]  := Block[{
+QuantumStateMultiplexer[qs_QuantumState, ___]  := Block[{
     operators, phases, phase, n = qs["Qudits"]
 },
     {operators, phases} = Reap[stateEvolution[qs["Split", n]], {"Operators", "Phase"}][[2, All, 1]];

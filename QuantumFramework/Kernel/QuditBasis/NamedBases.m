@@ -239,13 +239,23 @@ QuditBasis[{"RandomMIC", d : _Integer ? Positive : 2, methodOpts : OptionsPatter
 
 (* MUB *)
 
-QuditBasis[{"Ivanovic", d : _Integer ? Positive : 2, n_Integer : 1}] /; 0 <= n <= d := QuditBasis[
+QuditBasis[{"Ivanovic", d : _Integer ? PrimeQ : 2, n_Integer : 1}] /; 0 <= n <= d := QuditBasis[
     Subsuperscript["\[ScriptCapitalI]", #, d] & /@ Range[d],
-    Which[
-        n == 0, IdentityMatrix[d],
-        0 < n < d, 1 / Sqrt[d] Table[Exp[Pi I / d n (m + l) ^ 2], {m, 1, d}, {l, 1, d}],
-        True, 1 / Sqrt[d] Table[Exp[2 Pi I / d m l], {m, 1, d}, {l, 1, d}]
+    If[
+        n == 0,
+        IdentityMatrix[d],
+        If[ d == 2,
+            If[ n == d,
+                1 / Sqrt[d] Table[Exp[2 Pi I / d i j], {i, 1, d}, {j, 1, d}],
+                1 / Sqrt[d] Table[Exp[Pi I / d n (i + j) ^ 2], {i, 1, d}, {j, 1, d}]
+            ],
+            1 / Sqrt[d] Table[Exp[2 Pi I / d n (i + j) ^ 2], {i, 1, d}, {j, 1, d}]
+        ]
     ]
+]
+
+QuditBasis[{"Ivanovic", d : _Integer ? Positive : 2, n_Integer : 1}] := With[{factors = Catenate[Table @@@ FactorInteger[d]]},
+    QuantumTensorProduct @ MapThread[QuditBasis["Ivanovic"[##]] &, {factors, IntegerDigits[n, MixedRadix[factors + 1], Length[factors]]}]
 ]
 
 
