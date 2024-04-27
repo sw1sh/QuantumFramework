@@ -52,7 +52,7 @@ QuantumEvolve[
         TrigToExp @ Confirm @ If[mergeQ, MergeInterpolatingFunctions, Identity][
             If[ (phaseSpaceQ || state === None && lindblad =!= {}) && ! hamiltonian["MatrixQ"],
                 HamiltonianTransitionRate[hamiltonian, basis],
-                QuantumOperator[hamiltonian, basis]["Matrix"] / I
+                QuantumOperator[If[phaseSpaceQ, hamiltonian["Double"], hamiltonian], basis]["Matrix"] / I
             ]
         ],
         <|"Text" -> "Preparing Hamiltonian"|>
