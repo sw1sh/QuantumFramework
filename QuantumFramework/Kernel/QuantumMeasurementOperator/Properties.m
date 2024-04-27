@@ -296,17 +296,16 @@ QuantumMeasurementOperatorProp[qmo_, "DiscardExtraQudits"] := QuantumOperator[
     Fold[
         #2[#1] &,
         qmo,
-        (* TODO: figure out general scheme without relying on labels *)
-        With[{pauli = FirstCase[qmo["Label"], "X" | "Y" | "Z" | "I", "I", All]}, Join[
+        Join[
             MapThread[
-                QuantumOperator[With[{d = Sqrt[#1["Dimension"]]}, If[IntegerQ[d], "Marginal"["WignerMIC"[d, "Exact" -> ! qmo["NumberQ"]]], "Discard"[d ^ 2]]], {#2}] &,
+                QuantumOperator[With[{d = Sqrt[#1["Dimension"]]}, If[IntegerQ[d], "Marginal"["WignerMIC"[d, "Exact" -> ! qmo["NumberQ"]]], "Trace"[d ^ 2]]], {#2}] &,
                 {qmo["TargetBasis"]["Decompose"], qmo["TargetOrder"]}
             ],
             MapThread[
-                If[IntegerQ[#1], QuantumOperator["Measure"[pauli[#1]], {#2}], Nothing] &,
-                {Sqrt @ qmo["Eigendimensions"], qmo["Eigenorder"]}
+                If[IntegerQ[#1], QuantumOperator["Measure"[#], {#2}], Nothing] &,
+                {qmo["Eigenbasis"]["Decompose"], qmo["Eigenorder"]}
             ]
-        ]]
+        ]
     ],
     qmo["InputOrder"] -> qmo["TargetOrder"],
     "Label" -> "Measurement"[qmo["Label"]]
