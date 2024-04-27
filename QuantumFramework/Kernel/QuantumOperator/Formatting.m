@@ -4,7 +4,7 @@ Package["Wolfram`QuantumFramework`"]
 
 QuantumOperator /: MakeBoxes[qo_QuantumOperator, TraditionalForm] /; QuantumOperatorQ[qo] :=
     With[{formula = TooltipBox[
-            StyleBox[First[qo["Formula"]], "ShowStringCharacters" -> False],
+            StyleBox[First[If[qo["MatrixQ"], qo["State"]["Operator"], qo]["Formula"]], "ShowStringCharacters" -> False],
             ToBoxes[
                 Column[{
                     qo["Label"],
