@@ -17,7 +17,8 @@ $QuditBasisNames = {
     "Pauli", "GellMann", "GellMannMIC", "Bloch", "GellMannBloch", "GellMannBlochMIC",
     "Wootters", "Feynman",
     "Tetrahedron", "RandomMIC",
-    "QBismSIC", "HesseSIC", "HoggarSIC"
+    "QBismSIC", "HesseSIC", "HoggarSIC",
+    "Ivanovic"
 }
 
 $QuditPhaseSpaceBasisNames = Last @ SequenceSplit[$QuditBasisNames, x : {"Wigner", ___} :> x]
@@ -234,6 +235,19 @@ QuditBasis[{"RandomMIC", d : _Integer ? Positive : 2, methodOpts : OptionsPatter
         Chop @ GramDual[povm]
     ]
 ]
+
+
+(* MUB *)
+
+QuditBasis[{"Ivanovic", d : _Integer ? Positive : 2, n_Integer : 1}] /; 0 <= n <= d := QuditBasis[
+    Subsuperscript["\[ScriptCapitalI]", #, d] & /@ Range[d],
+    Which[
+        n == 0, IdentityMatrix[d],
+        0 < n < d, 1 / Sqrt[d] Table[Exp[Pi I / d n (m + l) ^ 2], {m, 1, d}, {l, 1, d}],
+        True, 1 / Sqrt[d] Table[Exp[2 Pi I / d m l], {m, 1, d}, {l, 1, d}]
+    ]
+]
+
 
 (* SICs *)
 
