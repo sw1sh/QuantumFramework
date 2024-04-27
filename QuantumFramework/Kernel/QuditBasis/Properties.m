@@ -349,7 +349,7 @@ QuditBasisProp[qb_, prop : "Chop" | "ComplexExpand", args___] := With[{f = Symbo
 
 
 
-QuditBasisProp[qb_, "NumericQ"] := ArrayQ[Replace[Values[qb["Representations"]], sa_ ? SparseArrayQ :> sa["ExplicitValues"], {1}], _, NumericQ]
+QuditBasisProp[qb_, "NumericQ"] := AllTrue[Replace[Values[qb["Representations"]], sa_ ? SparseArrayQ :> sa["ExplicitValues"], {1}], NumericQ[#] || ArrayQ[#, _, NumericQ] &]
 
-QuditBasisProp[qb_, "NumberQ"] := ArrayQ[Replace[Values[qb["Representations"]], sa_ ? SparseArrayQ :> sa["ExplicitValues"], {1}], _, MachineNumberQ]
+QuditBasisProp[qb_, "NumberQ"] := AllTrue[Replace[Values[qb["Representations"]], sa_ ? SparseArrayQ :> sa["ExplicitValues"], {1}], InexactNumberQ[#] || ArrayQ[#, _, InexactNumberQ] &]
 

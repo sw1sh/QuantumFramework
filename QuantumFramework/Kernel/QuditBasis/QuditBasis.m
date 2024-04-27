@@ -140,6 +140,13 @@ QuditBasis /: Times[qb__QuditBasis ? QuditBasisQ] := QuditBasis @ Association @ 
 ]
 
 
+(* N *)
+
+N[qb_QuditBasis, n_] := QuditBasis[N[#, n] & /@ qb["Representations"]]
+
+SetAttributes[QuditBasis, NHoldAll]
+
+
 (* simplify *)
 
 Scan[
