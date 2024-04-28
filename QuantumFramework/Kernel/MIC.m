@@ -73,7 +73,7 @@ QuantumWignerMICBasis[d : _Integer ? Positive : 2, opts : OptionsPattern[]] := B
 QuantumWignerMICBasis[basisArgs_, opts : OptionsPattern[]] := QuantumTensorProduct[QuantumWignerMICBasis[#, opts] & /@ QuantumBasis[basisArgs]["Dimensions"]]
 
 
-QuantumWignerMICTransform[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := Simplify @ QuantumTensorProduct[QuantumWignerMICBasis[#, opts] & /@ qb["Dimensions"]]
+QuantumWignerMICTransform[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := Simplify @ QuantumTensorProduct[QuantumWignerMICBasis[#, "Exact" -> ! qb["NumberQ"], opts] & /@ qb["Dimensions"]]
 
 QuantumWignerMICTransform[qb_ ? QuantumBasisQ, opts : OptionsPattern[]] :=
     Enclose @ QuantumBasis[
@@ -85,7 +85,7 @@ QuantumWignerMICTransform[qb_ ? QuantumBasisQ, opts : OptionsPattern[]] :=
 
 QuantumWignerMICTransform[qs_ ? QuantumStateQ, opts : OptionsPattern[]] := Enclose @ Chop @ Simplify @ QuantumState[
     qs["Double"],
-    ConfirmBy[QuantumWignerMICTransform[qs["Basis"], opts, "Exact" -> ! qs["NumberQ"]], QuantumBasisQ]
+    ConfirmBy[QuantumWignerMICTransform[qs["Basis"], opts, "Exact" -> ! qs["NumberQ"] && ! qs["Basis"]["NumberQ"]], QuantumBasisQ]
 ]
 
 QuantumWignerMICTransform[qo_ ? QuantumOperatorQ, opts : OptionsPattern[]] := Enclose @ QuantumOperator[

@@ -310,5 +310,5 @@ QuantumBasisProp[qb_, prop : "Simplify" | "FullSimplify" | "Chop" | "ComplexExpa
     QuantumBasis["Output" -> qb["Output"][prop], "Input" -> qb["Input"][prop], qb["Meta"]]
 
 
-QuantumBasisProp[qb_, prop : "NumericQ" | "NumberQ"] := qb["Output"][prop] && qb["Input"][prop]
+QuantumBasisProp[qb_, prop : "NumericQ" | "NumberQ"] := qb["Output"][prop] || qb["Input"][prop]
 

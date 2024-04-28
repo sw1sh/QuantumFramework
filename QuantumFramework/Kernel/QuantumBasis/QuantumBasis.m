@@ -182,7 +182,9 @@ QuantumBasis /: Equal[qb__QuantumBasis ? QuantumBasisQ] := Equal @@ (#["Input"] 
 
 (* N *)
 
-N[qb_QuantumBasis, n_] := QuantumBasis[qb, "Output" -> N[qb["Output"], n], "Input" -> N[qb["Input"], n]]
+N[qb_QuantumBasis, n_] /; ! AllTrue[
+    Join[Values[qb["Output"]["Representations"]], Values[qb["Input"]["Representations"]]],
+    InexactNumberQ[#] || ArrayQ[#, _, InexactNumberQ] &] := QuantumBasis[qb, "Output" -> N[qb["Output"], n], "Input" -> N[qb["Input"], n]]
 
 SetAttributes[QuantumBasis, NHoldAll]
 

@@ -37,7 +37,7 @@ WignerBasis[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := Block[{d, x, z},
 
 Options[QuantumWignerTransform] = Options[WignerBasis]
 
-QuantumWignerTransform[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := Chop @ QuditBasis[{"Wigner", qb, opts}]
+QuantumWignerTransform[qb_ ? QuditBasisQ, opts : OptionsPattern[]] := Chop @ QuditBasis[{"Wigner", qb, opts, "Exact" -> ! qb["NumberQ"]}]
 
 QuantumWignerTransform[qb_ ? QuantumBasisQ, opts : OptionsPattern[]] :=
     Enclose @ QuantumBasis[
@@ -50,7 +50,7 @@ QuantumWignerTransform[qb_ ? QuantumBasisQ, opts : OptionsPattern[]] :=
 QuantumWignerTransform[qs_ ? QuantumStateQ, opts : OptionsPattern[]] :=
     Enclose @ Chop @ Simplify @ QuantumState[
         ConfirmBy[qs["Double"], QuantumStateQ],
-        ConfirmBy[QuantumWignerTransform[qs["Basis"], opts, "Exact" -> ! qs["NumberQ"]], QuantumBasisQ]
+        ConfirmBy[QuantumWignerTransform[qs["Basis"], opts, "Exact" -> ! qs["NumberQ"] && ! qs["Basis"]["NumberQ"]], QuantumBasisQ]
     ]
 
 

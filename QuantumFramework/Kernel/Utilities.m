@@ -95,7 +95,7 @@ identityMatrix[0 | {_, 0} | {0, _}] := {{}}
 identityMatrix[n_] := IdentityMatrix[n, SparseArray]
 
 
-normalizeMatrix[matrix_] := With[{tr = Tr[matrix]}, If[tr == 0, matrix, matrix / tr]]
+normalizeMatrix[matrix_] := With[{tr = Tr[matrix]}, If[NumericQ[tr] && tr == 0, matrix, matrix / tr]]
 
 
 kroneckerProduct[ts___] := Fold[If[ArrayQ[#1] && ArrayQ[#2], KroneckerProduct[##], Times[##]] &, {ts}]
