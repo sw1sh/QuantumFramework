@@ -17,7 +17,8 @@ $QuditBasisNames = {
     "Pauli", "GellMann", "GellMannMIC", "Bloch", "GellMannBloch", "GellMannBlochMIC",
     "Wootters", "Feynman",
     "Tetrahedron", "RandomMIC",
-    "QBismSIC", "HesseSIC", "HoggarSIC"
+    "QBismSIC", "HesseSIC", "HoggarSIC",
+    "Ivanovic"
 }
 
 $QuditPhaseSpaceBasisNames = Last @ SequenceSplit[$QuditBasisNames, x : {"Wigner", ___} :> x]
@@ -234,6 +235,29 @@ QuditBasis[{"RandomMIC", d : _Integer ? Positive : 2, methodOpts : OptionsPatter
         Chop @ GramDual[povm]
     ]
 ]
+
+
+(* MUB *)
+
+QuditBasis[{"Ivanovic", d : _Integer ? PrimeQ : 2, n_Integer : 1}] /; 0 <= n <= d := QuditBasis[
+    Subsuperscript["\[ScriptCapitalI]", #, d] & /@ Range[d],
+    If[
+        n == 0,
+        IdentityMatrix[d],
+        If[ d == 2,
+            If[ n == d,
+                1 / Sqrt[d] Table[Exp[2 Pi I / d i j], {i, 1, d}, {j, 1, d}],
+                1 / Sqrt[d] Table[Exp[Pi I / d n (i + j) ^ 2], {i, 1, d}, {j, 1, d}]
+            ],
+            1 / Sqrt[d] Table[Exp[2 Pi I / d n (i + j) ^ 2], {i, 1, d}, {j, 1, d}]
+        ]
+    ]
+]
+
+QuditBasis[{"Ivanovic", d : _Integer ? Positive : 2, n_Integer : 1}] := With[{factors = Catenate[Table @@@ FactorInteger[d]]},
+    QuantumTensorProduct @ MapThread[QuditBasis["Ivanovic"[##]] &, {factors, IntegerDigits[n, MixedRadix[factors + 1], Length[factors]]}]
+]
+
 
 (* SICs *)
 

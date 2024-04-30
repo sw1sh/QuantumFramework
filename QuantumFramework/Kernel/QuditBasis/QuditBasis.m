@@ -62,6 +62,7 @@ QuditBasis[names_List, elements_ ? ArrayQ] /; Length[names] == Length[elements] 
 QuditBasis[elements_Association] /; Not @ AllTrue[elements, SparseArrayQ[#] || AtomQ[#] || emptyTensorQ[#] &] :=
     QuditBasis[Map[If[AtomQ[#], #, SparseArray[#]] &, elements]]
 
+QuditBasis[qb_ ? QuantumBasisQ] := qb["Output"]
 
 (* tensor product of multiple parameter basis *)
 
@@ -137,6 +138,13 @@ QuditBasis /: Times[qb__QuditBasis ? QuditBasisQ] := QuditBasis @ Association @ 
     ResourceFunction["KeyGroupBy"][#["Canonical"]["Representations"], Last] & /@ {qb},
     {QuantumTensorProduct[#[[All, 1, 1]]], #[[1, 1, -1]]} -> TensorProduct @@ #[[All, 2]] & /@ Tuples[Normal[#]] &
 ]
+
+
+(* N *)
+
+N[qb_QuditBasis, n_] := QuditBasis[N[#, n] & /@ qb["Representations"]]
+
+SetAttributes[QuditBasis, NHoldAll]
 
 
 (* simplify *)

@@ -105,19 +105,22 @@ QuantumTensorProduct[qc1_QuantumChannel, qc2_QuantumChannel] :=
 QuantumTensorProduct[qmo1_QuantumMeasurementOperator, qmo2_QuantumMeasurementOperator] /; qmo1["POVMQ"] && ! qmo2["POVMQ"] || ! qmo1["POVMQ"] && qmo2["POVMQ"]:=
     QuantumTensorProduct[qmo1["POVM"], qmo2["POVM"]]
 
-QuantumTensorProduct[qmo1_QuantumMeasurementOperator, qmo2_QuantumMeasurementOperator] :=
+QuantumTensorProduct[qmo1_QuantumMeasurementOperator, qmo2_QuantumMeasurementOperator] := With[{
+    order = {
+        With[{neg = Select[qmo2["OutputOrder"], NonPositive], pos = Select[qmo2["OutputOrder"], Positive]},
+            Join[neg - Count[qmo1["OutputOrder"], _ ? NonPositive], pos - Min[pos] + 1 + Max[qmo1["Order"]]]
+        ],
+        qmo2["InputOrder"] - Min[qmo2["InputOrder"]] + 1 + Max[qmo1["Order"]]
+    }
+},
     QuantumMeasurementOperator[
         QuantumTensorProduct[
             qmo1["QuantumOperator"],
-            QuantumOperator[qmo2["QuantumOperator"], {
-                With[{neg = Select[qmo2["OutputOrder"], NonPositive], pos = Select[qmo2["OutputOrder"], Positive]},
-                    Join[neg - Count[qmo1["OutputOrder"], _ ? NonPositive], pos - Min[pos] + 1 + Max[qmo1["Order"]]]
-                ],
-                qmo2["InputOrder"] - Min[qmo2["InputOrder"]] + 1 + Max[qmo1["Order"]]
-            }]
+            QuantumOperator[qmo2["QuantumOperator"], order]
         ]["Sort"],
-        Join[qmo1["Targets"], qmo2["Targets"]]
+        Join[qmo1["Targets"], qmo2["Targets"] /. Thread[qmo2["OutputOrder"] -> order[[1]]]]
     ]
+]
 
 
 QuantumTensorProduct[qm1_QuantumMeasurement, qm2_QuantumMeasurement] := QuantumMeasurement @ QuantumTensorProduct[qm1["QuantumOperator"], qm2["QuantumOperator"]]

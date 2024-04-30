@@ -59,7 +59,6 @@ from wolframclient.language import wl
 from wolframclient.language.expression import WLFunction
 
 from qiskit import QuantumCircuit
-from qiskit.extensions import UnitaryGate
 from qiskit.circuit.gate import Gate
 from qiskit.circuit.library import *
 
@@ -92,9 +91,9 @@ def make_gate(gate_spec):
         base_gate = make_gate(args[0])[0]
         gate = base_gate.inverse()
     elif name == 'Unitary':
-        gate = UnitaryGate(args[0], label=args[1])
+        gate = UnitaryGate(args[0], label=args[1], check_input=False)
         assert(all(i == j for i, j in zip(args[2][0], args[2][1])))
-        order = list(args[2][0])
+        order = list(args[2][0])[::-1]
     elif name == 'Barrier':
         gate = Barrier(len(order))
     elif name == 'Measure':
@@ -205,8 +204,6 @@ from qiskit.circuit import ParameterExpression
 
 qc = pickle.loads(<* $pythonBytes *>)
 
-ops = []
-
 def reverse_binary(n, width):
     b = '{:0{width}b}'.format(n, width=width)
     return int(b[::-1], 2)
@@ -222,39 +219,15 @@ def gate_to_QuantumOperator(gate, order):
             else:
                 xs.append(x)
     if gate.name == 'x':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('X', order)
-    elif gate.name == 'y':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('Y', order)
-    elif gate.name == 'z':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('Z', order)
-    elif gate.name == 'h':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('H', order)
-    elif gate.name == 'p':
-        return wl.Wolfram.QuantumFramework.QuantumOperator(['Phase', xs[0]], order)
-    elif gate.name == 'u':
-        return wl.Wolfram.QuantumFramework.QuantumOperator(['U', *xs], order)
-    elif gate.name == 'u1':
-        return wl.Wolfram.QuantumFramework.QuantumOperator(['U1', *xs], order)
-    elif gate.name == 'u2':
-        return wl.Wolfram.QuantumFramework.QuantumOperator(['U2', *xs], order)
-    elif gate.name == 'u3':
-        return wl.Wolfram.QuantumFramework.QuantumOperator(['U3', *xs], order)
-    elif gate.name == 'rx':
-        return wl.Wolfram.QuantumFramework.QuantumOperator(['RX', *xs], order)
-    elif gate.name == 'ry':
-        return wl.Wolfram.QuantumFramework.QuantumOperator(['RY', *xs], order)
-    elif gate.name == 'rz':
-        return wl.Wolfram.QuantumFramework.QuantumOperator(['RZ', *xs], order)
-    elif gate.name == 't':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('T', order)
+        return wl.Wolfram.QuantumFramework.QuantumOperator('NOT', order)
+    elif gate.name in ['y', 'z', 'h', 't', 's', 'swap']:
+        return wl.Wolfram.QuantumFramework.QuantumOperator(gate.name.upper(), order)
+    elif gate.name in ['p', 'u', 'u1', 'u2', 'u3', 'rx', 'ry', 'rz']:
+        return wl.Wolfram.QuantumFramework.QuantumOperator([gate.name.upper(), *xs], order)
     elif gate.name == 'tdg':
         return wl.Wolfram.QuantumFramework.QuantumOperator('T', order)('Dagger')
-    elif gate.name == 's':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('S', order)
     elif gate.name == 'sdg':
         return wl.Wolfram.QuantumFramework.QuantumOperator('S', order)('Dagger')
-    elif gate.name == 'swap':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('SWAP', order)
     elif gate.name == 'unitary':
         return wl.Wolfram.QuantumFramework.QuantumOperator(*xs, [order, order], wl.Rule('Label', gate.label))
     elif gate.name == 'measure':
@@ -273,35 +246,41 @@ def gate_to_QuantumOperator(gate, order):
         from qiskit.quantum_info import Operator
         return wl.Wolfram.QuantumFramework.QuantumOperator(Operator(gate).to_matrix(), [order, order], wl.Rule('Label', gate.label))
 
-for gate, qubits, clbits in qc:
-    order = []
-    for q in qubits:
-        size = 0
-        for r in qc.qubits:
-            if r.register.name == q.register.name:
-                order.append(size + q.index + 1)
-                break
-            else:
-                size = r.index + 1
-    ops.append(gate_to_QuantumOperator(gate, order))
+def qc_to_QuantumCircuitOperator(qc, label=None):
+    ops = []
+    for gate, qubits, clbits in qc:
+        order = []
+        for q in qubits:
+            size = 0
+            for r in qc.qubits:
+                if r._register._name == q._register._name:
+                    order.append(size + q._index + 1)
+                    break
+                else:
+                    size = r._index + 1
+        
+        if isinstance(gate, qiskit.qasm2.parse._DefinedGate):
+            sub_qc = QuantumCircuit(gate.num_qubits, gate.num_clbits)
+            sub_qc.append(gate, [o - 1 for o in order])
+            ops.append(qc_to_QuantumCircuitOperator(sub_qc.decompose(), gate.name))
+        else:
+            ops.append(gate_to_QuantumOperator(gate, order))
+    return wl.Wolfram.QuantumFramework.QuantumCircuitOperator(ops, label)
 
-wl.Wolfram.QuantumFramework.QuantumCircuitOperator(ops)
+qc_to_QuantumCircuitOperator(qc)
 "]
 ]
 
 
 qiskitMatrix[qc_QiskitCircuit] := Block[{$pythonBytes = qc["Bytes"]},
     PythonEvaluate[Context[$pythonBytes], "
-from qiskit import BasicAer, transpile
+from qiskit.quantum_info import Operator
 
 import pickle
 
 qc = pickle.loads(<* $pythonBytes *>)
-
-backend = BasicAer.get_backend('unitary_simulator')
-
-job = backend.run(transpile(qc, backend))
-job.result().get_unitary(qc, decimals=3)
+qc.remove_final_measurements()
+Operator(qc).data
 "]
 ]
 
@@ -367,26 +346,22 @@ provider = None
     ];
     PythonEvaluate[Context[$pythonBytes], "
 import pickle
-from qiskit import Aer
+from qiskit.providers.basic_provider import BasicProvider
+from qiskit_aer import AerSimulator
 from qiskit_braket_provider import AWSBraketProvider
 from qiskit_ibm_provider import IBMProvider
 
 qc = pickle.loads(<* $pythonBytes *>)
 backend_name = <* $backendName *>
 if provider is None:
-    if qc.num_clbits > 0:
-        backend = Aer.get_backend('qasm_simulator' if backend_name is None else backend_name)
-    else:
-        backend = Aer.get_backend('statevector_simulator')
+    provider = BasicProvider()
+    backend = AerSimulator()
 else:
     if backend_name is None:
         if isinstance(provider, AWSBraketProvider):
             backend = provider.get_backend('SV1')
         else:
-            if qc.num_clbits > 0:
-                backend = provider.get_backend('ibmq_qasm_simulator')
-            else:
-                backend = provider.get_backend('simulator_statevector')
+            backend = provider.get_backend('ibmq_qasm_simulator')
     else:
         backend = provider.get_backend(backend_name)
 if <* $fireOpal *>:
@@ -450,15 +425,17 @@ if <* $fireOpal *>:
     )['results'][0]
     result = {k[::-1]: v for k, v in result.items()}
 else:
-    result = backend.run(circuit, shots = <* $shots *>).result()
 
     if isinstance(provider, AWSBraketProvider):
+        result = backend.run(circuit, shots = <* $shots *>).result()
         result = result.get_counts()
     else:
         if qc.num_clbits > 0:
+            result = backend.run(circuit, shots = <* $shots *>).result()
             result = result.get_counts(circuit)
         else:
-            result = result.get_statevector().data
+            from qiskit.quantum_info import Statevector
+            result = Statevector(qc).data
 result
 "];
     Which[
@@ -486,7 +463,7 @@ result
     ]
 ]
 
-qc_QiskitCircuit["Decompose", n : _Integer ? Positive : 1] := Nest[QiskitCircuit[#["EvalBytes", "decompose"]] &, qc, n]
+qc_QiskitCircuit["Decompose", n : _Integer ? Positive : 1] := QiskitCircuit[qc["EvalBytes", "decompose", "reps" -> n]]
 
 qc_QiskitCircuit["QuantumOperator"] := Enclose @ Module[{mat = Chop @ Normal[ConfirmBy[qiskitMatrix[qc], NumericArrayQ]]},
     ConfirmAssert[SquareMatrixQ[mat]];

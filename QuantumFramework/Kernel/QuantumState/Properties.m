@@ -12,7 +12,6 @@ $QuantumStateProperties = {
     "Kind", "Scalar",
     "Norm", "TraceNorm", "NormalizedQ",
     "BlochSphericalCoordinates", "BlochCartesianCoordinates",
-    "BlochPlot",
     "Projector", "NormalizedProjector",
     "Operator", "NormalizedOperator",
     "Eigenvalues", "Eigenvectors", "Eigenstates",
@@ -31,7 +30,8 @@ $QuantumStateProperties = {
     "Bipartition",
     "Disentangle", "Decompose", "DecomposeWithAmplitudes", "DecomposeWithProbabilities",
     "SchmidtDecompose",
-    "Formula", "Simplify", "FullSimplify"
+    "Formula", "Simplify", "FullSimplify",
+    "BlochPlot", "AmplitudePlot", "ProbabilityPlot"
 };
 
 QuantumState["Properties"] := Union @ Join[$QuantumStateProperties, QuantumBasis["Properties"]]
@@ -90,7 +90,7 @@ QuantumStateProp[qs_, "PhysicalQ"] := ! qs["UnknownQ"]
 
 QuantumStateProp[qs_, "NumericQ"] := ArrayQ[Replace[qs["State"], sa_ ? SparseArrayQ :> sa["ExplicitValues"]], 1 | 2, NumericQ]
 
-QuantumStateProp[qs_, "NumberQ"] := ArrayQ[Replace[qs["State"], sa_ ? SparseArrayQ :> sa["ExplicitValues"]], 1 | 2, MachineNumberQ]
+QuantumStateProp[qs_, "NumberQ"] := ArrayQ[Replace[qs["State"], sa_ ? SparseArrayQ :> sa["ExplicitValues"]], 1 | 2, InexactNumberQ]
 
 
 QuantumStateProp[qs_, "Kind"] := Which[
@@ -137,27 +137,35 @@ QuantumStateProp[qs_, "StateVector"] := Module[{result},
     result /; !FailureQ[result]
 ]
 
+QuantumStateProp[qs_, "AmplitudeList"] := Values @ qs["Amplitude"]
+
+QuantumStateProp[qs_, "AmplitudesList"] := Normal @ qs["StateVector"]
+
 QuantumStateProp[qs_, "Scalar" | "Number"] /; qs["Kind"] === "Scalar" := First[Flatten[qs["State"]]]
 
 QuantumStateProp[qs_, "Weights"] := Which[
     qs["PureStateQ"] || qs["VectorQ"] && ! qs["NumericQ"],
     Abs[qs["StateVector"]] ^ 2,
     qs["PhysicalQ"] || ! qs["NumericQ"],
-    Diagonal @ qs["DensityMatrix"],
+    Abs @ Diagonal @ qs["DensityMatrix"],
     True,
     qs["Physical"]["Weights"]
 ]
 
-QuantumStateProp[qs_, "Probabilities"] := Re @ Normalize[qs["Weights"], Total]
+QuantumStateProp[qs_, "Weight"] := Normalize[qs["Weights"], Total]
 
-QuantumStateProp[qs_, "ProbabilityAssociation" | "Probability"] := With[{proba = Chop @ SparseArray @ qs["Probabilities"]},
+QuantumStateProp[qs_, "Probabilities"] := AssociationThread[qs["Names"], qs["ProbabilityList"]]
+
+QuantumStateProp[qs_, "ProbabilityList" | "ProbabilitiesList"] := Normal @ qs["Weight"]
+
+QuantumStateProp[qs_, "ProbabilityAssociation" | "Probability"] := With[{proba = Chop @ SparseArray @ qs["Weight"]},
     AssociationThread[
         qs["Names", QuotientRemainder[Catenate @ proba["ExplicitPositions"] - 1, qs["InputDimension"]] + 1],
         proba["ExplicitValues"]
     ]
 ]
 
-QuantumStateProp[qs_, "Distribution"] := CategoricalDistribution[qs["Names"], qs["Probabilities"]]
+QuantumStateProp[qs_, "Distribution"] := CategoricalDistribution[qs["Names"], qs["ProbabilitiesList"]]
 
 QuantumStateProp[qs_, "PhaseSpace"] /; qs["Picture"] === "PhaseSpace" := Enclose @ With[{dims = ConfirmBy[Sqrt[qs["Dimensions"]], AllTrue[IntegerQ]]},
     Fold[
@@ -800,6 +808,8 @@ QuantumStateProp[qs_, "PermuteInput", perm_Cycles] := If[
     ]
 ]
 
+QuantumStateProp[qs_, prop : "Permute" | "PermuteOutput" | "PermuteInput", list_List] := qs[prop, FindPermutation[list]]
+
 
 QuantumStateProp[qs_, "Split", n_Integer : 0] := With[{basis = qs["Basis"]["Split", n]},
     QuantumState[qs["State"], basis]
@@ -905,52 +915,15 @@ QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 := Wi
 ]
 
 
-Options[BlochPlot] = Join[{"ShowLabels" -> True, "ShowGreatCircles" -> True, "ShowAxes" -> True, "ShowArrow" -> True}, Options[Graphics3D]]
+QuantumStateProp[qs_, "BlochPlot" | "BlochSpherePlot", opts : OptionsPattern[BlochPlot]] /; qs["Dimension"] == 2 := BlochPlot[qs["BlochCartesianCoordinates"], opts]
 
-BlochPlot[qs_, opts : OptionsPattern[]] := Module[{
-    greatCircles, referenceStates, u, v, w
-},
-    greatCircles = If[
-        TrueQ[OptionValue["ShowGreatCircles"]],
-        ParametricPlot3D[
-            {{Cos[t], Sin[t], 0}, {0, Cos[t], Sin[t]}, {Cos[t], 0, Sin[t]}},
-            {t, 0, 2 Pi},
-            PlotStyle -> ConstantArray[{Black, Thin}, 3]
-        ],
-        Nothing
-    ];
-    referenceStates = Graphics3D[{
-        Opacity[0.4], Sphere[],Black, Thickness[0.0125], Opacity[1.0],
-        If[ TrueQ[OptionValue["ShowAxes"]],
-            Splice @ {Line[{{0, 1, 0}, {0, -1, 0}}], Line[{{0, 0, 1}, {0, 0, -1}}], Line[{{1, 0, 0}, {-1, 0, 0}}]},
-            Nothing
-        ],
-        If[ TrueQ[OptionValue["ShowLabels"]],
-            Splice @ {
-                Text[Ket[{0}], {0, 0, 1.3}],  Text[Ket[{1}], {0, 0, -1.3}],
-                Text[Ket[{"R"}], {0, 1.3, 0}], Text[Ket[{"L"}], {0, -1.3, 0}],
-                Text[Ket[{"+"}], {1.3, 0, 0}], Text[Ket[{"-"}], {-1.3, 0, 0}]
-            },
-            Nothing
-        ],
-        If[ TrueQ[OptionValue["ShowArrow"]],
-            Splice @ {Red, Arrowheads[0.05], Arrow[Tube[{{0, 0, 0}, {u, v, w}}, 0.03], {0, -0.01}]},
-            Nothing
-        ]
-    }
-    ];
-    {u, v, w} = qs["BlochCartesianCoordinates"];
-    Show[{greatCircles, referenceStates},
-        FilterRules[{opts}, Options[Graphics3D]],
-        PlotRange -> All,
-        ViewPoint -> {1, 1, 1},
-        Axes -> False,
-        Boxed -> False,
-        PlotRange -> {{-1.7, 1.7}, {-1.7, 1.7}, {-1.7, 1.7}}
-    ]
-]
+QuantumStateProp[qs_, "AmplitudePlot" | "AmplitudeChart", opts : OptionsPattern[AmplitudeChart]] := AmplitudeChart[qs["Amplitude"], opts]
 
-QuantumStateProp[qs_, "BlochPlot" | "BlochSpherePlot", opts : OptionsPattern[BlochPlot]] /; qs["Dimension"] == 2 := BlochPlot[qs, opts]
+QuantumStateProp[qs_, "ProbabilityPlot" | "ProbabilityChart", opts : OptionsPattern[ProbabilityChart]] := ProbabilityChart[qs["Probability"], opts]
+
+QuantumStateProp[qs_, "AmplitudesPlot" | "AmplitudesChart", opts : OptionsPattern[AmplitudeChart]] := AmplitudeChart[qs["Amplitudes"], opts]
+
+QuantumStateProp[qs_, "ProbabilitiesPlot" | "ProbabilitiesChart", opts : OptionsPattern[ProbabilityChart]] := ProbabilityChart[qs["Probabilities"], opts]
 
 (* basis properties *)
 

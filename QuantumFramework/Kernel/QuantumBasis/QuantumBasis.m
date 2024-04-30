@@ -100,7 +100,7 @@ QuantumBasis[output_QuditBasis ? QuditBasisQ, args___] := QuantumBasis["Output" 
 
 QuantumBasis[arg : {(_QuditName | _Integer | _ ? propQ) ..}, args___] := Enclose @ QuantumBasis["Output" -> ConfirmBy[QuditBasis[arg], QuditBasisQ], args]
 
-QuantumBasis[params_List, args : PatternSequence[Except[_List], ___]] := Enclose @ QuantumTensorProduct[ConfirmBy[QuantumBasis[#, args], QuantumBasisQ] & /@ params]
+QuantumBasis[params_List, args : PatternSequence[] | PatternSequence[Except[_List], ___]] := Enclose @ QuantumTensorProduct[ConfirmBy[QuantumBasis[#, args], QuantumBasisQ] & /@ params]
 
 QuantumBasis[{}, args___] := QuantumBasis[QuditBasis[{}], args]
 
@@ -221,6 +221,7 @@ Scan[
         "Output" -> Map[Map[ReplaceAll[rules], #, {ArrayDepth[#]}] &, qb["Output"]["Representations"]],
         "Input" -> Map[Map[ReplaceAll[rules], #, {ArrayDepth[#]}] &, qb["Input"]["Representations"]],
         "Label" -> qb["Label"] /. rules,
+        "Picture" -> qb["Picture"],
         "ParameterSpec" -> DeleteCases[qb["ParameterSpec"], {Alternatives @@ Keys[rules], __}]
     ]
 

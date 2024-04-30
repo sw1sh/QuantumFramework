@@ -6,13 +6,20 @@ PackageScope["PythonEvaluate"]
 
 
 
-$PythonPackages = {"wolframclient", "qiskit", "matplotlib", "pylatexenc", "qiskit-ibm-provider", "qiskit-braket-provider", "fire-opal", "git+https://github.com/Quantomatic/pyzx.git"}
+$PythonPackages = {
+    "wolframclient", "matplotlib", "pylatexenc",
+    "qiskit>=1.0",
+    "qiskit-aer", "qiskit-ibm-provider", "qiskit-braket-provider",
+    "classiq>=0.40.0",
+    (* "fire-opal", *)
+    "git+https://github.com/Quantomatic/pyzx.git"
+}
 
 $PythonSession := SelectFirst[
     ExternalSessions["Python"],
     #["ID"] == "QuantumFramework" &,
     With[{versions = Through[PacletFind["ExternalEvaluate"]["Version"]], required = "32.2"},
-        If[ AllTrue[versions, ResourceFunction["VersionOrder"][#, required] < 0 &], 
+        If[ AllTrue[versions, ResourceFunction["VersionOrder"][#, required] > 0 &], 
             Failure["DependencyFailure", <|
                 "MessageTemplate" ->  "ExternalEvaluate paclet should be at least version `` (availabe in Wolfram Language 14), but only versions {``} are found", 
                 "MessageParameters" -> {required, StringRiffle[versions, ", "]}

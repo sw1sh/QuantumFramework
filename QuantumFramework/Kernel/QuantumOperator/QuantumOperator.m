@@ -454,14 +454,25 @@ QuantumOperator /: HoldPattern[Plus[x : Except[_QuantumOperator], qo_QuantumOper
     ]
 ]
 
-QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator] ...] /; MemberQ[Attributes[f], NumericFunction] := With[{op = qo["Sort"]},
-    Enclose @ QuantumOperator[
-        ConfirmBy[
-            If[MemberQ[{Minus, Times}, f], f[left, #, right] &, matrixFunction[f[left, #, right] &, #] &] @ op["Matrix"],
-            MatrixQ
+QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOperator, right : Except[_QuantumOperator] ...] /; MemberQ[Attributes[f], NumericFunction] := Enclose @ With[{
+    op = qo["Sort"]
+},
+    ConfirmBy[
+        If[MemberQ[{Minus, Times}, f], f[left, #, right] &, matrixFunction[f[left, #, right] &, #] &] @ op["Matrix"],
+        MatrixQ
+    ] // QuantumOperator[
+        QuantumState[
+            If[ op["VectorQ"],
+                Flatten[#],
+                ArrayReshape[
+                    Transpose[ArrayReshape[#, Join[#, #] & @ op["MatrixNameDimensions"]], 2 <-> 3],
+                    op["MatrixNameDimensions"] ^ 2
+                ]
+            ],
+            op["Basis"], "Label" -> f[left, op["Label"], right]
         ],
-        op["Order"], op["Basis"], "Label" -> f[left, op["Label"], right]
-    ]
+        op["Order"]
+    ] &
 ]
 
 

@@ -31,7 +31,8 @@
             "RandomMIC",
             "QBismSIC",
             "HesseSIC",
-            "HoggarSIC"
+            "HoggarSIC",
+            "Ivanovic"
         }
     },
     "QuantumBasis" -> {
@@ -66,7 +67,8 @@
             "RandomMIC",
             "QBismSIC",
             "HesseSIC",
-            "HoggarSIC"
+            "HoggarSIC",
+            "Ivanovic"
         }
     },
     "QuantumState" -> {
@@ -130,7 +132,8 @@
             "RandomMIC",
             "QBismSIC",
             "HesseSIC",
-            "HoggarSIC"
+            "HoggarSIC",
+            "Ivanovic"
         }
     },
     "QuantumOperator" -> {
@@ -138,8 +141,8 @@
             "Identity",
             "I",
             "Permutation",
-            "Curry",
             "Uncurry",
+            "Curry",
             "Fourier",
             "InverseFourier",
             "XRotation",
@@ -155,6 +158,7 @@
             "Diagonal",
             "GlobalPhase",
             "PhaseShift",
+            "FlipSign",
             "SUM",
             "RootNOT",
             "X",
@@ -206,6 +210,7 @@
             "Discard",
             "Cup",
             "Cap",
+            "Trace",
             "Switch",
             "Multiplexer",
             "WignerD",
@@ -214,7 +219,8 @@
             "JZ",
             "J+",
             "J-",
-            "Double"
+            "Double",
+            "Liouvillian"
         },
         {
             "Computational",
@@ -247,7 +253,8 @@
             "RandomMIC",
             "QBismSIC",
             "HesseSIC",
-            "HoggarSIC"
+            "HoggarSIC",
+            "Ivanovic"
         }
     },
     "QuantumMeasurementOperator" -> {
@@ -283,6 +290,7 @@
             "QBismSIC",
             "HesseSIC",
             "HoggarSIC",
+            "Ivanovic",
             "RandomHermitian",
             "WignerMICPOVM",
             "GellMannMICPOVM",
@@ -323,7 +331,8 @@
             "RandomMIC",
             "QBismSIC",
             "HesseSIC",
-            "HoggarSIC"
+            "HoggarSIC",
+            "Ivanovic"
         }
     },
     "QuantumChannel" -> {
@@ -368,7 +377,8 @@
             "RandomMIC",
             "QBismSIC",
             "HesseSIC",
-            "HoggarSIC"
+            "HoggarSIC",
+            "Ivanovic"
         }
     },
     "QuantumCircuitOperator" -> {
@@ -381,6 +391,7 @@
             "GroverPhaseDiffusion0",
             "BooleanOracle",
             "PhaseOracle",
+            "GrayOracle",
             "DeutschJozsaPhaseOracle",
             "DeutschJozsaBooleanOracle",
             "DeutschJozsaPhase",
@@ -466,7 +477,8 @@
             "RandomMIC",
             "QBismSIC",
             "HesseSIC",
-            "HoggarSIC"
+            "HoggarSIC",
+            "Ivanovic"
         }
     }
 }

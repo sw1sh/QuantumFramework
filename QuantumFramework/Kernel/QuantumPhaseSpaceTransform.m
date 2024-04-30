@@ -4,27 +4,43 @@ PackageExport["QuantumPhaseSpaceTransform"]
 
 
 
-QuantumPhaseSpaceTransform[qb_ ? QuditBasisQ, args__] := With[{exactQ = TrueQ[OptionValue[Select[{args, "Exact" -> True}, OptionQ], "Exact"]]},
-    Enclose @ With[{
-        phaseSpaceBasis = ConfirmBy[QuditBasis @@ DeleteCases[{args}, "Exact" -> _], QuditBasisQ]
-    },
-        If[exactQ, Identity, N] @ If[phaseSpaceBasis["Dimension"] == qb["Dimension"] ^ 2, phaseSpaceBasis, QuditBasis[qb["Dimension"] ^ 2]]
-    ]
-]
+QuantumPhaseSpaceTransform[qb_ ? QuditBasisQ, phaseSpaceBasis_ ? QuditBasisQ] :=
+    Enclose @ If[phaseSpaceBasis["Dimension"] == qb["Dimension"] ^ 2, phaseSpaceBasis, QuditBasis[qb["Dimension"] ^ 2]]
 
-QuantumPhaseSpaceTransform[qb_ ? QuditBasisQ] := QuantumPhaseSpaceTransform[qb, "Wigner"[qb["Dimension"]]]
+QuantumPhaseSpaceTransform[qb_ ? QuditBasisQ] :=
+    QuantumPhaseSpaceTransform[qb, QuditBasis["Wigner"[qb["Dimensions"], "Exact" -> ! qb["NumberQ"]]]]
 
-QuantumPhaseSpaceTransform[qb_ ? QuantumBasisQ, args___] := 
+QuantumPhaseSpaceTransform[qb_ ? QuantumBasisQ] :=
+    QuantumPhaseSpaceTransform[qb, QuantumBasis["Wigner"[qb["OutputDimensions"], "Exact" -> ! qb["NumberQ"]], "Wigner"[qb["InputDimensions"], "Exact" -> ! qb["NumberQ"]]]]
+
+QuantumPhaseSpaceTransform[qb_ ? QuditBasisQ, args__] := QuantumPhaseSpaceTransform[qb, QuditBasis[args]]
+
+QuantumPhaseSpaceTransform[qb_ ? QuantumBasisQ, args__] := Enclose @ Block[{
+    basis = QuantumBasis[args], newBasis
+},
+
+    newBasis = If[
+        basis["InputDimension"] == 1 && qb["InputDimension"] > 1,
+        QuantumBasis[basis, "Input" -> basis["Output"]["Dual"]],
+        basis
+    ];
+
+    newBasis = QuantumBasis[
+        QuditBasis[newBasis["Output"], ConfirmBy[If[qb["OutputDimension"] == 1, 1, Log[newBasis["OutputDimension"], qb["OutputDimension"] ^ 2]], IntegerQ]],
+        QuditBasis[newBasis["Input"], ConfirmBy[If[qb["InputDimension"] == 1, 1, Log[newBasis["InputDimension"], qb["InputDimension"] ^ 2]], IntegerQ]]
+    ];
+
     Enclose @ QuantumBasis[
-        QuantumTensorProduct[ConfirmBy[QuantumPhaseSpaceTransform[#, args], QuditBasisQ] & /@ qb["Output"]["Decompose"]],
-        QuantumTensorProduct[ConfirmBy[QuantumPhaseSpaceTransform[#, args], QuditBasisQ] & /@ qb["Input"]["Decompose"]],
+        QuantumPhaseSpaceTransform[qb["Output"], newBasis["Output"]],
+        QuantumPhaseSpaceTransform[qb["Input"], newBasis["Input"]],
         "Picture" -> "PhaseSpace",
         qb["Meta"]
     ]
+]
 
 QuantumPhaseSpaceTransform[qs_ ? QuantumStateQ, args___] := Enclose @ Chop @ Simplify @ QuantumState[
     ConfirmBy[qs["Double"], QuantumStateQ],
-    ConfirmBy[QuantumPhaseSpaceTransform[qs["Basis"], args, "Exact" -> ! qs["NumberQ"]], QuantumBasisQ]
+    ConfirmBy[QuantumPhaseSpaceTransform[If[qs["NumberQ"], N, Identity] @ qs["Basis"], args], QuantumBasisQ]
 ]
 
 QuantumPhaseSpaceTransform[qo_ ? QuantumOperatorQ, args___] := Enclose @ QuantumOperator[

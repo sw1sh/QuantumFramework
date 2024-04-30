@@ -32,10 +32,10 @@ QuantumState["Zero" | "Up", args___] := QuantumState["0", args]
 
 QuantumState["One" | "Down", args___] := QuantumState["1", args]
 
-QuantumState[s_String /; StringMatchQ[s, DigitCharacter..], dim : (_Integer ? Positive) : 2, args___] := With[{
-    digits = Clip[Interpreter[DelimitedSequence["Digit", ""]] @ s, {0, dim - 1}]
+QuantumState[s_String /; StringMatchQ[s, DigitCharacter..], args___] := With[{
+    basis = QuantumBasis[args, "Label" -> s]
 },
-    QuantumState[{"BasisState", digits}, dim, args, "Label" -> s]
+    QuantumState[{"BasisState", Clip[Interpreter[DelimitedSequence["Digit", ""]] @ s, {0, basis["Dimension"] - 1}]}, basis]
 ]
 
 QuantumState["Plus" | "+", args___] := QuantumState[Normalize @ {1, 1}, args, "Label" -> "+"]
@@ -63,89 +63,79 @@ QuantumState[{name : "Plus" | "Minus" | "Left" | "Right" | "PsiPlus" | "PsiMinus
 
 
 
-QuantumState[{"BasisState", basisElement_List : {1}}, args___] := QuantumState[{"BasisState", basisElement}, 2, args]
-
-QuantumState[{"BasisState", basisElement_List : {1}}, dimension : (_Integer ? Positive) : 2, args___] := QuantumState[
-    With[{elementPosition = FromDigits[basisElement, dimension] + 1, basisSize = Length[basisElement]},
-        SparseArray[{elementPosition} -> 1, {dimension ^ basisSize}]
-    ],
-    dimension,
-    args
+QuantumState[{"BasisState", basisElement_List : {1}}, args___] := Enclose @ Block[{basis, dimension, elementPosition},
+    basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ];
+    basis = QuantumBasis[basis, Ceiling[Length[basisElement] / basis["Qudits"]]];
+    dimension = basis["Dimension"];
+    elementPosition = FromDigits[basisElement, First[basis["Dimensions"]]] + 1;
+    ConfirmAssert[1 <= elementPosition <= dimension];
+    QuantumState[SparseArray[{elementPosition} -> 1, dimension], basis]
 ]
 
 
-QuantumState[{"Register", subsystemCount : _Integer ? Positive : 1, state : _Integer ? NonNegative : 0}, dimension : (_Integer ? Positive), args___] :=
-    QuantumState[SparseArray[{{state + 1} -> 1}, {dimension ^ subsystemCount}], Table[dimension, Max[subsystemCount, 1]], args, "Label" -> state]
-
-QuantumState[{"Register", subsystemCount: _Integer ? Positive : 1, state : _Integer ? NonNegative : 0}, args___] :=
-    QuantumState[SparseArray[{{state + 1} -> 1}, {2 ^ subsystemCount}], args, "Label" -> state]
+QuantumState[{"Register", subsystemCount: _Integer ? Positive : 1, state : _Integer ? NonNegative : 0}, args___] := Enclose @ Block[{basis, dimension},
+    basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ];
+    basis = QuantumBasis[basis, Ceiling[subsystemCount / basis["Qudits"]], "Label" -> state];
+    dimension = basis["Dimension"];
+    ConfirmAssert[0 <= state < dimension];
+    QuantumState[SparseArray[{{state + 1} -> 1}, dimension], basis]
+]
 
 QuantumState[{"Register", 0, ___}, args___] := QuantumState[1, 1, args]
 
-QuantumState[{"Register", dims : {__Integer ? Positive}, state : _Integer ? NonNegative : 0}, args___] :=
-    QuantumState[SparseArray[{{state + 1} -> 1}, {Times @@ dims}], dims, args, "Label" -> state]
-
-QuantumState[{"Register", basisArgs_, state : _Integer ? NonNegative : 0}, args___] := Enclose @ With[{qb = ConfirmBy[QuantumBasis[basisArgs], QuantumBasisQ]},
-    QuantumState[SparseArray[{{state + 1} -> 1}, qb["Dimension"]], qb, args, "Label" -> state]
+QuantumState[{"Register", basisArg_, state : _Integer ? NonNegative : 0}, args___] := With[{basis = QuantumBasis[basisArg, args]},
+    QuantumState[{"Register", basis["Qudits"], state}, basis]
 ]
 
 
-QuantumState["UniformSuperposition", args___] := Enclose @ With[{basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ]},
+QuantumState[{"UniformSuperposition", subsystemCount : _Integer ? Positive : 1}, args___] := Enclose @ Block[{basis},
+    basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ];
+    basis = QuantumBasis[basis, Ceiling[subsystemCount / basis["Qudits"]]];
     QuantumState[ConstantArray[1, basis["Dimension"]], basis]["Normalized"]
 ]
 
-QuantumState[{"UniformSuperposition", subsystemCount_Integer}, args___] := Enclose @ With[{basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ]},
-    QuantumState[ConstantArray[1, basis["Dimension"] ^ subsystemCount], basis]["Normalized"]
+
+QuantumState[{"UniformMixture", subsystemCount : _Integer ? Positive : 1}, args___] := Enclose @ Block[{basis, dimension},
+    basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ];
+    basis = QuantumBasis[basis, Ceiling[subsystemCount / basis["Qudits"]]];
+    dimension = basis["Dimension"];
+    QuantumState[identityMatrix[dimension] / dimension, basis]
 ]
 
-QuantumState[{"UniformSuperposition", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
-    QuantumState[ConstantArray[1, dimension ^ subsystemCount], Table[dimension, subsystemCount], args]["Normalized"]
+
+QuantumState[{"RandomPure", subsystemCount : _Integer ? Positive : 1}, args___] := Enclose @ Block[{basis},
+    basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ];
+    basis = QuantumBasis[basis, Ceiling[subsystemCount / basis["Qudits"]]];
+    QuantumState[QuantumOperator[{"RandomUnitary", basis["Dimensions"]}, Range[basis["OutputQudits"]]][], basis]
+]
 
 
-QuantumState["UniformMixture", args___] := QuantumState[{"UniformMixture", 1}, args]
-
-QuantumState[{"UniformMixture", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
-    QuantumState[identityMatrix[dimension ^ subsystemCount] / (dimension ^ subsystemCount), dimension, args]
-
-
-QuantumState[{"RandomPure", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
-    QuantumState["RandomPure", dimension, subsystemCount, args]
-
-QuantumState["RandomPure", args : PatternSequence[Except[_ ? QuantumBasisQ], ___]] := Enclose @ QuantumState["RandomPure", ConfirmBy[QuantumBasis[args], QuantumBasisQ]]
-
-QuantumState["RandomPure", qb_ ? QuantumBasisQ] :=
-    QuantumState[QuantumOperator[{"RandomUnitary", qb["Dimensions"]}, Range[qb["OutputQudits"]]][], qb]
-
-QuantumState["RandomPure"] := QuantumState["RandomPure", QuantumBasis[]]
+QuantumState[{"RandomMixed", subsystemCount : _Integer ? Positive : 1}, args___] := Enclose @ Block[{basis, dimension, m},
+    basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ];
+    basis = QuantumBasis[basis, Ceiling[subsystemCount / basis["Qudits"]]];
+    dimension = basis["Dimension"];
+    m = RandomComplex[{-1 - I, 1 + I}, Table[dimension, 2]];
+    QuantumState[m . ConjugateTranspose[m], basis]["Normalized"]
+]
 
 
-QuantumState[{"RandomMixed", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
-    With[{m = RandomComplex[{-1 - I, 1 + I}, Table[dimension ^ subsystemCount, 2]]},
-        QuantumState[m . ConjugateTranspose[m], dimension, args]["Normalized"]
-    ]
-
-QuantumState["RandomMixed", args : PatternSequence[Except[_ ? QuantumBasisQ], ___]] := Enclose @  QuantumState["RandomMixed", ConfirmBy[QuantumBasis[args], QuantumBasisQ]]
-
-QuantumState["RandomMixed", qb_ ? QuantumBasisQ] :=
-    With[{m = RandomComplex[{-1 - I, 1 + I}, Table[qb["Dimension"], 2]]},
-        QuantumState[m . ConjugateTranspose[m], qb]["Normalized"]
-    ]
-
-QuantumState["RandomMixed"] := QuantumState["RandomMixed", QuantumBasis[]]
-
-
-QuantumState["GHZ", args___] := QuantumState[{"GHZ", 3}, args]
-
-QuantumState[{"GHZ", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
-    QuantumState[SparseArray[{{1} -> 1 / Sqrt[2], {dimension ^ subsystemCount} -> 1 / Sqrt[2]}, {dimension ^ subsystemCount}], dimension, args]
+QuantumState[{"GHZ", subsystemCount : _Integer ? Positive : 3}, args___] := Enclose @ Block[{basis, dimension},
+    basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ];
+    basis = QuantumBasis[basis, Ceiling[subsystemCount / basis["Qudits"]]];
+    dimension = basis["Dimension"];
+    QuantumState[SparseArray[{{1} -> 1 / Sqrt[2], {dimension} -> 1 / Sqrt[2]}, dimension], basis]
+]
 
 QuantumState["Bell", args___] := QuantumState[{"GHZ", 2}, args]
 
 
-QuantumState["W", args___] := QuantumState[{"W", 3}, args]
-
-QuantumState[{"W", subsystemCount_Integer}, dimension : (_Integer ? Positive) : 2, args___] :=
-    QuantumState[SparseArray[{element_} /; IntegerQ[Log[dimension, element - 1]] -> 1 / Sqrt[subsystemCount], {dimension ^ subsystemCount}], dimension, args]
+QuantumState[{"W", subsystemCount : _Integer ? Positive : 3}, args___] := Enclose @ Block[{basis, dimension},
+    basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ];
+    basis = QuantumBasis[basis, Ceiling[subsystemCount / basis["Qudits"]]];
+    ConfirmAssert[Equal @@ basis["Dimensions"]];
+    dimension = First @ basis["Dimensions"];
+    QuantumState[SparseArray[{element_} /; IntegerQ[Log[dimension, element - 1]] -> 1 / Sqrt[basis["Qudits"]], {basis["Dimension"]}], basis]
+]
 
 
 
