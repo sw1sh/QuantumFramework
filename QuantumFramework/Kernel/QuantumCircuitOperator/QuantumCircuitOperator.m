@@ -177,7 +177,7 @@ QuantumCircuitOperator /: Equal[left___, qco_QuantumCircuitOperator, right___] :
 
 (* part *)
 
-Part[qco_QuantumCircuitOperator, part_] ^:= QuantumCircuitOperator[qco["Elements"][[part]], qco["Label"]]
+Part[qco_QuantumCircuitOperator, part_] ^:= QuantumCircuitOperator[qco["Elements"][[part]], qco["Meta"]]
 
 
 (* reorder *)
@@ -199,7 +199,7 @@ QuantumCircuitOperator[qc_ ? QuantumCircuitOperatorQ, order : {_ ? orderQ, _ ? o
                 If[QuantumOperatorQ[#], #["Reorder", newOrder], Head[#][#, newOrder]]
             ]
         ] & /@ qc["Elements"],
-        qc["Label"]
+        qc["Meta"]
     ]
 ]
 
