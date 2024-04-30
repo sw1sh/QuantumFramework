@@ -16,17 +16,16 @@ PackageExport["FubiniStudyMetricTensor"]
 
 PackageExport["FubiniStudyMetricTensorLayers"]
 
-PackageExport["FlipSign"]
+PackageExport["QuantumUnlockingMechanism"]
 
-PackageExport["CFlipSign"]
-
+PackageExport["QuantumLockingMechanism"]
 
 
 (* ::Section:: *)
 (*Example specific functions *)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Quantum Natural Gradient Descent*)
 
 
@@ -200,6 +199,53 @@ ASPSRGradientValues[generatorFunction_,pauli_,H_,OptionsPattern[]]:=Module[
 		];
 
 			Thread[{\[Theta]values,Mean[(#[[1]]-#[[2]])]&/@result}]
+]
+
+
+(* ::Subsection:: *)
+(*Quantum Locking Mechanism*)
+
+
+QuantumLockingMechanism[key_String]:=Module[{pass,flipsigns, circuit},
+
+	pass=IntegerString[ToCharacterCode[key],4,4];
+	
+	flipsigns=QuantumOperator[{
+								{
+								"C","FlipSign"[#,4]->(Range[StringLength@#]+1),{1}
+								}
+							}
+				]&/@pass;
+
+	circuit=QuantumCircuitOperator[{
+								"H"->{1},
+								#,
+								"H"->{1},
+								QuantumMeasurementOperator["Computational",{1}]
+				}]&/@flipsigns
+
+]
+
+
+QuantumUnlockingMechanism[lock_List,key_String]:=Module[{result,pass,comb},
+		
+	pass=IntegerString[ToCharacterCode[key],4,4];
+
+	If[!MatchQ[Length@lock,Length@pass],Return["Incorrect key, try again"]];
+
+	result=#[[1]][
+				QuantumState[
+							<|Prepend[ToExpression[Characters[#[[2]]]],0]->1|>,
+							Prepend[ConstantArray[4,StringLength@#[[2]]],2]
+							]
+				]["Mean"]&/@Transpose[{lock,pass}];
+
+	If[
+		MatchQ[result,{1..}],
+			"Correct key",
+			"Incorrect key, try again"
+	]
+
 ]
 
 
