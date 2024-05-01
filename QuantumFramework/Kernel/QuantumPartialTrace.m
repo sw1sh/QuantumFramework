@@ -67,6 +67,9 @@ QuantumPartialTrace[qo_QuantumOperator, qudits : {{_Integer, _Integer} ..}] := W
     ]
 ]
 
+QuantumPartialTrace[qo_QuantumOperator] := QuantumPartialTrace[qo, Intersection @@ qo["Order"]]
+
+
 QuantumPartialTrace[qm_ ? QuantumMeasurementQ, qudits_] := QuantumMeasurement[QuantumPartialTrace[qm["State"], qudits]]
 
 QuantumPartialTrace[qc_ ? QuantumCircuitOperatorQ, qudits : {{_Integer, _Integer} ..}] := Enclose @ Block[{
