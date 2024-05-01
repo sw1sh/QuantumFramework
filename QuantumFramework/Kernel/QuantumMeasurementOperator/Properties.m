@@ -233,12 +233,8 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
         operator = QuantumOperator[
             SparseArray @ Map[kroneckerProduct[IdentityMatrix[Times @@ qmo["InputDimensions"][[traceQudits]], SparseArray], #] &, projectors],
             QuantumBasis[
-                "Output" -> QuantumTensorProduct[
-                    eigenBasis,
-                    QuditBasis[outputBasis["Dimensions"]],
-                    QuditBasis[tracedOperator["OutputDimensions"]]
-                ],
-                "Input" -> QuantumTensorProduct[QuditBasis[inputBasis["Dimensions"]], QuditBasis[tracedOperator["InputDimensions"]]]
+                "Output" -> QuditBasis @ Join[eigenBasis["Dimensions"], outputBasis["Dimensions"], tracedOperator["OutputDimensions"]],
+                "Input" -> QuditBasis @ Join[inputBasis["Dimensions"], tracedOperator["InputDimensions"]]
             ]
         ];
 

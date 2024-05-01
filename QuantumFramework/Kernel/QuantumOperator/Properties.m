@@ -469,8 +469,8 @@ QuantumOperatorProp[qo_, "Diagonalize", opts___] /; qo["SquareQ"] := Block[{vect
     {values, vectors} = qo["Eigensystem", opts, "Sort" -> True];
     QuantumOperator[
         DiagonalMatrix[values],
-        qo["Order"],
-        QuantumBasis[qo["Basis"], AssociationThread[Subscript["s", #] & /@ Range[Length[values]], vectors]]
+        Take[#, UpTo[1]] & /@ qo["Order"],
+        QuantumBasis[AssociationThread[Subscript["s", #] & /@ Range[Length[values]], vectors], qo["Basis"]["Meta"]]
     ]
 ]
 

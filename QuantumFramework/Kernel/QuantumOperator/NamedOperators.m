@@ -642,12 +642,31 @@ QuantumOperator[{name : "XSpider" | "YSpider" | "ZSpider", phase_ : 0},
 ]
 
 
-QuantumOperator["Spider", opts___] := QuantumOperator[{"Spider", QuantumBasis[QuditBasis[2], QuditBasis[2]]}, opts]
+QuantumOperator[name : "Spider" | "SimpleSpider", opts___] := QuantumOperator[{name, QuantumBasis[QuditBasis[2], QuditBasis[2]]}, opts]
 
-QuantumOperator[{"Spider", args_, phase_ : 0}, opts___] := Enclose @ QuantumOperator[{"Spider", Confirm @ QuantumBasis[args], phase}, opts]
+QuantumOperator[{name : "Spider" | "SimpleSpider", args_, phase_ : 0}, opts___] := Enclose @ QuantumOperator[{name, Confirm @ QuantumBasis[args], phase}, opts]
 
 QuantumOperator[{"Spider", basis_ ? QuantumBasisQ, phase_ : 0}, opts___] := Enclose @ Block[{
     phases, dims = Catenate[Table @@@ Catenate[FactorInteger[#] & /@ basis["Dimensions"]]], dim
+},
+    dim = Max[dims, 1];
+    phases = Prepend[0] @ PadRight[Flatten[{phase}], dim - 1];
+    QuantumOperator[
+        Confirm @ QuantumState[
+            If[ dim <= 1,
+                {Exp[I First[phases, 0]]},
+                SparseArrayFlatten @ SparseArray[Thread[Transpose[PadRight[Range[#], dim, #] & /@ dims] -> Exp[I phases]], dims]
+            ],
+            basis
+        ],
+        opts,
+        "Label" -> "Spider"[phase]
+    ]
+]
+
+
+QuantumOperator[{"SimpleSpider", basis_ ? QuantumBasisQ, phase_ : 0}, opts___] := Enclose @ Block[{
+    phases, dims = basis["Dimensions"], dim
 },
     dim = Max[dims, 1];
     phases = Prepend[0] @ PadRight[Flatten[{phase}], dim - 1];
@@ -696,9 +715,9 @@ QuantumOperator[{"Measure", args__ : 2}, opts___] := With[{decohere = QuantumOpe
 
 QuantumOperator[{"Encode", args__ : 2}, opts___] := With[{copy = QuantumOperator["Copy"[args], {1} -> {1, 2}]}, QuantumOperator[QuantumOperator["Curry"[copy["InputDimension"]], {1, 2} -> {1}] @ copy, opts, "Label" -> "Encode"]]
 
-QuantumOperator[{"Copy", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[QuantumOperator[{"Spider", QuantumBasis[QuantumTensorProduct[basis, basis["Conjugate"]], basis]}, {1} -> {1, 2}], opts, "Label" -> "Copy"]]
+QuantumOperator[{"Copy", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[QuantumOperator[{"SimpleSpider", QuantumBasis[QuantumTensorProduct[basis, basis["Conjugate"]], basis]}, {1} -> {1, 2}], opts, "Label" -> "Copy"]]
 
-QuantumOperator[{"Decohere", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[QuantumOperator[{"Spider", QuantumBasis[basis, QuantumTensorProduct[basis, basis["Conjugate"]]]}, {1, 2} -> {1}], opts, "Label" -> "Decohere"]]
+QuantumOperator[{"Decohere", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[QuantumOperator[{"SimpleSpider", QuantumBasis[basis, QuantumTensorProduct[basis, basis["Conjugate"]]]}, {1, 2} -> {1}], opts, "Label" -> "Decohere"]]
 
 QuantumOperator[{"Marginal", args__ : 4}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[Sqrt[basis["Dimension"]] QuantumState["UniformSuperposition", basis]["Dagger"], opts, "Label" -> "Marginal"]]
 

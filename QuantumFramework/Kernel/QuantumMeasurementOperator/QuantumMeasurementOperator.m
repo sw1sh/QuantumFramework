@@ -82,7 +82,8 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
 
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? targetQ] := QuantumMeasurementOperator[qo, {target}]
 
-QuantumMeasurementOperator[qo_ ? QuantumOperatorQ -> eigenvalues_, args___] := Enclose @ QuantumMeasurementOperator[qo["Output"] -> eigenvalues, args]
+QuantumMeasurementOperator[qo_ ? QuantumOperatorQ -> eigenvalues : _ ? VectorQ | Automatic, args___] :=
+    QuantumMeasurementOperator[qo["Eigenvectors"] -> Replace[eigenvalues, Automatic :> qo["Eigenvalues"]], args]
 
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, Automatic] := QuantumMeasurementOperator[qo, qo["InputOrder"]]
 
