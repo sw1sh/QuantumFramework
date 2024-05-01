@@ -72,6 +72,9 @@ QuantumPartialTrace[qo_QuantumOperator] := QuantumPartialTrace[qo, Intersection 
 
 QuantumPartialTrace[qm_ ? QuantumMeasurementQ, qudits_] := QuantumMeasurement[QuantumPartialTrace[qm["State"], qudits]]
 
+QuantumPartialTrace[qm_ ? QuantumMeasurementQ] := QuantumPartialTrace[qm, Range[qm["Eigenqudits"]]]
+
+
 QuantumPartialTrace[qc_ ? QuantumCircuitOperatorQ, qudits : {{_Integer, _Integer} ..}] := Enclose @ Block[{
     outputIdx = qc["OutputOrderQuditMapping"],
     inputIdx  = qc["InputOrderQuditMapping"],
@@ -88,6 +91,8 @@ QuantumPartialTrace[qc_ ? QuantumCircuitOperatorQ, qudits : {{_Integer, _Integer
         qc /*
     QuantumCircuitOperator[MapIndexed[{"Cap", #1[[2]]} -> {min - #2[[1]], #1[[1]]} &, Thread[{in, inDims}]]]
 ]
+
+QuantumPartialTrace[qc_QuantumCircuitOperator] := QuantumPartialTrace[qc, Intersection @@ qc["Order"]]
 
 
 QuantumPartialTrace[op_ ? QuantumFrameworkOperatorQ, qudits : {{_Integer, _Integer} ..}] :=
