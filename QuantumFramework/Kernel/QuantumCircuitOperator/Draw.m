@@ -108,7 +108,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			{center[[1]], - vGapSize #1[[2]] + size Switch[#2[[2]], "NOT", 1 / 5, "SWAP", 0, "1" | "0", 1 / 8, _, 1 / 2]}
 		}]
 	}];
-	gateFunction = Function[Replace[Replace[#, Interpretation[_, l_] :> l], {
+	gateFunction = Function[Replace[FixedPoint[ReplaceAll[{Interpretation[_, l_] :> l, "Eigen"[l_] :> l}], #], {
 		Subscript["C", subLabel_][control1_, control0_] :> Block[{
 			target = DeleteCases[vpos, Alternatives @@ Join[control1, control0]],
 			control = Join[control1, control0],

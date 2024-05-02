@@ -141,11 +141,13 @@ QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
     Normal @ Which[
         MatchQ[qm["LabelHead"], "Computational" | Automatic],
         qm["Computational"]["Eigenstate"],
-        MatchQ[qm["LabelHead"], "Eigen"],
+        MatchQ[qm["LabelHead"], "Eigen" | "Eigen"[_]],
         qm["ReverseEigenQudits"]["Eigenstate"],
         True,
         qm["Canonical"]["Eigenstate"]
     ]["ProbabilitiesList"]
+
+QuantumMeasurementProp[qm_, "Eigenvalues"] := QuditName /@ Replace[Normal /@ qm["Eigenbasis"]["Names"], SuperStar[x_] :> x, {2}]
 
 QuantumMeasurementProp[qm_, "Eigenvectors"] := qm["Eigenstate"]["Eigenvectors"]
 

@@ -254,15 +254,17 @@ QuantumCircuitOperatorProp[qco_, "Measurements"] := Count[qco["Flatten"]["Operat
 
 QuantumCircuitOperatorProp[qco_, "Channels"] := Count[qco["Flatten"]["Operators"], _ ? QuantumChannelQ]
 
-QuantumCircuitOperatorProp[qco_, "Target"] :=
+QuantumCircuitOperatorProp[qco_, "Targets"] :=
     Fold[
         If[ QuantumMeasurementOperatorQ[#2],
-            Join[#1, #2["Target"]],
-            If[Equal @@ Sort /@ #2["Order"] || ContainsNone[#2["InputOrder"], 1 - #1], #1, {}]
+            Join[#1, #2["Targets"]],
+            If[Equal @@ Sort /@ #2["Order"] || ContainsNone[#2["InputOrder"], 1 - Union @@ #1], #1, {}]
         ] &,
         {},
         qco["Flatten"]["NormalOperators"]
     ]
+
+QuantumCircuitOperatorProp[qco_, "Target"] := Join @@ qco["Targets"]
 
 QuantumCircuitOperatorProp[qco_, "TargetCount"] := Length @ qco["Target"]
 

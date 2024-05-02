@@ -341,7 +341,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     res = If[phaseSpaceQ || ! TrueQ[OptionValue["Computational"]], QuantumState[res["State"], basis], QuantumState[res, basis]];
     res = Which[
         eigenOrder =!= {},
-        QuantumMeasurementOperator[QuantumOperator[res, order], qco["Target"]],
+        QuantumMeasurementOperator[QuantumOperator[res, order], qco["Targets"]],
         ! TrueQ[OptionValue["Trace"]] && traceOrder =!= {},
         QuantumChannel[QuantumOperator[res, order]],
         True,

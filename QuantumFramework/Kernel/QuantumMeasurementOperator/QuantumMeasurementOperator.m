@@ -83,7 +83,7 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, target_ ? targetQ] := QuantumMeasurementOperator[qo, {target}]
 
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ -> eigenvalues : _ ? VectorQ | Automatic, args___] :=
-    QuantumMeasurementOperator[qo["Eigenvectors"] -> Replace[eigenvalues, Automatic :> qo["Eigenvalues"]], args]
+    QuantumMeasurementOperator[qo, args]["POVM", Replace[eigenvalues, Automatic :> qo["Eigenvalues", "Sort" -> True]]]
 
 QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, Automatic] := QuantumMeasurementOperator[qo, qo["InputOrder"]]
 
@@ -199,13 +199,16 @@ QuantumMeasurementOperator[qmo_ ? QuantumMeasurementOperatorQ, order : _ ? autoO
 
 (* composition *)
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qs_QuantumState, args___] := QuantumMeasurement @ QuantumCircuitOperator[qmo][qs, args]
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qs_QuantumState, args___] :=
+    If[QuantumMeasurementOperatorQ[#] || QuantumMeasurementQ[#], QuantumMeasurement[#, "Label" -> qmo["POVM"]["Label"]], #] & @ QuantumCircuitOperator[qmo][qs, args]
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qm_QuantumMeasurement, args___] := QuantumMeasurement @ QuantumCircuitOperator[{qm, qmo}][args]
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qm_QuantumMeasurement, args___] :=
+    If[QuantumMeasurementOperatorQ[#] || QuantumMeasurementQ[#], QuantumMeasurement[#, "Label" -> qmo["POVM"]["Label"]], #] & @ QuantumCircuitOperator[{qm, qmo}][args]
 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[op_ ? QuantumFrameworkOperatorQ] := QuantumCircuitOperator[{op, qmo}]["QuantumOperator"]
 
-(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[args___] := QuantumMeasurement @ QuantumCircuitOperator[qmo][args]
+(qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[args___] :=
+    If[QuantumMeasurementOperatorQ[#] || QuantumMeasurementQ[#], QuantumMeasurement[#, "Label" -> qmo["POVM"]["Label"]], #] & @ QuantumCircuitOperator[qmo][args]
 
 (* 
 (qmo_QuantumMeasurementOperator ? QuantumMeasurementOperatorQ)[qo_ ? QuantumOperatorQ] := Enclose @ With[{

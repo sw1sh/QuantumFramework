@@ -582,7 +582,7 @@ QuantumOperator["RandomHermitian", order : (_ ? orderQ) : {1}, opts___] := Enclo
     QuantumOperator[{"RandomHermitian", ConfirmBy[QuantumBasis[2, Length[order]], QuantumBasisQ]}, order, opts]
 
 QuantumOperator[{"RandomHermitian", qb_ ? QuantumBasisQ}, order : (_ ? orderQ) : {1}, opts___] :=
-    QuantumState["RandomMixed", QuantumBasis[qb, opts]]["Operator", order]
+    QuantumState["RandomMixed", QuantumBasis[qb, opts, "Label" -> None]]["Operator", order]
 
 QuantumOperator[{"RandomHermitian", args___}, order : (_ ? orderQ) : {1}] := Enclose @
     QuantumOperator[{"RandomHermitian", ConfirmBy[QuantumBasis[args], QuantumBasisQ]}, order]
@@ -709,7 +709,7 @@ QuantumOperator[{name : $Spider, args___}, order : _ ? orderQ, opts___] :=
 QuantumOperator[{name : $Spider, args___}, opts : PatternSequence[] | PatternSequence[Except[_ ? autoOrderQ], ___]] :=
     QuantumOperator[{name, args}, {{1}, {1}}, opts]
 
-QuantumOperator[name : "Measure" | "Encode" | "Copy" | "Decohere" | "Marginal" | "Discard" | "Trace", opts___] := QuantumOperator[{name}, opts]
+QuantumOperator[name : "Measure" | "Encode" | "Copy" | "Decohere" | "Marginal" | "Discard" | "Trace" | "Cap" | "Cup", opts___] := QuantumOperator[{name}, opts]
 
 QuantumOperator[{"Measure", args__ : 2}, opts___] := With[{decohere = QuantumOperator["Decohere"[args], {1, 2} -> {1}]}, QuantumOperator[decohere @ QuantumOperator["Uncurry"[decohere["OutputDimension"]], {1} -> {1, 2}], opts, "Label" -> "Measure"]]
 
@@ -723,14 +723,16 @@ QuantumOperator[{"Marginal", args__ : 4}, opts___] := With[{basis = QuditBasis[a
 
 QuantumOperator[{"Discard", args__ : 4}, opts___] := QuantumOperator[QuantumOperator[{"Spider", QuantumBasis[QuditBasis[1], QuditBasis[args]]}, {1} -> {}], opts, "Label" -> "Discard" ]
 
-QuantumOperator[{"Trace", d : _Integer ? Positive : 2}, opts___] := QuantumOperator[QuantumState[IdentityMatrix[d], d]["Dagger"], opts, "Label" -> "Trace"]
+QuantumOperator[{"Trace", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[QuantumState[IdentityMatrix[basis["Dimension"]], basis]["Dagger"], opts, "Label" -> "Trace"]]
 
 
-QuantumOperator["Cup" | {"Cup", dim : _Integer ? Positive : 2}, order : _ ? orderQ : {1, 2}, opts___] /; Length[order] == 2 :=
-    QuantumOperator[QuantumOperator[{"I", dim}]["SplitDual", 2], {order, {}}, "Label" -> "Cup", opts]
+QuantumOperator[{"Cup", args__ : 2}, order : _ ? orderQ : {1, 2}, opts___] /; Length[order] == 2 := With[{basis = QuditBasis[args]},
+    QuantumOperator["Spider"[QuantumBasis[QuantumTensorProduct[basis, basis["Conjugate"]], QuditBasis[]]], {order, {}}, opts, "Label" -> "Cup"]
+]
 
-QuantumOperator["Cap" | {"Cap", dim : _Integer ? Positive : 2}, order : _ ? orderQ : {1, 2}, opts___] /; Length[order] == 2 :=
-    QuantumOperator[QuantumOperator[{"I", dim}]["SplitDual", 0], {{}, order}, "Label" -> "Cap", opts]
+QuantumOperator[{"Cap", args__ : 2}, order : _ ? orderQ : {1, 2}, opts___] /; Length[order] == 2 := With[{basis = QuditBasis[args]},
+    QuantumOperator["Spider"[QuantumBasis[QuditBasis[], QuantumTensorProduct[basis, basis["Conjugate"]]]], {{}, order}, opts, "Label" -> "Cap"]
+]
 
 
 QuantumOperator[{"Deutsch", theta_}, order : _ ? orderQ : {1, 2, 3}] := With[{

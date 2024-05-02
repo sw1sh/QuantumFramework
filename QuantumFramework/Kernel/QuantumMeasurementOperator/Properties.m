@@ -8,7 +8,7 @@ $QuantumMeasurementOperatorProperties = {
     "Operator", "Basis", "MatrixRepresentation", "POVMElements",
     "OrderedMatrixRepresentation", "OrderedPOVMElements",
     "Arity", "Eigenqudits", "Dimensions", "Order", "HermitianQ", "UnitaryQ",
-    "Eigenvalues", "EigenvalueVectors", "Eigenvectors",
+    "Eigenbasis", "Eigenvalues", "EigenvalueVectors", "Eigenvectors",
     "Eigendimensions", "Eigendimension",
     "StateDimensions", "StateDimension",
     "TargetDimensions", "TargetDimension",
@@ -30,11 +30,13 @@ qmo_QuantumMeasurementOperator["ValidQ"] := QuantumMeasurementOperatorQ[qmo]
 QuantumMeasurementOperator::undefprop = "QuantumMeasurementOperator property `` is undefined for this operator";
 
 
+$QuantumMeasurementOperatorPreventCache = {"Properties", "QuantumOperator", "Operator", "SuperOperator", "DiscardExtraQudits"}
+
 (qmo_QuantumMeasurementOperator[prop_ ? propQ, args___]) /; QuantumMeasurementOperatorQ[qmo] := With[{
     result = QuantumMeasurementOperatorProp[qmo, prop, args]
     },
     If[ TrueQ[$QuantumFrameworkPropCache] &&
-        ! MemberQ[{"Properties", "QuantumOperator", "Operator"}, prop] &&
+        ! MemberQ[$QuantumMeasurementOperatorPreventCache, prop] &&
         QuantumMeasurementOperatorProp[qmo, "Basis"]["ParameterArity"] == 0,
         QuantumMeasurementOperatorProp[qmo, prop, args] = result,
         result
@@ -117,7 +119,9 @@ canonicalEigenPermutation[qmo_] := Block[{accumIndex = PositionIndex[FoldList[Ti
 
 
 QuantumMeasurementOperatorProp[qmo_, "Canonical", OptionsPattern[{"Reverse" -> True, "CanonicalBasis" -> True}]] /; qmo["Eigendimension"] == qmo["TargetDimension"] := With[{
-    basis = qmo["CanonicalBasis"], perm = canonicalEigenPermutation[qmo]
+    basis = qmo["CanonicalBasis"],
+    perm = canonicalEigenPermutation[qmo]
+    (* perm = EchoLabel[{qmo["Targets"], canonicalEigenPermutation[qmo]}] @ FindPermutation[Join @@ Sort /@ qmo["Targets"], ReverseSort[qmo["Target"]]] *)
 },
     QuantumMeasurementOperator[
         QuantumOperator[
@@ -199,7 +203,7 @@ QuantumMeasurementOperatorProp[qmo_, "Operators"] := If[qmo["POVMQ"],
     AssociationThread[Eigenvalues[qmo["Matrix"]], QuantumOperator[projector @ #, {Automatic, qmo["InputOrder"]}, qmo["Basis"]] & /@ Eigenvectors[qmo["OrderedMatrix"]]]
 ]
 
-QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
+QuantumMeasurementOperatorProp[qmo_, "SuperOperator", defaultEigenvalues_ : Automatic] := Module[{
     trace,
     traceQudits,
     tracedOperator,
@@ -216,6 +220,7 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
         tracedOperator = Chop @ Simplify @ QuantumPartialTrace[qmo, trace];
 
         {eigenvalues, eigenvectors} = profile["Eigensystem"] @ Simplify @ tracedOperator["Eigensystem", "Sort" -> True];
+        eigenvalues = PadRight[Replace[defaultEigenvalues, Automatic -> eigenvalues], Length[eigenvectors], 0];
         projectors = projector /@ eigenvectors;
 
         eigenBasis = QuditBasis[
@@ -233,7 +238,11 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
         operator = QuantumOperator[
             SparseArray @ Map[kroneckerProduct[IdentityMatrix[Times @@ qmo["InputDimensions"][[traceQudits]], SparseArray], #] &, projectors],
             QuantumBasis[
-                "Output" -> QuditBasis @ Join[eigenBasis["Dimensions"], outputBasis["Dimensions"], tracedOperator["OutputDimensions"]],
+                "Output" -> QuantumTensorProduct[
+                    eigenBasis,
+                    QuditBasis[outputBasis["Dimensions"]],
+                    QuditBasis[tracedOperator["OutputDimensions"]]
+                ],
                 "Input" -> QuditBasis @ Join[inputBasis["Dimensions"], tracedOperator["InputDimensions"]]
             ]
         ];
@@ -249,7 +258,7 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
                     tracedOperator["Output"]
                 ],
                 "Input" -> QuantumTensorProduct[inputBasis, tracedOperator["Input"]],
-                "Label" -> qmo["Label"],
+                "Label" -> "Eigen"[qmo["Label"]],
                 "ParameterSpec" -> qmo["ParameterSpec"]
             ]
         ];
@@ -266,7 +275,7 @@ QuantumMeasurementOperatorProp[qmo_, "SuperOperator"] := Module[{
     ]
 ]
 
-QuantumMeasurementOperatorProp[qmo_, "POVM"] := QuantumMeasurementOperator[qmo["SuperOperator"], qmo["Target"]]
+QuantumMeasurementOperatorProp[qmo_, "POVM", args___] := QuantumMeasurementOperator[qmo["SuperOperator", args], qmo["Targets"]]
 
 QuantumMeasurementOperatorProp[qmo_, "QASM"] := StringRiffle[MapIndexed[StringTemplate["c[``] = measure q[``];"][First[#2] - 1, #1 - 1] &, qmo["Target"]], "\n"]
 
@@ -292,15 +301,22 @@ QuantumMeasurementOperatorProp[qmo_, "DiscardExtraQudits"] := QuantumOperator[
     Fold[
         #2[#1] &,
         qmo,
+        With[{picture = qmo["Picture"]},
         Join[
             MapThread[
-                QuantumOperator[With[{d = Sqrt[#1["Dimension"]]}, If[IntegerQ[d], "Marginal"["WignerMIC"[d, "Exact" -> ! qmo["NumberQ"]]], "Trace"[d ^ 2]]], {#2}] &,
-                {qmo["TargetBasis"]["Decompose"], qmo["TargetOrder"]}
-            ],
-            MapThread[
-                If[IntegerQ[#1], QuantumOperator["Measure"[#], {#2}], Nothing] &,
+                QuantumOperator[With[{d = Sqrt[#1["Dimension"]]},
+                    If[picture === "PhaseSpace" && IntegerQ[d], "Marginal"[#1["Conjugate"]], "Trace"[#1["Dimension"]]]], {#2}
+                ] &,
                 {qmo["Eigenbasis"]["Decompose"], qmo["Eigenorder"]}
+            ],
+            If[ picture === "PhaseSpace", 
+                MapThread[
+                    If[IntegerQ[#1], QuantumOperator["Measure"[#], {#2}], Nothing] &,
+                    {qmo["TargetBasis"]["Decompose"], qmo["TargetOrder"]}
+                ],
+                {}
             ]
+        ]
         ]
     ],
     qmo["InputOrder"] -> qmo["TargetOrder"],

@@ -285,6 +285,9 @@ QuantumBasisProp[qb_, "Decompose"] := QuantumBasis[#, "Label" -> None, qb["Meta"
 
 QuantumBasisProp[qb_, "Canonical"] := QuantumBasis[qb, "Output" -> qb["Output"]["Canonical"], "Input" -> qb["Input"]["Canonical"]]
 
+QuantumBasisProp[qb_, "Bend"] := QuantumTensorProduct[qb, qb["Conjugate"]]
+
+QuantumBasisProp[qb_, "BendDual"] := QuantumTensorProduct[qb, qb["Conjugate"]["Dual"]]
 
 QuantumBasisProp[qb_, "Diagram", opts : OptionsPattern[QuantumDiagramGraphics]] := QuantumDiagramGraphics[
     qb,

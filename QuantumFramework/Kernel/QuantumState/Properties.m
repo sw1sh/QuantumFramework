@@ -656,9 +656,9 @@ QuantumStateProp[qs_, "Normalized" | "NormalizedState" | "Normalize"] :=
     QuantumState[If[qs["StateType"] === "Vector", qs["NormalizedStateVector"], qs["NormalizedDensityMatrix"]], qs["Basis"]]
 
 
-QuantumStateProp[qs_, "Bend"] := simplifyLabel @ QuantumState[qs["DensityVector"], QuantumTensorProduct[qs["Basis"], qs["Basis"]["Conjugate"]], "Label" -> CircleTimes[qs["Label"], SuperStar[qs["Label"]]]]
+QuantumStateProp[qs_, "Bend"] := simplifyLabel @ QuantumState[qs["DensityVector"], qs["Basis"]["Bend"], "Label" -> CircleTimes[qs["Label"], SuperStar[qs["Label"]]]]
 
-QuantumStateProp[qs_, "BendDual"] := simplifyLabel @ QuantumState[qs["DensityVector"], QuantumTensorProduct[qs["Basis"], qs["Basis"]["Conjugate"]["Dual"]], "Label" -> CircleTimes[qs["Label"], SuperStar[qs["Label"]]]]
+QuantumStateProp[qs_, "BendDual"] := simplifyLabel @ QuantumState[qs["DensityVector"], qs["Basis"]["BendDual"], "Label" -> CircleTimes[qs["Label"], SuperStar[qs["Label"]]]]
 
 
 QuantumStateProp[qs_, "Double"] := With[{out = qs["OutputQudits"], in = qs["InputQudits"]},
@@ -670,7 +670,7 @@ QuantumStateProp[qs_, "Unbend"] := Enclose @ With[{out = Sqrt[qs["OutputDimensio
         qs["PureStateQ"] && IntegerQ[out] && IntegerQ[in],
         QuantumState[
             ArrayReshape[
-                Transpose[ArrayReshape[qs["StateVector"], {out, out, in, in}], 2 <-> 3],
+                Transpose[ArrayReshape[qs["StateVector"], {out, out, in, in}], {1, 3, 4, 2}],
                 Table[out * in, 2]
             ],
             QuantumBasis[
