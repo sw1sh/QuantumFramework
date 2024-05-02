@@ -314,7 +314,7 @@ QuantumCircuitOperatorProp[qco_, "Flatten", n : _Integer ? NonNegative | Infinit
 ]
 
 QuantumCircuitOperatorProp[qco_, "ToggleExpand", pos : {___Integer}] := If[pos === {},
-    QuantumCircuitOperator[qco, "Expand" -> Replace[qco["Expand"], {True -> 0, lvl_Integer ? Positive :> lvl - 1, _ -> 1}]],
+    QuantumCircuitOperator[qco, "Expand" -> Replace[qco["Expand"], {- Infinity -> Infinity, True -> False, None | False -> True, _ -> - Infinity}]],
     Block[{elements = qco["FullElements"], elem},
         elem = elements[[First[pos]]];
         QuantumCircuitOperator[
