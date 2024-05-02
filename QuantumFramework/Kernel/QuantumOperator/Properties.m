@@ -11,7 +11,7 @@ $QuantumOperatorProperties = {
     "MatrixRepresentation", "Matrix",
     "TensorRepresentation", "Tensor",
     "Ordered", "OrderedInput", "OrderedOutput",
-    "SortInput", "SortOutput", "Sort",
+    "SortInput", "SortOutput", "Sort", "SortedQ",
     "ReverseOutput", "ReverseInput", "Reverse",
     "Shift",
     "OrderedMatrixRepresentation", "OrderedMatrix",
@@ -470,7 +470,7 @@ QuantumOperatorProp[qo_, "Diagonalize", opts___] /; qo["SquareQ"] := Block[{vect
     QuantumOperator[
         DiagonalMatrix[values],
         Take[#, UpTo[1]] & /@ qo["Order"],
-        QuantumBasis[AssociationThread[Subscript["s", #] & /@ Range[Length[values]], vectors], qo["Basis"]["Meta"]]
+        QuantumBasis[AssociationThread[Subscript["s", #] & /@ Range[Length[values]], vectors], qo["Basis"]["Options"]]
     ]
 ]
 
@@ -521,7 +521,7 @@ QuantumOperatorProp[qo_, "Double"] := With[{state = qo["State"]["Double"]},
                 "Output" -> QuantumTensorProduct[Times @@@ Partition[state["Output"]["Decompose"], 2]],
                 "Input" -> QuantumTensorProduct[Times @@@ Partition[state["Input"]["Decompose"], 2]],
                 "Label" -> With[{label = Replace[qo["Label"], Interpretation[_, label_] :> label]}, Interpretation[Style[label, Bold], label]],
-                state["Basis"]["Meta"]
+                state["Basis"]["Options"]
             ]
         ],
         qo["Order"]

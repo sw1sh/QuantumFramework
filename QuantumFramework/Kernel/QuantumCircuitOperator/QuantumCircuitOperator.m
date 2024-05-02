@@ -13,7 +13,7 @@ BarrierQ[barrier_] := MatchQ[barrier, "Barrier" | "Barrier"[_ ? orderQ, ___] | "
 quantumCircuitOperatorQ[QuantumCircuitOperator[data_Association]] /; ! AtomQ[Unevaluated[data]] :=
     QuantumCircuitOperatorQ[QuantumCircuitOperator[data]]
 
-quantumCircuitOperatorQ[QuantumCircuitOperator[KeyValuePattern[{"Elements" -> elements_, "Label" -> _, "Expand" -> True | False}]]] :=
+quantumCircuitOperatorQ[QuantumCircuitOperator[KeyValuePattern[{"Elements" -> elements_}]]] :=
     AllTrue[elements,
         BarrierQ[#] ||
         QuantumFrameworkOperatorQ[#] &
@@ -29,7 +29,7 @@ QuantumCircuitOperatorQ[___] := False
 qco_QuantumCircuitOperator /; quantumCircuitOperatorQ[Unevaluated[qco]] && ! System`Private`HoldValidQ[qco] := System`Private`HoldSetValid[qco]
 
 
-Options[QuantumCircuitOperator] = {"Parameters" -> {}, "Label" -> None, "Expand" -> False}
+Options[QuantumCircuitOperator] := Join[{"Parameters" -> {}}, Options[CircuitDraw]]
 
 (* constructors *)
 
@@ -49,7 +49,10 @@ FromCircuitOperatorShorthand[arg_] := Enclose @ Replace[Confirm @ FromOperatorSh
 
 
 QuantumCircuitOperator[operators_ ? ListQ] := Enclose @ With[{ops = Confirm @* FromCircuitOperatorShorthand /@ operators},
-    QuantumCircuitOperator[<|"Elements" -> ops, "Label" -> Replace[Composition @@ Reverse @ Through[DeleteCases[ops, _ ? BarrierQ]["Label"]], Identity -> None], "Expand" -> False|>]
+    QuantumCircuitOperator[<|
+        "Elements" -> ops, 
+        "Label" -> Replace[Composition @@ Reverse @ Through[DeleteCases[ops, _ ? BarrierQ]["Label"]], Identity -> None]
+    |>]
 ]
 
 QuantumCircuitOperator[arg_, order_ ? orderQ, args___] := QuantumCircuitOperator[QuantumCircuitOperator[arg, args], order]
@@ -59,8 +62,8 @@ QuantumCircuitOperator[arg_ -> order_ ? orderQ, args___] := QuantumCircuitOperat
 QuantumCircuitOperator[operators_ ? ListQ, opts : OptionsPattern[]] := With[{parameters = OptionValue["Parameters"]},
     Enclose @ QuantumCircuitOperator[<|
         "Elements" -> (Confirm[If[parameters === {} || BarrierQ[#], #, Head[#][#, "Parameters" -> parameters]] & @ FromCircuitOperatorShorthand[#]] & /@ operators),
-        "Label" -> OptionValue["Label"],
-        "Expand" -> OptionValue["Expand"]
+        "Label" -> None,
+        DeleteDuplicatesBy[First] @ FilterRules[{opts}, Options[CircuitDraw]]
     |>]
 ]
 
@@ -177,7 +180,7 @@ QuantumCircuitOperator /: Equal[left___, qco_QuantumCircuitOperator, right___] :
 
 (* part *)
 
-Part[qco_QuantumCircuitOperator, part_] ^:= QuantumCircuitOperator[qco["Elements"][[part]], qco["Meta"]]
+Part[qco_QuantumCircuitOperator, part___] ^:= QuantumCircuitOperator[qco["Elements"][[part]], qco["Options"]]
 
 
 (* reorder *)
@@ -199,7 +202,7 @@ QuantumCircuitOperator[qc_ ? QuantumCircuitOperatorQ, order : {_ ? orderQ, _ ? o
                 If[QuantumOperatorQ[#], #["Reorder", newOrder], Head[#][#, newOrder]]
             ]
         ] & /@ qc["Elements"],
-        qc["Meta"]
+        qc["Options"]
     ]
 ]
 

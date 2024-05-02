@@ -670,13 +670,13 @@ QuantumStateProp[qs_, "Unbend"] := Enclose @ With[{out = Sqrt[qs["OutputDimensio
         qs["PureStateQ"] && IntegerQ[out] && IntegerQ[in],
         QuantumState[
             ArrayReshape[
-                Transpose[ArrayReshape[qs["StateVector"], {out, out, in, in}], {1, 3, 4, 2}],
+                Transpose[ArrayReshape[qs["StateVector"], {out, out, in, in}], {1, 3, 2, 4}],
                 Table[out * in, 2]
             ],
             QuantumBasis[
                 "Output" -> ConfirmBy[qs["Output"]["TakeDimension", out], QuditBasisQ],
                 "Input" -> ConfirmBy[qs["Input"]["TakeDimension", in], QuditBasisQ],
-                qs["Basis"]["Meta"]
+                qs["Basis"]["Options"]
             ]
         ],
         qs

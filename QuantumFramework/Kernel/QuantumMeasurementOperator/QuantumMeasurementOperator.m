@@ -56,7 +56,7 @@ QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target
                     basis["Output"]
                 ],
                 basis["Output"],
-                basis["Meta"]
+                basis["Options"]
             ]
         ],
         QuantumStateQ

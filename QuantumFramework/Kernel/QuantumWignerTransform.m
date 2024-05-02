@@ -43,7 +43,7 @@ QuantumWignerTransform[qb_ ? QuantumBasisQ, opts : OptionsPattern[]] :=
     Enclose @ QuantumBasis[
         ConfirmBy[QuantumWignerTransform[qb["Output"], opts], QuditBasisQ],
         ConfirmBy[QuantumWignerTransform[qb["Input"], opts], QuditBasisQ],
-        "Picture" -> "PhaseSpace", qb["Meta"]
+        "Picture" -> "PhaseSpace", qb["Options"]
     ]
 
 
@@ -78,7 +78,7 @@ QuantumWeylTransform[qb_ ? QuantumBasisQ, double_ : False] :=
     Enclose @ QuantumBasis[
         ConfirmBy[QuantumWeylTransform[qb["Output"], double], QuditBasisQ],
         ConfirmBy[QuantumWeylTransform[qb["Input"], double], QuditBasisQ],
-        "Picture" -> "Schrodinger", qb["Meta"]
+        "Picture" -> "Schrodinger", qb["Options"]
     ]
 
 QuantumWeylTransform[qs_ ? QuantumStateQ] := QuantumState[qs, QuantumWeylTransform[qs["Basis"], True]]["Undouble"]

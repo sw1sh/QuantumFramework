@@ -418,7 +418,7 @@ QuantumOperator[{"Multiplexer" | "BlockDiagonal", qos__}, opts___] := Block[{sor
 QuantumOperator[{"Multiplexer" | "BlockDiagonal", qos__}, order : _ ? autoOrderQ, opts___] := With[{
     op = QuantumOperator[{"Multiplexer", qos}, opts]
 },
-    QuantumOperator[op, order, QuantumBasis[Join[Table @@@ FactorInteger[op["OutputDimension"]]], Sequence @@ op["Basis"]["Meta"]]] /; op["OutputDimension"] == op["InputDimension"]
+    QuantumOperator[op, order, QuantumBasis[Join[Table @@@ FactorInteger[op["OutputDimension"]]], Sequence @@ op["Basis"]["Options"]]] /; op["OutputDimension"] == op["InputDimension"]
 ]
 
 

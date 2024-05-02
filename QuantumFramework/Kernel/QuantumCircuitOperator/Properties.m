@@ -22,7 +22,7 @@ qds_QuantumCircuitOperator["ValidQ"] := QuantumCircuitOperatorQ[qds]
 QuantumCircuitOperator::undefprop = "property `` is undefined for this circuit";
 
 $QuantumCircuitPreventCache = {
-    "Association", "Elements", "Diagram", "Icon", "Qiskit", "QiskitCircuit", "QuantumOperator",
+    "Association", "Elements", "Options", "Diagram", "Icon", "Qiskit", "QiskitCircuit", "QuantumOperator",
     "Flatten", "Double", "Bend", "DiscardExtraQudits", "ExpandElements"
 }
 
@@ -30,22 +30,26 @@ $QuantumCircuitPreventCache = {
     result = QuantumCircuitOperatorProp[qds, prop, args]
 },
     If[ TrueQ[$QuantumFrameworkPropCache] && ! MemberQ[$QuantumCircuitPreventCache, propName[prop]],
-        QuantumCircuitOperatorProp[qds, prop, args] = result,
+        HoldPattern[QuantumCircuitOperatorProp[qds, prop, args]] = result,
         result
     ] /; !MatchQ[Unevaluated @ result, _QuantumCircuitOperatorProp] || Message[QuantumCircuitOperator::undefprop, prop]
 ]
 
 QuantumCircuitOperatorProp[QuantumCircuitOperator[data_Association], key_String] /; KeyExistsQ[data, key] := data[key]
 
+QuantumCircuitOperatorProp[QuantumCircuitOperator[data_Association], key_String] /; KeyExistsQ[Options[QuantumCircuitOperator], key] := Lookup[data, key, None]
+
+QuantumCircuitOperatorProp[QuantumCircuitOperator[data_Association], "Options"] := Normal @ KeyDrop[data, "Elements"]
+
 QuantumCircuitOperatorProp[QuantumCircuitOperator[data_Association], "Association"] := data
 
-QuantumCircuitOperatorProp[qco_, "Meta"] := Normal @ KeyDrop[qco["Association"], "Elements"]
+QuantumCircuitOperatorProp[qco_, "DiagramOptions"] := FilterRules[Normal[qco["Association"]], Options[CircuitDraw]]
 
 QuantumCircuitOperatorProp[qco_, "FullElements"] := Replace[qco["Elements"], {} :> {QuantumOperator["I"]}]
 
 QuantumCircuitOperatorProp[qco_, "Operators"] := Replace[DeleteCases[qco["Elements"], _ ? BarrierQ], {} :> {QuantumOperator["I"]}]
 
-QuantumCircuitOperatorProp[qco_, "NormalOperators", elementsQ : True | False : False] :=
+QuantumCircuitOperatorProp[qco_, "NormalOperators", elementsQ : True | False : False] := If[qco["NormalQ"], qco[If[elementsQ, "FullElements", "Operators"]],
     First[collectCircuitOperator[#, qco, elementsQ]][If[elementsQ, "FullElements", "Operators"]] & @ MapThread[
         Which[
             BarrierQ[#],
@@ -72,6 +76,7 @@ QuantumCircuitOperatorProp[qco_, "NormalOperators", elementsQ : True | False : F
             #["NormalOrders", elementsQ]
         } & @ qco["Flatten"]["Sort"]
     ]
+]
 
 QuantumCircuitOperatorProp[qco_, "NormalElements"] := qco["NormalOperators", True]
 
@@ -91,7 +96,7 @@ collectCircuitOperator[flatOps_, elements_List, elementsQ_] := Block[{x, xs = el
     {newElements, ops}
 ]
 
-collectCircuitOperator[flatOps_, qc_QuantumCircuitOperator, elementsQ_ : False] := MapAt[QuantumCircuitOperator[#, qc["Meta"]] &, collectCircuitOperator[flatOps, qc[If[elementsQ, "FullElements", "Operators"]], elementsQ], {1}]
+collectCircuitOperator[flatOps_, qc_QuantumCircuitOperator, elementsQ_ : False] := MapAt[QuantumCircuitOperator[#, qc["Options"]] &, collectCircuitOperator[flatOps, qc[If[elementsQ, "FullElements", "Operators"]], elementsQ], {1}]
 
 
 collectOrder[orders_, ops_, elementsQ_] := FoldPairList[With[{count = If[QuantumCircuitOperatorQ[#2], #2[If[TrueQ[elementsQ], "ElementCount", "OperatorCount"]], 1]}, TakeDrop[#1, count]] &, orders, ops]
@@ -119,12 +124,14 @@ QuantumCircuitOperatorProp[qco_, "NormalOrders", elementsQ_ : False] := Block[{o
     collectOrders[orders, qco[If[TrueQ[elementsQ], "FullElements", "Operators"]], elementsQ]
 ]
 
+QuantumCircuitOperatorProp[qco_, "NormalQ"] := Through[qco["Operators"]["Order"]] == qco["NormalOrders"]
+
 QuantumCircuitOperatorProp[qco_, "Diagram", opts : OptionsPattern[Options[CircuitDraw]]] :=
-    CircuitDraw[qco, opts, ImageSize -> Medium]
+    CircuitDraw[qco, opts, qco["DiagramOptions"], ImageSize -> Medium]
 
 QuantumCircuitOperatorProp[qco_, "Icon", opts : OptionsPattern[Options[CircuitDraw]]] :=
     CircuitDraw[
-        qco, opts,
+        qco, opts, qco["DiagramOptions"],
         "ShowGateLabels" -> False, "ShowMeasurementWire" -> False, "WireLabels" -> None,
         "ShowEmptyWires" -> False, "SubcircuitOptions" -> {"ShowLabel" -> False},
         ImageSize -> Tiny
@@ -293,17 +300,21 @@ QuantumCircuitOperatorProp[qco_, "QiskitCircuit" | "Qiskit"] := QuantumCircuitOp
 
 QuantumCircuitOperatorProp[qco_, "Stats" | "Statistics"] := Counts[#["Arity"] & /@ qco["Operators"]]
 
-QuantumCircuitOperatorProp[qco_, "Flatten", n : _Integer ? NonNegative | Infinity : Infinity] :=
-    QuantumCircuitOperator[
-        If[ n === Infinity,
-            FixedPoint[Flatten[Replace[#, c_ ? QuantumCircuitOperatorQ :> c["FullElements"], {1}], 1] &, qco["FullElements"]],
-            Nest[Flatten[Replace[#, c_ ? QuantumCircuitOperatorQ :> c["FullElements"], {1}], 1] &, qco["FullElements"], n]
+QuantumCircuitOperatorProp[qco_, "Flatten", n : _Integer ? NonNegative | Infinity : Infinity] := With[{elements = qco["Elements"]},
+    If[ MemberQ[elements, _QuantumCircuitOperator],
+        QuantumCircuitOperator[
+            If[ n === Infinity,
+                FixedPoint[Flatten[Replace[#, c_ ? QuantumCircuitOperatorQ :> c["Elements"], {1}], 1] &, elements],
+                Nest[Flatten[Replace[#, c_ ? QuantumCircuitOperatorQ :> c["Elements"], {1}], 1] &, elements, n]
+            ],
+            qco["Options"]
         ],
-        qco["Meta"]
+        qco
     ]
+]
 
 QuantumCircuitOperatorProp[qco_, "ToggleExpand", pos : {___Integer}] := If[pos === {},
-    QuantumCircuitOperator[qco, "Expand" -> ! qco["Expand"]],
+    QuantumCircuitOperator[qco, "Expand" -> Replace[qco["Expand"], {True -> 0, lvl_Integer ? Positive :> lvl - 1, _ -> 1}]],
     Block[{elements = qco["FullElements"], elem},
         elem = elements[[First[pos]]];
         QuantumCircuitOperator[
@@ -311,7 +322,7 @@ QuantumCircuitOperatorProp[qco_, "ToggleExpand", pos : {___Integer}] := If[pos =
                 ReplacePart[elements, First[pos] -> elem["ToggleExpand", Rest[pos]]],
                 elements
             ],
-            qco["Meta"]
+            qco["Options"]
         ]
     ]
 ]
@@ -319,21 +330,23 @@ QuantumCircuitOperatorProp[qco_, "ToggleExpand", pos : {___Integer}] := If[pos =
 QuantumCircuitOperatorProp[qco_, "ToggleExpand", pos : {{___Integer} ..}] := Fold[#1["ToggleExpand", #2] &, qco, pos]
 
 
-QuantumCircuitOperatorProp[qco_, "Sort"] := QuantumCircuitOperator[If[BarrierQ[#], #, #["Sort"]] & /@ qco["Elements"], qco["Meta"]]
+QuantumCircuitOperatorProp[qco_, "Sort"] := If[qco["SortedQ"], qco, QuantumCircuitOperator[If[BarrierQ[#], #, #["Sort"]] & /@ qco["Elements"], qco["Options"]]]
+
+QuantumCircuitOperatorProp[qco_, "SortedQ"] := AllTrue[qco["Operators"], #["SortedQ"] &]
 
 
 QuantumCircuitOperatorProp[qco_, "Shift", n : _Integer : 1] :=
-    QuantumCircuitOperator[#["Shift", n] & /@ qco["Operators"], qco["Meta"]]
+    If[n == 0, qco, QuantumCircuitOperator[#["Shift", n] & /@ qco["Operators"], qco["Options"]]]
 
 
 QuantumCircuitOperatorProp[qco_, "Dagger"] :=
-    simplifyLabel @ QuantumCircuitOperator[If[BarrierQ[#], #, #["Dagger"]] & /@ Reverse @ qco["NormalOperators", True], "Label" -> SuperDagger[qco["Label"]], FilterRules[qco["Meta"], Except["Label"]]]
+    simplifyLabel @ QuantumCircuitOperator[If[BarrierQ[#], #, #["Dagger"]] & /@ Reverse @ qco["NormalOperators", True], "Label" -> SuperDagger[qco["Label"]], FilterRules[qco["Options"], Except["Label"]]]
 
 QuantumCircuitOperatorProp[qco_, prop : "Conjugate" | "Dual" | "Double"] :=
-    simplifyLabel @ QuantumCircuitOperator[If[BarrierQ[#], #, #[prop]] & /@ qco["Elements"], "Label" -> Switch[prop, "Double", Style[#, Bold] &, _, SuperStar][qco["Label"]], FilterRules[qco["Meta"], Except["Label"]]]
+    simplifyLabel @ QuantumCircuitOperator[If[BarrierQ[#], #, #[prop]] & /@ qco["Elements"], "Label" -> Switch[prop, "Double", Style[#, Bold] &, _, SuperStar][qco["Label"]], FilterRules[qco["Options"], Except["Label"]]]
 
 QuantumCircuitOperatorProp[qco_, prop : "Computational" | "Simplify" | "FullSimplify" | "Chop" | "ComplexExpand", args___] :=
-    QuantumCircuitOperator[If[BarrierQ[#], #, #[prop, args]] & /@ qco["Elements"], qco["Meta"]]
+    QuantumCircuitOperator[If[BarrierQ[#], #, #[prop, args]] & /@ qco["Elements"], qco["Options"]]
 
 QuantumCircuitOperatorProp[qco_, "Transpose"] := qco["Dagger"]["Conjugate"]
 
@@ -346,7 +359,7 @@ QuantumCircuitOperatorProp[qco_, "Bend"] :=
             ] &,
             qco["NormalOperators"]
         ],
-        qco["Meta"]
+        qco["Options"]
     ]
 
 QuantumCircuitOperatorProp[qco_, "DiscardExtraQudits"] := QuantumCircuitOperator @ Prepend[
@@ -356,7 +369,7 @@ QuantumCircuitOperatorProp[qco_, "DiscardExtraQudits"] := QuantumCircuitOperator
 
 
 QuantumCircuitOperatorProp[qco_, "Normal", args___] :=
-    QuantumCircuitOperator[qco["NormalOperators", args], qco["Meta"]]
+    QuantumCircuitOperator[qco["NormalOperators", args], qco["Options"]]
 
 QuantumCircuitOperatorProp[qco_, "TensorNetwork", opts : OptionsPattern[QuantumTensorNetwork]] := QuantumTensorNetwork[qco["Flatten"], opts]
 

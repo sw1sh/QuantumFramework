@@ -17,7 +17,7 @@ simplifyLabel[x : _QuantumOperator | _QuantumMeasurementOperator | _QuantumMeasu
     Head[x][x, "Label" -> simplifyLabel[x["Label"], x["OutputDimensions"], x["InputDimensions"], x["Order"]]]
 
 simplifyLabel[qc : _QuantumCircuitOperator] :=
-    QuantumCircuitOperator[qc, "Label" -> simplifyLabel[qc["Label"], qc["OutputDimensions"], qc["InputDimensions"], qc["Order"]], FilterRules[qc["Meta"], Except["Label"]]]
+    QuantumCircuitOperator[qc, "Label" -> simplifyLabel[qc["Label"], qc["OutputDimensions"], qc["InputDimensions"], qc["Order"]], FilterRules[qc["Options"], Except["Label"]]]
 
 conj = SuperDagger | SuperStar
 

@@ -79,7 +79,7 @@ QuantumWignerMICTransform[qb_ ? QuantumBasisQ, opts : OptionsPattern[]] :=
     Enclose @ QuantumBasis[
         ConfirmBy[QuantumWignerMICTransform[qb["Output"], opts], QuditBasisQ],
         ConfirmBy[QuantumWignerMICTransform[qb["Input"], opts], QuditBasisQ],
-        "Picture" -> "PhaseSpace", qb["Meta"]
+        "Picture" -> "PhaseSpace", qb["Options"]
     ]
 
 

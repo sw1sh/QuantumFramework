@@ -45,7 +45,7 @@ QuantumBasis::undefprop = "QuantumBasis property `` is undefined for this basis"
     result = QuantumBasisProp[qb, prop, args]
 },
     If[ TrueQ[$QuantumFrameworkPropCache] &&
-        ! MemberQ[Join[$QuantumBasisDataKeys, {"Properties", "Meta", "Parameters"}], prop],
+        ! MemberQ[Join[$QuantumBasisDataKeys, {"Properties", "Options", "Parameters"}], prop],
         QuantumBasisProp[qb, prop, args] = result,
         result
     ] /; !FailureQ[Unevaluated @ result] &&
@@ -60,7 +60,7 @@ QuantumBasisProp[_, "Properties"] := QuantumBasis["Properties"]
 
 QuantumBasisProp[QuantumBasis[data_Association], key_] /; KeyExistsQ[data, key] := data[key]
 
-QuantumBasisProp[QuantumBasis[data_Association], "Meta"] := Normal @ data[[Key /@ {"Picture", "Label", "ParameterSpec"}]]
+QuantumBasisProp[QuantumBasis[data_Association], "Options"] := Normal @ data[[Key /@ {"Picture", "Label", "ParameterSpec"}]]
 
 (* computed *)
 
@@ -251,16 +251,16 @@ QuantumBasisProp[qb_, "Reverse"] := QuantumBasis[qb,
 ]
 
 QuantumBasisProp[qb_, "Split", n_Integer] :=
-    QuantumBasis["Output" -> #1, "Input" -> #2, qb["Meta"]] & @@ QuantumTensorProduct[qb["Output"], qb["Input"]]["Split", n]
+    QuantumBasis["Output" -> #1, "Input" -> #2, qb["Options"]] & @@ QuantumTensorProduct[qb["Output"], qb["Input"]]["Split", n]
 
 QuantumBasisProp[qb_, "SplitDual", n_Integer] /; 0 <= n <= qb["Qudits"] :=
     Which[
         qb["OutputQudits"] < n,
-        QuantumBasis["Output" -> (QuantumTensorProduct[#1, #2["Dual"]] & @@ #1["Split", qb["OutputQudits"]]), "Input" -> #2, qb["Meta"]],
+        QuantumBasis["Output" -> (QuantumTensorProduct[#1, #2["Dual"]] & @@ #1["Split", qb["OutputQudits"]]), "Input" -> #2, qb["Options"]],
         qb["OutputQudits"] > n,
-        QuantumBasis["Output" -> #1, "Input" -> (QuantumTensorProduct[#1["Dual"], #2] & @@ #2["Split", qb["OutputQudits"] - n]), qb["Meta"]],
+        QuantumBasis["Output" -> #1, "Input" -> (QuantumTensorProduct[#1["Dual"], #2] & @@ #2["Split", qb["OutputQudits"] - n]), qb["Options"]],
         True,
-        QuantumBasis["Output" -> #1, "Input" -> #2, qb["Meta"]]
+        QuantumBasis["Output" -> #1, "Input" -> #2, qb["Options"]]
     ] & @@ QuantumTensorProduct[qb["Output"], qb["Input"]]["Split", n]
 
 QuantumBasisProp[qb_, "SplitDual", n_Integer ? Negative] := qb["SplitDual", Mod[n, qb["Qudits"]]]
@@ -281,7 +281,7 @@ QuantumBasisProp[qb_, "SortedQ"] := qb["Output"]["SortedQ"] && qb["Input"]["Sort
 
 QuantumBasisProp[qb_, "Sort"] := QuantumBasis[qb, "Output" -> qb["Output"]["Sort"], "Input" -> qb["Input"]["Sort"]]
 
-QuantumBasisProp[qb_, "Decompose"] := QuantumBasis[#, "Label" -> None, qb["Meta"]] & /@ Join[qb["Output"]["Decompose"], qb["Input"]["Decompose"]]
+QuantumBasisProp[qb_, "Decompose"] := QuantumBasis[#, "Label" -> None, qb["Options"]] & /@ Join[qb["Output"]["Decompose"], qb["Input"]["Decompose"]]
 
 QuantumBasisProp[qb_, "Canonical"] := QuantumBasis[qb, "Output" -> qb["Output"]["Canonical"], "Input" -> qb["Input"]["Canonical"]]
 
@@ -310,7 +310,7 @@ QuantumBasisProp[qb_, "FinalParameters"] := qb["ParameterSpec"][[All, 3]]
 
 
 QuantumBasisProp[qb_, prop : "Simplify" | "FullSimplify" | "Chop" | "ComplexExpand"] :=
-    QuantumBasis["Output" -> qb["Output"][prop], "Input" -> qb["Input"][prop], qb["Meta"]]
+    QuantumBasis["Output" -> qb["Output"][prop], "Input" -> qb["Input"][prop], qb["Options"]]
 
 
 QuantumBasisProp[qb_, prop : "NumericQ" | "NumberQ"] := qb["Output"][prop] || qb["Input"][prop]

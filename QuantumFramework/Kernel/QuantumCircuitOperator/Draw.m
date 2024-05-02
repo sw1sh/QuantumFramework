@@ -703,7 +703,7 @@ Options[circuitDraw] := DeleteDuplicatesBy[First] @ Join[
 		"WireLabels" -> Automatic, "MeasurementWireLabel" -> "c", "ShowWires" -> True, "ShowLabel" -> False,
 		"ShowMeasurementWire" -> True, "ShowEmptyWires" -> True,
 		"ShowOutline" -> False,
-		"SubcircuitLevel" -> 1,
+		"Expand" -> True,
 		"GateOverlap" -> False,
 		"MeasurementWirePosition" -> Top,
 		"HorizontalGapSize" -> 1,
@@ -721,7 +721,7 @@ circuitDraw[circuit_QuantumCircuitOperator, Dynamic[qc_Symbol], position_List, o
 	order = Union @@ circuit["Order"],
 	freeOrder = circuit["FreeOrder"],
 	inputOrders,
-	level = Max[OptionValue["SubcircuitLevel"]],
+	level = Replace[OptionValue["Expand"], {True -> 1, False -> 0, None -> -1}],
 	hGapSize = OptionValue["HorizontalGapSize"],
 	height,
 	positions,
@@ -767,11 +767,12 @@ circuitDraw[circuit_QuantumCircuitOperator, Dynamic[qc_Symbol], position_List, o
 				drawBarrier[Append[Table[circuitElementPosition[#1, min, max] + min - 1, 2], #3 + 1], "ShowExtraQudits" -> extraQuditsQ, "Label" -> Replace[#1, {"Barrier"[_, label_, ___] :> label, _ -> None}], FilterRules[{opts}, Options[drawBarrier]]],
 				QuantumCircuitOperatorQ[#1],
 				EventHandler[
-					If[ level > 0 || TrueQ[#1["Expand"]],
+					If[ Min[level, Replace[#1["Expand"], {True | None -> 1, False -> 0}]] > 0,
 						Translate[
 							circuitDraw[#1, Dynamic[qc], Append[position, #4],
+								#1["DiagramOptions"],
 								OptionValue["SubcircuitOptions"],
-								"SubcircuitLevel" -> level - 1,
+								"Expand" -> level - 1,
 								"WireLabels" -> None, "ShowOutline" -> True, "ShowLabel" -> True,
 								"ShowMeasurementWire" -> False, "ShowEmptyWires" -> False, "LongOuterWires" -> False,
 								"ShowExtraQudits" -> False, "ShowGlobalPhase" -> False,
@@ -851,7 +852,7 @@ circuitPositions[circuit_QuantumCircuitOperator, level_Integer : 1, defaultOverl
 			overlapQ = defaultOverlapQ || QuantumOperatorQ[op] && MatchQ[op["Label"], "I" | "Permutation" | "Cap" | "Cup"];
 			overlapShift = Function[x, If[overlapQ, 0, NestWhile[# + 1 &, 0, ContainsAny[Lookup[ranges, x + #, {}], fullPos] &]]];
 			shift = If[
-				QuantumCircuitOperatorQ[op] && (level > 0 || TrueQ[op["Expand"]]),
+				QuantumCircuitOperatorQ[op] && Min[level, Replace[op["Expand"], {True | None -> 1, False -> 0}]] > 0,
 				ReplacePart[ConstantArray[0, width], Thread[pos -> Max[Replace[circuitPositions[op, level - 1, defaultOverlapQ, False, False], {{___, {_, o_}} :> o, _ -> 0}]]]],
 				ReplacePart[ConstantArray[0, width], Thread[pos -> 1]]
 			];
@@ -908,7 +909,7 @@ CircuitDraw[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := If[TrueQ
 				circuitDraw[
 					qc, Dynamic[qc], {},
 					FilterRules[{opts}, Options[circuitDraw]],
-					"SubcircuitLevel" -> 0,
+					"Expand" -> 0,
 					RoundingRadius -> 0.1
 				],
 				FilterRules[{opts}, Options[Graphics]]

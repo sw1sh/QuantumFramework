@@ -34,7 +34,7 @@ QuantumPhaseSpaceTransform[qb_ ? QuantumBasisQ, args__] := Enclose @ Block[{
         QuantumPhaseSpaceTransform[qb["Output"], newBasis["Output"]],
         QuantumPhaseSpaceTransform[qb["Input"], newBasis["Input"]],
         "Picture" -> "PhaseSpace",
-        qb["Meta"]
+        qb["Options"]
     ]
 ]
 

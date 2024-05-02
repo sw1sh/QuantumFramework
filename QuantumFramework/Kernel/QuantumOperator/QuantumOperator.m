@@ -324,7 +324,7 @@ QuantumOperator[qo_ ? QuantumOperatorQ,
 (qo_QuantumOperator ? QuantumOperatorQ)[qb_ ? QuantumBasisQ] := QuantumBasis[
     AssociationThread[qo["Output"]["Names"], qo[#]["StateVector"] & /@ qb["BasisStates"]],
     "Label" -> Replace[DeleteCases[qo["Label"] @* qb["Label"], None], Identity -> None],
-    qb["Meta"]
+    qb["Options"]
 ]
 
 QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible with this operation"
