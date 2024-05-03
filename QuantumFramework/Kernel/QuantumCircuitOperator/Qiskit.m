@@ -260,7 +260,7 @@ def qc_to_QuantumCircuitOperator(qc, label=None):
                     size = r._index + 1
         
         if isinstance(gate, qiskit.qasm2.parse._DefinedGate):
-            sub_qc = QuantumCircuit(gate.num_qubits, gate.num_clbits)
+            sub_qc = QuantumCircuit(max(order), gate.num_clbits)
             sub_qc.append(gate, [o - 1 for o in order])
             ops.append(qc_to_QuantumCircuitOperator(sub_qc.decompose(), gate.name))
         else:

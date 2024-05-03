@@ -9,10 +9,10 @@ Options[ClassiqQuantumState] = {"Bound" -> 0.01}
 ClassiqQuantumState[qs_QuantumState, OptionsPattern[]] := Enclose @ Block[{
     probabilities = NumericArray[qs["ProbabilitiesList"]],
     bound = ConfirmBy[OptionValue["Bound"], RealValuedNumberQ],
-    qasm
+    qasm, mapping
 },
 
-    qasm = Confirm @ PythonEvaluate[Context[probabilities], "
+    {qasm, mapping} = Confirm @ PythonEvaluate[Context[probabilities], "
 from classiq import (
     authenticate,
     Output,
@@ -37,9 +37,8 @@ def main(io: Output[QArray[QBit]]):
 
 model = create_model(main)
 
-qprog = synthesize(model)
-
-json.loads(qprog)['outputs']['qasm']
+qprog = json.loads(synthesize(model))
+qprog['outputs']['qasm'], qprog['data']['qubit_mapping']['logical_outputs']['io']
 "];
-    ImportQASMCircuit[qasm]["QuantumCircuit"]
+    QuantumCircuitOperator[ImportQASMCircuit[qasm]["QuantumCircuit"], Reverse[mapping] + 1]
 ]
