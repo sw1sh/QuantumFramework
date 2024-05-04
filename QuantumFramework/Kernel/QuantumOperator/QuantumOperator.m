@@ -323,7 +323,7 @@ QuantumOperator[qo_ ? QuantumOperatorQ,
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qb_ ? QuantumBasisQ] := QuantumBasis[
     AssociationThread[qo["Output"]["Names"], qo[#]["StateVector"] & /@ qb["BasisStates"]],
-    "Label" -> Replace[DeleteCases[qo["Label"] @* qb["Label"], None], Identity -> None],
+    "Label" -> Replace[qo["Label"] @* qb["Label"], Identity | None @* _ | _ @* None -> None],
     qb["Options"]
 ]
 
@@ -450,7 +450,7 @@ QuantumOperator /: HoldPattern[Plus[x : Except[_QuantumOperator], qo_QuantumOper
         Plus[DiagonalMatrix[ConstantArray[x, Min[op["MatrixNameDimensions"]], SparseArray], 0, op["MatrixNameDimensions"]], op["Matrix"]],
         op["Order"],
         op["Basis"],
-        "Label" -> x + op["Label"]
+        "Label" -> If[op["Label"] === None, None, x + op["Label"]]
     ]
 ]
 
@@ -469,7 +469,7 @@ QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOpera
                     op["MatrixNameDimensions"] ^ 2
                 ]
             ],
-            op["Basis"], "Label" -> f[left, op["Label"], right]
+            op["Basis"], "Label" -> If[op["Label"] === None, None, f[left, op["Label"], right]]
         ],
         op["Order"]
     ] &
@@ -505,7 +505,7 @@ addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator 
         ordered1["Order"],
         QuantumBasis[
             ordered1["Basis"],
-            "Label" -> ordered1["Label"] + ordered2["Label"],
+            "Label" -> If[ordered1["Label"] === None || ordered2["Label"] === None, None, ordered1["Label"] + ordered2["Label"]],
             "ParameterSpec" -> MergeParameterSpecs[ordered1, ordered2]
         ]
     ]

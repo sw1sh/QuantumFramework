@@ -51,7 +51,7 @@ FromCircuitOperatorShorthand[arg_] := Enclose @ Replace[Confirm @ FromOperatorSh
 QuantumCircuitOperator[operators_ ? ListQ] := Enclose @ With[{ops = Confirm @* FromCircuitOperatorShorthand /@ operators},
     QuantumCircuitOperator[<|
         "Elements" -> ops, 
-        "Label" -> Replace[Composition @@ Reverse @ Through[DeleteCases[ops, _ ? BarrierQ]["Label"]], Identity -> None]
+        "Label" -> If[# === {} || MemberQ[#, None], None, Composition @@ Reverse @ #] & @ Through[DeleteCases[ops, _ ? BarrierQ]["Label"]]
     |>]
 ]
 
@@ -93,7 +93,7 @@ QuantumCircuitOperator[] := QuantumCircuitOperator[{}]
 (* composition *)
 
 (qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ)[op_ ? QuantumFrameworkOperatorQ] :=
-    QuantumCircuitOperator[Prepend[qco["Elements"], op], qco["Label"][op["Label"]]]
+    QuantumCircuitOperator[Prepend[qco["Elements"], op], Replace[{qco["Label"], op["Label"]}, {{None, _} | {_, None} -> None, {lbl1_, lbl2_} :> lbl1[lbl2]}]]
 
 Options[quantumCircuitApply] := Join[{Method -> Automatic}, Options[TensorNetworkApply]]
 
@@ -153,17 +153,17 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
     QuantumMeasurement[qco[qm["QuantumOperator"]]["QuantumOperator", opts]]
 
 op_QuantumMeasurementOperator[qco_QuantumCircuitOperator ? QuantumCircuitOperatorQ] :=
-    QuantumCircuitOperator[Append[qco["Elements"], op], op["Label"][qco["Label"]]]
+    QuantumCircuitOperator[Append[qco["Elements"], op], Replace[{op["Label"], qco["Label"]}, {{None, _} | {_, None} -> None, {lbl1_, lbl2_} :> lbl1[lbl2]}]]
 
 
 QuantumCircuitOperator /: comp : Composition[___, _QuantumCircuitOperator ? QuantumCircuitOperatorQ, ___] := Enclose @
 With[{ops = ConfirmBy[QuantumCircuitOperator[#], QuantumCircuitOperatorQ] & /@ List @@ Unevaluated[comp]},
-    QuantumCircuitOperator[Flatten[Through[Reverse[ops]["Elements"]], 1], Replace[Composition @@ DeleteCases[None] @ Through[ops["Label"]], Identity -> None]]
+    QuantumCircuitOperator[Flatten[Through[Reverse[ops]["Elements"]], 1], If[# === {} || MemberQ[#, None], None, Composition @@ #] & @ Through[ops["Label"]]]
 ]
 
 QuantumCircuitOperator /: comp : RightComposition[___, _QuantumCircuitOperator ? QuantumCircuitOperatorQ, ___] := Enclose @
 With[{ops = ConfirmBy[QuantumCircuitOperator[#], QuantumCircuitOperatorQ] & /@ List @@ Unevaluated[comp]},
-    QuantumCircuitOperator[Flatten[Through[ops["Elements"]], 1], Replace[Composition @@ DeleteCases[None] @ Reverse @ Through[ops["Label"]], Identity -> None]]
+    QuantumCircuitOperator[Flatten[Through[ops["Elements"]], 1], If[# === {} || MemberQ[#, None], None, Composition @@ Reverse @ #] & @ Through[ops["Label"]]]
 ]
 
 

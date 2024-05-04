@@ -855,7 +855,7 @@ circuitPositions[circuit_QuantumCircuitOperator, level_ : 1, defaultOverlapQ : T
 			If[pos === {}, Return[#1, Block]];
 			fullPos = Which[
 				QuantumCircuitOperatorQ[op],
-				Range @@ MinMax[Select[pos, # + min - 1 > 0 &]],
+				With[{circuitPos = Select[pos, # + min - 1 > 0 &]}, If[circuitPos === {}, {}, Range @@ MinMax[circuitPos]]],
 				QuantumChannelQ[op] && ! showExtraQuditsQ,
 				Rest[pos],
 				QuantumMeasurementOperatorQ[op] && ! showMeasurementWireQ && ! showExtraQuditsQ,
