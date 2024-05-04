@@ -31,6 +31,7 @@ QuantumBasis[<|
         Replace[
             {qb1["Label"], qb2["Label"]},
             {
+                {None, _} | {_, None} -> None,
                 {OrderlessPatternSequence[Superscript[a_, CircleTimes[q_Integer]], a_]} :> Superscript[a, CircleTimes[q + 1]],
                 {Superscript[a_, CircleTimes[q_Integer]], Superscript[a_, CircleTimes[r_Integer]]} :> Superscript[a, CircleTimes[q + r]],
                 {a_, a_} :> Superscript[a, CircleTimes[2]],

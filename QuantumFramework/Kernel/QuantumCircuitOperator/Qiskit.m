@@ -158,7 +158,7 @@ qiskitDiagram[qc_QiskitCircuit, opts : OptionsPattern[]] := Enclose @ Block[{
     scale = OptionValue["Scale"],
     image
 },
-    image = PythonEvaluate[Context[scale], "
+    image = Confirm @ PythonEvaluate[Context[scale], "
 import pickle
 import PIL
 import matplotlib
@@ -229,7 +229,7 @@ def gate_to_QuantumOperator(gate, order):
     elif gate.name == 'sdg':
         return wl.Wolfram.QuantumFramework.QuantumOperator('S', order)('Dagger')
     elif gate.name == 'unitary':
-        return wl.Wolfram.QuantumFramework.QuantumOperator(*xs, [order, order], wl.Rule('Label', gate.label))
+        return wl.Wolfram.QuantumFramework.QuantumOperator(*xs, [order, order], wl.Rule('Label', gate.label if gate.label else None))
     elif gate.name == 'measure':
         return wl.Wolfram.QuantumFramework.QuantumMeasurementOperator(order)
     elif gate.name == 'reset':

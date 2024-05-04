@@ -555,7 +555,7 @@ QuantumOperator["CSWAP" | "Fredkin", opts___] := QuantumOperator[{"Controlled", 
 
 
 QuantumOperator["RandomUnitary", order : {outputOrder_ ? orderQ, inputOrder_ ? orderQ}, opts___] := Enclose @
-    QuantumOperator[{"RandomUnitary", ConfirmBy[QuantumBasis[QuditBasis[2, Length[outputOrder]], QuditBasis[2, Length[inputOrder]], "Label" -> None], QuantumBasisQ]}, order, opts]
+    QuantumOperator[{"RandomUnitary", ConfirmBy[QuantumBasis[QuditBasis[2, Length[outputOrder]], QuditBasis[2, Length[inputOrder]]], QuantumBasisQ]}, order, opts]
 
 
 QuantumOperator["RandomUnitary", order : (_ ? orderQ) : {1}, opts___] := Enclose @
@@ -571,7 +571,7 @@ QuantumOperator[{"RandomUnitary", qb_ ? QuantumBasisQ}, order : (_ ? autoOrderQ)
             True,
             QuantumState["RandomPure", qb["Dimensions"]]["Split", qb["OutputQudits"]]
         ],
-        order, qb, opts
+        order, qb, opts, "Label" -> None
     ]
 
 QuantumOperator[{"RandomUnitary", args___}, order : (_ ? autoOrderQ) : {1}, opts___] := Enclose @
