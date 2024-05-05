@@ -6,9 +6,9 @@ PackageScope[ProbabilityChart]
 
 
 
-Options[BlochPlot] = Join[{"ShowLabels" -> True, "ShowGreatCircles" -> True, "ShowAxes" -> True, "ShowArrow" -> True}, Options[Graphics3D]]
+Options[BlochPlot] = Join[{"ShowLabels" -> True, "ShowGreatCircles" -> True, "ShowAxes" -> True, "ShowArrow" -> True, "ShowFlag" -> False}, Options[Graphics3D]]
 
-BlochPlot[{u_, v_, w_}, opts : OptionsPattern[]] := Block[{
+BlochPlot[{u_, v_, w_, a_ : 0}, opts : OptionsPattern[]] := Block[{
     greatCircles, referenceStates
 },
     greatCircles = If[
@@ -21,7 +21,7 @@ BlochPlot[{u_, v_, w_}, opts : OptionsPattern[]] := Block[{
         Nothing
     ];
     referenceStates = Graphics3D[{
-        Opacity[0.4], Sphere[],Black, Thickness[0.0125], Opacity[1.0],
+        Opacity[0.4], Sphere[],Black, Thickness[0.005], Opacity[1.0],
         If[ TrueQ[OptionValue["ShowAxes"]],
             Splice @ {Line[{{0, 1, 0}, {0, -1, 0}}], Line[{{0, 0, 1}, {0, 0, -1}}], Line[{{1, 0, 0}, {-1, 0, 0}}]},
             Nothing
@@ -34,8 +34,16 @@ BlochPlot[{u_, v_, w_}, opts : OptionsPattern[]] := Block[{
             },
             Nothing
         ],
-        If[ TrueQ[OptionValue["ShowArrow"]],
+        Which[
+            TrueQ[OptionValue["ShowFlag"]],
+            Splice @ {ColorData["MidShiftBalancedHue"][Mod[a / (2 Pi) - 1 / 2, 1]], Tube[{{0, 0, 0}, {u, v, w}}, 0.03],
+                With[{r = RotationTransform[{{1, 0, 0}, {u, v, w}}][{0, .4, 0}]},
+                    GeometricTransformation[Polygon[{{u, v, w}, 0.8 {u, v, w}, 0.8 {u, v, w} + r, {u, v, w} + r}], RotationTransform[a, {u, v, w}]]
+                ]
+            },
+            TrueQ[OptionValue["ShowArrow"]],
             Splice @ {Red, Arrowheads[0.05], Arrow[Tube[{{0, 0, 0}, {u, v, w}}, 0.03], {0, -0.01}]},
+            True,
             Nothing
         ]
     }

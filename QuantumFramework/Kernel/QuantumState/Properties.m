@@ -892,12 +892,17 @@ QuantumStateProp[qs_, "BlochVector"] := With[{d = qs["Dimension"], rho = qs["Com
     If[d > 1, Sqrt[d / 2 / (d - 1)], 1] (Chop[Tr[rho . #]] & /@ GellMannMatrices[d])
 ]
 
+QuantumStateProp[qs_, "BlochVectorWithPhase"] /; qs["Dimension"] == 2 := Append[
+    qs["BlochVector"],
+    If[qs["VectorQ"], Arg[First[qs["StateVector"]]], 0]
+]
+
 QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 := With[{
     state = Simplify @ Normal[qs["Computational"]["NormalizedStateVector"]],
     matrix = Simplify @ Normal[qs["Computational"]["NormalizedDensityMatrix"]]
 },
     If[
-        qs["PureStateQ"],
+        qs["VectorQ"],
 
         Module[{
             alpha = state[[1]], beta = state[[2]], theta, phi
@@ -915,7 +920,7 @@ QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 := Wi
 ]
 
 
-QuantumStateProp[qs_, "BlochPlot" | "BlochSpherePlot", opts : OptionsPattern[BlochPlot]] /; qs["Dimension"] == 2 := BlochPlot[qs["BlochCartesianCoordinates"], opts]
+QuantumStateProp[qs_, "BlochPlot" | "BlochSpherePlot", opts : OptionsPattern[BlochPlot]] /; qs["Dimension"] == 2 := BlochPlot[qs["BlochVectorWithPhase"], opts]
 
 QuantumStateProp[qs_, "AmplitudePlot" | "AmplitudeChart", opts : OptionsPattern[AmplitudeChart]] := AmplitudeChart[qs["Amplitude"], opts]
 
