@@ -173,7 +173,23 @@ QuantumCircuitOperatorProp[qco_, "InputOrder"] := qco["Order"][[2]]
 
 QuantumCircuitOperatorProp[qco_, "OutputOrder"] := qco["Order"][[1]]
 
-QuantumCircuitOperatorProp[qco_, "Depth"] := Max[1, Counts[Catenate[Union @@@ qco["NormalOrders"]]]]
+QuantumCircuitOperatorProp[qco_, "Depth"] := Max @ Fold[
+    ReplacePart[#1, Thread[#2 -> Max[Lookup[#1, #2]] + 1]] &,
+    AssociationThread[Range[qco["Min"], qco["Max"]], 0],
+    Union @@@ qco["NormalOrders"]
+]
+
+QuantumCircuitOperatorProp[qco_, "Layers"] := MapIndexed[
+    QuantumCircuitOperator[#1, "Layer"[#2[[1]]]] &,
+    Fold[
+        Block[{keys = Union @@ #2["Order"], layers = #1[[1]], depths = #1[[2]], newDepths},
+            newDepths = ReplacePart[depths, Thread[keys -> Max[Lookup[depths, keys]] + 1]];
+            {If[Max[newDepths] > Max[depths], Append[layers, {#2}], MapAt[Append[#2], layers, {Max[Lookup[newDepths, keys]]}]], newDepths}
+        ] &,
+        {{}, AssociationThread[Range[qco["Min"], qco["Max"]], 0]},
+        qco["NormalOperators"]
+    ][[1]]
+]
 
 QuantumCircuitOperatorProp[qco_, "Arity"] := Length @ qco["InputOrder"]
 
