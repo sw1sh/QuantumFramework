@@ -103,10 +103,12 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 	boundaryStyle = Replace[label, gateBoundaryStyle];
 	drawControlWires = Function[{
 		boundaryStyle,
-		Line[{
-			{center[[1]], - vGapSize #1[[1]] - size Switch[#2[[1]], "NOT", 1 / 5, "SWAP", 0, "1" | "0", 1 / 8, _, 1 / 2]},
-			{center[[1]], - vGapSize #1[[2]] + size Switch[#2[[2]], "NOT", 1 / 5, "SWAP", 0, "1" | "0", 1 / 8, _, 1 / 2]}
-		}]
+		With[{shift = Which[vposIn === {}, 1 / 3, vposOut === {}, - 1 / 3, True, 0] size},
+			Line[{
+				{center[[1]] + shift, - vGapSize #1[[1]] - size Switch[#2[[1]], "NOT", 1 / 5, "SWAP", 0, "1" | "0", 1 / 8, _, 1 / 2]},
+				{center[[1]] + shift, - vGapSize #1[[2]] + size Switch[#2[[2]], "NOT", 1 / 5, "SWAP", 0, "1" | "0", 1 / 8, _, 1 / 2]}
+			}]
+		]
 	}];
 	gateFunction = Function[Replace[FixedPoint[ReplaceAll[{Interpretation[_, l_] :> l, "Eigen"[l_] :> l}], #], {
 		Subscript["C", subLabel_][control1_, control0_] :> Block[{
