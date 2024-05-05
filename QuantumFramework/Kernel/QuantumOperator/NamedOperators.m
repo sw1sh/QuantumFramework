@@ -27,7 +27,7 @@ $QuantumOperatorNames = {
     "Cup", "Cap", "Trace",
     "Switch",
     "Multiplexer",
-    "WignerD", "JX", "JY", "JZ", "J+", "J-",
+    "WignerD", "JX", "JY", "JZ", "JX+", "JY+", "JZ+", "JX-", "JY-", "JZ-", "J+", "J-", "+", "-",
     "Double",
     "Liouvillian"
 }
@@ -780,31 +780,33 @@ wignerD[j_, {a_, b_, c_}] := Table[WignerD[{j, m1, m2}, a, b, c], {m1, -j, j}, {
 
 wignerD[j_, b_] := Table[WignerD[{j, m1, m2}, b], {m1, -j, j}, {m2, -j, j}]
 
-jUp[j_] := Table[Sqrt[(j - m2) (j + m2 + 1)] KroneckerDelta[m1, m2 + 1], {m2, -j, j}, {m1, -j, j}]
+jUp[j_] := Table[Sqrt[(j - m1) (j + m1 + 1)] KroneckerDelta[m1 + 1, m2], {m2, -j, j}, {m1, -j, j}]
 
-jDown[j_] := Table[Sqrt[(j + m2) (j - m2 + 1)] KroneckerDelta[m1, m2 - 1], {m2, -j, j}, {m1, -j, j}]
+jDown[j_] := Table[Sqrt[(j + m1) (j - m1 + 1)] KroneckerDelta[m1 - 1, m2], {m2, -j, j}, {m1, -j, j}]
 
 jX[j_] := 1 / 2 (jUp[j] + jDown[j])
 
-jY[j_] := 1 / (2 I) (jUp[j] - jDown[j])
+jY[j_] := 1 / (2 I) (jDown[j] - jUp[j])
 
 jZ[j_] := DiagonalMatrix[Table[m, {m, j, -j, -1}]]
 
-QuantumOperator[name : "WignerD" | "JX" | "AngularMomentumX" | "JY" | "AngularMomentumY" | "JZ" | "AngularMomentumZ" | "J+" | "J-", opts___] := QuantumOperator[{name, 1 / 2}, opts]
+QuantumOperator[{"WignerD", j_ : 1 / 2, {a_, b_, c_}}, opts___] :=  QuantumOperator[QuantumOperator[wignerD[j, {a, b, c}], 2 j + 1], opts, "Label" -> "WignerD"[a, b, c]]
 
-QuantumOperator[{"WignerD", j_, {a_, b_, c_}}, opts___] :=  QuantumOperator[QuantumOperator[wignerD[j, {a, b, c}], 2 j + 1], opts, "Label" -> "WignerD"[a, b, c]]
+QuantumOperator[{"WignerD", j_ : 1 / 2, b_ : 0}, opts___] := QuantumOperator[QuantumOperator[wignerD[j, b], 2 j + 1], opts, "Label" -> "WignerD"[b]]
 
-QuantumOperator[{"WignerD", j_, b_ : 0}, opts___] := QuantumOperator[QuantumOperator[wignerD[j, b], 2 j + 1], opts, "Label" -> "WignerD"[b]]
+QuantumOperator[{"JX" | "AngularMomentumX", j_ : 1 / 2}, opts___] := QuantumOperator[QuantumOperator[QuantumOperator[jX[j], 2 j + 1], "JX"[j]], opts, "Label" -> "JX"]
 
-QuantumOperator[{"JX" | "AngularMomentumX", j_}, opts___] := QuantumOperator[QuantumOperator[jX[j], 2 j + 1], opts, "Label" -> "JX"]
+QuantumOperator[{"JY" | "AngularMomentumY", j_ : 1 / 2}, opts___] := QuantumOperator[QuantumOperator[QuantumOperator[jY[j], 2 j + 1], "JY"[j]], opts, "Label" -> "JY"]
 
-QuantumOperator[{"JY" | "AngularMomentumY", j_}, opts___] := QuantumOperator[QuantumOperator[jY[j], 2 j + 1], opts, "Label" -> "JY"]
+QuantumOperator[{"JZ" | "AngularMomentumZ", j_ : 1 / 2}, opts___] := QuantumOperator[QuantumOperator[QuantumOperator[jZ[j], 2 j + 1], "JZ"[j]], opts, "Label" -> "JZ"]
 
-QuantumOperator[{"JZ" | "AngularMomentumZ", j_}, opts___] := QuantumOperator[QuantumOperator[jZ[j], 2 j + 1], opts, "Label" -> "JZ"]
+QuantumOperator[{name : "JX+" | "JY+" | "JZ+" | "JI+" | "J+", j_ : 1 / 2}, opts___] := QuantumOperator[QuantumOperator[jUp[j], StringDrop[name, -1][j]], opts, "Label" -> name]
 
-QuantumOperator[{"J+", j_}, opts___] := QuantumOperator[QuantumOperator[jUp[j], 2 j + 1], opts, "Label" -> "J+"]
+QuantumOperator[{name : "JX-" | "JY-" | "JZ-" | "JI-" | "J-", j_ : 1 / 2}, opts___] := QuantumOperator[QuantumOperator[jDown[j], StringDrop[name, -1][j]], opts, "Label" -> name]
 
-QuantumOperator[{"J-", j_}, opts___] := QuantumOperator[QuantumOperator[jDown[j], 2 j + 1], opts, "Label" -> "J-"]
+QuantumOperator[{"+" | "I+", args___}, opts___] := With[{qb = QuantumBasis[args]}, QuantumOperator[QuantumOperator[jUp[(qb["Dimension"] - 1) / 2], qb], opts, "Label" -> "+"]]
+
+QuantumOperator[{"-" | "I-", args___}, opts___] := With[{qb = QuantumBasis[args]}, QuantumOperator[QuantumOperator[jDown[(qb["Dimension"] - 1) / 2], qb], opts, "Label" -> "-"]]
 
 
 QuantumOperator[{"Double", args___}, opts___] := QuantumOperator[args, opts]["Double"]
@@ -836,6 +838,9 @@ QuantumOperator[name_String, opts___] /; ToUpperCase[name] =!= name && KeyExists
 
 QuantumOperator[{name_String, params___}, opts___] /; ToUpperCase[name] =!= name && KeyExistsQ[$upperCasesOperatorNames, name] :=
     QuantumOperator[{$upperCasesOperatorNames[name], params}, opts]
+
+QuantumOperator[name_String, opts___] /; MemberQ[$QuantumOperatorNames, name] :=
+    QuantumOperator[{name}, opts]
 
 QuantumOperator[rule : _Rule, opts___] := QuantumOperator[FromOperatorShorthand[Unevaluated[rule]], opts]
 

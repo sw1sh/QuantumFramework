@@ -9,7 +9,7 @@ $QuditBasisNames = {
     "Computational",
     "PauliX", "PauliY", "PauliZ",
     "Identity", "I", "X", "Y", "Z",
-    "JX", "JY", "JZ",
+    "JX", "JY", "JZ", "J", "JI",
     "Bell",
     "Fourier",
     "Schwinger", "Dirac",
@@ -81,10 +81,10 @@ QuditBasis[{name : "PauliX" | "PauliY" | "PauliZ", dim_Integer : 2}, args___] :=
     ]
 ]
 
-QuditBasis[name : "JX" | "JY" | "JZ", args___] := QuditBasis[{name, 1 / 2}, args]
+QuditBasis[name : "JX" | "JY" | "JZ" | "J" | "JI", args___] := QuditBasis[{name, 1 / 2}, args]
 
-QuditBasis[{name : "JX" | "JY" | "JZ", j_ : 1 / 2}, args___] /; IntegerQ[2 j] := With[{
-    es = eigensystem[spinMatrix[name /. {"JX" -> 1, "JY" -> 2, "JZ" -> 3}, 2 j + 1], "Normalize" -> True, "Sort" -> True]
+QuditBasis[{name : "JX" | "JY" | "JZ" | "J" | "JI", j_ : 1 / 2}, args___] /; IntegerQ[2 j] := With[{
+    es = eigensystem[spinMatrix[name /. {"JX" -> 1, "JY" -> 2, "JZ" -> 3, "J" | "JI" -> 0}, 2 j + 1], "Normalize" -> True, "Sort" -> True]
 },
     QuditBasis[
         AssociationThread[
@@ -92,7 +92,7 @@ QuditBasis[{name : "JX" | "JY" | "JZ", j_ : 1 / 2}, args___] /; IntegerQ[2 j] :=
                 Subsuperscript[
                     "J",
                     Interpretation[If[j == 1 / 2, Replace[#2[[1]], {1 -> "\[UpArrow]", 2 -> "\[DownArrow]"}], InputForm[- j + #2[[1]] - 1]], #],
-                    ToLowerCase @ StringDelete[name, "J"]
+                    ToLowerCase @ Replace[StringDelete[name, "J"], "" -> "I"]
                 ] &,
                 First[es]
             ],
