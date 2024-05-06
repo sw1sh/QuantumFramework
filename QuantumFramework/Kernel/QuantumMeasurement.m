@@ -56,7 +56,7 @@ QuantumMeasurement[
 $QuantumMeasurementProperties = {
     "QuantumOperator",
     "Distribution",
-    "Outcomes", "Probabilities",
+    "Outcomes", "Probability", "Probabilities",
     "Mean", "States", "StateAssociation",
     "Entropy",
     "PostMeasurementState",
@@ -137,7 +137,7 @@ QuantumMeasurementProp[qm_, "MixedStates"] := With[{rep = If[qm["PureStateQ"], 1
 
 QuantumMeasurementProp[qm_, "States"] := If[qm["PureStateQ"], qm["MixedStates"], Plus @@@ Partition[qm["MixedStates"], qm["Eigendimension"] qm["InputDimension"]]]
 
-QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
+QuantumMeasurementProp[qm_, prop : "ProbabilityList" | "ProbabilitiesList"] :=
     Normal @ Which[
         MatchQ[qm["LabelHead"], "Computational" | Automatic],
         qm["Computational"]["Eigenstate"],
@@ -145,22 +145,22 @@ QuantumMeasurementProp[qm_, "ProbabilitiesList"] :=
         qm["ReverseEigenQudits"]["Eigenstate"],
         True,
         qm["Canonical"]["Eigenstate"]
-    ]["ProbabilitiesList"]
+    ][prop]
 
-QuantumMeasurementProp[qm_, "Eigenvalues"] := QuditName /@ Replace[Normal /@ qm["Eigenbasis"]["Names"], SuperStar[x_] :> x, {2}]
+QuantumMeasurementProp[qm_, "Eigenvalues", args___] := QuditName /@ Replace[Normal /@ qm["Eigenbasis"]["Names", args], SuperStar[x_] :> x, {2}]
 
 QuantumMeasurementProp[qm_, "Eigenvectors"] := qm["Eigenstate"]["Eigenvectors"]
 
 QuantumMeasurementProp[qm_, "Projectors"] := qm["Eigenstate"]["Projectors"]
 
-QuantumMeasurementProp[qm_, "Outcomes"] := Which[
+QuantumMeasurementProp[qm_, "Outcomes", args___] := Which[
     MatchQ[qm["LabelHead"], "Computational" | Automatic],
     qm["Computational"],
     MatchQ[qm["LabelHead"], "Eigen"],
     qm["ReverseEigenQudits"],
     True,
     qm["Canonical"]
-]["Eigenvalues"]
+]["Eigenvalues", args]
 
 QuantumMeasurementProp[qm_, "MixedOutcomes"] := If[
     qm["PureStateQ"],
@@ -191,13 +191,22 @@ QuantumMeasurementProp[qm_, "Probabilities"] := AssociationThread[
     qm["ProbabilitiesList"]
 ]
 
+QuantumMeasurementProp[qm_, "Probability"] :=  With[{proba = Chop @ SparseArray @ qm["ProbabilitiesList"]},
+    AssociationThread[
+        qm["Outcomes", Catenate @ proba["ExplicitPositions"]],
+        proba["ExplicitValues"]
+    ]
+]
+
 QuantumMeasurementProp[qm_, "DistributionInformation", args___] := Information[qm["Distribution"], args]
 
 QuantumMeasurementProp[qm_, args :
     "Categories" | "Probabilities" | "ProbabilityTable" | "ProbabilityArray" |
     "TopProbabilities" | ("TopProbabilities" -> _Integer)] := qm["DistributionInformation", args]
 
-QuantumMeasurementProp[qm_, "ProbabilityPlot" | "ProbabilityChart", opts___] := ProbabilityChart[qm["Probabilities"], FilterRules[{opts}, Options[ProbabilityChart]]]
+QuantumMeasurementProp[qm_, "ProbabilityPlot" | "ProbabilityChart", opts___] := ProbabilityChart[qm["Probability"], FilterRules[{opts}, Options[ProbabilityChart]]]
+
+QuantumMeasurementProp[qm_, "ProbabilitiesPlot" | "ProbabilitiesChart", opts___] := ProbabilityChart[qm["Probabilities"], FilterRules[{opts}, Options[ProbabilityChart]]]
 
 
 QuantumMeasurementProp[qm_, "Entropy"] := TimeConstrained[Quantity[qm["DistributionInformation", "Entropy"] / Log[2], "Bits"], 1]
@@ -271,13 +280,13 @@ QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement, TraditionalForm] /; Quant
     ]
 
 QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement ? QuantumMeasurementQ, format_] := Module[{icon},
-    icon = With[{proba = TimeConstrained[qm["Probabilities"], 1]},
+    icon = With[{proba = TimeConstrained[qm["Probability"], 1]},
         If[
             ! FailureQ[proba] && AllTrue[proba, NumericQ],
             Show[
                 BarChart[
                     Chop /@ N @ proba, Frame -> {{True, False}, {True, False}}, FrameTicks -> None,
-                    ChartLabels -> Placed[KeyValueMap[Column[{##}] &, qm["Probabilities"]], Tooltip]
+                    ChartLabels -> Placed[KeyValueMap[Column[{##}] &, proba], Tooltip]
                 ],
                 ImageSize -> Dynamic @ {Automatic, 3.5 CurrentValue["FontCapHeight"] / AbsoluteCurrentValue[Magnification]}
             ],
