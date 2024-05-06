@@ -215,7 +215,7 @@ QuditBasis[{"GellMannBlochMIC", d : _Integer ? Positive : 2}] := QuditBasis[
 ]
 
 
-QuditBasis[{"Wootters", d : _Integer ? Positive : 2}] := With[{factors = Catenate[Table @@@ FactorInteger[d]]},
+QuditBasis[{"Wootters", d : _Integer ? Positive : 2}] := With[{factors = primeFactors[d]},
     Simplify @ QuantumTensorProduct[QuditBasis[Subscript["\[ScriptCapitalW]", Row[{##}]] & @@@ Tuples[Range[0, # - 1], 2], WoottersBasis[#]] & /@ factors]
 ]
 

@@ -13,6 +13,9 @@ PackageScope["targetsQ"]
 PackageScope["measurementReprQ"]
 PackageScope["emptyTensorQ"]
 
+PackageScope["primeFactors"]
+PackageScope["powerPrimeFactors"]
+
 PackageScope["normalizeMatrix"]
 PackageScope["tensorToVector"]
 PackageScope["identityMatrix"]
@@ -75,6 +78,13 @@ targetQ[target_] := VectorQ[target, IntegerQ] && AllTrue[target, Positive]
 targetsQ[targets_] := VectorQ[targets, targetQ]
 
 measurementReprQ[state_] := TensorQ[state] && MemberQ[{2, 3}, TensorRank[state]]
+
+
+(* numbers *)
+
+primeFactors[n_] := Catenate[Table @@@ FactorInteger[n]]
+
+powerPrimeFactors[n_] := Power @@@ FactorInteger[n]
 
 
 (* Matrix tools *)

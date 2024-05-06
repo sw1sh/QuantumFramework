@@ -248,7 +248,7 @@ QuantumStateProp[qs_, "QuasiProbability", opts___] :=
 
 QuantumStateProp[qs_, "PrimeQuasiProbability"] := With[{n = Total[FactorInteger[qs["Dimension"]][[All, 2]]]},
     ArrayReshape[
-        Transpose[qs["PrimePhaseSpace"], FindPermutation[Join[Range[1, 2 n, 2], Range[2, 2 qs["Qudits"] - 1, 2]]]],
+        Transpose[qs["PrimePhaseSpace"], FindPermutation[Join[Range[1, 2 n, 2], Range[2, 2 n - 1, 2]]]],
         {1, 1} qs["Dimension"]
     ]
 ]
@@ -519,8 +519,6 @@ QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /;
     qs["Eigenvalues"] . (#["SchmidtBasis", dim]["MatrixState"] & /@ qs["Eigenstates"])
 
 
-primeFactors[n_] := Catenate[Table @@@ FactorInteger[n]]
-
 QuantumStateProp[qs_, "PrimeBasis"] := QuantumState[qs, QuantumBasis[primeFactors[qs["OutputDimension"]], primeFactors[qs["InputDimension"]]]]
 
 
@@ -697,9 +695,9 @@ QuantumStateProp[qs_, "Pure"] := If[qs["PureStateQ"] || qs["DegenerateStateQ"], 
 QuantumStateProp[qs_, "Mixed"] := If[qs["MixedStateQ"], qs, qs["Unbend"]]
 
 
-QuantumStateProp[qs_, "VectorState"] := If[qs["VectorQ"], qs, QuantumState[qs["StateVector"], qs["Basis"]]]
+QuantumStateProp[qs_, "VectorState" | "Vector"] := If[qs["VectorQ"], qs, QuantumState[qs["StateVector"], qs["Basis"]]]
 
-QuantumStateProp[qs_, "MatrixState"] := If[qs["MatrixQ"], qs, QuantumState[qs["DensityMatrix"], qs["Basis"]]]
+QuantumStateProp[qs_, "MatrixState" | "Matrix"] := If[qs["MatrixQ"], qs, QuantumState[qs["DensityMatrix"], qs["Basis"]]]
 
 QuantumStateProp[qs_, "Transpose"] := With[{qb = qs["Basis"]["Transpose"]},
     QuantumState[If[qs["VectorQ"], SparseArrayFlatten @ Transpose[qs["StateMatrix"]], ArrayReshape[Transpose[qs["DensityMatrixTensor"], {2, 1, 4, 3}], qb["MatrixDimensions"]]], qb]
