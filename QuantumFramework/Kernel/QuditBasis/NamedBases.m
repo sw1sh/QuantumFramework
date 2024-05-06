@@ -13,12 +13,12 @@ $QuditBasisNames = {
     "Bell",
     "Fourier",
     "Schwinger", "Dirac",
+    "Ivanovic",
     "Wigner", "WignerMIC",
     "Pauli", "GellMann", "GellMannMIC", "Bloch", "GellMannBloch", "GellMannBlochMIC",
     "Wootters", "Feynman",
     "Tetrahedron", "RandomMIC",
-    "QBismSIC", "HesseSIC", "HoggarSIC",
-    "Ivanovic"
+    "QBismSIC", "HesseSIC", "HoggarSIC"
 }
 
 $QuditPhaseSpaceBasisNames = Last @ SequenceSplit[$QuditBasisNames, x : {"Wigner", ___} :> x]

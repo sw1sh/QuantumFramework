@@ -69,6 +69,35 @@ QuantumState[obj : _QuantumOperator | _QuantumMeasurementOperator | _QuantumMeas
     QuantumState[obj["State"], opts]
 
 
+(* active basis transform *)
+
+QuantumState[qb_ ? QuantumBasisQ, opts___] := Enclose @ If[
+    qb["Picture"] === "PhaseSpace",
+
+    With[{dims = Sqrt[qb["Dimensions"]], n = qb["Qudits"]},
+        ConfirmAssert[AllTrue[dims, IntegerQ]];
+        QuantumState[
+            ArrayReshape[
+                Transpose[
+                    ArrayReshape[Inverse[qb["Matrix"]], Join[#, #] & @ Catenate[{#, #} & /@ dims]],
+                    If[ n > 1,
+                        PermutationProduct[
+                            Cycles[NestList[# + 2 &, {2, 2 n + 1 }, n - 1]],
+                            Cycles[NestList[# + 4 &, {2, 3}, n - 1]]
+                        ],
+                        Cycles[{{2, 3}}]
+                    ]
+                ],
+                {#, #} & @ qb["Dimension"]
+            ],
+            QuantumBasis[dims, dims, opts, qb["Options"]]
+        ]
+    ],
+
+    QuantumState[Flatten[qb["Matrix"]], QuantumBasis[qb["QuditBasis"], qb["Dimensions"], opts, qb["Options"]]]
+]
+
+
 (* number *)
 
 QuantumState[x : Except[_ ? QuantumStateQ | _ ? stateQ], basisArgs___] := QuantumState[{x}, QuantumBasis[basisArgs]]

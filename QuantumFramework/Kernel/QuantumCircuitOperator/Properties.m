@@ -143,7 +143,7 @@ Options[quantumCircuitCompile] := Join[{Method -> Automatic}, Options[TensorNetw
 quantumCircuitCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] :=
     Switch[
         OptionValue[Method],
-        "Schrodinger" | "Schroedinger" | "Schrödinger",
+        "Schrodinger",
         Fold[ReverseApplied[Construct], qco["Flatten"]["Operators"]],
         Automatic | "TensorNetwork",
         TensorNetworkCompile[qco, FilterRules[{opts}, Options[TensorNetworkCompile]]],

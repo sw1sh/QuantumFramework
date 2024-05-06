@@ -81,6 +81,10 @@ QuantumOperator[qs_ ? QuantumStateQ, {outputOrder_ ? orderQ, inputOrder_}] /; qs
 QuantumOperator[qs_ ? QuantumStateQ, {outputOrder_, inputOrder_ ? orderQ}] /; qs["InputDimension"] == 1 && Length[inputOrder] > 0 :=
     QuantumOperator[qs, {outputOrder, {}}]
 
+
+QuantumOperator[qb_ ? QuantumBasisQ, opts___] := QuantumOperator[QuantumState[qb], opts]
+
+
 QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, order : _ ? autoOrderQ : Automatic, args___, opts : OptionsPattern[]] := Block[{
     dimensions = TensorDimensions[tensor],
     outputOrder,

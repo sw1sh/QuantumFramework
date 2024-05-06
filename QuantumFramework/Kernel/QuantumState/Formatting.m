@@ -40,9 +40,12 @@ QuantumState /: MakeBoxes[qs_QuantumState /; QuantumStateQ[qs], format_] := Encl
             BoxForm`SummaryItem[{"Type: ", qs["StateType"]}],
             BoxForm`SummaryItem[{"Dimension: ", qs["Dimension"]}]
         },
-        {
-            BoxForm`SummaryItem[{"Picture: ", qs["Picture"]}]
-        }
+        If[ qs["Picture"] === "Schrodinger",
+            Nothing, 
+            {
+                BoxForm`SummaryItem[{"Picture: ", qs["Picture"]}]
+            }
+        ]
     },
     {
         {

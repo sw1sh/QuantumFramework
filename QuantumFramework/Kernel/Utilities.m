@@ -3,6 +3,7 @@ Package["Wolfram`QuantumFramework`"]
 PackageScope["SymbolicQ"]
 PackageScope["basisMultiplicity"]
 PackageScope["nameQ"]
+PackageScope["nameString"]
 PackageScope["propQ"]
 PackageScope["propName"]
 PackageScope["stateQ"]
@@ -62,6 +63,8 @@ basisMultiplicity[dim_, size_] := Quiet[Replace[Ceiling @ Log[size, dim], Except
 (* test functions *)
 
 nameQ[name_] := MatchQ[name, _String | {_String, ___} | _String[___]]
+
+nameString[name_] := Replace[name, s_String | {s_String, ___} | s_String[___] :> s]
 
 propQ[prop_] := MatchQ[prop, _String | {_String, ___}]
 

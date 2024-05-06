@@ -31,6 +31,7 @@ $QuantumStateProperties = {
     "Disentangle", "Decompose", "DecomposeWithAmplitudes", "DecomposeWithProbabilities",
     "SchmidtDecompose",
     "Formula", "Simplify", "FullSimplify",
+    "Diagram", "CircuitDiagram",
     "BlochPlot", "AmplitudePlot", "ProbabilityPlot"
 };
 
@@ -695,9 +696,9 @@ QuantumStateProp[qs_, "Pure"] := If[qs["PureStateQ"] || qs["DegenerateStateQ"], 
 QuantumStateProp[qs_, "Mixed"] := If[qs["MixedStateQ"], qs, qs["Unbend"]]
 
 
-QuantumStateProp[qs_, "VectorState" | "Vector"] := If[qs["VectorQ"], qs, QuantumState[qs["StateVector"], qs["Basis"]]]
+QuantumStateProp[qs_, "VectorState" | "ToVector" | "Vector"] := If[qs["VectorQ"], qs, QuantumState[qs["StateVector"], qs["Basis"]]]
 
-QuantumStateProp[qs_, "MatrixState" | "Matrix"] := If[qs["MatrixQ"], qs, QuantumState[qs["DensityMatrix"], qs["Basis"]]]
+QuantumStateProp[qs_, "MatrixState" | "ToMatrix"] := If[qs["MatrixQ"], qs, QuantumState[qs["DensityMatrix"], qs["Basis"]]]
 
 QuantumStateProp[qs_, "Transpose"] := With[{qb = qs["Basis"]["Transpose"]},
     QuantumState[If[qs["VectorQ"], SparseArrayFlatten @ Transpose[qs["StateMatrix"]], ArrayReshape[Transpose[qs["DensityMatrixTensor"], {2, 1, 4, 3}], qb["MatrixDimensions"]]], qb]
@@ -917,6 +918,8 @@ QuantumStateProp[qs_, "BlochCartesianCoordinates"] /; qs["Dimension"] == 2 := Wi
     ]
 ]
 
+
+QuantumStateProp[qs_, "CircuitDiagram", opts___] := QuantumCircuitOperator[{qs}]["Diagram", opts]
 
 QuantumStateProp[qs_, "BlochPlot" | "BlochSpherePlot", opts : OptionsPattern[BlochPlot]] /; qs["Dimension"] == 2 := BlochPlot[qs["BlochVectorWithPhase"], opts]
 
