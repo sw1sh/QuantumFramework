@@ -100,7 +100,7 @@ Options[quantumCircuitApply] := Join[{Method -> Automatic}, Options[TensorNetwor
 quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, opts : OptionsPattern[]] /; qco["InputDimensions"][[Ordering[qco["InputOrder"]]]] == qs["OutputDimensions"] := Replace[
     OptionValue[Method],
     {
-        "Schrodinger" | "Schroedinger" | "Schrödinger" :> Fold[ReverseApplied[Construct], qs, qco["Operators"]],
+        "Schrodinger" :> Fold[ReverseApplied[Construct], qs, qco["Operators"]],
         Automatic | "TensorNetwork" :> TensorNetworkApply[qco["Flatten"], qs, FilterRules[{opts}, Options[TensorNetworkApply]]],
         "QuEST" :> QuESTApply[qco, qs],
         "Qiskit" | {"Qiskit", subOpts___} :> qco["Qiskit"][qs, subOpts],
