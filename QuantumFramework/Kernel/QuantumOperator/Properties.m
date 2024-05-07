@@ -167,6 +167,8 @@ QuantumOperatorProp[qo_, "InputOrderDimensions"] := AssociationMap[
     qo["FullInputOrder"]
 ]
 
+QuantumOperatorProp[qo_, "TargetDimensions"] := qo["TargetOrder"] /. qo["InputOrderDimensions"]
+
 
 QuantumOperatorProp[qo_, "SquareQ"] := qo["OutputDimension"] == qo["InputDimension"]
 
@@ -197,7 +199,7 @@ QuantumOperatorProp[qo_, "OrderedTensorRepresentation"] := qo["Ordered"]["Tensor
 
 QuantumOperatorProp[qo_, "MatrixQuantumState"] /; qo["OutputDimension"] == qo["InputDimension"] := QuantumState[qo["Matrix"], qo["Output"]]
 
-QuantumOperatorProp[qo_, prop : "MatrixState" | "VectorState"] := QuantumOperator[qo["State"][prop], qo["Order"]]
+QuantumOperatorProp[qo_, prop : "MatrixState" | "VectorState" | "ToMatrix" | "ToVector" | "Vector"] := QuantumOperator[qo["State"][prop], qo["Order"]]
 
 QuantumOperatorProp[qo_, "PermuteInput", perm_Cycles] := QuantumOperator[
     qo["State"]["PermuteInput", perm],

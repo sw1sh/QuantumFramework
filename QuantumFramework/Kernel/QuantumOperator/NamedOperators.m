@@ -91,6 +91,8 @@ QuantumOperator[arg : _String | {_String, ___}, n_Integer ? Positive, opts___] :
 
 QuantumOperator[arg_, inputOrder : _ ? orderQ | Automatic -> outputOrder : _ ? orderQ | Automatic, opts___] := QuantumOperator[arg, {outputOrder, inputOrder}, opts]
 
+QuantumOperator["Identity" | "I", opts___] := QuantumOperator["I", Automatic, opts] 
+
 QuantumOperator["Identity" | "I", order : _ ? orderQ | Automatic, opts___] :=
     QuantumOperator[{"Identity", Table[2, If[order === Automatic, 1, Length[order]]]}, order, opts]
 
@@ -403,21 +405,33 @@ QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orde
 ]
 
 QuantumOperator[{name : "C" | "Controlled" | "C0" | "Controlled0", qo_ ? QuantumOperatorQ, args___}, opts___] /; qo["MatrixQ"] := Enclose @ Block[{
-    cop = ConfirmBy[QuantumOperator[{name, qo["Bend"], args}], QuantumOperatorQ], control, target
+    cop = ConfirmBy[QuantumOperator[{name, qo["Bend"], args}], QuantumOperatorQ], control, target, targetDimensions
 },
     control = cop["ControlOrder"];
     target = cop["TargetOrder"];
+    targetDimensions = cop["TargetDimensions"];
     ConfirmAssert[control =!= target =!= {}];
     QuantumOperator[
         QuantumCircuitOperator[{
             "Measure" -> control,
-            "Uncurry" -> target, cop, "Curry" -> target,
+            "Uncurry"[targetDimensions] -> target, cop, "Curry"[targetDimensions] -> target,
             "Encode" -> control
         }],
         opts,
         "Label" -> ReplacePart[cop["Label"], {0, 2} -> qo["Label"]]
     ]["Undouble"]
 ]
+
+(* QuantumOperator[{name : "C" | "Controlled" | "C0" | "Controlled0", qo_ ? QuantumOperatorQ, args___}, opts___] /; qo["MatrixQ"] := Enclose @ Block[{
+    weights, vectors, ops
+},
+    {weights, vectors} = qo["State"]["Eigensystem"];
+    ops = MapThread[Confirm[QuantumOperator[{name, QuantumOperator[QuantumState[Sqrt[#1] #2, qo["Basis"]], qo["Order"]], args}, opts]] &, {weights, vectors}];
+    QuantumOperator[
+        QuantumState[Total[Through[ops["DensityMatrix"]]], First[ops]["Basis"]],
+        First[ops]["Order"]
+    ]
+] *)
 
 
 QuantumOperator[{"Multiplexer" | "BlockDiagonal", qos__}, opts___] := Block[{sorted = QuantumOperator[#]["Sort"] & /@ {qos}},
