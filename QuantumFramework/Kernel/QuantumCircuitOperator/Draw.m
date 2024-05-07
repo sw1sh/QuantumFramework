@@ -250,7 +250,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			wireStyle,
 			Table[{
 				wireThickness[Replace[i, inDims]],
-				Line[{{center[[1]] - size /2, - i vGapSize}, {center[[1]], - i vGapSize}}],
+				Line[{{center[[1]] - size / 2, - i vGapSize}, {center[[1]] + size / 8, - i vGapSize}}],
 				Thickness[Large],
 				Table[
 					Line[{{center[[1]] + ((j - 1) / 6 - 1 / 3) size, - i vGapSize + size / j / 2}, {center[[1]] + ((j - 1) / 6 - 1 / 3) size, - i vGapSize - size / j / 2}}],
