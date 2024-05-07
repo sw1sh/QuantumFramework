@@ -758,7 +758,7 @@ circuitDraw[circuit_QuantumCircuitOperator, Dynamic[qc_Symbol], position_List, o
 	inputOrders = Map[If[QuantumChannelQ[#] || QuantumMeasurementOperatorQ[#], #["InputOrder"], Union @@ #["Order"]] &, circuit["Flatten"]["Operators"]];
 	extraQuditsQ = TrueQ[OptionValue["ShowExtraQudits"]] || AnyTrue[inputOrders, NonPositive, 2];
 	showMeasurementWireQ = TrueQ[OptionValue["ShowMeasurementWire"]] && ! extraQuditsQ && circuit["Measurements"] > 0;
-	labelCounter[label_, {out_, in_}] := If[MatchQ[label, ("Measurement" | "Channel")[_]], label, label /. None :> (labelCount++; Subscript[If[out === {} || in === {}, "\[Psi]", "U"], labelCount])];
+	labelCounter[label_, {out_, in_}] := If[MatchQ[label, ("Measurement" | "Channel")[_] | Subscript["C", ("Measurement" | "Channel")[_]][___]], label, label /. None :> (labelCount++; Subscript[If[out === {} || in === {}, "\[Psi]", "U"], labelCount])];
 	outlineMin = Which[showMeasurementWireQ, 1, AnyTrue[order, NonPositive] && extraQuditsQ, min, emptyWiresQ, 1, True, Min[inputOrders, max]];
 	positions = circuitPositions[circuit, level, MatchQ[OptionValue["GateOverlap"], Automatic | True], showMeasurementWireQ, extraQuditsQ];
 	height = Max[0, positions] + 1;

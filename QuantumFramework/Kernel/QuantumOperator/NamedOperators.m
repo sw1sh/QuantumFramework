@@ -365,7 +365,7 @@ QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ /; qo["ControlOrder"
         Complement[Union[qo["ControlOrder0"], control0], control1]
     }, opts]
 
-QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}}, opts___] := Enclose @ With[{
+QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orderQ | {}, control0 : _ ? orderQ | {} : {}}, opts___] /; qo["VectorQ"] := Enclose @ With[{
     controls1 = Length[control1],
     controls0 = Length[control0],
     control = Join[control0, control1],
@@ -400,6 +400,23 @@ QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orde
         opts,
         "Label" -> Subscript["C", op["Label"]][control1, control0]
     ]
+]
+
+QuantumOperator[{name : "C" | "Controlled" | "C0" | "Controlled0", qo_ ? QuantumOperatorQ, args___}, opts___] /; qo["MatrixQ"] := Enclose @ Block[{
+    cop = ConfirmBy[QuantumOperator[{name, qo["Bend"], args}], QuantumOperatorQ], control, target
+},
+    control = cop["ControlOrder"];
+    target = cop["TargetOrder"];
+    ConfirmAssert[control =!= target =!= {}];
+    QuantumOperator[
+        QuantumCircuitOperator[{
+            "Measure" -> control,
+            "Uncurry" -> target, cop, "Curry" -> target,
+            "Encode" -> control
+        }],
+        opts,
+        "Label" -> ReplacePart[cop["Label"], {0, 2} -> qo["Label"]]
+    ]["Undouble"]
 ]
 
 

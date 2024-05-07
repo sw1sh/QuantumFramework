@@ -82,7 +82,7 @@ QuantumOperator[qs_ ? QuantumStateQ, {outputOrder_, inputOrder_ ? orderQ}] /; qs
     QuantumOperator[qs, {outputOrder, {}}]
 
 
-QuantumOperator[qb_ ? QuantumBasisQ, opts___] := QuantumOperator[QuantumState[qb], opts]
+QuantumOperator[qb : _QuditBasis | _QuantumBasis, opts___] := QuantumOperator[QuantumState[qb], opts]
 
 
 QuantumOperator[tensor_ ? TensorQ /; TensorRank[tensor] > 2, order : _ ? autoOrderQ : Automatic, args___, opts : OptionsPattern[]] := Block[{

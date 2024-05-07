@@ -71,6 +71,8 @@ QuantumState[obj : _QuantumOperator | _QuantumMeasurementOperator | _QuantumMeas
 
 (* active basis transform *)
 
+QuantumState[qb_QuditBasis, opts___] := QuantumState[QuantumBasis[qb], opts]
+
 QuantumState[qb_ ? QuantumBasisQ, opts___] := Enclose @ If[
     qb["Picture"] === "PhaseSpace",
 
@@ -94,7 +96,7 @@ QuantumState[qb_ ? QuantumBasisQ, opts___] := Enclose @ If[
         ]
     ],
 
-    QuantumState[Flatten[qb["Matrix"]], QuantumBasis[qb["QuditBasis"], qb["Dimensions"], opts, qb["Options"]]]
+    QuantumState[Flatten[Inverse[qb["Matrix"]]], QuantumBasis[qb["QuditBasis"], qb["Dimensions"], opts, qb["Options"]]]
 ]
 
 
