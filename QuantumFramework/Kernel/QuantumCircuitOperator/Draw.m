@@ -7,13 +7,14 @@ PackageScope["CircuitDraw"]
 $DefaultGray = RGBColor[0.537254, 0.537254, 0.537254];
 
 $GateDefaultBoundaryStyle = {
+	None | Subscript["\[Psi]", _] | _Ket | _Bra -> Hue[0.62, 0.45, 0.87],
 	"H" -> RGBColor[0.368417, 0.506779, 0.709798],
 	"T" | "S" -> RGBColor[0.922526, 0.385626, 0.209179],
 	"I" | "X" | "Y" | "Z" | "Pauli" | "NOT" | "0" | "1" -> RGBColor[0.880722, 0.611041, 0.142051],
 	"P"[_] | (Superscript | Power)["P"[_], _] | "PhaseShift"[_] -> RGBColor[0.560181, 0.691569, 0.194885],
 	Subscript["R", _][_] -> RGBColor[0.528488, 0.470624, 0.701351],
-	"Measurement" -> RGBColor[0.7367, 0.358, 0.5030],
-	"Channel" -> Directive[Dotted, $DefaultGray],
+	"Measurement" | "Measurement"[_] -> RGBColor[0.7367, 0.358, 0.5030],
+	"Channel" | "Channel"[_] -> Directive[Dotted, $DefaultGray],
 	"ZSpider" | "XSpider" | "Spider" | "Measure" | "Encode" | "Copy" -> Directive[CapForm[None], $DefaultGray, Opacity[.3]],
 	_ -> $DefaultGray
 };
@@ -245,14 +246,14 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 				Triangle[{center - size / 4 {1/2, 1}, center - size / 4 {1/2, -1}, center - size / 4 {-1, 0}}]
 			]
 		}],
-		"Discard" :> {
+		"Discard" | "Trace" :> {
 			wireStyle,
 			Table[{
 				wireThickness[Replace[i, inDims]],
 				Line[{{center[[1]] - size /2, - i vGapSize}, {center[[1]], - i vGapSize}}],
 				Thickness[Large],
 				Table[
-					Line[{{center[[1]] + (j - 1) size / 6, - i vGapSize + size / j / 2}, {center[[1]] + (j - 1) size / 6, - i vGapSize - size / j / 2}}],
+					Line[{{center[[1]] + ((j - 1) / 6 - 1 / 3) size, - i vGapSize + size / j / 2}, {center[[1]] + ((j - 1) / 6 - 1 / 3) size, - i vGapSize - size / j / 2}}],
 					{j, 3}
 				]
 			},
@@ -411,7 +412,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 		(head : (SuperDagger | SuperStar))[subLabel_] :> (gateFunction[subLabel] /. Text[l_, args___] :> Text[head[l], args]),
 		subLabel_ :> {
 			EdgeForm[If[thickWireQ, Directive[AbsoluteThickness[3], #] &, Identity] @ Replace[subLabel, gateBoundaryStyle]],
-			FaceForm[Replace[subLabel, gateBackgroundStyle]],
+			FaceForm[Replace[If[Length[vposIn] == 0 || Length[vposOut] == 0, None, subLabel], gateBackgroundStyle]],
 			Which[
 				Length[vposIn] == 0,
 				Translate[

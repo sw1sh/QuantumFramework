@@ -24,7 +24,7 @@ conj = SuperDagger | SuperStar
 (* TODO: dimensions and order dependence *)
 simplifyLabel[l_, out_ : None, in_ : None, order_ : None] := Replace[l, {
     _CircleTimes :> Map[simplifyLabel, l],
-    conj[label : None | "X" | "I" | "NOT" | "SWAP" | "Cap" | "Cup"] :> label,
+    conj[label : None | "0" | "1" | "X" | "I" | "NOT" | "SWAP" | "Cap" | "Cup" | "Measurement"[_] | "Channel"[_]] :> label,
     conj[label : "Z" | "H"] /; out == in == {2} :> label,
     SuperStar[label: "S" | "T"] :> SuperDagger[label],
     (h : conj)[Superscript[label_, p_CircleTimes]] :> Superscript[simplifyLabel[h[label]], p],

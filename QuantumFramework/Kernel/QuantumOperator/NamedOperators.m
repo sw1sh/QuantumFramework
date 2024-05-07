@@ -728,6 +728,8 @@ QuantumOperator[{name : $Spider, args___}, opts : PatternSequence[] | PatternSeq
 
 QuantumOperator[name : "Measure" | "Encode" | "Copy" | "Decohere" | "Marginal" | "Discard" | "Trace" | "Cap" | "Cup", opts___] := QuantumOperator[{name}, opts]
 
+QuantumOperator[{name : "Measure" | "Encode" | "Marginal" | "Discard" | "Trace", args___}, order : _ ? orderQ, opts___] /; Length[order] > 1 := QuantumTensorProduct[QuantumOperator[{name, args}, {#}, opts] & /@ order]
+
 QuantumOperator[{"Measure", args__ : 2}, opts___] := With[{decohere = QuantumOperator["Decohere"[args], {1, 2} -> {1}]}, QuantumOperator[decohere @ QuantumOperator["Uncurry"[decohere["OutputDimension"]], {1} -> {1, 2}], opts, "Label" -> "Measure"]]
 
 QuantumOperator[{"Encode", args__ : 2}, opts___] := With[{copy = QuantumOperator["Copy"[args], {1} -> {1, 2}]}, QuantumOperator[QuantumOperator["Curry"[copy["InputDimension"]], {1, 2} -> {1}] @ copy, opts, "Label" -> "Encode"]]

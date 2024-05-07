@@ -74,8 +74,8 @@ QuantumState[{"BasisState", basisElement_List : {1}}, args___] := Enclose @ Bloc
 
 
 QuantumState[{"Register", subsystemCount: _Integer ? Positive : 1, state : _Integer ? NonNegative : 0}, args___] := Enclose @ Block[{basis, dimension},
-    basis = ConfirmBy[QuantumBasis[args], QuantumBasisQ];
-    basis = QuantumBasis[basis, Ceiling[subsystemCount / basis["Qudits"]], "Label" -> state];
+    basis = ConfirmBy[QuantumBasis[args, "Label" -> state], QuantumBasisQ];
+    basis = QuantumBasis[basis, Ceiling[subsystemCount / basis["Qudits"]]];
     dimension = basis["Dimension"];
     ConfirmAssert[0 <= state < dimension];
     QuantumState[SparseArray[{{state + 1} -> 1}, dimension], basis]

@@ -502,7 +502,7 @@ QuantumOperatorProp[qo_, prop : "Dagger" | "ConjugateTranspose" | "Inverse"] := 
 QuantumOperatorProp[qo_, prop : "Conjugate" | "Dual"] := QuantumOperator[qo["State"][prop], qo["Order"]]
 
 QuantumOperatorProp[qo_, "Bend", shift : _Integer ? Positive : Automatic] :=
-    If[ qo["MatrixQ"],
+    simplifyLabel @ Echo@If[ qo["MatrixQ"],
         QuantumOperator[qo["State"]["Bend"], Join[#, # + Replace[shift, Automatic :> Max[qo["Order"]] - Min[#] + 1]] & /@ qo["Order"]],
         QuantumTensorProduct[qo, qo["Conjugate"]["Shift", Replace[shift, Automatic :> Max[qo["Order"]]]]]
     ]
