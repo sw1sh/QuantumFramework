@@ -1,6 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
 PackageScope["CircuitDraw"]
+PackageScope["circuitElementPosition"]
 
 
 
@@ -200,9 +201,16 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 			Map[drawGate[{{#}, hpos}, dims, Subscript["R", Subscript[subLabel, #]][angle], opts] &, vpos],
 			drawControlWires[#, {Subscript["R", Subscript[subLabel, #[[1]]]][angle], Subscript["R", Subscript[subLabel, #[[2]]]][angle]}] & /@ Partition[Sort[vpos], 2, 1]
 		},
-		"I" /; Length[vposOut] === Length[vposIn] && ! identityQ :> {
+		"I" | "I"[subLabel___] /; Length[vposOut] === Length[vposIn] && ! identityQ :> {
 			wireStyle,
-			MapThread[{wireThickness[Replace[#1, inDims]], Line[{{center[[1]] - size / 2, - #1 vGapSize}, {center[[1]] + size / 2, - #2 vGapSize}}]} &, {vposIn, vposOut}]
+			MapThread[{wireThickness[Replace[#1, inDims]], Line[{{center[[1]] - size / 2, - #1 vGapSize}, {center[[1]] + size / 2, - #2 vGapSize}}]} &, {vposIn, vposOut}],
+			If[	{subLabel} === {} || ! gateLabelsQ,
+				Nothing,
+				Text[
+					Style[Replace[subLabel, OptionValue["GateLabels"]], labelStyleOpts],
+					center + {0, size / 8}
+				]
+			]
 		},
 		"Cup" | ("I" /; Length[vposOut] == 2 && vposIn === {}) :> {
 			wireStyle,
