@@ -73,7 +73,7 @@ FromOperatorShorthand[arg : {name_String, ___} | name_String[___] | name_String]
 FromOperatorShorthand[arg : {name_String, ___} | name_String[___] | name_String] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[arg]
 FromOperatorShorthand[arg : {name_String, ___} | name_String[___] | name_String -> order_] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[arg, Flatten[{order}]]
 FromOperatorShorthand[(qc_ ? QuantumChannelQ) -> order_ ? autoOrderQ] := QuantumChannel[qc, order]
-FromOperatorShorthand[lhs_ -> order_ ? autoOrderQ] := QuantumOperator[FromOperatorShorthand[Unevaluated[lhs]], order]
+FromOperatorShorthand[lhs_ -> order_ ? autoOrderQ] := QuantumOperator[Unevaluated[lhs], order]
 FromOperatorShorthand[lhs_ -> n_Integer] := FromOperatorShorthand[Unevaluated[lhs -> {n}]]
 FromOperatorShorthand[lhs_ -> n : _Integer | _ ? orderQ -> m : _Integer | _ ? orderQ] := QuantumOperator[lhs, {Flatten[{m}], Flatten[{n}]}]
 FromOperatorShorthand[(lhs_ -> rhs_) -> label : Except[OptionsPattern[]]] := FromOperatorShorthand[Unevaluated[(lhs -> rhs) -> ("Label" -> label)]]
@@ -414,7 +414,7 @@ QuantumOperator[{name : "C" | "Controlled" | "C0" | "Controlled0", qo_ ? Quantum
     QuantumOperator[
         QuantumCircuitOperator[{
             "Measure" -> control,
-            "Uncurry"[targetDimensions] -> target, cop, "Curry"[targetDimensions] -> target,
+            "Uncurry"[targetDimensions] -> {First[target]} -> target, cop, "Curry"[targetDimensions] -> target -> {First[target]},
             "Encode" -> control
         }],
         opts,
@@ -643,19 +643,21 @@ QuantumOperator[{"Permutation", dims : {_Integer ? Positive..} | Automatic : Aut
     QuantumOperator[{"Permutation", Replace[dims, Automatic :> ConstantArray[2, Length[perm]]], PermutationCycles[perm]}, opts]
 
 
-QuantumOperator["Curry", opts___] := QuantumOperator[{"Curry", 2}, opts]
+QuantumOperator[{name : "Curry" | "Uncurry", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[{name, {basis, basis}}, opts]]
 
-QuantumOperator[{"Curry", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[{"Curry", {basis, basis}}, opts]]
-
-QuantumOperator[{"Curry", args_List}, opts___] := With[{bases = QuditBasis /@ args},
+QuantumOperator[{name : "Curry" | "Uncurry", args_List}, opts___] := With[{bases = QuditBasis /@ args},
     QuantumOperator[
-        QuantumOperator[identityMatrix[Times @@ Through[bases["Dimension"]]], QuantumBasis[QuditBasis[Tuples[Through[bases["Names"]]]], QuantumTensorProduct[bases]]],
+        QuantumState[
+            SparseArrayFlatten @ identityMatrix[Times @@ Through[bases["Dimension"]]],
+            If[ name === "Curry",
+                QuantumBasis[QuditBasis[Tuples[Through[bases["Names"]]]], QuantumTensorProduct[bases]],
+                QuantumBasis[QuantumTensorProduct[bases], QuditBasis[Tuples[Through[bases["Names"]]]]]
+            ]
+        ],
         opts,
-        "Label" -> "Curry"
+        "Label" -> name
     ]
 ]
-
-QuantumOperator[name : "Uncurry" | {"Uncurry", ___}, opts___] := QuantumOperator[QuantumOperator[name /. "Uncurry" -> "Curry"]["ConjugateTranspose"], opts, "Label" -> "Uncurry"]
 
 
 QuantumOperator[{name : "XSpider" | "YSpider" | "ZSpider", phase_ : 0},

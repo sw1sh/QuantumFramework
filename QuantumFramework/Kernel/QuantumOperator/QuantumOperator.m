@@ -40,21 +40,22 @@ QuantumOperator[qs_ ? QuantumStateQ, order : {outputOrder_ ? orderQ, inputOrder_
 QuantumOperator[qs_ ? QuantumStateQ] :=
     QuantumOperator[
         qs,
-        If[qs["InputDimension"] > 1, {Automatic, Range[qs["InputQudits"]]}, {Range[qs["OutputQudits"]], Automatic}]
+        If[qs["InputQudits"] > qs["OutputQudits"], {Automatic, Range[qs["InputQudits"]]}, {Range[qs["OutputQudits"]], Automatic}]
     ]
 
 QuantumOperator[arg : _ ? QuantumStateQ, outputOrder : _ ? orderQ | Automatic, inputOrder : _ ? orderQ | Automatic, opts___] :=
     QuantumOperator[QuantumState[arg, opts], {outputOrder, inputOrder}]
 
-QuantumOperator[qs : _ ? QuantumStateQ, order : _ ? orderQ | Automatic, opts___] :=
-    QuantumOperator[qs, {Replace[order, Automatic :> Range[qs["OutputQudits"]]], Automatic}, opts]
+QuantumOperator[qs : _ ? QuantumStateQ, autoOrder : _ ? orderQ | Automatic, opts___] := With[{order = Replace[autoOrder, Automatic :> Range[qs["OutputQudits"]]]},
+    QuantumOperator[qs, If[Length[order] == qs["OutputQudits"], {order, Automatic}, {Automatic, order}], opts]
+]
 
 
 QuantumOperator[qs_ ? QuantumStateQ, {Automatic, order_ ? orderQ}, opts___] :=
     QuantumOperator[
         qs,
         {
-            Reverse @ Take[Join[Reverse @ order, Min[order] - Range[Max[1, qs["OutputQudits"] - qs["InputQudits"]]]], UpTo @ qs["OutputQudits"]],
+            # - Min[#, 1] + 1 & @ Reverse @ Take[Join[Reverse @ order, Min[order] - Range[Max[1, qs["OutputQudits"] - qs["InputQudits"]]]], UpTo @ qs["OutputQudits"]],
             order
         },
         opts
@@ -65,7 +66,7 @@ QuantumOperator[qs_ ? QuantumStateQ, {order_ ? orderQ, Automatic}, opts___] :=
         qs,
         {
             order,
-            Reverse @ Take[Join[Reverse @ order, Min[order] - Range[Max[1, qs["InputQudits"] - qs["OutputQudits"]]]], UpTo @ qs["InputQudits"]]
+            # - Min[#, 1] + 1 & @ Reverse @ Take[Join[Reverse @ order, Min[order] - Range[Max[1, qs["InputQudits"] - qs["OutputQudits"]]]], UpTo @ qs["InputQudits"]]
         },
         opts
     ]
