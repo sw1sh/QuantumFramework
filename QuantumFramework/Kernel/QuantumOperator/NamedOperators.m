@@ -73,7 +73,7 @@ FromOperatorShorthand[arg : {name_String, ___} | name_String[___] | name_String]
 FromOperatorShorthand[arg : {name_String, ___} | name_String[___] | name_String] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[arg]
 FromOperatorShorthand[arg : {name_String, ___} | name_String[___] | name_String -> order_] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[arg, Flatten[{order}]]
 FromOperatorShorthand[(qc_ ? QuantumChannelQ) -> order_ ? autoOrderQ] := QuantumChannel[qc, order]
-FromOperatorShorthand[lhs_ -> order_ ? autoOrderQ] := QuantumOperator[Unevaluated[lhs], order]
+FromOperatorShorthand[lhs_ -> order_ ? autoOrderQ] := QuantumOperator[FromOperatorShorthand[Unevaluated[lhs]], order]
 FromOperatorShorthand[lhs_ -> n_Integer] := FromOperatorShorthand[Unevaluated[lhs -> {n}]]
 FromOperatorShorthand[lhs_ -> n : _Integer | _ ? orderQ -> m : _Integer | _ ? orderQ] := QuantumOperator[lhs, {Flatten[{m}], Flatten[{n}]}]
 FromOperatorShorthand[(lhs_ -> rhs_) -> label : Except[OptionsPattern[]]] := FromOperatorShorthand[Unevaluated[(lhs -> rhs) -> ("Label" -> label)]]
@@ -405,21 +405,31 @@ QuantumOperator[{"C" | "Controlled", qo_ ? QuantumOperatorQ, control1 : _ ? orde
 ]
 
 QuantumOperator[{name : "C" | "Controlled" | "C0" | "Controlled0", qo_ ? QuantumOperatorQ, args___}, opts___] /; qo["MatrixQ"] := Enclose @ Block[{
-    cop = ConfirmBy[QuantumOperator[{name, qo["Bend"], args}], QuantumOperatorQ], control, target, targetDimensions
+    cop = ConfirmBy[QuantumOperator[{name, qo["Bend"], args}], QuantumOperatorQ]["Sort"], control, target, targetDimensions
 },
     control = cop["ControlOrder"];
     target = cop["TargetOrder"];
-    targetDimensions = cop["TargetDimensions"];
     ConfirmAssert[control =!= target =!= {}];
+    targetDimensions = Take[cop["TargetDimensions"], Length[target] / 2];
+    target = Thread[TakeDrop[target, Length[target] / 2]];
     QuantumOperator[
         QuantumCircuitOperator[{
             "Measure" -> control,
-            "Uncurry"[targetDimensions] -> {First[target]} -> target, cop, "Curry"[targetDimensions] -> target -> {First[target]},
+            MapThread["Uncurry"[#2] -> {First[#1]} -> #1 &, {target, targetDimensions}],
+            cop,
+            MapThread["Curry"[#2] -> #1 -> {First[#1]} &, {target, targetDimensions}],
             "Encode" -> control
         }],
         opts,
         "Label" -> ReplacePart[cop["Label"], {0, 2} -> qo["Label"]]
-    ]["Undouble"]
+    ]["Undouble"] //
+        QuantumOperator[#,
+            QuantumBasis[
+                "Output" -> QuantumTensorProduct @ ReplacePart[#["Output"]["Decompose"], Thread[(qo["OutputOrder"] /. #["OutputOrderQuditMapping"]) -> qo["Output"]["Decompose"]]],
+                "Input" -> QuantumTensorProduct @ ReplacePart[#["Input"]["Decompose"], Thread[(qo["InputOrder"] /. #["InputOrderQuditMapping"]) -> qo["Input"]["Decompose"]]],
+                #["Basis"]["Options"]
+            ]
+        ] &
 ]
 
 (* QuantumOperator[{name : "C" | "Controlled" | "C0" | "Controlled0", qo_ ? QuantumOperatorQ, args___}, opts___] /; qo["MatrixQ"] := Enclose @ Block[{
