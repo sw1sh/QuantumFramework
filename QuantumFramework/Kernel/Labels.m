@@ -73,47 +73,50 @@ sortLabel[label_, order_] := collectLabel @ With[{subLabels = labelList[label]},
     If[Length[subLabels] == Length[order], CircleTimes @@ subLabels[[Ordering[order]]], label]
 ]
 
-QuantumShortcut[qo_QuantumOperator] := Replace[
+
+Options[QuantumShortcut] = {"Decompose" -> True}
+
+QuantumShortcut[qo_QuantumOperator, OptionsPattern[]] := Replace[
     QuantumShortcut[qo["Label"], First[qo["Dimensions"], 1], qo["Order"]],
     {
-        _Missing /; qo["Dimensions"] === {2, 2} && MatrixQ[qo["Matrix"], NumericQ] && MatchQ[qo["Order"], {{_}, {_}}] :> QuantumShortcut[qo["ZYZ"]],
+        _Missing /; TrueQ[OptionValue["Decompose"]] && qo["VectorQ"] && qo["Dimensions"] === {2, 2} && MatrixQ[qo["Matrix"], NumericQ] && MatchQ[qo["Order"], {{_}, {_}}] :> QuantumShortcut[qo["ZYZ"]],
         _Missing :> {Labeled[qo["Matrix"] -> qo["Order"], qo["Label"]]}
     }
 ]
 
-QuantumShortcut[qmo_QuantumMeasurementOperator] := {
+QuantumShortcut[qmo_QuantumMeasurementOperator, OptionsPattern[]] := {
     If[ MatchQ[qmo["Label"], None | "I"[___]],
         If[AllTrue[qmo["TargetDimensions"], # == 2 &], qmo["InputOrder"], qmo["InputOrder"] -> {"I"[qmo["TargetDimensions"]], "Label" -> None}],
         qmo
     ]
 }
 
-QuantumShortcut[qc_QuantumCircuitOperator] := Catenate[QuantumShortcut /@ qc["Operators"]]
+QuantumShortcut[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Catenate[QuantumShortcut[#, opts] & /@ qc["Operators"]]
 
-QuantumShortcut[qc_QuantumChannel] := {qc}
+QuantumShortcut[qc_QuantumChannel, OptionsPattern[]] := {qc}
 
-QuantumShortcut[label_, dim_ : 2, order : _ ? orderQ] := QuantumShortcut[label, dim, {order, order}]
+QuantumShortcut[label_, dim_Integer : 2, order : _ ? orderQ, opts : OptionsPattern[]] := QuantumShortcut[label, dim, {order, order}, opts]
 
-QuantumShortcut[label_, dim_ : 2, order : {outputOrder : _ ? orderQ, inputOrder : _ ? orderQ} : {}] := Enclose[Confirm @ With[{
+QuantumShortcut[label_, dim_Integer : 2, order : {outputOrder : _ ? orderQ, inputOrder : _ ? orderQ} : {}, opts : OptionsPattern[]] := Enclose[Confirm @ With[{
     nameOrder = Which[order === {}, Identity, outputOrder === inputOrder, # -> inputOrder &, True, # -> order &]
 },
     Replace[label, {
-        HoldPattern[Composition[subLabels___]] :> Catenate[Reverse[Confirm @ QuantumShortcut[#, dim, order] & /@ {subLabels}]],
-        Subscript["C", subLabel_][{}, {}] :> QuantumShortcut[subLabel, dim, order],
-        Subscript["C", subLabel_][controls__] :> ({"C", #, controls} & /@ Confirm @ QuantumShortcut[subLabel, dim, Complement[Join @@ order, Flatten[{controls}]]]),
-        Superscript[subLabel_, CircleTimes[n_Integer]] /; n == Length[inputOrder] :> Catenate @ MapThread[Thread[#1 -> {#2}, List, 1] &, {ConstantArray[Confirm @ QuantumShortcut[subLabel], n], inputOrder}],
-        Superscript[subLabel_, _CircleTimes] :> QuantumShortcut[subLabel, dim, order],
-        ct : CircleTimes[___, Superscript[_, CircleTimes[_Integer]], ___] :> QuantumShortcut[Replace[ct, Superscript[subLabel_, CircleTimes[n_Integer]] :> Splice[ConstantArray[subLabel, n], CircleTimes], {1}], dim, order],
+        HoldPattern[Composition[subLabels___]] :> Catenate[Reverse[Confirm @ QuantumShortcut[#, dim, order, opts] & /@ {subLabels}]],
+        Subscript["C", subLabel_][{}, {}] :> QuantumShortcut[subLabel, dim, order, opts],
+        Subscript["C", subLabel_][controls__] :> ({"C", #, controls} & /@ Confirm @ QuantumShortcut[subLabel, dim, Complement[Join @@ order, Flatten[{controls}]], opts]),
+        Superscript[subLabel_, CircleTimes[n_Integer]] /; n == Length[inputOrder] :> Catenate @ MapThread[Thread[#1 -> {#2}, List, 1] &, {ConstantArray[Confirm @ QuantumShortcut[subLabel, opts], n], inputOrder}],
+        Superscript[subLabel_, _CircleTimes] :> QuantumShortcut[subLabel, dim, order, opts],
+        ct : CircleTimes[___, Superscript[_, CircleTimes[_Integer]], ___] :> QuantumShortcut[Replace[ct, Superscript[subLabel_, CircleTimes[n_Integer]] :> Splice[ConstantArray[subLabel, n], CircleTimes], {1}], dim, order, opts],
         CircleTimes[subLabels___] /; Length[{subLabels}] == Length[inputOrder] :>
-            Catenate @ MapThread[Confirm @ QuantumShortcut[#1, dim, {#2}] &, {{subLabels}, inputOrder}],
-        Subscript["R", subLabel_][angle_] :> {{"R", Sow[Chop @ angle], Confirm @ QuantumShortcut[subLabel, dim, order]}},
+            Catenate @ MapThread[Confirm @ QuantumShortcut[#1, dim, {#2}, opts] &, {{subLabels}, inputOrder}],
+        Subscript["R", subLabel_][angle_] :> {{"R", Sow[Chop @ angle], Confirm @ QuantumShortcut[subLabel, dim, order, opts]}},
         "\[Pi]"[perm__] :> {nameOrder @ {"Permutation", PermutationCycles[{perm}]}},
         OverHat[x_] :> {nameOrder @ {"Diagonal", x}},
         (subLabel : "P" | "PhaseShift" | "U2" | "U" | "ZSpider" | "XSpider" | "Spider")[params___] :> {nameOrder @ {subLabel, params}},
         (subLabel : "GlobalPhase")[params___] :> {{subLabel, params}},
-        subLabel : "X" | "Y" | "Z" | "I" | "NOT" | "Cap" | "Cup" :> {nameOrder @ If[dim === 2, subLabel, {subLabel, dim}]},
-        Times[x_ ? NumericQ, subLabel_] :> QuantumShortcut[Composition[OverHat[x], subLabel], dim, order],
-        (h : SuperDagger | SuperStar)[subLabel_] :> MapAt[h, Confirm @ QuantumShortcut[subLabel, dim, order], {All, 1}],
+        (subLabel : "X" | "Y" | "Z" | "I" | "NOT" | "Cap" | "Cup") | (subLabel : "I")[_] :> {nameOrder @ If[dim === 2, subLabel, {subLabel, dim}]},
+        Times[x_ ? NumericQ, subLabel_] :> QuantumShortcut[Composition[OverHat[x], subLabel], dim, order, opts],
+        (h : SuperDagger | SuperStar)[subLabel_] :> MapAt[h, Confirm @ QuantumShortcut[subLabel, dim, order, opts], {All, 1}],
         name_ /; MemberQ[$QuantumOperatorNames, name] :> {nameOrder[name]},
         barrier_ ? BarrierQ :> {barrier},
         _ :> Missing[label]
