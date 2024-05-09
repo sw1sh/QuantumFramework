@@ -160,7 +160,7 @@ QuantumOperator[matrix_ ? MatrixQ, order : _ ? autoOrderQ, args___, opts : Optio
     QuantumOperator[op["State"]["Split", Length[newOutputOrder]], {newOutputOrder, newInputOrder}, opts]
 ]
 
-QuantumOperator[matrix_ ? MatrixQ, opts : OptionsPattern[]] := QuantumOperator[matrix, QuantumBasis[{#1}, {#2}] & @@ Dimensions[matrix], opts]
+QuantumOperator[matrix_ ? MatrixQ, opts : OptionsPattern[]] := QuantumOperator[matrix, QuantumBasis[primeFactors[#1], primeFactors[#2]] & @@ Dimensions[matrix], opts]
 
 QuantumOperator[matrix_ ? MatrixQ, args__, opts : OptionsPattern[]] := Module[{
     outMultiplicity, inMultiplicity, result
