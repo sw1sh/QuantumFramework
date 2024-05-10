@@ -107,7 +107,7 @@ QuditBasis /: Equal[qb__QuditBasis ? QuditBasisQ] :=
 (* addition *)
 
 QuditBasis /: Plus[qb__QuditBasis ? QuditBasisQ] := Module[{
-    repr = MapIndexed[{b, i} |-> KeyValueMap[#1[[2]] -> {#1[[1]]["Name"], SparseArrayFlatten @ #2, First[i]} &, b["Representations"]], {qb}],
+    repr = MapIndexed[{b, i} |-> KeyValueMap[#1[[2]] -> {#1[[1]], SparseArrayFlatten @ #2, First[i]} &, b["Representations"]], {qb}],
     dims = #["ElementDimensions"] & /@ {qb},
     maxRank
 },
