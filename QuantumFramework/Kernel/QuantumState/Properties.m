@@ -462,6 +462,8 @@ QuantumStateProp[qs_, "Type"] := Which[
     "Pure",
     PositiveSemidefiniteMatrixQ[N @ qs["DensityMatrix"]],
     "Mixed",
+    qs["ParameterArity"] > 0,
+    "Parametric",
     True,
     "Unknown"
 ]
