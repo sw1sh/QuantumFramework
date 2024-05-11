@@ -314,8 +314,8 @@ QuantumState[qs__QuantumState ? QuantumStateQ] := QuantumState[
         TrueQ[qs1["VectorQ"] && qs2["VectorQ"]],
         SparseArrayFlatten[q1["StateMatrix"] . q2["StateMatrix"]],
         True,
-        If[qs1["VectorQ"], q1 = q1["Double"]];
-        If[qs2["VectorQ"], q2 = q2["Double"]];
+        q1 = q1["Double"];
+        q2 = q2["Double"];
         ArrayReshape[
             q1["StateMatrix"] . q2["StateMatrix"],
             Table[qs1["OutputDimension"] qs2["InputDimension"], 2]
