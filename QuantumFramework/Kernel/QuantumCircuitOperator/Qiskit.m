@@ -244,7 +244,7 @@ def gate_to_QuantumOperator(gate, order):
         return wl.Wolfram.QuantumFramework.QuantumOperator(arg)
     else:
         from qiskit.quantum_info import Operator
-        return wl.Wolfram.QuantumFramework.QuantumOperator(Operator(gate).to_matrix(), [order, order], wl.Rule('Label', gate.label))
+        return wl.Wolfram.QuantumFramework.QuantumOperator(Operator(gate).to_matrix(), [order, order], wl.Rule('Label', gate.label if gate.label else None))
 
 def qc_to_QuantumCircuitOperator(qc, label=None):
     ops = []
@@ -265,7 +265,7 @@ def qc_to_QuantumCircuitOperator(qc, label=None):
             ops.append(qc_to_QuantumCircuitOperator(sub_qc.decompose(), gate.name))
         else:
             ops.append(gate_to_QuantumOperator(gate, order))
-    return wl.Wolfram.QuantumFramework.QuantumCircuitOperator(ops, label)
+    return wl.Wolfram.QuantumFramework.QuantumCircuitOperator(ops, label if label else None)
 
 qc_to_QuantumCircuitOperator(qc)
 "]
@@ -291,8 +291,10 @@ qiskitInitBackend[qc_QiskitCircuit, OptionsPattern[]] := Enclose @ Block[{
     provider, params,
     $backendName = Replace[OptionValue["Backend"], Automatic -> Null],
     $fireOpal = TrueQ[OptionValue["FireOpal"]],
-    $token = Null
+    $token = Null,
+    env
 },
+    env = If[$fireOpal, "qctrl", Automatic];
     {provider, params} = Replace[OptionValue["Provider"], {
         {name_, params : OptionsPattern[]} | name_ :> {name, Flatten[{params}]}
     }];
@@ -342,8 +344,7 @@ except:
     _,
 "
 provider = None
-"]
-    ];
+"], env];
     PythonEvaluate[Context[$pythonBytes], "
 import pickle
 from qiskit.providers.basic_provider import BasicProvider
@@ -371,8 +372,7 @@ if <* $fireOpal *>:
         fireopal_credentials = make_credentials_for_ibmq(provider._account.token, 'open', 'ibm-q', 'main')
     else:
         raise ValueError(f'Unsupported FireOpal provider: {provider}')
-"
-    ]
+", env]
 ]
 
 Options[qiskitApply] = Join[{"Shots" -> 1024, "Validate" -> False}, Options[qiskitInitBackend]]
@@ -382,8 +382,9 @@ qiskitApply[qc_QiskitCircuit, qs_QuantumState, opts : OptionsPattern[]] := Enclo
     $shots = OptionValue["Shots"],
     $fireOpal = TrueQ[OptionValue["FireOpal"]],
     $validate = TrueQ[OptionValue["Validate"]],
-    result
+    env, result
 },
+    env = If[$fireOpal, "qctrl", Automatic];
     ConfirmAssert[qs["InputDimensions"] == {}];
     ConfirmAssert[AllTrue[qs["OutputDimensions"], EqualTo[2]]];
 
@@ -410,8 +411,9 @@ except:
     pass
 
 if <* $fireOpal *>:
+    from qiskit import qasm2
     import fireopal
-    qasm = circuit.qasm()
+    qasm = qasm2.dumps(circuit)
     if <* $validate *>:
         validate_results = fireopal.validate(
             circuits=[qasm], credentials=fireopal_credentials, backend_name=backend.name
@@ -437,7 +439,7 @@ else:
             from qiskit.quantum_info import Statevector
             result = Statevector(qc).data
 result
-"];
+", env];
     Which[
         AssociationQ[result],
         Block[{counts = KeyMap[StringDelete[Whitespace]] @ result, size},
@@ -476,9 +478,10 @@ qc_QiskitCircuit[opts : OptionsPattern[qiskitApply]] := qiskitApply[qc, QuantumS
 
 qc_QiskitCircuit[qs_QuantumState, opts : OptionsPattern[qiskitApply]] := qiskitApply[qc, qs, opts]
 
-qc_QiskitCircuit["QASM", opts : OptionsPattern[qiskitInitBackend]] := Enclose[
+
+qiskitQASM[qc_, OptionsPattern[Join[{"Version" -> 2}, Options[qiskitInitBackend]]]] := Enclose @ Block[{$version = OptionValue["Version"]},
     Confirm @ qiskitInitBackend[qc, opts];
-    PythonEvaluate["
+    PythonEvaluate[Context[$version], "
 from qiskit import transpile
 from qiskit_braket_provider import AWSBraketProvider
 
@@ -488,10 +491,19 @@ if isinstance(provider, AWSBraketProvider):
     from braket.circuits.serialization import IRType
     result = convert_qiskit_to_braket_circuit(circuit).to_ir(IRType.OPENQASM).source
 else:
-    result = circuit.qasm()
+    if <* $version *> == 3:
+        from qiskit import qasm3
+        result = qasm3.dumps(circuit)
+    else:
+        from qiskit import qasm2
+        result = qasm2.dumps(circuit)
 result
 "]
 ]
+
+qc_QiskitCircuit["QASM" | "QASM2", opts___] := qiskitQASM[qc, "Version" -> 2, opts]
+
+qc_QiskitCircuit["QASM3", opts___] := qiskitQASM[qc, "Version" -> 3, opts]
 
 
 qc_QiskitCircuit["QPY", opts : OptionsPattern[qiskitInitBackend]] := Enclose[
@@ -531,16 +543,19 @@ from wolframclient.language import wl
 wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(transpile(qc, backend)))
 "]
 ]
+
 qc_QiskitCircuit["Validate", opts : OptionsPattern[qiskitInitBackend]]:= Enclose[
     Confirm @ qiskitInitBackend[qc, opts, "FireOpal" -> True, "Provider" -> "IBMProvider"];
     PythonEvaluate["
 import fireopal
-from qiskit import transpile
+from qiskit import transpile, qasm2
 circuit = transpile(qc, backend)
+qc_qasm = qasm2.dumps(qc)
+circuit_qasm = qasm2.dumps(circuit)
 fireopal.validate(
-    circuits=[qc.qasm(), circuit.qasm()], credentials=fireopal_credentials, backend_name=backend.name
+    circuits=[qc_qasm, circuit_qasm], credentials=fireopal_credentials, backend_name=backend.name
 )
-"]
+", "qctrl"]
 ]
 
 ImportQASMCircuit[file_ /; FileExistsQ[file], basisGates : {_String...} | None] := ImportQASMCircuit[Import[file, "String"], basisGates]

@@ -39,6 +39,6 @@ model = create_model(main)
 
 qprog = json.loads(synthesize(model))
 qprog['outputs']['qasm'], qprog['data']['qubit_mapping']['logical_outputs']['io']
-"];
+", "classiq"];
     QuantumCircuitOperator[ImportQASMCircuit[qasm]["QuantumCircuit"], Reverse[mapping] + 1]
 ]

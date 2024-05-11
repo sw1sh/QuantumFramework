@@ -9,7 +9,7 @@ PackageExport[ZXExpression]
 Options[toZX] = {"Simplify" -> False, "Fuse" -> False}
 
 toZX[op_, OptionsPattern[]] := With[{qasm = QuantumCircuitOperator[op]["Qiskit"]["QASM"]},
-ExternalEvaluate[$PythonSession, StringTemplate["
+PythonEvaluate[Context[qasm], StringTemplate["
 import pyzx
 from pyzx import draw, Circuit
 from pyzx.utils import VertexType, EdgeType
@@ -48,7 +48,7 @@ qubits = graph.qubits()
 
 (edges, vertices, edge_types, phases, qubits)
 
-"][qasm, TrueQ[OptionValue["Simplify"]], TrueQ[OptionValue["Fuse"]]]]
+", "pyzx"][qasm, TrueQ[OptionValue["Simplify"]], TrueQ[OptionValue["Fuse"]]]]
 ]
 
 

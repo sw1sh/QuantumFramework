@@ -6,49 +6,54 @@ PackageScope["PythonEvaluate"]
 
 
 
-$PythonPackages = {
-    "wolframclient", "matplotlib", "pylatexenc",
-    "qiskit>=1.0",
-    "qiskit-aer", "qiskit-ibm-provider", "qiskit-braket-provider",
-    "classiq>=0.40.0",
-    (* "fire-opal", *)
-    "git+https://github.com/Quantomatic/pyzx.git"
+$BasePythonPackages = {
+    "wolframclient", "matplotlib", "pylatexenc", "qiskit>=1.0"
 }
 
-$PythonSession := SelectFirst[
-    ExternalSessions["Python"],
-    #["ID"] == "QuantumFramework" &,
-    With[{versions = Through[PacletFind["ExternalEvaluate"]["Version"]], required = "32.2"},
-        If[ AllTrue[versions, ResourceFunction["VersionOrder"][#, required] > 0 &], 
-            Failure["DependencyFailure", <|
-                "MessageTemplate" ->  "ExternalEvaluate paclet should be at least version `` (availabe in Wolfram Language 14), but only versions {``} are found", 
-                "MessageParameters" -> {required, StringRiffle[versions, ", "]}
-            |>],
-            StartExternalSession[{{"Python", "StandardErrorFunction" -> Null},
-                "ID" -> "QuantumFramework",
-                "Evaluator" -> <|"Dependencies" -> $PythonPackages, "PythonRuntime" -> "3.11"|>,
-                "SessionProlog" -> "import qiskit\nfrom qiskit import QuantumCircuit"
-            }]
+$PythonEnvironmentPackages = <|
+    "default" -> {"qiskit-aer", "qiskit-ibm-provider", "qiskit-braket-provider"},
+    "qctrl" -> {"qiskit-aer", "qiskit-ibm-provider", "qiskit-braket-provider", "fire-opal"},
+    "classiq" -> {"classiq>=0.40.0"},
+    "pyzx" -> {"git+https://github.com/Quantomatic/pyzx.git"}
+|>
+
+$PythonSession[env_String] := With[{id = StringTemplate["QuantumFramework_``"] @ env},
+    SelectFirst[
+        ExternalSessions["Python"],
+        #["ID"] == id &,
+        With[{versions = Through[PacletFind["ExternalEvaluate"]["Version"]], required = "32.2"},
+            If[ AllTrue[versions, ResourceFunction["VersionOrder"][#, required] > 0 &], 
+                Failure["DependencyFailure", <|
+                    "MessageTemplate" ->  "ExternalEvaluate paclet should be at least version `` (availabe in Wolfram Language 14), but only versions {``} are found", 
+                    "MessageParameters" -> {required, StringRiffle[versions, ", "]}
+                |>],
+                StartExternalSession[{{"Python", "StandardErrorFunction" -> Null},
+                    "ID" -> id,
+                    "Evaluator" -> <|"Dependencies" -> Join[$BasePythonPackages, $PythonEnvironmentPackages[env]], "PythonRuntime" -> "3.11"|>,
+                    "SessionProlog" -> "import qiskit\nfrom qiskit import QuantumCircuit"
+                }]
+            ]
         ]
     ]
 ]
 
 
-PythonEvaluate[code_] := Enclose @ With[{session = Confirm @ $PythonSession},
-    Progress`EvaluateWithProgress[
-        ExternalEvaluate[session, code],
-        <|"Text" -> "Running Python code", "ElapsedTime" -> Automatic|>
+PythonEvaluate[ctx_String /; StringContainsQ[ctx, "`"], code_String, env : _String | Automatic : Automatic] :=
+Enclose @ With[{session = Confirm @ $PythonSession[Replace[env, Automatic -> "default"]]},
+    WithCleanup[
+        PrependTo[$ContextPath, ctx],
+        Progress`EvaluateWithProgress[
+            ExternalEvaluate[session, code],
+            <|"Text" -> "Running Python code", "ElapsedTime" -> Automatic|>
+        ],
+        $ContextPath = DeleteCases[$ContextPath, ctx]
     ]
 ]
 
-PythonEvaluate[ctx_, code_] := WithCleanup[
-    PrependTo[$ContextPath, ctx],
-    PythonEvaluate[code],
-    $ContextPath = DeleteCases[$ContextPath, ctx]
-]
+PythonEvaluate[code_String, env : _String | Automatic : Automatic] := PythonEvaluate["Wolfram`QuantumFramework`", code, env]
 
 
-PythonEvalAttr[{bytes_ByteArray, attr_String, args___, kwargs : OptionsPattern[]}, OptionsPattern[{"ReturnBytes" -> False}]] := Block[{
+PythonEvalAttr[{bytes_ByteArray, attr_String, args___, kwargs : OptionsPattern[]}, OptionsPattern[{"ReturnBytes" -> False, "Environment" -> Automatic}]] := Block[{
     pythonBytes = bytes,
     pythonAttr = attr,
     pythonArgs = {args},
@@ -68,6 +73,8 @@ if <* TrueQ @ returnBytes  *>:
     result = pickle.dumps(result)
 
 result
-    "]
+",
+    Replace[OptionValue["Environment"], Automatic -> "default"]
+]
 ]
 
