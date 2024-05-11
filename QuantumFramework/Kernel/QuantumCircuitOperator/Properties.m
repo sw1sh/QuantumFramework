@@ -179,18 +179,20 @@ QuantumCircuitOperatorProp[qco_, "Depth"] := Max @ Fold[
     Union @@@ qco["NormalOrders"]
 ]
 
-QuantumCircuitOperatorProp[qco_, "Layers"] := MapIndexed[
-    QuantumCircuitOperator[#1, "Layer"[#2[[1]]]] &,
-    DeleteCases[
-        Fold[
-            Block[{keys = If[BarrierQ[#2], circuitElementPosition[#2, 1, qco["Max"]], Union @@ #2["Order"]], layers = #1[[1]], depths = #1[[2]], newDepths},
-                newDepths = ReplacePart[depths, Thread[{Key[#]} & /@ keys -> Max[Lookup[depths, keys]] + 1]];
-                {If[Max[newDepths] > Max[depths], Append[layers, {#2}], MapAt[Append[#2], layers, {Max[Lookup[newDepths, keys]]}]], newDepths}
-            ] &,
-            {{}, AssociationThread[Range[qco["Min"], qco["Max"]], 0]},
-            qco["NormalOperators", True]
-        ][[1]],
-        {_ ? BarrierQ}
+QuantumCircuitOperatorProp[qco_, "Layers"] := With[{min = Min[1, qco["Min"]], max = qco["Max"]},
+    MapIndexed[
+        QuantumCircuitOperator[#1, "Layer"[#2[[1]]]] &,
+        DeleteCases[
+            Fold[
+                Block[{keys = If[BarrierQ[#2], circuitElementPosition[#2, min, max] + min - 1, Union @@ #2["Order"]], layers = #1[[1]], depths = #1[[2]], newDepths},
+                    newDepths = ReplacePart[depths, Thread[{Key[#]} & /@ keys -> Max[Lookup[depths, keys]] + 1]];
+                    {If[Max[newDepths] > Max[depths], Append[layers, {#2}], MapAt[Append[#2], layers, {Max[Lookup[newDepths, keys]]}]], newDepths}
+                ] &,
+                {{}, AssociationThread[Range[min, max], 0]},
+                qco["NormalOperators", True]
+            ][[1]],
+            {_ ? BarrierQ}
+        ]
     ]
 ]
 
