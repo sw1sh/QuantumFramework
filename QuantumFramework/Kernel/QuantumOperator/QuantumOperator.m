@@ -432,11 +432,13 @@ QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible wit
 orderDuplicates[xs_List] := Block[{next = Function[{ys, y}, If[MemberQ[ys, y], next[ys, y + 1], y]]}, Fold[Append[#1, next[#1, #2]] &, {}, xs]]
 
 
-(qo_QuantumOperator ? QuantumOperatorQ)[qmo_ ? QuantumMeasurementOperatorQ] :=
-    QuantumMeasurementOperator[qo @ qmo["SuperOperator"], qmo["Targets"]]
+(qo_QuantumOperator ? QuantumOperatorQ)[qmo_ ? QuantumMeasurementOperatorQ] := With[{op = qo @ qmo["SuperOperator"]},
+    If[ContainsAll[Select[op["OutputOrder"], Positive], Select[qmo["OutputOrder"], Positive]], QuantumMeasurementOperator[op, qmo["Targets"]], op]
+]
 
-(qo_QuantumOperator ? QuantumOperatorQ)[qc_ ? QuantumChannelQ] :=
-    QuantumChannel[qo @ qc["QuantumOperator"]]
+(qo_QuantumOperator ? QuantumOperatorQ)[qc_ ? QuantumChannelQ] := With[{op = qo @ qc["QuantumOperator"]},
+    If[ContainsAll[Select[op["OutputOrder"], Positive], Select[qc["OutputOrder"], Positive]], QuantumChannel[op], op]
+]
 
 (qo_QuantumOperator ? QuantumOperatorQ)[qm_ ? QuantumMeasurementQ] :=
     If[QuantumMeasurementOperatorQ[#], QuantumMeasurement[#["Sort"]], #] & @ qo[qm["QuantumOperator"]]
