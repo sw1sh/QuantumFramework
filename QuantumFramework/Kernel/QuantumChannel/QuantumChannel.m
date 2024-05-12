@@ -28,6 +28,10 @@ QuantumChannel[opArgs_List, args___] := Enclose @ Block[{ops = QuantumOperator[#
 
 QuantumChannel[qo_ ? QuantumOperatorQ] /; ! qo["SortedQ"] := QuantumChannel[qo["Sort"]]
 
+QuantumChannel[qc_ ? QuantumChannelQ, order : _ ? orderQ | Automatic] := qc["Reorder", {Join[Select[qc["FullOutputOrder"], NonPositive], order], order}]
+
+QuantumChannel[qc_ ? QuantumChannelQ, order : {_ ? orderQ | Automatic, _ ? orderQ | Automatic}] := qc["Reorder", order]
+
 QuantumChannel[qc_ ? QuantumChannelQ, args___] := QuantumChannel[QuantumOperator[qc["QuantumOperator"], args]]
 
 QuantumChannel[qm : _ ? QuantumMeasurementOperatorQ | _ ? QuantumMeasurementQ] := QuantumChannel[QuantumOperator[qm["POVM"]]]

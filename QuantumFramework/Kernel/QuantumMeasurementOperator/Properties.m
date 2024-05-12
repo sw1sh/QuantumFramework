@@ -330,7 +330,7 @@ QuantumMeasurementOperatorProp[qmo_, "CircuitDiagram", opts___] :=
 
 (* operator properties *)
 
-QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | "SortOutput" | "SortInput" | "Computational" | "Simplify" | "FullSimplify" | "Chop" | "ComplexExpand", args___] :=
+QuantumMeasurementOperatorProp[qmo_, prop : "Ordered" | "SortOutput" | "SortInput" | "Computational" | "Simplify" | "FullSimplify" | "Chop" | "ComplexExpand" | "Reorder", args___] :=
     QuantumMeasurementOperator[qmo["QuantumOperator"][prop, args], qmo["Target"]]
 
 QuantumMeasurementOperatorProp[qmo_, prop : "Dagger", args___] :=

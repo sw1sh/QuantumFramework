@@ -65,7 +65,7 @@ QuantumChannelProp[qc_, "NEvolutionChannel"] := QuantumChannel[
 ]
 
 QuantumChannelProp[qc_, name : "Dagger" | "Conjugate" | "Dual" | "Double" | "Computational" | "Sort" |
-    "Chop" | "ComplexExpand" | "Simplify" | "FullSimplify", args___] := QuantumChannel[qc["Operator"][name, args]]
+    "Chop" | "ComplexExpand" | "Simplify" | "FullSimplify" | "Reorder", args___] := QuantumChannel[qc["Operator"][name, args]]
 
 QuantumChannelProp[qc_, "Adjoint"] := QuantumChannel @ QuantumOperator[
     qc["State"]["Conjugate"]["Permute",
@@ -75,7 +75,7 @@ QuantumChannelProp[qc_, "Adjoint"] := QuantumChannel @ QuantumOperator[
     "Label" -> SuperDagger[qc["Label"]]
 ]
 
-QuantumChannelProp[qc_, "Shift", n : _Integer ? NonNegative : 1] := QuantumChannel[qc["Operator"]["Reorder", qc["Order"] /. k_Integer /; k > 0 :> k + n]]
+QuantumChannelProp[qc_, "Shift", n : _Integer ? NonNegative : 1] := qc["Reorder", qc["Order"] /. k_Integer /; k > 0 :> k + n]
 
 QuantumChannelProp[qc_, "Bend", autoShift : _Integer ? Positive : Automatic] := With[{shift = Replace[autoShift, Automatic :> Max[qc["Order"]]]},
     If[ qc["MatrixQ"],

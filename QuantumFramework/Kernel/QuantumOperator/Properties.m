@@ -395,8 +395,7 @@ QuantumOperatorProp[qo_, "OrderedFormula", OptionsPattern["Normalize" -> False]]
 
 QuantumOperatorProp[qo_, "Reorder", order : {_ ? orderQ | Automatic, _ ? orderQ | Automatic}, controlQ_ : False] := Block[{
     output = Replace[order[[1]], Automatic :> qo["FullOutputOrder"]], input = Replace[order[[2]], Automatic :> qo["FullInputOrder"]],
-    inputRepl, outputRepl,
-    positiveOrder = Select[qo["FullOutputOrder"], Positive]
+    inputRepl, outputRepl
 },
     inputRepl =
         Thread[
@@ -411,8 +410,8 @@ QuantumOperatorProp[qo_, "Reorder", order : {_ ? orderQ | Automatic, _ ? orderQ 
         ];
     outputRepl =
         Thread[
-            Take[positiveOrder, UpTo[Length[output]]] ->
-            Take[output, UpTo[Length[positiveOrder]]]];
+            Take[qo["FullOutputOrder"], UpTo[Length[output]]] ->
+            Take[output, UpTo[Length[qo["FullOutputOrder"]]]]];
     QuantumOperator[
         qo["State"],
         {qo["FullOutputOrder"] /. outputRepl, qo["FullInputOrder"] /. inputRepl},
