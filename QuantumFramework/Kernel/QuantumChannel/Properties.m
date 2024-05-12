@@ -93,15 +93,15 @@ QuantumChannelProp[qc_, "Bend", autoShift : _Integer ? Positive : Automatic] := 
 ]
 
 QuantumChannelProp[qc_, "DiscardExtraQudits"] := With[{picture = qc["Picture"]},
-    QuantumChannel[
-        Fold[#2[#1] &, qc,
+    QuantumOperator[
+        Fold[#2[#1] &, qc["QuantumOperator"],
             MapThread[
                 QuantumOperator[With[{d = Sqrt[#1["Dimension"]]},
                     If[picture === "PhaseSpace" && IntegerQ[d], "Marginal"[#1], "Trace"[#1]]], {#2}
                 ] &,
                 {qc["TraceBasis"]["Decompose"], qc["TraceOrder"]}
             ]
-        ], "Label" -> qc["Label"]
+        ], "Label" -> "Channel"[qc["Label"]]
     ]
 ]
 

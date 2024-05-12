@@ -24,7 +24,7 @@ $QuantumOperatorNames = {
     "RandomUnitary", "RandomHermitian",
     "Spider", "ZSpider", "XSpider", "WSpider",
     "Measure", "Encode", "Copy", "Decohere", "Marginal", "Discard",
-    "Cup", "Cap", "Trace", "Reset", "Measurement",
+    "Cup", "Cap", "Trace", "Reset", "Channel", "Measurement",
     "Switch",
     "Multiplexer",
     "WignerD", "JX", "JY", "JZ", "JX+", "JY+", "JZ+", "JX-", "JY-", "JZ-", "J+", "J-", "+", "-",
@@ -780,13 +780,15 @@ QuantumOperator[{"Marginal", args__ : 4}, opts___] := With[{basis = QuditBasis[a
 
 QuantumOperator[{"Discard", args__ : 4}, opts___] := QuantumOperator[QuantumOperator[{"Spider", QuantumBasis[QuditBasis[1], QuditBasis[args]]}, {1} -> {}], opts, "Label" -> "Discard" ]
 
-QuantumOperator[{"Trace", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[QuantumState[IdentityMatrix[basis["Dimension"]], basis]["Dagger"], opts, "Label" -> "Trace"]]
+QuantumOperator[{"Trace", args__ : 2}, opts___] := With[{basis = QuditBasis[args]}, QuantumOperator[QuantumState[IdentityMatrix[basis["Dimension"]] / basis["Dimension"], basis]["Dagger"], opts, "Label" -> "Trace"]]
 
 QuantumOperator[{"Reset", args___ : "0"}, opts___] := With[{state = QuantumState[args]},
     QuantumOperator[QuantumOperator[state] @ QuantumOperator["Trace"[state["Dimension"]]], opts, "Label" -> If[state["Label"] === None, None, "Reset"[state["Label"]]]]
 ]
 
 QuantumOperator[{"Measurement", args__ : 2}, opts___] := QuantumMeasurementOperator[QuantumBasis[args], opts]["DiscardExtraQudits"]
+
+QuantumOperator[{"Channel", args__ : "BitFlip"}, opts___] := QuantumOperator[QuantumChannel[args]["DiscardExtraQudits"], opts]
 
 QuantumOperator[{"Cup", args__ : 2}, order : _ ? orderQ : {1, 2}, opts___] /; Length[order] == 2 := With[{basis = QuditBasis[args]},
     QuantumOperator["Spider"[QuantumBasis[QuantumTensorProduct[basis, basis["Conjugate"]], QuditBasis[]]], {order, {}}, opts, "Label" -> "Cup"]
