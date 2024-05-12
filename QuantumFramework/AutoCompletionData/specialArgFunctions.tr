@@ -19,6 +19,7 @@
             "Fourier",
             "Schwinger",
             "Dirac",
+            "Ivanovic",
             "Wigner",
             "WignerMIC",
             "Pauli",
@@ -33,8 +34,7 @@
             "RandomMIC",
             "QBismSIC",
             "HesseSIC",
-            "HoggarSIC",
-            "Ivanovic"
+            "HoggarSIC"
         }
     },
     "QuantumBasis" -> {
@@ -57,6 +57,7 @@
             "Fourier",
             "Schwinger",
             "Dirac",
+            "Ivanovic",
             "Wigner",
             "WignerMIC",
             "Pauli",
@@ -71,8 +72,7 @@
             "RandomMIC",
             "QBismSIC",
             "HesseSIC",
-            "HoggarSIC",
-            "Ivanovic"
+            "HoggarSIC"
         }
     },
     "QuantumState" -> {
@@ -124,6 +124,7 @@
             "Fourier",
             "Schwinger",
             "Dirac",
+            "Ivanovic",
             "Wigner",
             "WignerMIC",
             "Pauli",
@@ -138,8 +139,7 @@
             "RandomMIC",
             "QBismSIC",
             "HesseSIC",
-            "HoggarSIC",
-            "Ivanovic"
+            "HoggarSIC"
         }
     },
     "QuantumOperator" -> {
@@ -218,6 +218,7 @@
             "Cap",
             "Trace",
             "Reset",
+            "Measurement",
             "Switch",
             "Multiplexer",
             "WignerD",
@@ -256,6 +257,7 @@
             "Fourier",
             "Schwinger",
             "Dirac",
+            "Ivanovic",
             "Wigner",
             "WignerMIC",
             "Pauli",
@@ -270,8 +272,7 @@
             "RandomMIC",
             "QBismSIC",
             "HesseSIC",
-            "HoggarSIC",
-            "Ivanovic"
+            "HoggarSIC"
         }
     },
     "QuantumMeasurementOperator" -> {
@@ -294,6 +295,7 @@
             "Fourier",
             "Schwinger",
             "Dirac",
+            "Ivanovic",
             "Wigner",
             "WignerMIC",
             "Pauli",
@@ -309,7 +311,6 @@
             "QBismSIC",
             "HesseSIC",
             "HoggarSIC",
-            "Ivanovic",
             "RandomHermitian",
             "WignerMICPOVM",
             "GellMannMICPOVM",
@@ -338,6 +339,7 @@
             "Fourier",
             "Schwinger",
             "Dirac",
+            "Ivanovic",
             "Wigner",
             "WignerMIC",
             "Pauli",
@@ -352,8 +354,7 @@
             "RandomMIC",
             "QBismSIC",
             "HesseSIC",
-            "HoggarSIC",
-            "Ivanovic"
+            "HoggarSIC"
         }
     },
     "QuantumChannel" -> {
@@ -386,6 +387,7 @@
             "Fourier",
             "Schwinger",
             "Dirac",
+            "Ivanovic",
             "Wigner",
             "WignerMIC",
             "Pauli",
@@ -400,8 +402,7 @@
             "RandomMIC",
             "QBismSIC",
             "HesseSIC",
-            "HoggarSIC",
-            "Ivanovic"
+            "HoggarSIC"
         }
     },
     "QuantumCircuitOperator" -> {
@@ -500,8 +501,7 @@
             "RandomMIC",
             "QBismSIC",
             "HesseSIC",
-            "HoggarSIC",
-            "Ivanovic"
+            "HoggarSIC"
         }
     }
 }
