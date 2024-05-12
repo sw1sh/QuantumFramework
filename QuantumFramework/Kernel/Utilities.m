@@ -450,7 +450,7 @@ isum[in_List -> out_, arrays_List] := Enclose @ Module[{
 
 EinsteinSummation::length = "Number of index specifications (`1`) does not match the number of tensors (`2`)";
 EinsteinSummation::shape = "Index specification `1` does not match the tensor rank of `2`";
-EinsteinSummation::dim = "Dimensions of contracted indices do not much";
+EinsteinSummation::dim = "Dimensions of contracted indices don't match";
 (*EinsteinSummation::repeat = "Index specifications `1` are repeated more than twice";*)
 EinsteinSummation::output = "The uncontracted indices can't compose the desired output";
 
