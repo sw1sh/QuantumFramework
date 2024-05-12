@@ -311,6 +311,7 @@
             "QBismSIC",
             "HesseSIC",
             "HoggarSIC",
+            "M",
             "RandomHermitian",
             "WignerMICPOVM",
             "GellMannMICPOVM",

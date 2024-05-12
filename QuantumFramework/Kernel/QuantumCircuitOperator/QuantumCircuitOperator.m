@@ -41,9 +41,6 @@ FromCircuitOperatorShorthand[qc_ ? QuantumCircuitOperatorQ -> order_ ? orderQ] :
 FromCircuitOperatorShorthand[arg : circuitNamePattern] := QuantumCircuitOperator[arg]
 FromCircuitOperatorShorthand[(arg : circuitNamePattern) -> args_] := QuantumCircuitOperator[FromCircuitOperatorShorthand[arg], args]
 FromCircuitOperatorShorthand[(arg : circuitNamePattern) -> order_ ? orderQ -> args_] := QuantumCircuitOperator[FromCircuitOperatorShorthand[arg], order, args]
-FromCircuitOperatorShorthand["M" | {"M", args___} | "M"[args___]] := FromCircuitOperatorShorthand[{"M", args} -> {1}]
-FromCircuitOperatorShorthand["M" | {"M", args___} | "M"[args___] -> target_Integer] := FromCircuitOperatorShorthand[{"M", args} -> {target}]
-FromCircuitOperatorShorthand["M" | {"M", args___} | "M"[args___] -> target_ ? orderQ] := QuantumMeasurementOperator[args, target]
 FromCircuitOperatorShorthand[op : Except[_ ? QuantumCircuitOperatorQ, _ ? QuantumFrameworkOperatorQ]] := op
 FromCircuitOperatorShorthand[arg_] := Enclose @ Replace[Confirm @ FromOperatorShorthand[arg], ops_List :> QuantumCircuitOperator[ops]]
 

@@ -4,8 +4,10 @@ PackageScope["$QuantumMeasurementOperatorNames"]
 
 
 
-$QuantumMeasurementOperatorNames = {"RandomHermitian", "WignerMICPOVM", "GellMannMICPOVM", "TetrahedronSICPOVM", "QBismSICPOVM", "HesseSICPOVM", "HoggarSICPOVM", "RandomPOVM"}
+$QuantumMeasurementOperatorNames = {"M", "RandomHermitian", "WignerMICPOVM", "GellMannMICPOVM", "TetrahedronSICPOVM", "QBismSICPOVM", "HesseSICPOVM", "HoggarSICPOVM", "RandomPOVM"}
 
+
+QuantumMeasurementOperator[{"M", args__ : 2}, opts___] := QuantumMeasurementOperator[QuantumBasis[args], opts]
 
 QuantumMeasurementOperator[{"RandomHermitian", args___}, target : _ ? targetQ : {1}, opts___] := With[{
     basis = QuantumBasis[args, "Label" -> "Random"]
