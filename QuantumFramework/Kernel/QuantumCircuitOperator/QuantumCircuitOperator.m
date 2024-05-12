@@ -61,7 +61,7 @@ QuantumCircuitOperator[arg_ -> order_ ? orderQ, args___] := QuantumCircuitOperat
 
 QuantumCircuitOperator[operators_ ? ListQ, opts : OptionsPattern[]] := Enclose @ With[{parameters = OptionValue["Parameters"]},
     QuantumCircuitOperator[With[{
-        ops = (Confirm[If[parameters === {} || BarrierQ[#], #, Head[#][#, "Parameters" -> parameters]] & @ FromCircuitOperatorShorthand[#]] & /@ operators)
+        ops = (Confirm[If[parameters === {} || BarrierQ[#], #, Head[#][#, "Parameters" -> Join[#["ParameterSpec"], {parameters}]]] & @ FromCircuitOperatorShorthand[#]] & /@ operators)
     },
         <|
             "Elements" -> ops,
