@@ -314,16 +314,16 @@ QuantumStateProp[qs_, "Formula", OptionsPattern[]] /; qs["DegenerateStateQ"] := 
 
 MinusBoxQ[boxes_] := MatchQ[boxes, RowBox[{"-" | _ ? MinusBoxQ, __}]]
 
-QuantumStateProp[qs_, "Formula", OptionsPattern["Normalize" -> False]] := RawBoxes @ With[{s = qs["Pure"]},
+QuantumStateProp[qs_, "Formula", OptionsPattern[{"Normalize" -> False, "Form" -> StandardForm}]] := RawBoxes @ With[{s = qs["Pure"], form = OptionValue["Form"]},
     If[ s["Dimension"] == 0, 0,
         With[{v = SparseArray @ s[If[TrueQ[OptionValue["Normalize"]], "NormalizedStateVector", "StateVector"]], d = s["InputDimension"]},
             RowBox @ MapThread[
-                With[{coef = Replace[Parenthesize[#2, StandardForm, Plus], {
+                With[{coef = Replace[Parenthesize[#2, form, Plus], {
                     RowBox[{"-", "1"}] -> "-",
                     "1" :> If[#3 > 1, "+", Nothing],
                     x : Except[_ ? MinusBoxQ] :> If[#3 > 1, Splice[{"+", x}], x]
                 }]},
-                    RowBox[{coef, ToBoxes[#1, StandardForm]}]
+                    RowBox[{coef, ToBoxes[#1, form]}]
                 ] &,
                 {
                     With[{pos = Catenate @ v["ExplicitPositions"]}, s["Names", Thread[{Quotient[pos - 1, d] + 1, Mod[pos - 1, d] + 1}]]],
