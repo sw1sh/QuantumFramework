@@ -56,42 +56,43 @@ FromOperatorShorthand[f_Symbol[
     right___]
 ] /; MemberQ[Attributes[f], NumericFunction] :=
     With[{qo = QuantumOperator[Unevaluated[op]]}, FromOperatorShorthand[Unevaluated[f[left, qo, right]]]]
-FromOperatorShorthand[op_ ? QuantumFrameworkOperatorQ] := op
-FromOperatorShorthand[qm_ ? QuantumMeasurementQ] := qm["QuantumOperator"]
 
-FromOperatorShorthand[arg : {name_String, ___} | name_String[___] | name_String] /; MemberQ[$QuantumMeasurementOperatorNames, name] := QuantumMeasurementOperator[arg]
-FromOperatorShorthand[(arg : {name_String, ___} | name_String[___] | name_String -> target_) -> opts : OptionsPattern[]] /; MemberQ[$QuantumMeasurementOperatorNames, name] := QuantumMeasurementOperator[arg, target, opts]
+FromOperatorShorthand[op_ ? QuantumFrameworkOperatorQ] := op
+FromOperatorShorthand[op_ ? QuantumFrameworkOperatorQ -> order_ ? autoOrderQ] := Head[op][op, order]
+
+FromOperatorShorthand[qm_ ? QuantumMeasurementQ] := qm["QuantumOperator"]
+FromOperatorShorthand[qm_ ? QuantumMeasurementQ -> order_ ? autoOrderQ] := QuantumMeasurementOperator[qm["QuantumOperator"], order]
+
+FromOperatorShorthand[SuperDagger[arg_]] := FromOperatorShorthand[Unevaluated[arg]]["Dagger"]
+FromOperatorShorthand[SuperDagger[arg_] -> rest_] := FromOperatorShorthand[Unevaluated[arg -> rest]]["Dagger"]
+
+namePattern = {name_String, ___} | name_String[___] | name_String
+
+FromOperatorShorthand[arg : namePattern] /; MemberQ[$QuantumStateNames, name] || StringMatchQ[name, ("0" | "1" | "+" | "-" | "L" | "R") ..] :=
+    With[{s = QuantumState[arg]}, QuantumOperator[s, "Label" -> Ket[{s["Label"]}]]]
+
+FromOperatorShorthand[arg : namePattern] /; MemberQ[$QuantumMeasurementOperatorNames, name] := QuantumMeasurementOperator[arg]
 FromOperatorShorthand[target_ ? targetQ] := QuantumMeasurementOperator[target]
 FromOperatorShorthand[target_ ? targetQ -> {arg_, opts___} | arg_] := QuantumMeasurementOperator[arg, target, opts]
 FromOperatorShorthand[target_Integer ? Positive -> {arg_, opts___} | arg_] := QuantumMeasurementOperator[arg, {target}, opts]
 
-FromOperatorShorthand[arg : {name_String, ___} | name_String[___] | name_String] /; MemberQ[$QuantumStateNames, name] :=
-    With[{s = QuantumState[arg]}, QuantumOperator[s, "Label" -> Ket[{s["Label"]}]]]
-FromOperatorShorthand[arg : name_String] /; MemberQ[$QuantumStateNames, name] || StringMatchQ[name, ("0" | "1" | "+" | "-" | "L" | "R") ..] :=
-    With[{s = QuantumState[arg]}, QuantumOperator[s, "Label" -> Ket[{s["Label"]}]]]
-FromOperatorShorthand[SuperDagger[arg : {name_String, ___} | name_String[___] | name_String]] /; MemberQ[$QuantumStateNames, name] :=
-    FromOperatorShorthand[arg]["Dagger"]
-FromOperatorShorthand[SuperDagger[arg : name_String]] /; MemberQ[$QuantumStateNames, name] || StringMatchQ[name, ("0" | "1" | "+" | "-" | "L" | "R") ..] :=
-    FromOperatorShorthand[arg]["Dagger"]
 
-FromOperatorShorthand[arg : {name_String, ___} | name_String[___] | name_String] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[arg]
-FromOperatorShorthand[(arg : {name_String, ___} | name_String[___] | name_String -> order_) -> opts : OptionsPattern[]] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[arg, Flatten[{order}], opts]
-FromOperatorShorthand[(qc_ ? QuantumChannelQ) -> order_ ? autoOrderQ] := QuantumChannel[qc, order]
+FromOperatorShorthand[arg : namePattern] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[arg]
 
-FromOperatorShorthand[arg : {name_String, ___} | name_String[___] | name_String] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[arg]
+FromOperatorShorthand[arg : namePattern] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[arg]
+
+FromOperatorShorthand[arg : namePattern -> order : _Integer | _ ? orderQ] := With[{op = FromOperatorShorthand[Unevaluated[arg]]}, Head[op][op, Flatten[{order}]]]
 
 FromOperatorShorthand[lhs_ -> order_ ? autoOrderQ] := QuantumOperator[FromOperatorShorthand[Unevaluated[lhs]], order]
 FromOperatorShorthand[lhs_ -> n_Integer] := FromOperatorShorthand[Unevaluated[lhs -> {n}]]
 FromOperatorShorthand[lhs_ -> n : _Integer | _ ? orderQ -> m : _Integer | _ ? orderQ] := QuantumOperator[lhs, {Flatten[{m}], Flatten[{n}]}]
 FromOperatorShorthand[(lhs_ -> rhs_) -> label : Except[OptionsPattern[]]] := FromOperatorShorthand[Unevaluated[(lhs -> rhs) -> ("Label" -> label)]]
-FromOperatorShorthand[lhs_ -> label : Except[OptionsPattern[]]] := FromOperatorShorthand[Unevaluated[lhs -> ("Label" -> label)]]
-
-FromOperatorShorthand[arg : {name_String, ___} | name_String[___] | name_String -> target_] /; MemberQ[$QuantumMeasurementOperatorNames, name] := QuantumMeasurementOperator[arg, Flatten[{target}]]
-FromOperatorShorthand[arg : {name_String, ___} | name_String[___] | name_String -> order_] /; MemberQ[$QuantumChannelNames, name] := QuantumChannel[arg, Flatten[{order}]]
-FromOperatorShorthand[arg : {name_String, ___} | name_String[___] | name_String -> order_] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[arg, Flatten[{order}]]
+FromOperatorShorthand[(lhs_ -> rhs_) -> opts : OptionsPattern[]] := With[{op = FromOperatorShorthand[Unevaluated[lhs -> rhs]]}, Head[op][op, opts]]
+FromOperatorShorthand[lhs_ -> opts : OptionsPattern[]] := FromOperatorShorthand[Unevaluated[(lhs -> {1}) -> {opts}]]
+FromOperatorShorthand[lhs_ -> label : Except[OptionsPattern[]]] := FromOperatorShorthand[Unevaluated[(lhs -> {1}) -> ("Label" -> label)]]
 
 FromOperatorShorthand[lhs_ -> rest_] := QuantumOperator[Unevaluated[lhs], Sequence @@ Developer`ToList[rest]]
-FromOperatorShorthand[args_List] := FromOperatorShorthand /@ args
+FromOperatorShorthand[args_List] := Function[Null, FromOperatorShorthand[Unevaluated[#]], HoldFirst] /@ Unevaluated[args]
 FromOperatorShorthand[arg_] := QuantumOperator[arg]
 
 
