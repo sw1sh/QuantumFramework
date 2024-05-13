@@ -498,7 +498,13 @@ drawMeasurement[{vpos_, _, hpos_}, eigenDims_, max_, opts : OptionsPattern[]] :=
 	corners = positionCorners[{order, Table[height, 2]}, size, vGapSize, hGapSize];
 	center = Mean[corners];
 	{
-		drawGate[{order, order, hpos}, {{}, {}}, Superscript[MapAt[If[gaugeQ, "Measurement", "Channel"], label, Replace[label, {_Interpretation -> 2, _ -> {{}}}]], CircleTimes[Length[order]]], FilterRules[{opts}, Options[drawGate]]],
+		drawGate[{order, order, hpos}, {{}, {}},
+			If[	MatchQ[label, Superscript[_, CircleTimes[_Integer]]],
+				MapAt[If[gaugeQ, "Measurement", "Channel"], label, {1}],
+				Superscript[MapAt[If[gaugeQ, "Measurement", "Channel"], label, Replace[label, {_Interpretation -> 2, _ -> {{}}}]], CircleTimes[Length[order]]]
+			],
+			FilterRules[{opts}, Options[drawGate]]
+		],
 		If[	connectorsQ, {FaceForm[Directive[$DefaultGray, Opacity[1]]], Disk[#, size / 32] & /@ {{center[[1]] - size / 2, - vGapSize #}, {center[[1]] + size / 2, - vGapSize #}} & /@ Select[vpos, Positive]}, Nothing],
 		If[	showMeasurementWireQ || extraQuditsQ, {
 			$DefaultGray,
