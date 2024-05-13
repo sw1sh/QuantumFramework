@@ -701,9 +701,9 @@ Options[QuantumStatePreparation] = Join[{Method -> Automatic}, Options[QuantumSt
 
 QuantumStatePreparation[qs_QuantumState, opts: OptionsPattern[]] /; MatchQ[qs["Dimensions"], {2 ..}] := Switch[OptionValue[Method],
     Automatic,
-    QuantumStateMultiplexer[qs, FilterRules[{opts}, Options[QuantumStateMultiplexer]]],
+    QuantumStateMultiplexer[qs["Computational"], FilterRules[{opts}, Options[QuantumStateMultiplexer]]],
     "Classiq",
-    ClassiqQuantumState[qs, FilterRules[{opts}, Options[ClassiqQuantumState]]]
+    ClassiqQuantumState[qs["Computational"], FilterRules[{opts}, Options[ClassiqQuantumState]]]
 ]
 
 QuantumStateMultiplexer[qs_QuantumState, ___]  := Block[{
