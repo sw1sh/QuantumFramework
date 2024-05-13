@@ -84,12 +84,8 @@ QuantumShortcut[qo_QuantumOperator, OptionsPattern[]] := Replace[
     }
 ]
 
-QuantumShortcut[qmo_QuantumMeasurementOperator, OptionsPattern[]] := {
-    If[ MatchQ[qmo["Label"], None | "I"[___]],
-        If[AllTrue[qmo["TargetDimensions"], # == 2 &], qmo["InputOrder"], qmo["InputOrder"] -> {"I"[qmo["TargetDimensions"]], "Label" -> None}],
-        qmo
-    ]
-}
+QuantumShortcut[qmo_QuantumMeasurementOperator, OptionsPattern[]] :=
+    {If[MatchQ[qmo["Label"], None | "I" | "I"[___]], "M", {"M", qmo["Label"]}] -> If[AllTrue[qmo["TargetDimensions"], # == 2 &], qmo["InputOrder"], qmo["InputOrder"] -> {"I"[qmo["TargetDimensions"]], "Label" -> None}]}
 
 QuantumShortcut[qc_QuantumCircuitOperator, opts : OptionsPattern[]] := Catenate[QuantumShortcut[#, opts] & /@ qc["Operators"]]
 

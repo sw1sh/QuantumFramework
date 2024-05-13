@@ -11,6 +11,8 @@ PackageScope["QuantumCircuitOperatorToQiskit"]
 shortcutToGate = Replace[
     {
         {"R", angle_, {name_ -> order_ ? orderQ}} :> shortcutToGate[{"R", angle, name}] -> order,
+        ("M" -> target_ ? orderQ) :> {"Measure", target},
+        ({"M", args___} -> target_ ? orderQ) :> Splice @ Append[shortcutToGate /@ QuantumShortcut[QuantumOperator[Inverse[QuantumBasis[args]["Matrix"]]]], {"Measure", target}],
         (name_ -> (order_ ? orderQ)) :> With[{shortcut = shortcutToGate[name]}, If[shortcut === Nothing, Nothing, shortcut -> order]],
         "I" -> Nothing,
         "X" | "NOT" -> "XGate",
@@ -44,8 +46,6 @@ shortcutToGate = Replace[
             ],
             {"Unitary", NumericArray[Normal @ N @ arr, "ComplexReal32"], ToString[label], order}
         ],
-        target_ ? orderQ :> {"Measure", target},
-        qmo_ ? QuantumMeasurementOperatorQ :> Replace[qmo["Label"], {None :> shortcutToGate[qmo["Target"]], label_ :> Splice[shortcutToGate /@ Append[QuantumShortcut[QuantumOperator[Inverse[QuditBasis[label]["Matrix"]], qmo["Target"]]], qmo["Target"]]]}],
         shortcut_ :> With[{op = QuantumOperator[shortcut]}, {"Unitary", NumericArray[Normal @ N @ op["Matrix"], "ComplexReal32"], ToString[shortcut], op["Order"]}]
     }
 ]

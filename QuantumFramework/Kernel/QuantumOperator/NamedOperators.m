@@ -905,7 +905,7 @@ QuantumOperator[{"Liouvillian", H : _QuantumOperator | None : None, Ls : {___Qua
     ]
 ]
 
-QuantumOperator[{"Hamiltonian", args___}, opts___] := I QuantumOperator["Liouvillian"[args], opts, "Label" -> "Hamiltonian"]
+QuantumOperator[{"Hamiltonian", args___}, opts___] := QuantumOperator[I QuantumOperator["Liouvillian"[args]], opts, "Label" -> "Hamiltonian"]
 
 
 QuantumOperator[chain_String, opts___] := With[{chars = Characters[chain]},
