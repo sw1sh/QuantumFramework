@@ -507,16 +507,18 @@ addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator 
     ordered2 = qo2[orderInput]["Sort"][orderOutput]["Sort"];
     ConfirmAssert[ordered1["Dimensions"] == ordered2["Dimensions"]];
     QuantumOperator[
-        QuantumOperator[
-            ordered1["MatrixRepresentation"] + ordered2["MatrixRepresentation"],
-            QuantumBasis[ordered1["OutputDimensions"], ordered2["InputDimensions"]]
+        QuantumState[
+            QuantumState[
+                ordered1["State"]["Computational"]["State"] + ordered2["State"]["Computational"]["State"],
+                QuantumBasis[ordered1["OutputDimensions"], ordered2["InputDimensions"]]
+            ],
+            QuantumBasis[
+                ordered1["Basis"],
+                "Label" -> If[ordered1["Label"] === None || ordered2["Label"] === None, None, ordered1["Label"] + ordered2["Label"]],
+                "ParameterSpec" -> MergeParameterSpecs[ordered1, ordered2]
+            ]
         ],
-        ordered1["Order"],
-        QuantumBasis[
-            ordered1["Basis"],
-            "Label" -> If[ordered1["Label"] === None || ordered2["Label"] === None, None, ordered1["Label"] + ordered2["Label"]],
-            "ParameterSpec" -> MergeParameterSpecs[ordered1, ordered2]
-        ]
+        ordered1["Order"]
     ]
 ]
 

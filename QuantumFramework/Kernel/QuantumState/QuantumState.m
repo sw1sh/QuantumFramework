@@ -25,7 +25,9 @@ qs_QuantumState /; quantumStateQ[Unevaluated[qs]] && ! System`Private`HoldValidQ
 
 (* basis argument input *)
 
-QuantumState[state_ ? stateQ, basisArgs___] /; !QuantumBasisQ[basisArgs] := Enclose @ Module[{
+QuantumState[state_ ? stateQ] := QuantumState[state, QuantumBasis[primeFactors[Length[state]]]]
+
+QuantumState[state_ ? stateQ, basisArgs__] /; ! QuantumBasisQ[basisArgs] := Enclose @ Block[{
     basis, multiplicity
 },
     basis = ConfirmBy[QuantumBasis[basisArgs], QuantumBasisQ];
@@ -128,7 +130,6 @@ QuantumState[state_ ? stateQ, basis_ ? QuantumBasisQ] := QuantumState[
 
 QuantumState[state_ ? stateQ, basis_ ? QuantumBasisQ] /; !SparseArrayQ[state] && state =!= {} :=
     Enclose @ QuantumState[ConfirmBy[SparseArray[state, Length[state]], SparseArrayQ], basis]
-
 
 QuantumState[qs_ ? QuantumStateQ, args : Except[_ ? QuantumBasisQ, Except[Alternatives @@ $QuantumBasisPictures, _ ? nameQ | _Integer]]] :=
     Enclose @ QuantumState[qs, ConfirmBy[QuantumBasis[args], QuantumBasisQ]]

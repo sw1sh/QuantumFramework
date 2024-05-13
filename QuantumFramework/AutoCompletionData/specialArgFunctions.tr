@@ -237,6 +237,7 @@
             "+",
             "-",
             "Double",
+            "Hamiltonian",
             "Liouvillian"
         },
         {

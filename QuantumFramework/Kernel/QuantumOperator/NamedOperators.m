@@ -29,7 +29,7 @@ $QuantumOperatorNames = {
     "Multiplexer",
     "WignerD", "JX", "JY", "JZ", "JX+", "JY+", "JZ+", "JX-", "JY-", "JZ-", "J+", "J-", "+", "-",
     "Double",
-    "Liouvillian"
+    "Hamiltonian", "Liouvillian"
 }
 
 
@@ -880,16 +880,33 @@ QuantumOperator[{"-" | "I-", args___}, opts___] := With[{qb = QuantumBasis[args]
 QuantumOperator[{"Double", args___}, opts___] := QuantumOperator[args, opts]["Double"]
 
 
-QuantumOperator[{"Liouvillian", H_QuantumOperator, Ls : {___QuantumOperator} : {}, gammas_List : {}}, opts___] := Enclose[
-	ConfirmAssert[SameQ @@ Join[{H["OutputDimension"], H["InputDimension"]}, Through[Ls["OutputDimension"]], Through[Ls["InputDimension"]]]];
-	QuantumOperator[
-        QuantumWeylTransform @ QuantumOperator[
-            I (HamiltonianTransitionRate[H] + PadRight[gammas, Length[Ls], 1] . LindbladTransitionRates[Ls]),
-            QuantumBasis["Wigner"[H["OutputDimension"], "Exact" -> ! Or @@ Join[{H["NumberQ"]}, Through[Ls["NumberQ"]], NumberQ / gammas]]]
+HamiltonianMixedOperator[h_QuantumOperator] := Block[{d = h["Dimension"], H},
+    H = QuantumOperator[h, {1}, d];
+    QuantumOperator[QuantumState[ArrayReshape[Transpose[(H - QuantumOperator[Transpose[H], {2}])["Tensor"], 2 <-> 3], {d, d}], h["Basis"]], h["Order"]]
+]
+
+LindbladMixedOperator[l_QuantumOperator] := Block[{d = l["Dimension"], L, LL},
+    L = QuantumOperator[l, {1}, d];
+    LL = L["Dagger"] @ L;
+    QuantumOperator[
+        QuantumState[
+            ArrayReshape[Transpose[(L["Dagger"] @ QuantumOperator[Transpose[L], {2}] - (LL + QuantumOperator[Transpose[LL], {2}]) / 2)["Tensor"], 2 <-> 3], {d, d}],
+            l["Basis"]
         ],
-        QuantumBasis[H["Basis"], opts, "Label" -> "Liouvillian"]
+        l["Order"]
     ]
 ]
+
+QuantumOperator[{"Liouvillian", H : _QuantumOperator | None : None, Ls : {___QuantumOperator} : {}, gammas_List : {}}, opts___] := Enclose[
+	ConfirmAssert[SameQ @@ Join[If[H === None, {}, {H["OutputDimension"], H["InputDimension"]}], Through[Ls["OutputDimension"]], Through[Ls["InputDimension"]]]];
+    QuantumOperator[
+        If[H === None, 0, HamiltonianMixedOperator[H] / I] + PadRight[gammas, Length[Ls], 1] . (LindbladMixedOperator /@ Ls),
+        opts, "Label" -> "Liouvillian"
+    ]
+]
+
+QuantumOperator[{"Hamiltonian", args___}, opts___] := I QuantumOperator["Liouvillian"[args], opts, "Label" -> "Hamiltonian"]
+
 
 QuantumOperator[chain_String, opts___] := With[{chars = Characters[chain]},
     QuantumOperator[QuantumTensorProduct[MapIndexed[QuantumOperator, chars]], opts] /;
