@@ -136,9 +136,11 @@ QuantumEvolve[
     ];
 
     solution = If[numericQ,
-        Module[{time},
+        Module[{time, protectedQ = MemberQ[Attributes[parameter], Protected]},
             WithCleanup[
-                Unprotect[\[FormalS], Evaluate[parameter]],
+                Unprotect[\[FormalS]];
+                If[protectedQ, Unprotect[Evaluate[parameter]]]
+                ,
                 Progress`EvaluateWithProgress[
                     NDSolveValue[
                         equations,
@@ -148,8 +150,10 @@ QuantumEvolve[
                         StepMonitor :> (time = parameter)
                     ],
                     <|"Text" -> "Integrating", "Progress" :> time / Last[param], "Percentage" :> time / Last[param], "ElapsedTime" -> Automatic, "RemainingTime" -> Automatic|>
-                ],
-                Protect[\[FormalS], Evaluate[parameter]]
+                ]
+                ,
+                Protect[\[FormalS]];
+                If[protectedQ, Protect[Evaluate[parameter]]]
             ]
         ],
         DSolveValue[
