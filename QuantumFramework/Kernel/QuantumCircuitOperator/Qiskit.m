@@ -425,7 +425,7 @@ if <* $fireOpal *>:
         credentials=fireopal_credentials,
         backend_name=backend.name,
     )['results'][0]
-    result = {k[::-1]: v for k, v in result.items()}
+    result = {k: v for k, v in result.items()}
 else:
 
     if isinstance(provider, AWSBraketProvider):
