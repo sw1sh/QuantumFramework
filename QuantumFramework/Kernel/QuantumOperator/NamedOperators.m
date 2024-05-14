@@ -790,7 +790,7 @@ QuantumOperator[{"Reset", args___ : "0"}, opts___] := With[{state = QuantumState
     QuantumOperator[QuantumOperator[state] @ QuantumOperator["Trace"[state["Dimension"]]], opts, "Label" -> If[state["Label"] === None, None, "Reset"[state["Label"]]]]
 ]
 
-QuantumOperator[{"Measurement", args__ : 2}, opts___] := QuantumMeasurementOperator[QuantumBasis[args], opts]["DiscardExtraQudits"]
+QuantumOperator[{"Measurement", args__ : 2}, opts___] := QuantumOperator[QuantumMeasurementOperator[args]["DiscardExtraQudits"], opts]
 
 QuantumOperator[{"Channel", args__ : "BitFlip"}, opts___] := QuantumOperator[QuantumChannel[args]["DiscardExtraQudits"], opts]
 
