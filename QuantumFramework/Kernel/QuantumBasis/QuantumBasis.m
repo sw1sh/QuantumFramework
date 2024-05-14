@@ -129,7 +129,7 @@ defaultParameterSpec[p : Except[_List]] := defaultParameterSpec[{p}]
 
 
 QuantumBasis[data_Association] /; !MatchQ[data["ParameterSpec"], {{_, _, _}...}] :=
-    QuantumBasis[<|data, "ParameterSpec" -> defaultParameterSpec[data["ParameterSpec"]]|>]
+    QuantumBasis[<|data, "ParameterSpec" -> Reverse @ DeleteDuplicatesBy[Reverse @ defaultParameterSpec[data["ParameterSpec"]], First]|>]
 
 
 (* multiplicity *)
