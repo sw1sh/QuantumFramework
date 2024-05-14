@@ -397,6 +397,8 @@ QuantumStateProp[qs_, "DensityTensor"] := ArrayReshape[qs["DensityMatrix"], Join
 
 QuantumStateProp[qs_, "DensityMatrixTensor"] := ArrayReshape[qs["DensityMatrix"], Join[#, #] & @ qs["MatrixNameDimensions"]]
 
+QuantumStateProp[qs_, "DensityVectorMatrix"] := ArrayReshape[Transpose[qs["DensityMatrixTensor"], 2 <-> 3], qs["MatrixNameDimensions"] ^ 2]
+
 QuantumStateProp[qs_, "DensityVector"] := SparseArrayFlatten @ Transpose[qs["DensityMatrixTensor"], 2 <-> 3]
 
 QuantumStateProp[qs_, "Projector"] := QuantumState[Flatten @ qs["DensityMatrix"],
@@ -840,7 +842,7 @@ QuantumStateProp[qs_, "UnstackInput", n_Integer : 1] /; 1 <= n <= qs["InputQudit
 QuantumStateProp[qs_, "StateTensor"] := If[
     qs["VectorQ"],
     ArrayReshape[qs["StateVector"], qs["Dimensions"]],
-    ArrayReshape[qs["DensityMatrix"], Join[qs["Dimensions"], qs["Dimensions"]]]
+    qs["DensityTensor"]
 ]
 
 QuantumStateProp[qs_, "StateMatrix"] := If[

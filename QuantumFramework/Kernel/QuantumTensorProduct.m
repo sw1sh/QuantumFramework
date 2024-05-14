@@ -45,14 +45,13 @@ QuantumBasis[<|
 
 (* state x state *)
 
+QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] /; qs1["MatrixQ"] || qs2["MatrixQ"] := QuantumTensorProduct[qs1["Double"], qs2["Double"]]["Undouble"]
+
 QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] /; qs1["Input"] == qs2["Input"] && qs1["Output"] == qs2["Output"] := Enclose[
     profile["Kronecker"] @ QuantumState[
-        If[ qs1["StateType"] === qs2["StateType"] === "Vector",
-            SparseArrayFlatten @ KroneckerProduct[
-                qs1["StateMatrix"],
-                qs2["StateMatrix"]
-            ],
-            KroneckerProduct[qs1["DensityMatrix"], qs2["DensityMatrix"]]
+        SparseArrayFlatten @ KroneckerProduct[
+            qs1["StateMatrix"],
+            qs2["StateMatrix"]
         ],
         QuantumTensorProduct[qs1["Basis"], qs2["Basis"]]
     ]
@@ -60,12 +59,9 @@ QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] /; qs1["Input"] == qs2[
 
 QuantumTensorProduct[qs1_QuantumState, qs2_QuantumState] := Enclose[
     QuantumState[QuantumState[
-        If[ qs1["StateType"] === qs2["StateType"] === "Vector",
-            SparseArrayFlatten @ KroneckerProduct[
-                qs1["Computational"]["StateMatrix"],
-                qs2["Computational"]["StateMatrix"]
-            ],
-            KroneckerProduct[qs1["MatrixRepresentation"], qs2["MatrixRepresentation"]]
+        SparseArrayFlatten @ KroneckerProduct[
+            qs1["Computational"]["StateMatrix"],
+            qs2["Computational"]["StateMatrix"]
         ],
         QuantumBasis[Join[qs1["OutputDimensions"], qs2["OutputDimensions"]], Join[qs1["InputDimensions"], qs2["InputDimensions"]]]
     ],
