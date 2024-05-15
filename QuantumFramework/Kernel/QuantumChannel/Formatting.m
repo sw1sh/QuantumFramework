@@ -22,24 +22,28 @@ QuantumChannel /: MakeBoxes[qc_QuantumChannel /; QuantumChannelQ[qc], format_] :
     BoxForm`ArrangeSummaryBox["QuantumChannel", qc,
         Tooltip[icon, qc["Label"]], {
             {
-                BoxForm`SummaryItem[{"Picture: ", qc["Picture"]}],
-                BoxForm`SummaryItem[{"Arity: ", qc["Arity"]}]
+                BoxForm`SummaryItem[{"Order: ", Row[{qc["InputOrder"], "\[RightArrow]", qc["OutputOrder"]}]}]
             },
             {
-                BoxForm`SummaryItem[{"Dimension: ", Row[{qc["InputDimension"]}]}],
-                BoxForm`SummaryItem[{"Qudits: ", Row[{qc["InputQudits"]}]}]
-            }
+                BoxForm`SummaryItem[{"Dimension: ", Row[{qc["InputDimension"], "\[RightArrow]", qc["OutputDimension"]}]}]
+            },
+            If[ qc["Picture"] === "Schrodinger",
+                Nothing, 
+                {
+                    BoxForm`SummaryItem[{"Picture: ", qc["Picture"]}]
+                }
+            ]
         },
         {
             {
-                BoxForm`SummaryItem[{"Trace preserving: ", TimeConstrained[qc["TracePreservingQ"], 1]}]
+                BoxForm`SummaryItem[{"Trace preserving: ", TimeConstrained[qc["TracePreservingQ"], 1]}],
+                BoxForm`SummaryItem[{"Qudits: ", Row[{qc["InputQudits"], "\[RightArrow]", qc["OutputQudits"]}]}]
             },
             {
-                BoxForm`SummaryItem[{"Order: ", Row[{qc["InputOrder"]}]}],
-                BoxForm`SummaryItem[{"Dimensions: ", Row[{qc["InputDimensions"]}]}]
-            },
-            {
-                BoxForm`SummaryItem[{"Parameters: ", qc["Parameters"]}]
+                BoxForm`SummaryItem[{"Parameters: ", qc["Parameters"]}],
+                BoxForm`SummaryItem[{"Dimensions: ",
+                    Row[{qc["InputDimensions"], "\[RightArrow]", qc["OutputDimensions"]}]}
+                ]
             }
         },
         format,

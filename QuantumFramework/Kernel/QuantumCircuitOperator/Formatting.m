@@ -16,22 +16,13 @@ BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
     ],
     {{}},
     {
-        {
-            BoxForm`SummaryItem[{"Gates: ", qco["GateCount"]}],
-            BoxForm`SummaryItem[{"Depth: ", qco["Depth"]}]
-        },
-        {
-            BoxForm`SummaryItem[{"Dimensions: ", qco["InputDimension"] -> qco["OutputDimension"]}]
-        },
-        {
-            BoxForm`SummaryItem[{"Order: ", qco["InputOrder"] -> qco["OutputOrder"]}]
-        },
-        {
-            BoxForm`SummaryItem[{"Measurement Target: ", qco["Target"]}]
-        },
-        {
-            BoxForm`SummaryItem[{"Parameters: ", qco["Parameters"]}]
-        }
+        BoxForm`SummaryItem[{"Gates: ", qco["GateCount"]}],
+        BoxForm`SummaryItem[{"Depth: ", qco["Depth"]}],
+        BoxForm`SummaryItem[{"Width: ", qco["Width"]}],
+        BoxForm`SummaryItem[{"Order: ", qco["InputOrder"] -> qco["OutputOrder"]}],
+        BoxForm`SummaryItem[{"Dimensions: ", qco["InputDimensions"] -> qco["OutputDimensions"]}],
+        BoxForm`SummaryItem[{"Measurement Target: ", qco["Target"]}],
+        BoxForm`SummaryItem[{"Parameters: ", qco["Parameters"]}]
     },
     format
 ],

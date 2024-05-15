@@ -28,13 +28,19 @@ QuantumMeasurementOperator /: MakeBoxes[qmo_QuantumMeasurementOperator /; Quantu
             },
             {
                 BoxForm`SummaryItem[{"Dimension: ", Row[{qmo["InputDimension"], "\[RightArrow]", qmo["OutputDimension"]}]}],
-                BoxForm`SummaryItem[{"Qudits: ", Row[{qmo["InputQudits"], "\[RightArrow]", qmo["OutputQudits"]}]}]
-            }
+                BoxForm`SummaryItem[{"Order: ", Row[{qmo["InputOrder"], "\[RightArrow]", qmo["OutputOrder"]}]}]
+            },
+            If[ qmo["Picture"] === "Schrodinger",
+                Nothing, 
+                {
+                    BoxForm`SummaryItem[{"Picture: ", qmo["Picture"]}]
+                }
+            ]
         },
         {
             {
                 BoxForm`SummaryItem[{"Hermitian: ", TimeConstrained[qmo["HermitianQ"], 1]}],
-                BoxForm`SummaryItem[{"Order: ", Row[{qmo["InputOrder"], "\[RightArrow]", qmo["OutputOrder"]}]}]
+                BoxForm`SummaryItem[{"Qudits: ", Row[{qmo["InputQudits"], "\[RightArrow]", qmo["OutputQudits"]}]}]
             },
             {
                 BoxForm`SummaryItem[{"Unitary: ", TimeConstrained[qmo["UnitaryQ"], 1]}],

@@ -43,11 +43,12 @@ QuantumBasis /: MakeBoxes[qb_QuantumBasis ? QuantumBasisQ, format : StandardForm
     },
     {
         {
-            BoxForm`SummaryItem[{"Qudits: ", {qb["OutputQudits"], qb["InputQudits"]}}]
+            BoxForm`SummaryItem[{"Qudits: ", Row[{qb["InputQudits"], "\[RightArrow]", qb["OutputQudits"]}]}]
         },
         {
             BoxForm`SummaryItem[{"Dimensions: ",
-                Row[{"{", Row[qb["OutputDimensions"], ","], " | ", Row[Style[#, Bold] & /@ qb["InputDimensions"], ","], "}"}]}]
+                Row[{qb["InputDimensions"], "\[RightArrow]", qb["OutputDimensions"]}]}
+            ]
         },
         {
             BoxForm`SummaryItem[{"Element dimensions: ", qb["ElementDimensions"]}]

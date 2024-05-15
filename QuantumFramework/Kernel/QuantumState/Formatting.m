@@ -51,16 +51,17 @@ QuantumState /: MakeBoxes[qs_QuantumState /; QuantumStateQ[qs], format_] := Encl
         {
             BoxForm`SummaryItem[{"Purity: ",
                 If[qs["Dimension"] < 2 ^ 9, TimeConstrained[Enclose[ConfirmQuiet[N @ qs["Purity"]], Indeterminate &], 1], $Aborted]}
-            ]
+            ],
+
+            BoxForm`SummaryItem[{"Qudits: ", Row[{qs["InputQudits"], "\[RightArrow]", qs["OutputQudits"]}]}]
         },
         {
             BoxForm`SummaryItem[{"Von Neumann Entropy: ",
                 If[qs["Dimension"] < 2 ^ 9, TimeConstrained[Enclose[ConfirmQuiet[N @ qs["VonNeumannEntropy"]], Indeterminate &], 1], $Aborted]}
-            ]
-        },
-        {
+            ],
             BoxForm`SummaryItem[{"Dimensions: ",
-                Row[{"{", Row[qs["OutputDimensions"], ","], " | ", Row[Style[#, Bold] & /@ qs["InputDimensions"], ","], "}"}]}]
+                Row[{qs["InputDimensions"], "\[RightArrow]", qs["OutputDimensions"]}]}
+            ]
         },
         {
             BoxForm`SummaryItem[{"Parameters: ", qs["Parameters"]}]

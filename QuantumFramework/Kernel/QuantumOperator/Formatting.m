@@ -38,18 +38,23 @@ QuantumOperator /: MakeBoxes[qo_QuantumOperator /; QuantumOperatorQ[qo], format_
         If[qo["Label"] === None, icon, Tooltip[icon, qo["Label"]]],
         {
             {
-                BoxForm`SummaryItem[{"Picture: ", qo["Picture"]}],
-                BoxForm`SummaryItem[{"Arity: ", qo["Arity"]}]
+                BoxForm`SummaryItem[{Row @ {qo["Type"], " ", ToLowerCase @ qo["Kind"]}}]
             },
             {
                 BoxForm`SummaryItem[{"Dimension: ", Row[{qo["InputDimension"], "\[RightArrow]", qo["OutputDimension"]}]}],
-                BoxForm`SummaryItem[{"Qudits: ", Row[{qo["InputQudits"], "\[RightArrow]", qo["OutputQudits"]}]}]
-            }
+                BoxForm`SummaryItem[{"Order: ", Row[{qo["InputOrder"], "\[RightArrow]", qo["OutputOrder"]}]}]
+            },
+            If[ qo["Picture"] === "Schrodinger",
+                Nothing, 
+                {
+                    BoxForm`SummaryItem[{"Picture: ", qo["Picture"]}]
+                }
+            ]
         },
         {
             {
                 BoxForm`SummaryItem[{"Hermitian: ", TimeConstrained[qo["HermitianQ"], 1]}],
-                BoxForm`SummaryItem[{"Order: ", Row[{qo["InputOrder"], "\[RightArrow]", qo["OutputOrder"]}]}]
+                BoxForm`SummaryItem[{"Qudits: ", Row[{qo["InputQudits"], "\[RightArrow]", qo["OutputQudits"]}]}]
             },
             {
                 BoxForm`SummaryItem[{"Unitary: ", TimeConstrained[qo["UnitaryQ"], 1]}],
