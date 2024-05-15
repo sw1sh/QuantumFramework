@@ -115,23 +115,24 @@ QuantumOperator["Identity" | "I", order : _ ? orderQ | Automatic, opts___] :=
 QuantumOperator["Identity" | "I", order : {outOrder : _ ? orderQ | Automatic, inOrder : _ ? orderQ | Automatic}, opts___] :=
     QuantumOperator[{"Identity", Table[2, If[outOrder === Automatic, 1, Length[outOrder]]], Table[2, If[inOrder === Automatic, 1, Length[inOrder]]]}, order, opts]
 
-QuantumOperator[{"Identity" | "I", dims : {_Integer ? Positive ...}}, args___] := QuantumOperator[
-    QuantumState[SparseArrayFlatten @ identityMatrix[Times @@ dims], QuantumBasis[QuditBasis[dims], QuditBasis[dims], "Label" -> "I"]],
-    args
+QuantumOperator[{"Identity" | "I", dims : {_Integer ? Positive ...}}, opts___] := QuantumOperator[
+    QuantumOperator[QuantumState[SparseArrayFlatten @ identityMatrix[Times @@ dims], QuantumBasis[QuditBasis[dims], QuditBasis[dims], "Label" -> "I"]]],
+    opts
 ]
 
-QuantumOperator[{"Identity" | "I", outDims : {_Integer ? Positive ...}, inDims : {_Integer ? Positive ...}}, args___] := QuantumOperator[
-    QuantumState[SparseArrayFlatten @ identityMatrix[{Times @@ outDims, Times @@ inDims}], QuantumBasis[QuditBasis[outDims], QuditBasis[inDims], "Label" -> "I"]],
-    args
+QuantumOperator[{"Identity" | "I", outDims : {_Integer ? Positive ...}, inDims : {_Integer ? Positive ...}}, opts___] := QuantumOperator[
+    QuantumOperator[QuantumState[SparseArrayFlatten @ identityMatrix[{Times @@ outDims, Times @@ inDims}], QuantumBasis[QuditBasis[outDims], QuditBasis[inDims], "Label" -> "I"]]],
+    opts
 ]
 
-QuantumOperator[{"Identity" | "I", qb_ ? QuditBasisQ}, args___] := QuantumOperator[
-    QuantumOperator[{"Identity", qb["FullDimensions"]}, args],
+QuantumOperator[{"Identity" | "I", qb_ ? QuditBasisQ}, opts___] := QuantumOperator[
+    QuantumOperator[{"Identity", qb["FullDimensions"]}],
+    opts,
     "Output" -> qb, "Input" -> qb["Dual"]
 ]
 
-QuantumOperator[{"Identity" | "I", qb_ ? QuantumBasisQ}, args___] :=
-    QuantumOperator[{"Identity", qb["OutputDimensions"], qb["InputDimensions"]}, args]
+QuantumOperator[{"Identity" | "I", qb_ ? QuantumBasisQ}, opts___] :=
+    QuantumOperator[{"Identity", qb["OutputDimensions"], qb["InputDimensions"]}, opts]
 
 QuantumOperator[{"Identity" | "I", params__}, opts___] :=
     Enclose @ QuantumOperator[{"Identity", ConfirmBy[QuantumBasis[params], QuantumBasisQ]}, opts]
@@ -790,7 +791,7 @@ QuantumOperator[{"Reset", args___ : "0"}, opts___] := With[{state = QuantumState
     QuantumOperator[QuantumOperator[state] @ QuantumOperator["Trace"[state["Dimension"]]], opts, "Label" -> If[state["Label"] === None, None, "Reset"[state["Label"]]]]
 ]
 
-QuantumOperator[{"Measurement", args__ : 2}, opts___] := QuantumOperator[QuantumMeasurementOperator[args]["DiscardExtraQudits"], opts]
+QuantumOperator[{"Measurement", args__ : "I"}, opts___] := QuantumOperator[QuantumMeasurementOperator[args]["DiscardExtraQudits"], opts]
 
 QuantumOperator[{"Channel", args__ : "BitFlip"}, opts___] := QuantumOperator[QuantumChannel[args]["DiscardExtraQudits"], opts]
 
