@@ -68,7 +68,7 @@ FromOperatorShorthand[SuperDagger[arg_] -> rest_] := FromOperatorShorthand[Uneva
 
 namePattern = {name_String, ___} | name_String[___] | name_String
 
-FromOperatorShorthand[arg : namePattern] /; MemberQ[$QuantumStateNames, name] || StringMatchQ[name, ("0" | "1" | "+" | "-" | "L" | "R") ..] :=
+FromOperatorShorthand[arg : (namePattern /; MemberQ[$QuantumStateNames, name]) | (name_String /; StringMatchQ[name, ("0" | "1" | "+" | "-" | "L" | "R") ..])] :=
     With[{s = QuantumState[arg]}, QuantumOperator[s, "Label" -> Ket[{s["Label"]}]]]
 
 FromOperatorShorthand[arg : namePattern] /; MemberQ[$QuantumMeasurementOperatorNames, name] := QuantumMeasurementOperator[arg]
