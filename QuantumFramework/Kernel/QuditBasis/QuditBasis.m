@@ -108,10 +108,10 @@ QuditBasis /: Equal[qb__QuditBasis ? QuditBasisQ] :=
 
 QuditBasis /: Plus[qb__QuditBasis ? QuditBasisQ] := Module[{
     repr = MapIndexed[{b, i} |-> KeyValueMap[#1[[2]] -> {#1[[1]], SparseArrayFlatten @ #2, First[i]} &, b["Representations"]], {qb}],
-    dims = #["ElementDimensions"] & /@ {qb},
+    dims = #["Shape"] & /@ {qb},
     maxRank
 },
-    maxRank = Max[Length /@ dims];
+    maxRank = Max[Length /@ dims, 1];
     dims = PadRight[#, maxRank, 1] & /@ dims;
     QuditBasis @ Association @ KeyValueMap[
         {k, vs} |-> MapThread[{QuditName[#1], k} -> #2 &] @ {
