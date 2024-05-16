@@ -8,9 +8,9 @@ PackageExport[QuantumCircuitTokenEventGraph]
 
 
 
-operatorApply[op_ ? QuantumOperatorQ, states : {_ ? QuantumStateQ ...}] := Enclose @ With[{
-	inputOrder = op["FullInputOrder"],
-	outputOrder = op["FullOutputOrder"]
+operatorApply[op_, states : {_ ? QuantumStateQ ...}] := Enclose @ With[{
+	inputOrder = op["InputOrder"],
+	outputOrder = op["OutputOrder"]
 },
 	Map[
 		#[[1]] -> ReplacePart[states, Thread[outputOrder -> #[[2]]]] &,
@@ -57,7 +57,7 @@ QuantumCircuitMultiwayGraph[circuit_, initStates : Except[OptionsPattern[]] : Au
 			])
 		]
 		}},
-		circuit["Flatten"]["NormalOperators"],
+		circuit["NormalOperators"],
 		FilterRules[{opts}, Options[Graph]],
 		GraphLayout -> {"LayeredDigraphEmbedding", "Orientation" -> Left}
 	]
@@ -150,7 +150,7 @@ QuantumCircuitPathGraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]] 
 	g = VertexReplace[
 		ResourceFunction["FoldGraph"][{bot, top} |->
 			MapThread[
-				With[{amplitude = Chop @ Simplify[#2]}, If[amplitude == 0, Nothing, Labeled[{MapAt[# + 1 &, Join[AssociationThread[top["OutputOrder"] -> 0], bot[[1]]], {Key[#]} & /@ top["OutputOrder"]], #1}, {amplitude, top["Order"]}]]] &,
+				With[{amplitude = Chop @ Simplify[#2]}, If[N[amplitude] == 0., Nothing, Labeled[{MapAt[# + 1 &, Join[AssociationThread[top["OutputOrder"] -> 0], bot[[1]]], {Key[#]} & /@ top["OutputOrder"]], #1}, {amplitude, top["Order"]}]]] &,
 				With[{newOp = top[bot[[2]]]["Sort"]},
 					{QuantumOperator[#, {newOp["OutputOrder"], {}}] & /@ newOp["OutputBasis"]["BasisStates"], newOp["StateVector"]}
 				]
@@ -168,7 +168,7 @@ QuantumCircuitPathGraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]] 
 		VertexWeight -> Thread[VertexList[g] -> 1],
         EdgeWeight -> weights,
 		EdgeStyle -> If[AllTrue[weights, RealValuedNumericQ],
-			Thread[EdgeList[g] -> ({Arrowheads[0.0075], Thickness[0.001 Abs[#]], Replace[Sign[#], {-1 -> Blue, 1 -> Red}]} & /@ weights)],
+			Thread[EdgeList[g] -> ({Arrowheads[0.0075], Thickness[0.001 Abs[#]], If[N[Sign[#]] == -1., Blue, Red]} & /@ weights)],
 			Automatic
 		],
 		VertexCoordinates -> RotationTransform[- Pi / 2] @ GraphEmbedding[g, {"MultipartiteEmbedding", "VertexPartition" -> Length /@ GatherBy[VertexList[g], First]}],
