@@ -300,23 +300,14 @@ QuantumMeasurementOperatorProp[qmo_, prop : "Conjugate" | "Dual" | "Unbend"] :=
 QuantumMeasurementOperatorProp[qmo_, "DiscardExtraQudits"] := QuantumOperator[
     Fold[
         #2[#1] &,
-        qmo,
+        qmo["SuperOperator"],
         With[{picture = qmo["Picture"]},
-        Join[
             MapThread[
                 QuantumOperator[With[{d = Sqrt[#1["Dimension"]]},
-                    If[picture === "PhaseSpace" && IntegerQ[d], "Marginal"[#1["Conjugate"]], "Trace"[#1["Dimension"]]]], {#2}
+                    If[picture === "PhaseSpace" && IntegerQ[d], "Double"["Trace"[d]], "Trace"[#1["Dimension"]]]], {#2}
                 ] &,
                 {qmo["Eigenbasis"]["Decompose"], qmo["Eigenorder"]}
-            ],
-            If[ picture === "PhaseSpace", 
-                MapThread[
-                    If[IntegerQ[#1], QuantumOperator["Measure"[#], {#2}], Nothing] &,
-                    {qmo["TargetBasis"]["Decompose"], qmo["TargetOrder"]}
-                ],
-                {}
             ]
-        ]
         ]
     ],
     qmo["InputOrder"] -> qmo["TargetOrder"],

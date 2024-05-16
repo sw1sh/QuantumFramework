@@ -97,7 +97,7 @@ QuantumChannelProp[qc_, "DiscardExtraQudits"] := With[{picture = qc["Picture"]},
         Fold[#2[#1] &, qc["QuantumOperator"],
             MapThread[
                 QuantumOperator[With[{d = Sqrt[#1["Dimension"]]},
-                    If[picture === "PhaseSpace" && IntegerQ[d], "Marginal"[#1], "Trace"[#1]]], {#2}
+                    If[picture === "PhaseSpace" && IntegerQ[d], "Double"["Trace"[d]], "Trace"[#1["Dimension"]]]], {#2}
                 ] &,
                 {qc["TraceBasis"]["Decompose"], qc["TraceOrder"]}
             ]
