@@ -195,8 +195,8 @@ QuantumCircuitOperator[qc_ ? QuantumCircuitOperatorQ, order : {_ ? orderQ, _ ? o
     outRepl, inRepl
 },
     length = Max[Length[outOrder], Length[inOrder]];
-    outRepl = Thread[Take[Join[outOrder, inOrder], UpTo[length]] -> Take[Join[order[[1]], order[[2]], Drop[outOrder, UpTo[Length[order[[1]]]]]], UpTo[length]]];
-    inRepl = Thread[Take[Join[inOrder, outOrder], UpTo[length]] -> Take[Join[order[[2]], order[[1]], Drop[inOrder, UpTo[Length[order[[2]]]]]], UpTo[length]]];
+    outRepl = Thread[Sort @ Take[Join[outOrder, inOrder], UpTo[length]] -> Take[Join[order[[1]], order[[2]], Drop[outOrder, UpTo[Length[order[[1]]]]]], UpTo[length]]];
+    inRepl = Thread[Sort @ Take[Join[inOrder, outOrder], UpTo[length]] -> Take[Join[order[[2]], order[[1]], Drop[inOrder, UpTo[Length[order[[2]]]]]], UpTo[length]]];
     {outRepl, inRepl} = {Join[outRepl, inRepl], Join[inRepl, outRepl]};
     QuantumCircuitOperator[
         Which[
