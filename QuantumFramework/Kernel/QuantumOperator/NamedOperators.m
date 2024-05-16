@@ -796,11 +796,11 @@ QuantumOperator[{"Measurement", args__ : "I"}, opts___] := QuantumOperator[Quant
 QuantumOperator[{"Channel", args__ : "BitFlip"}, opts___] := QuantumOperator[QuantumChannel[args]["DiscardExtraQudits"], opts]
 
 QuantumOperator[{"Cup", args__ : 2}, order : _ ? orderQ : {1, 2}, opts___] /; Length[order] == 2 := With[{basis = QuditBasis[args]},
-    QuantumOperator["Spider"[QuantumBasis[QuantumTensorProduct[basis, basis["Conjugate"]], QuditBasis[]]], {order, {}}, opts, "Label" -> "Cup"]
+    QuantumOperator["SimpleSpider"[QuantumBasis[QuantumTensorProduct[basis, basis["Conjugate"]], QuditBasis[]]], {order, {}}, opts, "Label" -> "Cup"]
 ]
 
 QuantumOperator[{"Cap", args__ : 2}, order : _ ? orderQ : {1, 2}, opts___] /; Length[order] == 2 := With[{basis = QuditBasis[args]},
-    QuantumOperator["Spider"[QuantumBasis[QuditBasis[], QuantumTensorProduct[basis, basis["Conjugate"]]]], {{}, order}, opts, "Label" -> "Cap"]
+    QuantumOperator["SimpleSpider"[QuantumBasis[QuditBasis[], QuantumTensorProduct[basis, basis["Conjugate"]]]], {{}, order}, opts, "Label" -> "Cap"]
 ]
 
 
