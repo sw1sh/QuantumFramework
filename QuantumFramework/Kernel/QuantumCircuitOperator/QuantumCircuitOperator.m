@@ -189,12 +189,14 @@ Part[qco_QuantumCircuitOperator, part___] ^:= QuantumCircuitOperator[qco["Elemen
 QuantumCircuitOperator[qc_ ? QuantumCircuitOperatorQ, order_ ? orderQ] := QuantumCircuitOperator[qc, {order, order}]
 
 QuantumCircuitOperator[qc_ ? QuantumCircuitOperatorQ, order : {_ ? orderQ, _ ? orderQ}] := Block[{
-    outOrder = Select[qc["OutputOrder"], Positive],
-    inOrder = Select[qc["InputOrder"], Positive],
+    outOrder = Select[qc["FullOutputOrder"], Positive],
+    inOrder = Select[qc["FullInputOrder"], Positive],
+    length,
     outRepl, inRepl
 },
-    outRepl = Thread[outOrder -> Take[Join[order[[1]], Drop[outOrder, UpTo[Length[order[[1]]]]]], UpTo[Length[outOrder]]]];
-    inRepl = Thread[inOrder -> Take[Join[order[[2]], Drop[inOrder, UpTo[Length[order[[2]]]]]], UpTo[Length[inOrder]]]];
+    length = Max[Length[outOrder], Length[inOrder]];
+    outRepl = Thread[Take[Join[outOrder, inOrder], UpTo[length]] -> Take[Join[order[[1]], order[[2]], Drop[outOrder, UpTo[Length[order[[1]]]]]], UpTo[length]]];
+    inRepl = Thread[Take[Join[inOrder, outOrder], UpTo[length]] -> Take[Join[order[[2]], order[[1]], Drop[inOrder, UpTo[Length[order[[2]]]]]], UpTo[length]]];
     {outRepl, inRepl} = {Join[outRepl, inRepl], Join[inRepl, outRepl]};
     QuantumCircuitOperator[
         Which[

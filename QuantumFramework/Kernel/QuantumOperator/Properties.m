@@ -125,13 +125,13 @@ QuantumOperatorProp[qo_, "SetFullOrder"] := QuantumOperator[qo, {qo["FullOutputO
 
 
 QuantumOperatorProp[qo_, "ControlOrder1"] :=
-    FirstCase[qo["Label"], Subscript["C", _][control1_, ___] :> control1, {}, {0}]
+    FirstCase[qo["Label"], Subscript["C", _][control1_, ___] | Interpretation[_, Subscript["C", _][control1_, ___]] :> control1, {}, {0}]
 
 QuantumOperatorProp[qo_, "ControlOrder0"] :=
-    FirstCase[qo["Label"], Subscript["C", _][_, control0_] :> control0, {}, {0}]
+    FirstCase[qo["Label"], Subscript["C", _][_, control0_]  | Interpretation[_, Subscript["C", _][_, control0_]] :> control0, {}, {0}]
 
 QuantumOperatorProp[qo_, "ControlOrder"] :=
-    FirstCase[qo["Label"], Subscript["C", _][control1_, control0_ : {}] :> Join[control1, control0], {}, {0}]
+    FirstCase[qo["Label"], Subscript["C", _][control1_, control0_ : {}] | Interpretation[_, Subscript["C", _][control1_, control0_ : {}]] :> Join[control1, control0], {}, {0}]
 
 QuantumOperatorProp[qo_, "TargetOrder"] := Enclose[DeleteCases[qo["InputOrder"], Alternatives @@ Confirm @ qo["ControlOrder"]], qo["InputOrder"] &]
 
@@ -415,8 +415,8 @@ QuantumOperatorProp[qo_, "Reorder", order : {_ ? orderQ | Automatic, _ ? orderQ 
     QuantumOperator[
         qo["State"],
         {qo["FullOutputOrder"] /. outputRepl, qo["FullInputOrder"] /. inputRepl},
-        "Label" -> Replace[qo["Label"],
-            Subscript["C", name_][c1_, c0_] :> Subscript["C", name][c1 /. inputRepl, c0 /. inputRepl]
+        "Label" -> ReplaceAll[qo["Label"],
+            Subscript["C", name_][c1_, c0_] :> RuleCondition[Subscript["C", name][c1 /. inputRepl, c0 /. inputRepl]]
         ]
     ]
 ]
