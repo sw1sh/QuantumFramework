@@ -222,21 +222,18 @@ def gate_to_QuantumOperator(gate, order):
         return wl.Wolfram.QuantumFramework.QuantumOperator('NOT', order)
     elif gate.name in ['y', 'z', 'h', 't', 's', 'swap']:
         return wl.Wolfram.QuantumFramework.QuantumOperator(gate.name.upper(), order)
-    elif gate.name in ['p', 'u', 'u1', 'u2', 'u3', 'rx', 'ry', 'rz']:
+    elif gate.name in ['p', 'u', 'u1', 'u2', 'u3', 'rx', 'ry', 'rz', 'sx']:
         return wl.Wolfram.QuantumFramework.QuantumOperator([gate.name.upper(), *xs], order)
     elif gate.name == 'tdg':
         return wl.Wolfram.QuantumFramework.QuantumOperator('T', order)('Dagger')
     elif gate.name == 'sdg':
         return wl.Wolfram.QuantumFramework.QuantumOperator('S', order)('Dagger')
     elif gate.name == 'unitary':
-        return wl.Wolfram.QuantumFramework.QuantumOperator(*xs, [order, order], wl.Rule('Label', gate.label if gate.label else None))
+        return wl.Wolfram.QuantumFramework.QuantumOperator(*xs, [order, order], wl.Rule('Label', gate.name if gate.name else None))
     elif gate.name == 'measure':
         return wl.Wolfram.QuantumFramework.QuantumMeasurementOperator(order)
     elif gate.name == 'reset':
-        ops.extend([
-            wl.Wolfram.QuantumFramework.QuantumOperator('Discard', order),
-            wl.Wolfram.QuantumFramework.QuantumOperator(wl.Wolfram.QuantumFramework.QuantumState(('Register', len(order)), wl.Rule('Label', wl.Ket(0))), order)
-        ])
+        return wl.Wolfram.QuantumFramework.QuantumOperator('Reset', order),
     elif gate.name == 'barrier':
         return 'Barrier'
     elif hasattr(gate, 'num_ctrl_qubits'):
@@ -244,7 +241,7 @@ def gate_to_QuantumOperator(gate, order):
         return wl.Wolfram.QuantumFramework.QuantumOperator(arg)
     else:
         from qiskit.quantum_info import Operator
-        return wl.Wolfram.QuantumFramework.QuantumOperator(Operator(gate).to_matrix(), [order, order], wl.Rule('Label', gate.label if gate.label else None))
+        return wl.Wolfram.QuantumFramework.QuantumOperator(Operator(gate).to_matrix(), [order, order], wl.Rule('Label', gate.name if gate.name else None))
 
 def qc_to_QuantumCircuitOperator(qc, label=None):
     ops = []
@@ -258,12 +255,14 @@ def qc_to_QuantumCircuitOperator(qc, label=None):
                     break
                 else:
                     size = r._index + 1
-        
-        if isinstance(gate, qiskit.qasm2.parse._DefinedGate):
-            sub_qc = QuantumCircuit(max(order), gate.num_clbits)
-            sub_qc.append(gate, [o - 1 for o in order])
-            ops.append(qc_to_QuantumCircuitOperator(sub_qc.decompose(), gate.name))
-        else:
+        try: 
+            if isinstance(gate, qiskit.qasm2.parse._DefinedGate):
+                sub_qc = QuantumCircuit(max(order), gate.num_clbits)
+                sub_qc.append(gate, [o - 1 for o in order])
+                ops.append(qc_to_QuantumCircuitOperator(sub_qc.decompose(), gate.name))
+            else:
+                ops.append(gate_to_QuantumOperator(gate, order))
+        except:
             ops.append(gate_to_QuantumOperator(gate, order))
     return wl.Wolfram.QuantumFramework.QuantumCircuitOperator(ops, label if label else None)
 
@@ -533,14 +532,16 @@ qcs = qpy.load(BytesIO(zlib.decompress(<* $qpy *>)))
 "]
 ]
 
-qc_QiskitCircuit["Transpile", opts : OptionsPattern[qiskitInitBackend]]:= Enclose[
+qc_QiskitCircuit["Transpile", basisGates : {_String...} | None, opts : OptionsPattern[qiskitInitBackend]]:= Enclose @ Block[{
+    $basisGates = Replace[basisGates, None -> Null]
+},
     Confirm @ qiskitInitBackend[qc, opts];
-    PythonEvaluate["
+    PythonEvaluate[Context[$basisGates], "
 import pickle
 from qiskit import transpile
 from wolframclient.language import wl
 
-wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(transpile(qc, backend)))
+wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(transpile(qc, backend=backend, basis_gates=<* $basisGates *>)))
 "]
 ]
 
