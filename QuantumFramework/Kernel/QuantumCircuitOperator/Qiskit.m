@@ -532,7 +532,7 @@ qcs = qpy.load(BytesIO(zlib.decompress(<* $qpy *>)))
 "]
 ]
 
-qc_QiskitCircuit["Transpile", basisGates : {_String...} | None, opts : OptionsPattern[qiskitInitBackend]]:= Enclose @ Block[{
+qc_QiskitCircuit["Transpile", basisGates : {_String...} | None : None, opts : OptionsPattern[qiskitInitBackend]]:= Enclose @ Block[{
     $basisGates = Replace[basisGates, None -> Null]
 },
     Confirm @ qiskitInitBackend[qc, opts];

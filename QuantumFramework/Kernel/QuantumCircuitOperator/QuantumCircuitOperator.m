@@ -206,7 +206,7 @@ QuantumCircuitOperator[qc_ ? QuantumCircuitOperatorQ, order : {_ ? orderQ, _ ? o
     QuantumCircuitOperator[
         Which[
             BarrierQ[#], # /. inRepl,
-            True, With[{newOrder = {#["OutputOrder"] /. outRepl, #["InputOrder"] /. inRepl}},
+            True, With[{newOrder = {#["FullOutputOrder"] /. outRepl, #["FullInputOrder"] /. inRepl}},
                 If[QuantumOperatorQ[#], #["Reorder", newOrder], Head[#][#, newOrder]]
             ]
         ] & /@ qc["Elements"],
