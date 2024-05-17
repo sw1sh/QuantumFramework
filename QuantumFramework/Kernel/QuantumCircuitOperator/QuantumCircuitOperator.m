@@ -97,7 +97,12 @@ Options[quantumCircuitApply] := Join[{Method -> Automatic}, Options[TensorNetwor
 quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, opts : OptionsPattern[]] /; qco["InputDimensions"][[Ordering[qco["InputOrder"]]]] == qs["OutputDimensions"] := Replace[
     OptionValue[Method],
     {
-        "Schrodinger" :> Fold[ReverseApplied[Construct], qs, qco["Operators"]],
+        "Schrodinger" :> Block[{n = 1, m = qco["Gates"]},
+            Progress`EvaluateWithProgress[
+                Fold[(n++; FullSimplify @ #2[#1, "Computational" -> False]) &, qs, qco["NormalOperators"]],
+                <|"Text" -> "Folding gates", "Progress" :> n / m, "Percentage" :> n / m, "ElapsedTime" -> Automatic, "RemainingTime" -> Automatic|>
+            ]
+        ],
         Automatic | "TensorNetwork" :> TensorNetworkApply[qco["Flatten"], qs, FilterRules[{opts}, Options[TensorNetworkApply]]],
         "QuEST" :> QuESTApply[qco, qs],
         "Qiskit" | {"Qiskit", subOpts___} :> qco["Qiskit"][qs, subOpts],
