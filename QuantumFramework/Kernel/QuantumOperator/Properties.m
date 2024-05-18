@@ -10,6 +10,7 @@ $QuantumOperatorProperties = {
     "InputOrder", "OutputOrder", "ControlOrder", "TargetOrder",
     "MatrixRepresentation", "Matrix",
     "TensorRepresentation", "Tensor",
+    "Table",
     "Ordered", "OrderedInput", "OrderedOutput",
     "SortInput", "SortOutput", "Sort", "SortedQ",
     "ReverseOutput", "ReverseInput", "Reverse",
@@ -182,6 +183,8 @@ QuantumOperatorProp[qo_, "Matrix"] := qo["Sort"]["StateMatrix"]
 QuantumOperatorProp[qo_, "MatrixRepresentation"] := qo["Computational"]["Matrix"]
 
 QuantumOperatorProp[qo_, "Operator"] := qo["Amplitudes"]
+
+QuantumOperatorProp[qo_, "Table"] := TableForm[qo["Matrix"], TableHeadings -> {qo["Output"]["Names"], qo["Input"]["Names"]}, TableAlignments -> Center]
 
 QuantumOperatorProp[qo_, "QuantumOperator"] := qo
 
