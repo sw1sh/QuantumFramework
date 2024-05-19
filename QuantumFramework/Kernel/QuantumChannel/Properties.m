@@ -101,7 +101,9 @@ QuantumChannelProp[qc_, "DiscardExtraQudits"] := With[{picture = qc["Picture"]},
                 ] &,
                 {qc["TraceBasis"]["Decompose"], qc["TraceOrder"]}
             ]
-        ], "Label" -> "Channel"[qc["Label"]]
+        ],
+        "Label" -> "Channel"[qc["Label"]],
+        qc["Basis"]["Options"]
     ]
 ]
 

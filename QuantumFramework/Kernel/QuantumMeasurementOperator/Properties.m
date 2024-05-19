@@ -311,7 +311,8 @@ QuantumMeasurementOperatorProp[qmo_, "DiscardExtraQudits"] := QuantumOperator[
         ]
     ],
     qmo["InputOrder"] -> qmo["TargetOrder"],
-    "Label" -> "Measurement"[qmo["Label"]]
+    "Label" -> "Measurement"[qmo["Label"]],
+    qmo["Basis"]["Options"]
 ]
 
 
