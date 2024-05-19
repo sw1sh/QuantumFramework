@@ -32,6 +32,9 @@ QuantumMeasurementOperator[target_Integer, args___] := QuantumMeasurementOperato
 
 QuantumMeasurementOperator[] := QuantumMeasurementOperator[{1}]
 
+QuantumMeasurementOperator[arg : _ ? QuantumBasisQ | (_ ? QuantumBasisQ -> _ ? VectorQ), targets_ ? targetsQ, args___] /; Length[targets] != 0 :=
+    Enclose @ Fold[#2[#1] &, Confirm[QuantumMeasurementOperator[arg, #, args]] & /@ targets]
+
 QuantumMeasurementOperator[qb_ ? QuantumBasisQ -> eigenvalues_ ? VectorQ, target : (_ ? targetQ) : Automatic, args___] /; qb["InputQudits"] == 0 && Length[eigenvalues] > 0 := Enclose @ Block[{
     basis, state, order, newTarget, qmo
 },
