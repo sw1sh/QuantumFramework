@@ -18,7 +18,7 @@ $QuantumStateProperties = {
     "Computational", "SchmidtBasis", "SpectralBasis", "PrimeBasis", "UniformBasis",
     "StateTensor", "StateMatrix",
     "VectorState", "MatrixState",
-    "Tensor", "Matrix",
+    "Tensor", "Matrix", "Table",
     "Purify", "Unpurify",
     "Bend", "BendDual", "Unbend", "Double",
     "Pure", "Mixed",
@@ -384,6 +384,8 @@ QuantumStateProp[qs_, "NormalizedDensityMatrix"] := Quiet @ Enclose @ Confirm[no
 QuantumStateProp[qs_, "Operator", args___] := QuantumOperator[qs["Projector"], args]
 
 QuantumStateProp[qs_, "NormalizedOperator"] := qs["NormalizedProjector"]["Amplitudes"]
+
+QuantumStateProp[qs_, "Table"] := TableForm[qs["StateMatrix"], TableHeadings -> {qs["Output"]["Names"], qs["Input"]["Names"]}, TableAlignments -> Center]
 
 
 (* density matrix *)
