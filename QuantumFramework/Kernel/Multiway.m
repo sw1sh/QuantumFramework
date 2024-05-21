@@ -8,9 +8,10 @@ PackageExport[QuantumCircuitTokenEventGraph]
 
 
 
-operatorApply[op_, states : {_ ? QuantumStateQ ...}] := Enclose @ With[{
+operatorApply[op_, states : {_ ? QuantumStateQ ...}, basisQ_ : False] := Enclose @ With[{
 	inputOrder = op["InputOrder"],
-	outputOrder = op["OutputOrder"]
+	outputOrder = op["OutputOrder"],
+	decompose = If[TrueQ[basisQ], {"BasisDecompose"}, {"DecomposeWithAmplitudes", op["OutputDimensions"]}]
 },
 	Map[
 		#[[1]] -> ReplacePart[states, Thread[outputOrder -> #[[2]]]] &,
@@ -18,25 +19,25 @@ operatorApply[op_, states : {_ ? QuantumStateQ ...}] := Enclose @ With[{
 			inputOrder === outputOrder === {},
 			{Simplify[op["Norm"]] -> {}},
 			inputOrder === {},
-			op["State"]["Simplify"]["DecomposeWithAmplitudes", op["OutputDimensions"]],
+			op["State"]["Simplify"] @@ decompose,
 			True,
-			op["State"][QuantumTensorProduct @@ states[[inputOrder]]]["Simplify"]["DecomposeWithAmplitudes", op["OutputDimensions"]]
+			op["State"][QuantumTensorProduct @@ states[[inputOrder]]]["Simplify"] @@ decompose
 		]
 	]
 ]
 
 
-Options[QuantumCircuitMultiwayGraph] = Join[{"Normalize" -> False}, Options[Graph]];
-QuantumCircuitMultiwayGraph[circuit_, initStates : Except[OptionsPattern[]] : Automatic, opts : OptionsPattern[]] := Enclose @ Block[{
-	index = 0, normalizeQ = TrueQ[OptionValue[QuantumCircuitMultiwayGraph, {opts}, "Normalize"]]
+Options[QuantumCircuitMultiwayGraph] = Join[{"Normalize" -> False, "BasisDecompose" -> False}, Options[Graph]];
+QuantumCircuitMultiwayGraph[PatternSequence[circuit_, initStates_ : Automatic], opts : OptionsPattern[]] := Enclose @ Block[{
+	index = 0
 },
 	ResourceFunction["FoldGraph"][
-		List /* Replace[{{pos_, states_}, op_} :> Block[{weightedStates = Confirm @ operatorApply[op, states], norm},
+		List /* Replace[{{pos_, states_}, op_} :> Block[{weightedStates = Confirm @ operatorApply[op, states, TrueQ[OptionValue["BasisDecompose"]]], norm},
 			norm = Total[weightedStates[[All, 1]]];
 			index++;
 			MapIndexed[
 				With[{newPos = Join[pos, #2]},
-					Labeled[{newPos, If[normalizeQ, #1[[2]], With[{factor = #1[[1]] ^ (1 / Length[op["FullOutputOrder"]])}, MapAt[factor * # &, #1[[2]], List /@ op["FullOutputOrder"]]]]}, <|
+					Labeled[{newPos, If[TrueQ[OptionValue["Normalize"]], #1[[2]], With[{factor = #1[[1]] ^ (1 / Length[op["FullOutputOrder"]])}, MapAt[factor * # &, #1[[2]], List /@ op["FullOutputOrder"]]]]}, <|
 						"Input" -> op["FullInputOrder"],
 						"Output" -> op["FullOutputOrder"],
 						"Step" -> Length[newPos],
