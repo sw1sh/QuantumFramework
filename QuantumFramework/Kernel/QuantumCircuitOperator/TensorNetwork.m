@@ -336,9 +336,10 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
         If[ eigenOrder =!= {},
             order = {Join[Take[Select[order[[1]], NonPositive], - Length[eigenOrder]], Select[order[[1]], Positive]], order[[2]]};
         ];
-        res = res["Unbend"]
+        res = QuantumState[res, QuantumBasis[{basis, basis["Conjugate"]}]]["Unbend"]
+        ,
+        res = If[phaseSpaceQ || ! TrueQ[OptionValue["Computational"]], QuantumState[res["State"], basis], QuantumState[res, basis]];
     ];
-    res = If[phaseSpaceQ || ! TrueQ[OptionValue["Computational"]], QuantumState[res["State"], basis], QuantumState[res, basis]];
     res = Which[
         eigenOrder =!= {},
         QuantumMeasurementOperator[QuantumOperator[res, order], qco["Targets"]],
