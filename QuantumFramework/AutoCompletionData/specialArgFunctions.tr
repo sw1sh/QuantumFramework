@@ -508,5 +508,25 @@
             "HesseSIC",
             "HoggarSIC"
         }
+    },
+    "QuantumPositiveTransform" -> {
+        0,
+        {
+            "Wigner",
+            "WignerMIC",
+            "Pauli",
+            "GellMann",
+            "GellMannMIC",
+            "Bloch",
+            "GellMannBloch",
+            "GellMannBlochMIC",
+            "Wootters",
+            "Feynman",
+            "Tetrahedron",
+            "RandomMIC",
+            "QBismSIC",
+            "HesseSIC",
+            "HoggarSIC"
+        }
     }
 }

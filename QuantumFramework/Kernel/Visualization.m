@@ -3,6 +3,8 @@ Package["Wolfram`QuantumFramework`"]
 PackageScope[BlochPlot]
 PackageScope[AmplitudeChart]
 PackageScope[ProbabilityChart]
+PackageScope[QuditPieChart]
+PackageScope[QuditSectorChart]
 
 
 
@@ -94,4 +96,12 @@ ProbabilityChart[probabilities_Association, opts : OptionsPattern[]] := Block[{p
     BarChart[Values[proba], FilterRules[{opts}, Options[BarChart]], ChartLabels -> (Rotate[#, OptionValue["LabelsAngle"]] & /@ Keys[proba])]
 ]
 
+
+QuditPieChart[qs_QuantumState, args___] := With[{proba = Normal @ Reverse @ QuantumPositiveTransform[QuantumPhaseSpaceTransform[qs, args]["StateTensor"]]},
+	PieChart[proba, ChartStyle -> {{ColorData[97][1], ColorData[97][2]}, None}]
+]
+
+QuditSectorChart[qs_QuantumState, args___] := With[{proba = Normal @ Reverse @ QuantumPositiveTransform[QuantumPhaseSpaceTransform[qs, args]["StateTensor"]]},
+	SectorChart[Map[{1, #} &] /@ proba, ChartStyle -> {{ColorData[97][1], ColorData[97][2]}, None}]
+]
 
