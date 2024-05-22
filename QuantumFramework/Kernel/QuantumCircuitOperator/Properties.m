@@ -234,6 +234,8 @@ QuantumCircuitOperatorProp[qco_, "OutputDimension"] := Times @@ qco["OutputDimen
 
 QuantumCircuitOperatorProp[qco_, "TraceDimensions"] := Extract[qco["OutputDimensions"], Lookup[PositionIndex[qco["OutputOrder"]], qco["TraceOrder"]]]
 
+QuantumCircuitOperatorProp[qco_, "TraceBasis"] := QuantumTensorProduct @ Extract[qco["Output"]["Decompose"], Lookup[PositionIndex[qco["OutputOrder"]], qco["TraceOrder"]]]
+
 QuantumCircuitOperatorProp[qco_, "Input"] := If[Length[qco["InputOrder"]] > 0,
     With[{ops = qco["NormalOperators"]},
         QuantumTensorProduct[

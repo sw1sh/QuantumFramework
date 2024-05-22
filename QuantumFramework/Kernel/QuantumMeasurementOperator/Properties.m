@@ -304,7 +304,7 @@ QuantumMeasurementOperatorProp[qmo_, "DiscardExtraQudits"] := QuantumOperator[
         With[{picture = qmo["Picture"]},
             MapThread[
                 QuantumOperator[With[{d = Sqrt[#1["Dimension"]]},
-                    If[picture === "PhaseSpace" && IntegerQ[d], "Double"["Trace"[d]], "Trace"[#1["Dimension"]]]], {#2}
+                    If[picture === "PhaseSpace" && IntegerQ[d], "Double"["Trace"[d]], "Trace"[#1]]], {#2}
                 ] &,
                 {qmo["Eigenbasis"]["Decompose"], qmo["Eigenorder"]}
             ]

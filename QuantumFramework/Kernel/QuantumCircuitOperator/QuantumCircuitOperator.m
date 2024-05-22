@@ -122,7 +122,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
         qco /* QuantumCircuitOperator[
             Join[
                 MapIndexed[
-                    If[#2[[1]] <= qs["OutputQudits"], "I"[qs["Output"]["Extract", #2]], "I"] -> #1 &,
+                    If[#2[[1]] <= qs["OutputQudits"], "I"[qs["Output"]["Extract", #2 + #1 - Min[qco["FullInputOrder"]]]], "I"] -> #1 &,
                     qco["FreeOrder"]
                 ],
                 MapIndexed[

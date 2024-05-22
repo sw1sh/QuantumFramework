@@ -27,14 +27,8 @@ QuantumPartialTrace[qs_QuantumState, {}] := qs
 
 QuantumPartialTrace[qs_QuantumState, qudits : {_Integer ..}] :=
     QuantumState[
-        QuantumState[
-            If[ qs["VectorQ"] && False, (* Need an efficient check for separability to be able to discard qudits this way *)
-                SparseArrayFlatten @ Extract[qs["Computational"]["StateTensor"], ReplacePart[Table[All, qs["Qudits"]], Thread[qudits -> 1]]],
-                MatrixPartialTrace[qs["Computational"]["DensityMatrix"], qudits, qs["Dimensions"]]
-            ],
-            QuantumBasis[qs["Dimensions"][[Complement[Range[qs["Qudits"]], qudits]]]]
-        ],
-        QuantumBasis["Output" -> #1, "Input" -> #2] & @@ QuantumPartialTrace[QuantumTensorProduct[qs["Output"], qs["Input"]], qudits][
+        MatrixPartialTrace[qs["DensityMatrix"], qudits, qs["Dimensions"]],
+        QuantumBasis["Output" -> #1, "Input" -> #2] & @@ QuantumPartialTrace[qs["QuditBasis"], qudits][
             "Split", qs["OutputQudits"] - Count[qudits, q_ /; q <= qs["OutputQudits"]]
         ]
     ]
@@ -43,10 +37,7 @@ QuantumPartialTrace[qs_QuantumState, qudits : {{_Integer, _Integer} ..}] := With
     basis = QuantumPartialTrace[qs["Basis"], qudits]
 },
     QuantumState[
-        QuantumState[
-            SparseArrayFlatten @ TensorContract[qs["Tensor"], MapAt[qs["OutputQudits"] + # &, qudits, {All, 2}]],
-            QuantumBasis[basis["OutputDimensions"], basis["InputDimensions"]]
-        ],
+        SparseArrayFlatten @ TensorContract[qs["StateTensor"], MapAt[qs["OutputQudits"] + # &, qudits, {All, 2}]],
         basis
     ]
 ]

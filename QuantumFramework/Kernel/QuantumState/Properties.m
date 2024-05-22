@@ -169,6 +169,8 @@ QuantumStateProp[qs_, "ProbabilityAssociation" | "Probability"] := With[{proba =
 
 QuantumStateProp[qs_, "Distribution"] := CategoricalDistribution[qs["Names"], qs["ProbabilitiesList"]]
 
+QuantumStateProp[qs_, "MultivariateDistribution"] := CategoricalDistribution[Comap[qs["QuditBasis"]["Decompose"], "Names"], ArrayReshape[qs["ProbabilitiesList"], qs["Dimensions"]]]
+
 QuantumStateProp[qs_, "PhaseSpace"] /; qs["Picture"] === "PhaseSpace" := Enclose @ With[{dims = ConfirmBy[Sqrt[qs["Dimensions"]], AllTrue[IntegerQ]]},
     Fold[
         With[{ds = Dimensions[#1][[#2]] {1, 1}, lds = Dimensions[#1][[;; #2 - 1]], rds = Dimensions[#1][[#2 + 2 ;;]]},

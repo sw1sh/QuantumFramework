@@ -230,7 +230,7 @@ QuantumBasisProp[qb_, prop : "Dual" | "Conjugate", out : {___Integer}, in : {___
 QuantumBasisProp[qb_, prop: "Dual" | "Conjugate", qudits : {___Integer}] :=
     qb[prop, Sequence @@ (MapAt[# - qb["OutputQudits"] &, 2] @ PadRight[GatherBy[qudits, LessEqualThan[qb["OutputQudits"]]], 2, {{}}])]
 
-QuantumBasisProp[qb_, prop : "Dual" | "Conjugate"] := qb[prop, Range[qb["Qudits"]]]
+QuantumBasisProp[qb_, prop : "Dual" | "Conjugate"] := qb[prop, Range[qb["OutputQudits"]], Range[qb["InputQudits"]]]
 
 
 QuantumBasisProp[qb_, "Transpose"] := simplifyLabel @ QuantumBasis[qb,
