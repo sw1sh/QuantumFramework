@@ -27,7 +27,7 @@ $QuantumOperatorNames = {
     "Cup", "Cap", "Trace", "Reset", "Channel", "Measurement",
     "Switch",
     "Multiplexer",
-    "WignerD", "JX", "JY", "JZ", "JX+", "JY+", "JZ+", "JX-", "JY-", "JZ-", "J+", "J-", "+", "-",
+    "WignerD", "JX", "JY", "JZ", "JX+", "JY+", "JZ+", "JX-", "JY-", "JZ-", "J+", "J-", "+", "-", "Up", "Down",
     "Double",
     "Hamiltonian", "Liouvillian"
 }
@@ -873,9 +873,9 @@ QuantumOperator[{name : "JX+" | "JY+" | "JZ+" | "JI+" | "J+", j_ : 1 / 2}, opts_
 
 QuantumOperator[{name : "JX-" | "JY-" | "JZ-" | "JI-" | "J-", j_ : 1 / 2}, opts___] := QuantumOperator[QuantumOperator[jDown[j], StringDrop[name, -1][j]], opts, "Label" -> name]
 
-QuantumOperator[{"+" | "I+", args___}, opts___] := With[{qb = QuantumBasis[args]}, QuantumOperator[QuantumOperator[jUp[(qb["Dimension"] - 1) / 2], qb], opts, "Label" -> "+"]]
+QuantumOperator[{"Up" | "+" | "I+", args___}, opts___] := With[{qb = QuantumBasis[args]}, QuantumOperator[QuantumOperator[DiagonalMatrix[Sqrt @ Range[qb["Dimension"] - 1], 1], qb], opts, "Label" -> "+"]]
 
-QuantumOperator[{"-" | "I-", args___}, opts___] := With[{qb = QuantumBasis[args]}, QuantumOperator[QuantumOperator[jDown[(qb["Dimension"] - 1) / 2], qb], opts, "Label" -> "-"]]
+QuantumOperator[{"Down" | "-" | "I-", args___}, opts___] := QuantumOperator[QuantumOperator["+"[args]]["Dagger"], opts, "Label" -> "-"]
 
 
 QuantumOperator[{"Double", args___}, opts___] := QuantumOperator[args, opts]["Double"]
