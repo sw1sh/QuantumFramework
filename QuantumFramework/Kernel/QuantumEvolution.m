@@ -13,10 +13,13 @@ Options[QuantumEvolve] = DeleteDuplicatesBy[First] @ Join[
     Options[NDSolveValue], Options[DSolveValue]
 ]
 
+QuantumEvolve[hamiltonian_ ? QuantumOperatorQ, lindblad : {___ ? QuantumOperatorQ}, args___] := QuantumEvolve[hamiltonian, lindblad -> {}, args]
+
+QuantumEvolve[hamiltonian_ ? QuantumOperatorQ, args___] := QuantumEvolve[hamiltonian, {} -> {}, args]
+
 QuantumEvolve[
     hamiltonian_ ? QuantumOperatorQ,
-    lindblad : {___ ? QuantumOperatorQ} : {},
-    gammas_List : {},
+    lindblad : {___ ? QuantumOperatorQ} -> gammas_List,
     defaultState : _ ? QuantumStateQ | Automatic | None : Automatic,
     defaultParameter : _Symbol | {_Symbol, _ ? NumericQ, _ ? NumericQ} | Automatic : Automatic,
     opts : OptionsPattern[]
@@ -136,7 +139,7 @@ QuantumEvolve[
     ];
 
     solution = If[numericQ,
-        Module[{time, protectedQ = MemberQ[Attributes[parameter], Protected]},
+        Module[{time, protectedQ = MemberQ[Attributes[Evaluate[parameter]], Protected]},
             WithCleanup[
                 Unprotect[\[FormalS]];
                 If[protectedQ, Unprotect[Evaluate[parameter]]]
@@ -180,7 +183,7 @@ QuantumEvolve[
                 hamiltonian["Basis"]
             ],
             hamiltonian["Order"],
-            "ParameterSpec" -> Append[hamiltonian["ParameterSpec"], parameterSpec]
+            "ParameterSpec" -> DeleteDuplicatesBy[Append[hamiltonian["ParameterSpec"], parameterSpec], First]
         ],
         stateQ[solution],
         If[ state =!= None && phaseSpaceQ,
@@ -190,9 +193,9 @@ QuantumEvolve[
                     Sqrt[basis["Dimensions"]]
                 ]["Double"],
                 basis,
-                "ParameterSpec" -> Append[basis["ParameterSpec"], parameterSpec]
+                "ParameterSpec" -> DeleteDuplicatesBy[Append[basis["ParameterSpec"], parameterSpec], First]
             ],
-            If[hamiltonian["MatrixQ"], #["Undouble"], #] & @ QuantumState[solution, basis, "ParameterSpec" -> Append[basis["ParameterSpec"], parameterSpec]]
+            If[hamiltonian["MatrixQ"], #["Undouble"], #] & @ QuantumState[solution, basis, "ParameterSpec" -> DeleteDuplicatesBy[Append[basis["ParameterSpec"], parameterSpec], First]]
         ],
         True,
         Message[QuantumEvolve::error];
