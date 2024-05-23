@@ -15,7 +15,7 @@ $GateDefaultBoundaryStyle = {
 	"P"[_] | (Superscript | Power)["P"[_], _] | "PhaseShift"[_] -> RGBColor[0.560181, 0.691569, 0.194885],
 	Subscript["R", _][_] -> RGBColor[0.528488, 0.470624, 0.701351],
 	"Measurement" | "Measurement"[_] -> RGBColor[0.7367, 0.358, 0.5030],
-	"Channel" | "Channel"[_] -> Directive[Dotted, $DefaultGray],
+	"Channel" | "Channel"[_] -> Directive[AbsoluteThickness[1], Dotted, RGBColor[0.854902, 0.266667, 0.490196]],
 	"ZSpider" | "XSpider" | "Spider" | "Measure" | "Encode" | "Copy" -> Directive[CapForm[None], $DefaultGray, Opacity[.3]],
 	_ -> $DefaultGray
 };
@@ -23,7 +23,7 @@ $GateDefaultBoundaryStyle = {
 $GateDefaultBackgroundStyle = Join[
 	{
 		"ZSpider" -> White, "XSpider" ->LightGray, "Spider" | "Measure" | "Encode" | "Copy" -> Directive[Opacity[.1], $DefaultGray],
-		"Channel" -> Directive[$DefaultGray, Opacity[.25]]
+		"Channel" -> Directive[RGBColor[0.854902, 0.266667, 0.490196], Opacity[.25]]
 	},
 	MapAt[Directive[#, Opacity[0.3]] &, Most[$GateDefaultBoundaryStyle], {All, 2}],
 	{
@@ -104,7 +104,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 	backgroundStyle = Replace[label, gateBackgroundStyle];
 	boundaryStyle = Replace[label, gateBoundaryStyle];
 	drawControlWires = Function[{
-		boundaryStyle,
+		boundaryStyle /. _AbsoluteThickness :> AbsoluteThickness[1],
 		With[{shift = Which[vposIn === {}, 1 / 3, vposOut === {}, - 1 / 3, True, 0] size},
 			Line[{
 				{center[[1]] + shift, - vGapSize #1[[1]] - size Switch[#2[[1]], "NOT", 1 / 5, "SWAP", 0, "1" | "0", 1 / 8, _, 1 / 2]},
