@@ -20,6 +20,10 @@ PackageExport["QuantumUnlockingMechanism"]
 
 PackageExport["QuantumLockingMechanism"]
 
+PackageExport["GraphToCircuit"]
+
+PackageExport["LinearChainTeleportation"]
+
 
 (* ::Section:: *)
 (*Example specific functions *)
@@ -90,6 +94,121 @@ FubiniStudyMetricTensorLayers[qc_QuantumCircuitOperator, parameters_List]:=Modul
 	
 		{QuantumCircuitOperator[Flatten[#[[;;-2]]],"Parameters"->parameters][],#[[-1]]}&/@layers
 ]
+
+GraphToCircuit::invalidInput = "Inconsistent graph with measure qubit list";
+GraphToCircuit::UnequalLength = "Incompatible sizes of measurement qubits and equatorial angles";
+GraphToCircuit[g_Graph, measure_List/;AllTrue[measure,Internal`PositiveIntegerQ], angles_List]:=Module[{
+	qubitsCircuit = Length[VertexList[g]] - Length[measure], 
+	coords = Chop[GraphEmbedding[g]], 
+	coordsAso, 
+	visited = {},
+	edgesNotMeasure,
+	adjListEdges,
+	gates = {}
+	}, 
+	If[Length[Union[coords[[All,2]]]] != qubitsCircuit,
+		Message[GraphToCircuit::invalidInput];
+		Return[$Failed]
+	];
+	If[Length[angles] !=Length[measure],
+		Message[GraphToCircuit::UnequalLength];
+		Return[$Failed]
+	];
+
+	coordsAso = AssociationThread[ReverseSort[Union[coords[[All,2]]]],Range[qubitsCircuit]];
+
+	edgesNotMeasure = VertexDelete[g,measure] //EdgeList;
+
+	Do[
+	adjListEdges =  SortBy[
+					Thread[{
+					measure[[i]],
+					Complement[AdjacencyList[g,measure[[i]]],visited]
+					}
+					],
+						Abs[Subtract@@coords[[#,1]]]&];
+	AppendTo[visited,measure[[i]]]; 
+	gates = Join[
+			gates,
+			Thread[
+				"CZ"->
+			Lookup[coordsAso,coords[[List @@ #,2]]]& /@ Most[adjListEdges]
+				]
+			];
+	gates =Join[
+			gates,
+			Thread[
+				({"RZ"[angles[[i]]],"H"}/."RZ"[0]->Nothing)->
+				Lookup[coordsAso,coords[[measure[[i]],2]]]
+				]
+			],
+	{i,Length[measure]}
+	];
+	gates = Join[
+				gates,
+				Thread[
+						"CZ"->
+					Lookup[coordsAso,coords[[List @@ #,2]]]& /@ edgesNotMeasure
+					]
+			];
+	QuantumCircuitOperator[gates][
+				"Diagram",
+				"WireLabels"->Table[
+					{Placed["|+\[RightAngleBracket]",Left]},
+					{i,qubitsCircuit}
+					]
+				]
+]
+
+LinearChainTeleportation[state_QuantumState, n_Integer?Positive] := Module[
+	{
+    graph = GridGraph[{n - 1, 1}], 
+    measureState,
+    correction,
+    projected,
+    q},
+
+    q = QuantumCircuitOperator[
+    	Join[
+     	{Splice["+" -> # & /@ Range[2, n]]},
+     	{"C", "1"} -> # & /@ Partition[Range[n], 2, 1]
+     	 ],
+    	"Cluster State"];
+
+    measureState =  RandomChoice[Tuples[{0, 1}, n - 1]];
+
+    projected = Fold[#1[#2] &,  QuantumBasis["X"]["BasisStates"][[measureState + 1]]]["Dagger"];
+
+    correction = simplifyXH[measureState /. {0 -> "H", 1 -> Sequence @@ {"X", "H"}}];
+
+   <|
+   "FinalState" -> (Sqrt[2])^(n - 1) QuantumCircuitOperator[correction] @ (projected @ q[state]),
+
+   "Circuit" -> QuantumCircuitOperator[{
+       				q,
+
+       				QuantumCircuitOperator[
+        				Table[QuantumMeasurementOperator["X", {i}], {i, n - 1}],
+                        "Measurement"],   
+       		
+       				QuantumCircuitOperator[
+        				If[correction != {}, Thread[correction -> n], {"I" -> n}],
+        	       		"Correction"]
+       	          }]["Diagram"],
+
+   "MeasurementGraph" -> Show[
+     						HighlightGraph[
+      							GridGraph[{n, 1}, VertexCoordinates -> Table[{0, n - i}, {i, n}],
+       								VertexLabels -> "Name",
+       								VertexSize -> 0.4],
+      							 Range[n - 1]],
+
+     						Graphics[
+      							Style[Text[StringJoin["Measurements X basis:", ToString[measureState]], {2, 0}], 12]
+      						     ]
+     					]
+   |>
+  ]
 
 
 (* ::Subsection::Closed:: *)
@@ -323,3 +442,10 @@ centralFiniteDifference[f_[vars__],var_,val_]:=With[{h=10.^-3},
 			1/(2 h) ((f[vars]/.var->val+h)-(f[vars]/.var->val-h))
 			
 		]
+
+simplifyXH[list_List] := ReplaceRepeated[list, {
+  {a___, x_, x_, b___} :> {a, b}, 
+  {a___, "H", "X", "H", b___} :> {a, "Z", b}, 
+  {a___, "H", "Z", "H", b___} :> {a, "X", b}, 
+  {a___, "X", "Z", "X", b___} :> {a, "Z", b}
+  }]
