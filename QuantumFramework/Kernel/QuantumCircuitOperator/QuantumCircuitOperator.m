@@ -29,7 +29,7 @@ QuantumCircuitOperatorQ[___] := False
 qco_QuantumCircuitOperator /; quantumCircuitOperatorQ[Unevaluated[qco]] && ! System`Private`HoldValidQ[qco] := System`Private`HoldSetValid[qco]
 
 
-Options[QuantumCircuitOperator] := Join[{"Parameters" -> {}}, Options[CircuitDraw]]
+Options[QuantumCircuitOperator] := Join[{"Parameters" -> {}, "Picture" -> Automatic}, Options[CircuitDraw]]
 
 (* constructors *)
 
@@ -56,9 +56,9 @@ QuantumCircuitOperator[arg_, order_ ? orderQ, args___] := QuantumCircuitOperator
 
 QuantumCircuitOperator[arg_ -> order_ ? orderQ, args___] := QuantumCircuitOperator[QuantumCircuitOperator[arg, args], order]
 
-QuantumCircuitOperator[operators_ ? ListQ, opts : OptionsPattern[]] := Enclose @ With[{parameters = Developer`ToList @ OptionValue["Parameters"]},
+QuantumCircuitOperator[operators_ ? ListQ, opts : OptionsPattern[]] := Enclose @ With[{parameters = Developer`ToList @ OptionValue["Parameters"], picture = OptionValue["Picture"]},
     QuantumCircuitOperator[With[{
-        ops = (Confirm[If[parameters === {} || BarrierQ[#], #, Head[#][#, "Parameters" -> Join[#["ParameterSpec"], parameters]]] & @ FromCircuitOperatorShorthand[#]] & /@ operators)
+        ops = (Confirm[If[BarrierQ[#], #, Head[#][#, "Parameters" -> Join[#["ParameterSpec"], parameters], "Picture" -> Replace[picture, Automatic | None :> #["Picture"]]]] & @ FromCircuitOperatorShorthand[#]] & /@ operators)
     },
         <|
             "Elements" -> ops,

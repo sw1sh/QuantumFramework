@@ -4,7 +4,7 @@ Package["Wolfram`QuantumFramework`"]
 
 $QuantumCircuitOperatorProperties = {
     "Association", "Operators", "Diagram", "OperatorCount", "Orders", "CircuitOperator", "QiskitCircuit", "Label",
-    "Depth", "Arity", "Width", "TensorNetwork", "Topology", "Properties", "Parameters", "ParameterArity"
+    "Depth", "Arity", "Width", "TensorNetwork", "Topology", "Properties", "Picture", "Parameters", "ParameterArity"
 };
 
 
@@ -23,7 +23,7 @@ QuantumCircuitOperator::undefprop = "property `` is undefined for this circuit";
 
 $QuantumCircuitPreventCache = {
     "Association", "Elements", "Options", "Diagram", "Icon", "Qiskit", "QiskitCircuit", "QuantumOperator",
-    "Flatten", "Double", "Bend", "DiscardExtraQudits", "ExpandElements", "Parameters", "ParameterArity"
+    "Flatten", "Double", "Bend", "DiscardExtraQudits", "ExpandElements", "Picture", "Parameters", "ParameterArity"
 }
 
 (qds_QuantumCircuitOperator[prop_ ? propQ, args___]) /; QuantumCircuitOperatorQ[qds] := With[{
@@ -431,6 +431,8 @@ CircuitTopology[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Bloc
 
 QuantumCircuitOperatorProp[qco_, "Topology", opts___] := CircuitTopology[qco, opts]
 
+
+QuantumCircuitOperatorProp[qco_, "Picture"] := First @ Commonest[Through[qco["Operators"]["Picture"]]]
 
 QuantumCircuitOperatorProp[qco_, "Parameters"] := DeleteDuplicates[Join @@ Through[qco["Operators"]["Parameters"]]]
 

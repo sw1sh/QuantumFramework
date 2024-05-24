@@ -81,6 +81,8 @@ FromOperatorShorthand[arg : namePattern] /; MemberQ[$QuantumChannelNames, name] 
 
 FromOperatorShorthand[arg : namePattern] /; MemberQ[$QuantumOperatorNames, name] := QuantumOperator[arg]
 
+FromOperatorShorthand[arg : namePattern -> order : _ ? orderQ] /;
+    MemberQ[$QuantumOperatorNames, name] && ! (MemberQ[$QuantumStateNames, name] || StringMatchQ[name, ("0" | "1" | "+" | "-" | "L" | "R") ..]) := QuantumOperator[arg, order]
 FromOperatorShorthand[arg : namePattern -> order : _Integer | _ ? orderQ] /; MemberQ[$QuantumMeasurementOperatorNames, name] :=
     With[{ops = QuantumMeasurementOperator[arg, {#}] & /@ Flatten[{order}]}, QuantumMeasurementOperator[Fold[#2[#1] &, ops], "Label" -> First[ops]["Label"]]]
 FromOperatorShorthand[arg : namePattern -> order : _Integer | _ ? orderQ] /; MemberQ[$QuantumChannelNames, name] :=
