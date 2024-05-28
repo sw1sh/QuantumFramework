@@ -471,6 +471,8 @@ QuantumStateProp[qs_, "Type"] := Which[
     "Mixed",
     qs["ParameterArity"] > 0,
     "Parametric",
+    qs["MatrixQ"] && qs["OutputDimension"] == qs["InputDimension"],
+    "Superoperator",
     True,
     "Unknown"
 ]
