@@ -29,6 +29,7 @@ $QuantumOperatorNames = {
     "Multiplexer",
     "WignerD", "JX", "JY", "JZ", "JX+", "JY+", "JZ+", "JX-", "JY-", "JZ-", "J+", "J-", "+", "-", "Up", "Down",
     "Double",
+    "Left", "Right",
     "Hamiltonian", "Liouvillian"
 }
 
@@ -881,6 +882,20 @@ QuantumOperator[{"Down" | "-" | "I-", args___}, opts___] := QuantumOperator[Quan
 
 
 QuantumOperator[{"Double", args___}, opts___] := QuantumOperator[args, opts]["Double"]
+
+QuantumOperator[{"Left", a_}, opts___] := Enclose @ Block[{A = QuantumOperator[a], B, d},
+    d = A["Dimension"];
+    ConfirmAssert[IntegerQ[Sqrt[d]]];
+    B = QuantumOperator[A, {1}, d];
+    QuantumOperator[QuantumState[ArrayReshape[Transpose[QuantumTensorProduct[B, QuantumOperator["I"[Sqrt[d]]]]["Tensor"], 2 <-> 3], {d, d}], A["Basis"]], opts]
+]
+
+QuantumOperator[{"Right", a_}, opts___] := Enclose @ Block[{A = QuantumOperator[a], B, d},
+    d = A["Dimension"];
+    ConfirmAssert[IntegerQ[Sqrt[d]]];
+    B = QuantumOperator[A, {1}, d];
+    QuantumOperator[QuantumState[ArrayReshape[Transpose[QuantumTensorProduct[QuantumOperator["I"[Sqrt[d]]], Transpose[B]]["Tensor"], 2 <-> 3], {d, d}], A["Basis"]], opts]
+]
 
 
 HamiltonianMixedOperator[h_QuantumOperator] := Block[{d = h["Dimension"], H},

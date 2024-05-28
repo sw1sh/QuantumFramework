@@ -239,6 +239,8 @@
             "Up",
             "Down",
             "Double",
+            "Left",
+            "Right",
             "Hamiltonian",
             "Liouvillian"
         },
