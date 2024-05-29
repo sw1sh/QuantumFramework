@@ -184,7 +184,9 @@ qb_QuantumBasis /; System`Private`HoldNotValidQ[qb] && quantumBasisQ[Unevaluated
 
 (* equality *)
 
-QuantumBasis /: Equal[qb__QuantumBasis ? QuantumBasisQ] := Equal @@ (#["Input"] & /@ {qb}) && Equal @@ (#["Output"] & /@ {qb})
+QuantumBasis /: Equal[qb__QuantumBasis] := Equal @@ (#["Input"] & /@ {qb}) && Equal @@ (#["Output"] & /@ {qb})
+
+QuantumBasis /: Unequal[qb__QuantumBasis] := ! Equal[qb]
 
 
 (* N *)

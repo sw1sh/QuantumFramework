@@ -63,7 +63,9 @@ QuantumChannel[qm : _ ? QuantumMeasurementOperatorQ | _ ? QuantumMeasurementQ] :
 
 (* equality *)
 
-QuantumChannel /: Equal[qc : _QuantumChannel ... ] := Equal @@ (#["QuantumOperator"] & /@ {qc})
+QuantumChannel /: Equal[qc__QuantumChannel] := Equal @@ (#["QuantumOperator"] & /@ {qc})
+
+QuantumChannel /: Unequal[qc__QuantumChannel] := ! Equal[qc]
 
 
 (* dagger *)

@@ -100,8 +100,10 @@ QuditBasis[source_QuditBasis -> target_QuditBasis] := QuditBasis[
 
 (* equality *)
 
-QuditBasis /: Equal[qb__QuditBasis ? QuditBasisQ] :=
+QuditBasis /: Equal[qb__QuditBasis] :=
     Thread[Equal @@ (Chop @ SetPrecision[SparseArrayFlatten @ Values @ #["Canonical"]["Sort"]["Representations"], $MachinePrecision - 2] & /@ {qb})]
+
+QuditBasis /: Unequal[qb__QuditBasis] := ! Equal[qb]
 
 
 (* addition *)

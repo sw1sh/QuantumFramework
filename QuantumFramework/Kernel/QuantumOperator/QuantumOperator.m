@@ -563,8 +563,10 @@ QuantumOperator[qo__QuantumOperator ? QuantumOperatorQ] := QuantumOperator[{"Mul
 
 (* equality *)
 
-QuantumOperator /: Equal[qo : _QuantumOperator ... ] :=
+QuantumOperator /: Equal[qo__QuantumOperator] :=
     Equal @@ (#["Picture"] & /@ {qo}) && And @@ Thread[Equal @@ (Chop @ SetPrecisionNumeric @ SparseArrayFlatten @ #["Sort"]["MatrixRepresentation"] & /@ {qo})]
+
+QuantumOperator /: Unequal[qo__QuantumOperator] := ! Equal[qo]
 
 
 (* conversion *)

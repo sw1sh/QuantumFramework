@@ -292,8 +292,10 @@ QuantumMeasurementOperator /: f_Symbol[left : Except[_QuantumMeasurementOperator
 
 (* equality *)
 
-QuantumMeasurementOperator /: Equal[qmo : _QuantumMeasurementOperator ... ] :=
+QuantumMeasurementOperator /: Equal[qmo__QuantumMeasurementOperator] :=
     Equal @@ (#["Picture"] & /@ {qmo}) && Equal @@ (#["Canonical"]["QuantumOperator"] & /@ {qmo})
+
+QuantumMeasurementOperator /: Unequal[qmo__QuantumMeasurementOperator] := ! Equal[qmo]
 
 
 (* simplify *)

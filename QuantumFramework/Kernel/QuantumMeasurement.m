@@ -251,8 +251,10 @@ QuantumMeasurementProp[qm_, prop_ ? propQ, args___] /;
 
 (* equality *)
 
-QuantumMeasurement /: Equal[qms : _QuantumMeasurement ...] :=
+QuantumMeasurement /: Equal[qms__QuantumMeasurement] :=
     Equal @@ (#["Canonical"]["State"] & /@ {qms})
+
+QuantumMeasurement /: Unequal[qms__QuantumMeasurement] := ! Equal[qms]
 
 
 (* simplify *)

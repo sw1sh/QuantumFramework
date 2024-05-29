@@ -183,6 +183,8 @@ Transpose[qco_QuantumCircuitOperator] ^:= qco["Transpose"]
 QuantumCircuitOperator /: Equal[left___, qco_QuantumCircuitOperator, right___] :=
     Equal @@ (If[QuantumCircuitOperatorQ[#], #["CircuitOperator"], #] & /@ {left, qco, right})
 
+QuantumCircuitOperator /: Unequal[left___, qco_QuantumCircuitOperator, right___] := ! Equal[left, qco, right]
+
 
 (* part *)
 
