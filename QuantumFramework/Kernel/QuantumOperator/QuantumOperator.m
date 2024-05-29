@@ -477,7 +477,7 @@ QuantumOperator /: f_Symbol[left : Except[_QuantumOperator] ..., qo_QuantumOpera
                 Flatten[#],
                 ArrayReshape[
                     Transpose[ArrayReshape[#, Join[#, #] & @ op["MatrixNameDimensions"]], 2 <-> 3],
-                    op["MatrixNameDimensions"] ^ 2
+                    {#, #} &[op["Dimension"]]
                 ]
             ],
             op["Basis"], "Label" -> If[op["Label"] === None, None, f[left, op["Label"], right]]
