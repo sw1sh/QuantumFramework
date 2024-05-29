@@ -489,8 +489,20 @@
             "Bloch"
         }
     },
-    "PauliStabilizer" -> { { "5QubitCode", "5QubitCode1", "9QubitCode", \
-"9QubitCode1", "Random" } },
+    "PauliStabilizer" -> {
+        {
+            "5QubitCode",
+            "5QubitCode1",
+            "SteaneCode",
+            "7QubitCode",
+            "7QubitCode1",
+            "SteaneCode",
+            "SteaneCode1",
+            "9QubitCode",
+            "9QubitCode1",
+            "Random"
+        }
+    },
     "QuantumPhaseSpaceTransform" -> {
         0,
         {

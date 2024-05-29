@@ -6,7 +6,7 @@ PackageScope[$PauliStabilizerNames]
 
 
 
-$PauliStabilizerNames = {"5QubitCode", "5QubitCode1", "9QubitCode", "9QubitCode1", "Random"}
+$PauliStabilizerNames = {"5QubitCode", "5QubitCode1", "SteaneCode", "7QubitCode", "7QubitCode1", "SteaneCode", "SteaneCode1", "9QubitCode", "9QubitCode1", "Random"}
 
 
 PauliTableauQ[t_] := ArrayQ[t, 3, MatchQ[0 | 1 | -1]] && MatchQ[Dimensions[t], {2, n_, m_}]
@@ -132,6 +132,9 @@ PauliStabilizer[q_Integer ? NonNegative] := PauliStabilizer[{ConstantArray[0, {M
 
 PauliStabilizer["5QubitCode"] := PauliStabilizer[{"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ", "XXXXX"}]
 PauliStabilizer["5QubitCode1"] := PauliStabilizer[{"XZZXI", "IXZZX", "XIXZZ", "ZXIXZ", "-XXXXX"}]
+
+PauliStabilizer["7QubitCode" | "SteaneCode"] := PauliStabilizer[{"IIIXXXX", "XIXIXIX", "IXXIIXX", "IIIZZZZ", "ZIZIZIZ", "IZZIIZZ", "XXXXXXX"}]
+PauliStabilizer["7QubitCode1" | "SteaneCode1"] := PauliStabilizer[{"IIIXXXX", "XIXIXIX", "IXXIIXX", "IIIZZZZ", "ZIZIZIZ", "IZZIIZZ", "-XXXXXXX"}]
 
 PauliStabilizer["9QubitCode"] := PauliStabilizer[{"ZZIIIIIII", "IZZIIIIII", "IIIZZIIII", "IIIIZZIII", "IIIIIIZZI", "IIIIIIIZZ", "XXXXXXIII", "IIIXXXXXX", "XXXXXXXXX"}]
 PauliStabilizer["9QubitCode1"] := PauliStabilizer[{"ZZIIIIIII", "IZZIIIIII", "IIIZZIIII", "IIIIZZIII", "IIIIIIZZI", "IIIIIIIZZ", "XXXXXXIII", "IIIXXXXXX", "-XXXXXXXXX"}]
