@@ -254,6 +254,20 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 				Triangle[{center - size / 4 {1/2, 1}, center - size / 4 {1/2, -1}, center - size / 4 {-1, 0}}]
 			]
 		}],
+		"UniformMixture" | SuperDagger["Trace" | "Discard"] :> {
+			wireStyle,
+			Table[{
+				wireThickness[Replace[i, outDims]],
+				Line[{{center[[1]] - size / 8, - i vGapSize}, {center[[1]] + size / 2, - i vGapSize}}],
+				Thickness[Large],
+				Table[
+					Line[{{center[[1]] - ((j - 1) / 6 - 1 / 3) size, - i vGapSize + size / j / 2}, {center[[1]] - ((j - 1) / 6 - 1 / 3) size, - i vGapSize - size / j / 2}}],
+					{j, 3}
+				]
+			},
+				{i, vposOut}
+			]
+		},
 		"Discard" | "Trace" :> {
 			wireStyle,
 			Table[{
