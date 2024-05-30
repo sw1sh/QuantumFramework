@@ -57,7 +57,7 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "LogN
 QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "EntanglementEntropy"] := Enclose @ With[{
     bp = ConfirmBy[qs["Bipartition", biPartition]["Normalized"], QuantumStateQ[#] && #["Qudits"] == 2 &]
 },
-    If[ qs["VectorQ"],
+    If[ bp["VectorQ"],
         Quantity[Total[-# Log2[#] & @ Select[Confirm @ bp["Probability"], # > 0 &]], "Bits"],
         QuantumPartialTrace[bp, {1}]["VonNeumannEntropy"]
     ]
