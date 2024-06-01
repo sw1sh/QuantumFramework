@@ -13,9 +13,9 @@ Options[QuantumEvolve] = DeleteDuplicatesBy[First] @ Join[
     Options[NDSolveValue], Options[DSolveValue]
 ]
 
-QuantumEvolve[hamiltonian_ ? QuantumOperatorQ, lindblad : {___ ? QuantumOperatorQ}, args___] := QuantumEvolve[hamiltonian, lindblad -> {}, args]
+QuantumEvolve[hamiltonian_QuantumOperator, lindblad : _QuantumOperator | {___QuantumOperator}, args___] := QuantumEvolve[hamiltonian, ToList[lindblad] -> {}, args]
 
-QuantumEvolve[hamiltonian_ ? QuantumOperatorQ, args___] := QuantumEvolve[hamiltonian, {} -> {}, args]
+QuantumEvolve[hamiltonian_QuantumOperator, (lindblad : Except[_List] -> gamma_) | (lindblad_ -> gamma : Except[_List]), args___] := QuantumEvolve[hamiltonian, ToList[lindblad] -> ToList[gamma], args]
 
 QuantumEvolve[
     hamiltonian_ ? QuantumOperatorQ,
@@ -202,6 +202,9 @@ QuantumEvolve[
         solution
     ]
 ]
+
+QuantumEvolve[hamiltonian_QuantumOperator, args___] := QuantumEvolve[hamiltonian, {} -> {}, args]
+
 
 MapSparseArray[f_, sa_] := SparseArray[Thread[sa["ExplicitPositions"] -> f /@ sa["ExplicitValues"]], Dimensions[sa]]
 

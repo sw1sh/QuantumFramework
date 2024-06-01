@@ -98,7 +98,7 @@ FromOperatorShorthand[(lhs_ -> rhs_) -> opts : OptionsPattern[]] := With[{op = F
 FromOperatorShorthand[lhs_ -> opts : OptionsPattern[]] := FromOperatorShorthand[Unevaluated[(lhs -> {1}) -> {opts}]]
 FromOperatorShorthand[lhs_ -> label : Except[OptionsPattern[]]] := FromOperatorShorthand[Unevaluated[(lhs -> {1}) -> ("Label" -> label)]]
 
-FromOperatorShorthand[lhs_ -> rest_] := QuantumOperator[Unevaluated[lhs], Sequence @@ Developer`ToList[rest]]
+FromOperatorShorthand[lhs_ -> rest_] := QuantumOperator[Unevaluated[lhs], Sequence @@ ToList[rest]]
 FromOperatorShorthand[args_List] := Function[Null, FromOperatorShorthand[Unevaluated[#]], HoldFirst] /@ Unevaluated[args]
 FromOperatorShorthand[arg_] := QuantumOperator[arg]
 
@@ -915,13 +915,15 @@ LindbladMixedOperator[l_QuantumOperator] := Block[{d = l["Dimension"], L, LL},
     ]
 ]
 
-QuantumOperator[{"Liouvillian", H : _QuantumOperator | None : None, Ls : {___QuantumOperator} : {}, gammas_List : {}}, opts___] := Enclose[
-	ConfirmAssert[SameQ @@ Join[If[H === None, {}, {H["OutputDimension"], H["InputDimension"]}], Through[Ls["OutputDimension"]], Through[Ls["InputDimension"]]]];
+QuantumOperator[{"Liouvillian", H : _QuantumOperator | None : None, Ls : _ : {}, Gammas : _ : {}}, opts___] := Enclose @ With[{ls = ToList[Ls], gammas = ToList[Gammas]},
+	ConfirmAssert[SameQ @@ Join[If[H === None, {}, {H["OutputDimension"], H["InputDimension"]}], Through[ls["OutputDimension"]], Through[ls["InputDimension"]]]];
     QuantumOperator[
-        If[H === None, 0, HamiltonianMixedOperator[H] / I] + PadRight[gammas, Length[Ls], 1] . (LindbladMixedOperator /@ Ls),
+        If[H === None, 0, HamiltonianMixedOperator[H] / I] + PadRight[gammas, Length[ls], 1] . (LindbladMixedOperator /@ ls),
         opts, "Label" -> "Liouvillian"
     ]
 ]
+
+QuantumOperator[{"Liouvillian", H : _QuantumOperator | None : None, ls_ -> gammas_}, opts___] := QuantumOperator[{"Liouvillian", H, ls, gammas}, opts]
 
 QuantumOperator[{"Hamiltonian", args___}, opts___] := QuantumOperator[I QuantumOperator["Liouvillian"[args]], opts, "Label" -> "Hamiltonian"]
 

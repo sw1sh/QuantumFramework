@@ -1,5 +1,6 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageScope["ToList"]
 PackageScope["SymbolicQ"]
 PackageScope["basisMultiplicity"]
 PackageScope["nameQ"]
@@ -51,6 +52,8 @@ PackageScope["profile"]
 PackageScope["Memoize"]
 
 
+
+ToList = Developer`ToList
 
 
 (* *)
