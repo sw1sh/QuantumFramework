@@ -569,12 +569,21 @@ TensorNetworkContractPath[net_ ? TensorNetworkQ, path_] := Enclose @ Block[{tens
 TensorNetworkNetGraph[net_ ? TensorNetworkQ] := TensorNetworkNetGraph[net, TensorNetworkContractionPath[net]]
 
 TensorNetworkNetGraph[net_ ? TensorNetworkQ, path_] := Enclose @ Block[{tensors, indices, freeIndices, g, tensorQueue, addEinsumLayer, n},
-    tensors = NumericArray[N[#]] & /@ TensorNetworkTensors[net];
+    tensors = Chop @* FullSimplify @* N @* Normal /@ TensorNetworkTensors[net];
     indices = TensorNetworkIndices[net];
     freeIndices = TensorNetworkFreeIndices[net];
     indices = Replace[indices, Rule @@@ EdgeTags[net], {2}];
     n = Length[tensors];
-    g = NetGraph[NetArrayLayer["Array" -> #] & /@ tensors, # -> NetPort["T" <> ToString[#]] & /@ Range[n]];
+    g = NetGraph[
+        Block[{body, symbols},
+            symbols = Union @@ Reap[body = Replace[#, s_Symbol /; ! NumericQ[s] :> Slot @@ {Sow[ToString[s]]}, Infinity]][[2]];
+            If[ symbols === {},
+                Confirm @ NetArrayLayer["Array" -> NumericArray[#]],
+                Confirm @ FunctionLayer[Function[Evaluate[body]], Sequence @@ (# -> {} & /@ symbols)]
+            ]
+        ] & /@ tensors,
+        # -> NetPort["T" <> ToString[#]] & /@ Range[n]
+    ];
     tensorQueue = "T" <> ToString[#] & /@ Range[n];
     addEinsumLayer[{i_, j_} -> k_, a_, b_] :=
 		With[{
@@ -639,7 +648,7 @@ TensorNetworkNetGraph[net_ ? TensorNetworkQ, path_] := Enclose @ Block[{tensors,
 	ConfirmAssert[Length[tensorQueue] == Length[indices] == 1];
 	ConfirmAssert[ContainsAll[indices[[1]], freeIndices]];
 	With[{perm = PermutationList @ FindPermutation[indices[[1]], freeIndices]},
-		NetFlatten @ If[perm === {}, g, NetAppend[g, TransposeLayer[perm]]]
+		If[perm === {}, g, NetAppend[g, TransposeLayer[perm]]]
 	]
 ]
 
