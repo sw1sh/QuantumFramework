@@ -54,7 +54,7 @@ QuantumEvolve[
         (* TrigToExp helps with some examples *)
         TrigToExp @ Confirm @ If[mergeQ, MergeInterpolatingFunctions, Identity][
             If[ (phaseSpaceQ || state === None && lindblad =!= {}) && ! hamiltonian["MatrixQ"],
-                HamiltonianTransitionRate[hamiltonian, basis] / I,
+                HamiltonianTransitionRate[hamiltonian, basis],
                 QuantumOperator[If[phaseSpaceQ, hamiltonian["Double"], hamiltonian], basis]["Matrix"] / I
             ]
         ],
@@ -63,7 +63,7 @@ QuantumEvolve[
     jumps = Progress`EvaluateWithProgress[
         TrigToExp @ Confirm @ If[mergeQ, Map[MergeInterpolatingFunctions], Identity][
             If[ (phaseSpaceQ || state === None) && lindblad =!= {} && ! First[lindblad]["MatrixQ"],
-                PadRight[gammas, Length[lindblad], 1] * LindbladTransitionRates[lindblad, basis] / I,
+                PadRight[gammas, Length[lindblad], 1] * LindbladTransitionRates[lindblad, basis],
                 PadRight[Sqrt[gammas], Length[lindblad], 1] * (QuantumOperator[#, basis]["Matrix"] & /@ lindblad)
             ]
         ],
@@ -259,7 +259,7 @@ ExpandInterpolatingFunction[array_ ? ArrayQ] := ExpandInterpolatingFunction[Merg
 ExpandInterpolatingFunction[qs_QuantumState] := QuantumState[ExpandInterpolatingFunction @ qs["State"], qs["Basis"]]
 
 
-HamiltonianTransitionRate[h_QuantumOperator, args___] := QuantumPhaseSpaceTransform[QuantumOperator["Hamiltonian"[h]], args]["Matrix"]
+HamiltonianTransitionRate[h_QuantumOperator, args___] := Chop[QuantumPhaseSpaceTransform[QuantumOperator["Hamiltonian"[h]], args]["Matrix"] / I]
 
-LindbladTransitionRates[ls : {___QuantumOperator}, args___] := QuantumPhaseSpaceTransform[QuantumOperator["Hamiltonian"[{#}]], args]["Matrix"] & /@ ls
+LindbladTransitionRates[ls : {___QuantumOperator}, args___] := Chop[QuantumPhaseSpaceTransform[QuantumOperator["Hamiltonian"[{#}]], args]["Matrix"] / I] & /@ ls
 

@@ -97,7 +97,7 @@ drawGate[{vposOut_, vposIn_, hpos_}, dims : {outDims : {___Rule}, inDims : {___R
 	gateFunction, gate
 },
 	vpos = Union[vposOut, vposIn];
-	vposIndex = PositionIndex[Developer`ToList[vpos]];
+	vposIndex = PositionIndex[ToList[vpos]];
 	rotateLabel = Replace[OptionValue["RotateGateLabel"], {True | Automatic -> If[Length[vpos] > 1, - Pi / 2, 0], False | None -> 0}];
 	corners = positionCorners[{vpos, hpos}, size, vGapSize, hGapSize];
 	center = Mean[corners];
@@ -669,7 +669,7 @@ drawWireLabels[wireLabels_, min_, max_, height_, opts : OptionsPattern[]] := Blo
             Replace[{
                 Placed[l_, p_] :> With[{
 					text = Style[Replace[l, Automatic -> i], Background -> Transparent, FilterRules[{opts}, Options[Style]], $DefaultWireLabelStyle],
-					ps = Developer`ToList[Replace[p, Automatic -> {Left, Center}]]
+					ps = ToList[Replace[p, Automatic -> {Left, Center}]]
 				},
                     Text[
                         text,
@@ -688,7 +688,7 @@ drawWireLabels[wireLabels_, min_, max_, height_, opts : OptionsPattern[]] := Blo
                 l_ :> Text[Style[l, Background -> Transparent, FilterRules[{opts}, Options[Style]], $DefaultWireLabelStyle], {3 size / 8, -i}, {1, 0}]
                 }
             ],
-            Developer`ToList[label]
+            ToList[label]
         ]
     ],
         labels

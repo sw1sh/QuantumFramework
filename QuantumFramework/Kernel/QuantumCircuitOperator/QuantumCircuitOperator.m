@@ -56,7 +56,7 @@ QuantumCircuitOperator[arg_, order_ ? orderQ, args___] := QuantumCircuitOperator
 
 QuantumCircuitOperator[arg_ -> order_ ? orderQ, args___] := QuantumCircuitOperator[QuantumCircuitOperator[arg, args], order]
 
-QuantumCircuitOperator[operators_ ? ListQ, opts : OptionsPattern[]] := Enclose @ With[{parameters = Developer`ToList @ OptionValue["Parameters"], picture = OptionValue["Picture"]},
+QuantumCircuitOperator[operators_ ? ListQ, opts : OptionsPattern[]] := Enclose @ With[{parameters = ToList @ OptionValue["Parameters"], picture = OptionValue["Picture"]},
     QuantumCircuitOperator[With[{
         ops = (Confirm[If[BarrierQ[#], #, Head[#][#, "Parameters" -> Join[#["ParameterSpec"], parameters], "Picture" -> Replace[picture, Automatic | None :> #["Picture"]]]] & @ FromCircuitOperatorShorthand[#]] & /@ operators)
     },
@@ -188,7 +188,9 @@ QuantumCircuitOperator /: Unequal[left___, qco_QuantumCircuitOperator, right___]
 
 (* part *)
 
-Part[qco_QuantumCircuitOperator, part___] ^:= QuantumCircuitOperator[qco["Elements"][[part]], qco["Options"]]
+Part[qco_QuantumCircuitOperator, i_, rest___] ^:= With[{elem = qco["Elements"][[i]]}, If[QuantumCircuitOperatorQ[elem], elem[[rest]], QuantumCircuitOperator[{elem}, qco["Options"]][[rest]]]]
+
+Part[qco_QuantumCircuitOperator] ^:= qco
 
 
 (* reorder *)

@@ -899,12 +899,12 @@ QuantumOperator[{"Right", a_}, opts___] := Enclose @ Block[{A = QuantumOperator[
 
 
 HamiltonianMixedOperator[h_QuantumOperator] := Block[{d = h["Dimension"], H},
-    H = QuantumOperator[h, {1}, d];
+    H = QuantumOperator[h, {1}, QuditBasis[Sqrt[d]]];
     QuantumOperator[QuantumState[ArrayReshape[Transpose[(H - QuantumOperator[Transpose[H], {2}])["Tensor"], 2 <-> 3], {d, d}], h["Basis"]], h["Order"]]
 ]
 
 LindbladMixedOperator[l_QuantumOperator] := Block[{d = l["Dimension"], L, LL},
-    L = QuantumOperator[l, {1}, d];
+    L = QuantumOperator[l, {1}, QuditBasis[Sqrt[d]]];
     LL = L["Dagger"] @ L;
     QuantumOperator[
         QuantumState[

@@ -128,7 +128,7 @@ defaultParameterSpec[ps_List] := Catenate[defaultParameterSpec /@ ps]
 defaultParameterSpec[p : Except[_List]] := defaultParameterSpec[{p}]
 
 
-QuantumBasis[data_Association] /; !MatchQ[data["ParameterSpec"], {{_, _, _}...}] :=
+QuantumBasis[data_Association] /; ! MatchQ[data["ParameterSpec"], {{_, _, _}...}] || ! DuplicateFreeQ[data["ParameterSpec"]] :=
     QuantumBasis[<|data, "ParameterSpec" -> Reverse @ DeleteDuplicatesBy[Reverse @ defaultParameterSpec[data["ParameterSpec"]], First]|>]
 
 
