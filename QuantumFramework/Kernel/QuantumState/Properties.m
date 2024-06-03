@@ -228,7 +228,13 @@ QuantumStateProp[qs_, "PrimePhaseSpace"] /; qs["Picture"] === "PhaseSpace" := En
 ]
 
 QuantumStateProp[qs_, "PrimeTransitionPhaseSpace" | "PrimeTransitionQuasiProbability"] /; qs["Picture"] === "PhaseSpace" := Enclose @ With[{
-    mat = ArrayReshape[qs["StateVector"], {#, #} & @ ConfirmBy[Sqrt[qs["Dimension"]], IntegerQ]]
+    mat = ArrayReshape[
+        Transpose[
+            ArrayReshape[qs["StateVector"], Catenate[{#, #} & /@ ConfirmBy[Sqrt[qs["Dimensions"]], AllTrue[IntegerQ]]]],
+            FindPermutation[Join[Range[1, 2 #, 2], Range[2, 2 # - 1, 2]]] & @ qs["Qudits"]
+        ],
+        {#, #} & @ Sqrt[qs["Dimension"]]
+    ]
 },
     SparseArray @ Chop @ Join[
         Join[ConstantArray[0, Dimensions[mat]], mat, 2],
@@ -265,12 +271,12 @@ QuantumStateProp[qs_, "TransitionQuasiProbability", opts___] :=
     ]
 
 
-QuantumStateProp[qs_, "TransitionGraph", opts : OptionsPattern[Join[{"Positive" -> False, "Prime" -> True}, Options[Graph]]]] := With[{
+QuantumStateProp[qs_, "TransitionGraph", opts : OptionsPattern[]] := With[{
     q = qs["Qudits"], dims = qs["Dimensions"]
 }, {
     vs = Join[QuditBasis["X"[dims]]["Names"], QuditBasis[dims]["Names"]],
-    mat = qs[If[TrueQ[Lookup[{opts}, "Prime"]], "PrimeTransitionQuasiProbability", "TransitionQuasiProbability"]] //
-        If[TrueQ[Lookup[{opts}, "Positive"]], UnitStep[#] # - Transpose[UnitStep[- #] #], #] &
+    mat = qs[If[TrueQ[Lookup[{opts, "Prime" -> True}, "Prime"]], "PrimeTransitionQuasiProbability", "TransitionQuasiProbability"]] //
+        If[TrueQ[Lookup[{opts, "Positive" -> False}, "Positive"]], UnitStep[#] # - Transpose[UnitStep[- #] #], #] &
 }, {
     g = WeightedAdjacencyGraph[
         vs,
@@ -285,12 +291,12 @@ QuantumStateProp[qs_, "TransitionGraph", opts : OptionsPattern[Join[{"Positive" 
     Graph[g, EdgeStyle -> (# -> Replace[Sign[AnnotationValue[{g, #}, EdgeWeight]], {0 | 1 -> Red, -1 -> Blue}] & /@ EdgeList[g])]
 ]
 
-QuantumStateProp[qs_, "FullTransitionGraph", opts : OptionsPattern[Join[{"Positive" -> False, "Prime" -> True}, Options[Graph]]]] := With[{
+QuantumStateProp[qs_, "FullTransitionGraph", opts : OptionsPattern[]] := With[{
     q = qs["Qudits"], dims = If[qs["Picture"] === "PhaseSpace", Sqrt, Identity] @ qs["Dimensions"]
 }, {
     vs = QuantumTensorProduct /@ Tuples[Join[QuditBasis["X"[#]]["Names"], QuditBasis[#]["Names"]] & /@ dims],
-    tensor = qs[If[TrueQ[Lookup[{opts}, "Prime"]], "PrimeTransitionPhaseSpace", "TransitionPhaseSpace"]] //
-        If[TrueQ[Lookup[{opts}, "Positive"]], UnitStep[#] # - Transpose[UnitStep[-#] #, Catenate[Reverse /@ Partition[Range[TensorRank[#]], 2]]], #] &
+    tensor = qs[If[TrueQ[Lookup[{opts, "Prime" -> True}, "Prime"]], "PrimeTransitionPhaseSpace", "TransitionPhaseSpace"]] //
+        If[TrueQ[Lookup[{opts, "Positive" -> False}, "Positive"]], UnitStep[#] # - Transpose[UnitStep[-#] #, Catenate[Reverse /@ Partition[Range[TensorRank[#]], 2]]], #] &
 },  {
     g = WeightedAdjacencyGraph[
         vs,
