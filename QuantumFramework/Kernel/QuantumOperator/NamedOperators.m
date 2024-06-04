@@ -643,7 +643,7 @@ QuantumOperator["RandomHermitian", order : (_ ? orderQ) : {1}, opts___] := Enclo
     QuantumOperator[{"RandomHermitian", ConfirmBy[QuantumBasis[2, Length[order]], QuantumBasisQ]}, order, opts]
 
 QuantumOperator[{"RandomHermitian", qb_ ? QuantumBasisQ}, order : (_ ? orderQ) : {1}, opts___] :=
-    QuantumState["RandomMixed", QuantumBasis[qb, opts, "Label" -> None]]["Operator", order]
+    With[{u = QuantumOperator["RandomUnitary"[qb], order, opts]}, u + SuperDagger[u]]
 
 QuantumOperator[{"RandomHermitian", args___}, order : (_ ? orderQ) : {1}] := Enclose @
     QuantumOperator[{"RandomHermitian", ConfirmBy[QuantumBasis[args], QuantumBasisQ]}, order]
