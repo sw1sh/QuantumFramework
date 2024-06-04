@@ -891,7 +891,7 @@ QuantumStateProp[qs_, "StateMatrix"] := If[
     qs["VectorQ"],
     ArrayReshape[qs["StateVector"], qs["MatrixNameDimensions"]],
     ArrayReshape[
-        Transpose[ArrayReshape[qs["StateTensor"], Join[#, #] & @ qs["MatrixNameDimensions"]], 2 <-> 3],
+        Transpose[ArrayReshape[{qs["StateTensor"]}, Join[#, #] & @ qs["MatrixNameDimensions"]], 2 <-> 3],
         qs["MatrixNameDimensions"] ^ 2
     ]
 ]

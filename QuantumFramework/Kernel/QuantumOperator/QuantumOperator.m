@@ -564,7 +564,8 @@ QuantumOperator[qo__QuantumOperator ? QuantumOperatorQ] := QuantumOperator[{"Mul
 (* equality *)
 
 QuantumOperator /: Equal[qo__QuantumOperator] :=
-    Equal @@ (#["Picture"] & /@ {qo}) && And @@ Thread[Equal @@ (Chop @ SetPrecisionNumeric @ SparseArrayFlatten @ #["Sort"]["MatrixRepresentation"] & /@ {qo})]
+    Equal @@ (#["Picture"] & /@ {qo}) && And @@ Thread[Equal @@ (Chop @ SetPrecisionNumeric @ SparseArrayFlatten @ #["Sort"]["MatrixRepresentation"] & /@
+        If[Or @@ Through[{qo}["MatrixQ"]], Through[{qo}["ToMatrix"]], {qo}])]
 
 QuantumOperator /: Unequal[qo__QuantumOperator] := ! Equal[qo]
 

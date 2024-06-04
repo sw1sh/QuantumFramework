@@ -37,7 +37,10 @@ QuantumPartialTrace[qs_QuantumState, qudits : {{_Integer, _Integer} ..}] := With
     basis = QuantumPartialTrace[qs["Basis"], qudits]
 },
     QuantumState[
-        SparseArrayFlatten @ TensorContract[qs["StateTensor"], MapAt[qs["OutputQudits"] + # &, qudits, {All, 2}]],
+        If[ qs["VectorQ"],
+            SparseArrayFlatten @ TensorContract[qs["StateTensor"], MapAt[qs["OutputQudits"] + # &, qudits, {All, 2}]],
+            ArrayReshape[{TensorContract[qs["DensityTensor"], Join[#, # + qs["Qudits"]] & @ MapAt[qs["OutputQudits"] + # &, qudits, {All, 2}]]}, {#, #} & @ basis["Dimension"]]
+        ],
         basis
     ]
 ]
@@ -45,12 +48,12 @@ QuantumPartialTrace[qs_QuantumState, qudits : {{_Integer, _Integer} ..}] := With
 QuantumPartialTrace[qs_QuantumState] := QuantumPartialTrace[qs, Range @ qs["Qudits"]]
 
 
-QuantumPartialTrace[qo_QuantumOperator, qudits : {{_Integer, _Integer} ..}] := With[{
+QuantumPartialTrace[qo_QuantumOperator, qudits : {{_Integer, _Integer} ..}] := Enclose @ With[{
     outputIdx = qo["OutputOrderQuditMapping"],
     inputIdx  = qo["InputOrderQuditMapping"]
 },
     QuantumOperator[
-        QuantumPartialTrace[qo["State"], {Lookup[outputIdx, #[[1]]], Lookup[inputIdx, #[[2]]]} & /@ qudits],
+        ConfirmBy[QuantumPartialTrace[qo["State"], {Lookup[outputIdx, #[[1]]], Lookup[inputIdx, #[[2]]]} & /@ qudits], QuantumStateQ],
         {
             DeleteElements[qo["OutputOrder"], qudits[[All, 1]]],
             DeleteElements[qo["InputOrder"], qudits[[All, 2]]]
