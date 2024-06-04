@@ -227,8 +227,8 @@ Scan[
 
 (qb_QuantumBasis ? QuantumBasisQ)[rules_ ? AssociationQ] /; ContainsOnly[Keys[rules], qb["Parameters"]] :=
     QuantumBasis[
-        "Output" -> Map[Map[ReplaceAll[rules], #, {ArrayDepth[#]}] &, qb["Output"]["Representations"]],
-        "Input" -> Map[Map[ReplaceAll[rules], #, {ArrayDepth[#]}] &, qb["Input"]["Representations"]],
+        "Output" -> KeyMap[ReplaceAll[rules]] @ Map[Map[ReplaceAll[rules], #, {ArrayDepth[#]}] &, qb["Output"]["Representations"]],
+        "Input" -> KeyMap[ReplaceAll[rules]] @ Map[Map[ReplaceAll[rules], #, {ArrayDepth[#]}] &, qb["Input"]["Representations"]],
         "Label" -> qb["Label"] /. rules,
         "Picture" -> qb["Picture"],
         "ParameterSpec" -> DeleteCases[qb["ParameterSpec"], {Alternatives @@ Keys[rules], __}]

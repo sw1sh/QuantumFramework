@@ -263,19 +263,23 @@ QuantumCircuitOperatorProp[qco_, "Basis"] := QuantumBasis[
     "ParameterSpec" -> DeleteDuplicatesBy[Join @@ Through[qco["NormalOperators"]["ParameterSpec"]], First]
 ]
 
-QuantumCircuitOperatorProp[qco_, "TensorNetworkBasis"] := Enclose @ Block[{net = Confirm @ qco["TensorNetwork", "PrependInitial" -> False, "Computational" -> False], ops = qco["Flatten"]["Sort"]["NormalOperators"], indices, quditBases},
+QuantumCircuitOperatorProp[qco_, "TensorNetworkInfo"] := Enclose @ Block[{net = Confirm @ qco["TensorNetwork", "PrependInitial" -> False, "Computational" -> False], ops = qco["Flatten"]["Sort"]["NormalOperators"], indices, quditBases},
     indices = TensorNetworkIndices[net];
     ConfirmAssert[Length[indices] == Length[ops]];
     quditBases = Catenate @ MapThread[Join[Thread[Cases[#1, _Superscript] -> #2["Output"]["Decompose"]], Thread[Cases[#1, _Subscript] -> #2["Input"]["Decompose"]]] &, {indices, ops}];
+    <|"ContractionIndices" -> EdgeTags[net], "FreeIndices" -> TensorNetworkFreeIndices[net], "QuditBases" -> quditBases, "Operators" -> ops|>
+]
+
+QuantumCircuitOperatorProp[qco_, "TensorNetworkBasis"] := Enclose @ With[{info = Confirm @ qco["TensorNetworkInfo"]},
     QuantumBasis[##,
             "Label" -> qco["Label"],
-            "Picture" -> If[Length[#] > 0 && SameQ @@ #, First[#], "Schrodinger"] & @ DeleteMissing @ Through[ops["Picture"]],
-            "ParameterSpec" -> DeleteDuplicatesBy[Join @@ Through[ops["ParameterSpec"]], First]
+            "Picture" -> If[Length[#] > 0 && SameQ @@ #, First[#], "Schrodinger"] & @ DeleteMissing @ Through[info["Operators"]["Picture"]],
+            "ParameterSpec" -> DeleteDuplicatesBy[Join @@ Through[info["Operators"]["ParameterSpec"]], First]
         ] & @@ Normal @ Map[
-        QuantumTensorProduct[Lookup[quditBases, #]] &,
+        QuantumTensorProduct[Lookup[info["QuditBases"], #]] &,
         <|
             "Output" -> {}, "Input" -> {},
-            KeyMap[Replace[{Superscript -> "Output", Subscript -> "Input"}], GroupBy[TensorNetworkFreeIndices[net], Head]]
+            KeyMap[Replace[{Superscript -> "Output", Subscript -> "Input"}], GroupBy[info["FreeIndices"], Head]]
         |>
     ]
 ]

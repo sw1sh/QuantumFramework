@@ -298,9 +298,13 @@ Options[TensorNetworkCompile] = Join[{"ReturnCircuit" -> False, "Trace" -> True}
 
 TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
     circuit = qco["Normal"], width, net, phaseSpaceQ, bendQ, order, res,
-    traceOrder, eigenOrder, basis
+    traceOrder, eigenOrder, info, contractionBases, basisCompatibleQ, basis
 },
     width = circuit["Width"];
+    info = Confirm @ circuit["TensorNetworkInfo"];
+    contractionBases = Partition[Lookup[info["QuditBases"], Catenate[info["ContractionIndices"]]], 2];
+    ConfirmAssert[AllTrue[contractionBases, Equal @@ Through[#["Dimension"]] &]];
+    basisCompatibleQ = And @@ Equal @@@ contractionBases;
     basis = Confirm @ circuit["TensorNetworkBasis"];
     phaseSpaceQ = basis["Picture"] === "PhaseSpace";
     traceOrder = circuit["TraceOrder"];
@@ -316,7 +320,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
         ]
     ];
     If[TrueQ[OptionValue["ReturnCircuit"]], Return[circuit]];
-    net = ConfirmBy[QuantumTensorNetwork[circuit, FilterRules[{opts}, Options[QuantumTensorNetwork]], "PrependInitial" -> False, "Computational" -> ! phaseSpaceQ], TensorNetworkQ];
+    net = ConfirmBy[QuantumTensorNetwork[circuit, FilterRules[{opts}, Options[QuantumTensorNetwork]], "PrependInitial" -> False, "Computational" -> ! phaseSpaceQ && ! basisCompatibleQ], TensorNetworkQ];
     res = Confirm @ ContractTensorNetwork[net];
     res = With[{basis = Confirm @ circuit["TensorNetworkBasis"]},
         QuantumState[
@@ -338,7 +342,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
         ];
         res = QuantumState[res, QuantumBasis[{basis, basis["Conjugate"]}]]["Unbend"]
         ,
-        res = If[phaseSpaceQ || ! TrueQ[OptionValue["Computational"]], QuantumState[res["State"], basis], QuantumState[res, basis]];
+        res = If[phaseSpaceQ || basisCompatibleQ || ! TrueQ[OptionValue["Computational"]], QuantumState[res["State"], basis], QuantumState[res, basis]];
     ];
     res = Which[
         eigenOrder =!= {},
