@@ -246,10 +246,10 @@ QuantumStateProp[qs_, "PrimeTransitionPhaseSpace" | "PrimeTransitionQuasiProbabi
 QuantumStateProp[qs_, prop : "PhaseSpace" | "TransitionPhaseSpace", opts___] := QuantumWignerTransform[qs, opts][prop]
 
 QuantumStateProp[qs_, "PrimePhaseSpace"] :=
-    QuantumState[qs["PrimeBasis"]["Double"], If[qs["NumberQ"], N, Identity] @ QuantumBasis["Wootters"[qs["Dimension"]], "Picture" -> "PhaseSpace"]]["PrimePhaseSpace"]
+    QuantumPhaseSpaceTransform[qs["PrimeBasis"], If[qs["NumberQ"], N, Identity] @ QuantumBasis["Wootters"[qs["Dimension"]]]]["PrimePhaseSpace"]
 
 QuantumStateProp[qs_, "PrimeTransitionPhaseSpace" | "PrimeTransitionQuasiProbability"] :=
-    QuantumState[qs["PrimeBasis"]["Double"], If[qs["NumberQ"], N, Identity] @ QuantumBasis["Wootters"[qs["Dimension"]], "Picture" -> "PhaseSpace"]]["PrimeTransitionPhaseSpace"]
+    QuantumPhaseSpaceTransform[qs["PrimeBasis"], If[qs["NumberQ"], N, Identity] @ QuantumBasis["Wootters"[qs["Dimension"]]]]["PrimeTransitionPhaseSpace"]
 
 QuantumStateProp[qs_, "QuasiProbability", opts___] :=
     ArrayReshape[
