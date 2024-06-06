@@ -9,7 +9,7 @@ PackageExport[LindbladTransitionRates]
 QuantumEvolve::error = "Differential Solver failed to find a solution"
 
 Options[QuantumEvolve] = DeleteDuplicatesBy[First] @ Join[
-    {"AdditionalEquations" -> {}, "ReturnEquations" -> False, "MergeInterpolatingFunctions" -> True},
+    {"AdditionalEquations" -> {}, "ReturnEquations" -> False, "ReturnSolution" -> False, "MergeInterpolatingFunctions" -> True},
     Options[NDSolveValue], Options[DSolveValue]
 ]
 
@@ -166,6 +166,7 @@ QuantumEvolve[
             FilterRules[{opts}, Options[NDSolveValue]]
         ]
     ];
+    If[ TrueQ[OptionValue["ReturnSolution"]], Return[solution]];
     If[ MatchQ[solution, _InterpolatingFunction],
         solution = ExpandInterpolatingFunction[solution, parameter]
     ];
