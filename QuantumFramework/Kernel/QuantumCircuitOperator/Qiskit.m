@@ -125,6 +125,8 @@ wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(circuit))
     "]
 ]
 
+QiskitCircuit[qc_QuantumCircuitOperator] := qc["Qiskit"]
+
 QiskitCircuit[bytes_ByteArray]["Bytes"] := bytes
 
 qc_QiskitCircuit["Eval", attr_String, args___, kwargs : OptionsPattern[]] :=
