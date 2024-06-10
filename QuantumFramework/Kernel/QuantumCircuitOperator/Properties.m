@@ -23,7 +23,7 @@ QuantumCircuitOperator::undefprop = "property `` is undefined for this circuit";
 
 $QuantumCircuitPreventCache = {
     "Association", "Elements", "Options", "Diagram", "Icon", "Qiskit", "QiskitCircuit", "QuantumOperator",
-    "Flatten", "Double", "Bend", "DiscardExtraQudits", "ExpandElements", "Picture", "Parameters", "ParameterArity"
+    "Flatten", "Double", "Bend", "DiscardExtraQudits", "ToggleExpand", "ExpandElements", "Picture", "Parameters", "ParameterArity"
 }
 
 (qds_QuantumCircuitOperator[prop_ ? propQ, args___]) /; QuantumCircuitOperatorQ[qds] := With[{
