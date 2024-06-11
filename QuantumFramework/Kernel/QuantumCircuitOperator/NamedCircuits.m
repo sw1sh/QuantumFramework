@@ -726,10 +726,10 @@ QuantumStateMultiplexer[qs_QuantumState, ___]  := Block[{
     QuantumCircuitOperator[operators, "Label" -> qs["Label"]]["Flatten"]
 ]
 
-QuantumCircuitOperator[qs_QuantumState | {"QuantumState", qs_QuantumState}, opts___] /; MatchQ[qs["Dimensions"], {2 ..}] :=
+QuantumCircuitOperator[qs_QuantumState | {"QuantumState", qs_QuantumState, args___}, opts___] /; MatchQ[qs["Dimensions"], {2 ..}] :=
     Enclose @ QuantumCircuitOperator[
-        ConfirmBy[QuantumStatePreparation[qs, FilterRules[{opts}, Options[QuantumStatePreparation]]], QuantumCircuitOperatorQ],
-        FilterRules[{opts}, Except[Options[QuantumStatePreparation]]]
+        ConfirmBy[QuantumStatePreparation[qs, args], QuantumCircuitOperatorQ],
+        opts
     ]
 
 QuantumCircuitOperator["QuantumState", opts___] := QuantumCircuitOperator[{"QuantumState", QuantumState[{"UniformSuperposition", 3}]}, opts]
