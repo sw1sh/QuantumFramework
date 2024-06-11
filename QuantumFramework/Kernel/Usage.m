@@ -82,23 +82,31 @@ basis, too.\"}]]}}]], \"Usage\", Rule[CellID, 721227442]]\)"
 
 QuantumChannel::usage = "\!\(\*Cell[BoxData[GridBox[{{\"\", \
 Cell[TextData[{Cell[BoxData[RowBox[{\"QuantumChannel\", \"[\", \
-RowBox[{StyleBox[\"ko\", \"TI\"], \",\", StyleBox[\"order\", \"TI\"], \",\", \
-StyleBox[\"qb\", \"TI\"]}], \"]\"}]], \"InlineFormula\", Rule[FontFamily, \
+RowBox[{RowBox[{\"{\", \
+RowBox[{SubscriptBox[TemplateBox[List[Cell[TextData[\"B\"]], \
+\"paclet:Wolfram/QuantumFramework/ref/B\"], \"RefLink\", Rule[BaseStyle, \
+List[\"InlineFormula\", \"TI\"]]], StyleBox[\"1\", \"TR\"]], \",\", \
+SubscriptBox[TemplateBox[List[Cell[TextData[\"B\"]], \
+\"paclet:Wolfram/QuantumFramework/ref/B\"], \"RefLink\", Rule[BaseStyle, \
+List[\"InlineFormula\", \"TI\"]]], StyleBox[\"2\", \"TR\"]], \",\", \
+\"\[Ellipsis]\"}], \"}\"}], \",\", StyleBox[\"order\", \"TI\"], \",\", \
+StyleBox[\"basis\", \"TI\"]}], \"]\"}]], \"InlineFormula\", Rule[FontFamily, \
 \"Source Sans Pro\"]], \" \\[LineSeparator]represents a quantum channel with \
-Kraus operators \", Cell[BoxData[StyleBox[\"ko\", \"TI\"]], \
-\"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \", in basis \", \
-Cell[BoxData[StyleBox[\"qb\", \"TI\"]], \"InlineFormula\", Rule[FontFamily, \
-\"Source Sans Pro\"]], \", to be applied onto the qubits indexed in \", \
-Cell[BoxData[StyleBox[\"order\", \"TI\"]], \"InlineFormula\", \
+Kraus operators \", Cell[BoxData[SubscriptBox[StyleBox[\"B\", \"TI\"], \
+\"i\"]], \"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \", in  \
+\", Cell[BoxData[StyleBox[\"basis\", \"TI\"]], \"InlineFormula\", \
+Rule[FontFamily, \"Source Sans Pro\"]], \", to be applied onto the qubits \
+indexed in \", Cell[BoxData[StyleBox[\"order\", \"TI\"]], \"InlineFormula\", \
 Rule[FontFamily, \"Source Sans Pro\"]], \".\"}]]}, {\"\", \
 Cell[TextData[{Cell[BoxData[RowBox[{\"QuantumChannel\", \"[\", \
-RowBox[{StyleBox[\"name\", \"TI\"], \",\", StyleBox[\"par\", \"TI\"]}], \
-\"]\"}]], \"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \
-\"\\[LineSeparator]represents a the named quantum channel with name \", \
-Cell[BoxData[StyleBox[\"name\", \"TI\"]], \"InlineFormula\", Rule[FontFamily, \
-\"Source Sans Pro\"]], \", and potential parameters specified by \", \
-Cell[BoxData[StyleBox[\"par\", \"TI\"]], \"InlineFormula\", Rule[FontFamily, \
-\"Source Sans Pro\"]], \".\"}]]}}]], \"Usage\", Rule[CellID, 14939724]]\)"
+StyleBox[RowBox[{RowBox[{\"name\", \"[\", \"params\", \"]\"}], \",\", \
+\"...\"}], \"TI\"], \"]\"}]], \"InlineFormula\", Rule[FontFamily, \"Source \
+Sans Pro\"]], \"\\[LineSeparator]represents a the named quantum channel with \
+\", Cell[BoxData[StyleBox[\"name\", \"TI\"]], \"InlineFormula\", \
+Rule[FontFamily, \"Source Sans Pro\"]], \", and potential parameters \
+specified by \", Cell[BoxData[StyleBox[\"params\", \"TI\"]], \
+\"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \".\"}]]}}]], \
+\"Usage\", Rule[CellID, 14939724]]\)"
 
 
 
@@ -120,7 +128,7 @@ RowBox[{StyleBox[\"{\", \"TR\"], RowBox[{StyleBox[SubscriptBox[\"obj\", \
 \"3\"], \"TI\"], StyleBox[\",\", \"TR\"], StyleBox[\"...\", \"TR\"]}], \
 StyleBox[\"}\", \"TR\"]}], \"]\"}]], \"InlineFormula\", Rule[FontFamily, \
 \"Source Sans Pro\"]], \" \\[LineSeparator]represents a quantum circuit with \
-list of quantum objects \", Cell[BoxData[StyleBox[SubscriptBox[\"obj\", \
+a list of quantum objects \", Cell[BoxData[StyleBox[SubscriptBox[\"obj\", \
 \"i\"], \"TI\"]], \"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \
 \", e.g., quantum operator, quantum channel, quantum state or quantum \
 measurement operators.\"}]]}}]], \"Usage\", Rule[CellID, 982511436]]\)"
@@ -188,8 +196,8 @@ volve\"]], \"paclet:Wolfram/QuantumFramework/ref/QuantumEvolve\", \"Wolfram \
 Package Symbol\"], \"PackageLink\", Rule[BaseStyle, \"InlineFormula\"]], \
 \"[\", StyleBox[\"op\", \"TI\"], \"]\"}]], \"InlineFormula\", \
 Rule[FontFamily, \"Source Sans Pro\"]], \"\\[LineSeparator]represents a \
-symbolic quantum state evolved in time  with the symbolic Hamiltonian \", \
-Cell[BoxData[StyleBox[\"op\", Rule[FontSlant, \"Italic\"]]], \
+symbolic quantum state evolved in time  with the symbolic Hamiltonian or \
+Liouvillian \", Cell[BoxData[StyleBox[\"op\", Rule[FontSlant, \"Italic\"]]], \
 \"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \", from the \
 initial register state, by setting the variable \", \
 Cell[BoxData[StyleBox[\"t\", Rule[FontSlant, \"Italic\"]]], \
@@ -201,8 +209,8 @@ Package Symbol\"], \"PackageLink\", Rule[BaseStyle, \"InlineFormula\"]], \
 \"[\", RowBox[{StyleBox[\"op\", \"TI\"], \",\", StyleBox[\"qs\", \"TI\"], \
 \",\", StyleBox[\"t\", \"TI\"]}], \"]\"}]], \"InlineFormula\", \
 Rule[FontFamily, \"Source Sans Pro\"]], \"\\[LineSeparator]represents a \
-symbolic quantum state evolved in time  with the symbolic Hamiltonian \", \
-Cell[BoxData[StyleBox[\"op\", Rule[FontSlant, \"Italic\"]]], \
+symbolic quantum state evolved in time  with the symbolic Hamiltonian or \
+Liouvillian \", Cell[BoxData[StyleBox[\"op\", Rule[FontSlant, \"Italic\"]]], \
 \"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \", from the \
 initial state \", Cell[BoxData[\"qs\"], \"InlineFormula\", Rule[FontFamily, \
 \"Source Sans Pro\"]], \", and time as \", Cell[BoxData[\"t\"], \
@@ -216,14 +224,14 @@ SubscriptBox[StyleBox[\"t\", \"TI\"], StyleBox[\"i\", \"TI\"]], \",\", \
 SubscriptBox[StyleBox[\"t\", \"TI\"], StyleBox[\"f\", \"TI\"]]}], \"}\"}]}], \
 \"]\"}]], \"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \
 \"\\[LineSeparator]represents a numeric quantum state evolved in time  with \
-the numeric Hamiltonian \", Cell[BoxData[StyleBox[\"op\", Rule[FontSlant, \
-\"Italic\"]]], \"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \", \
-from the initial numeric state \", Cell[BoxData[StyleBox[\"qs\", \
+the numeric Hamiltonian or Liouvillian \", Cell[BoxData[StyleBox[\"op\", \
 Rule[FontSlant, \"Italic\"]]], \"InlineFormula\", Rule[FontFamily, \"Source \
-Sans Pro\"]], \",  with variable \", Cell[BoxData[StyleBox[\"t\", \
-Rule[FontSlant, \"Italic\"]]], \"InlineFormula\", Rule[FontFamily, \"Source \
-Sans Pro\"]], \" as time in the range \", \
-Cell[BoxData[StyleBox[SubscriptBox[\"t\", \"i\"], Rule[FontSlant, \
+Sans Pro\"]], \", from the initial numeric state \", \
+Cell[BoxData[StyleBox[\"qs\", Rule[FontSlant, \"Italic\"]]], \
+\"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \",  with variable \
+\", Cell[BoxData[StyleBox[\"t\", Rule[FontSlant, \"Italic\"]]], \
+\"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \" as time in the \
+range \", Cell[BoxData[StyleBox[SubscriptBox[\"t\", \"i\"], Rule[FontSlant, \
 \"Italic\"]]], \"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \" \
 to \", Cell[BoxData[StyleBox[SubscriptBox[\"t\", \"f\"], Rule[FontSlant, \
 \"Italic\"]]], \"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \
@@ -235,9 +243,29 @@ Package Symbol\"], \"PackageLink\", Rule[BaseStyle, \"InlineFormula\"]], \
 TemplateBox[List[Cell[TextData[\"None\"]], \"paclet:ref/None\"], \"RefLink\", \
 Rule[BaseStyle, List[\"InlineFormula\"]]], \",\", \"\[Ellipsis]\"}], \
 \"]\"}]], \"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \
-\"\\[LineSeparator]represents an evolution operator of the Hamiltonian \", \
-Cell[BoxData[StyleBox[\"op\", \"TI\"]], \"InlineFormula\", Rule[FontFamily, \
-\"Source Sans Pro\"]], \".\"}]]}, {\"\", \
+\"\\[LineSeparator]represents an evolution operator of the Hamiltonian or \
+Liouvillian \", Cell[BoxData[StyleBox[\"op\", \"TI\"]], \"InlineFormula\", \
+Rule[FontFamily, \"Source Sans Pro\"]], \".\"}]]}, {\"\", \
+Cell[TextData[{Cell[BoxData[RowBox[{TemplateBox[List[Cell[TextData[\"QuantumE\
+volve\"]], \"paclet:Wolfram/QuantumFramework/ref/QuantumEvolve\", \"Wolfram \
+Package Symbol\"], \"PackageLink\", Rule[BaseStyle, \"InlineFormula\"]], \
+\"[\", RowBox[{StyleBox[\"op\", \"TI\"], \",\", RowBox[{\"{\", \
+RowBox[{SubscriptBox[StyleBox[\"L\", \"TI\"], StyleBox[\"1\", \"TR\"]], \
+\",\", SubscriptBox[StyleBox[\"L\", \"TI\"], StyleBox[\"2\", \"TR\"]], \",\", \
+\"\[Ellipsis]\"}], \"}\"}], \",\", \"\[Ellipsis]\"}], \"]\"}]], \
+\"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \
+\"\\[LineSeparator]specify Lindblad jump operator.\"}]]}, {\"\", \
+Cell[TextData[{Cell[BoxData[RowBox[{TemplateBox[List[Cell[TextData[\"QuantumE\
+volve\"]], \"paclet:Wolfram/QuantumFramework/ref/QuantumEvolve\", \"Wolfram \
+Package Symbol\"], \"PackageLink\", Rule[BaseStyle, \"InlineFormula\"]], \
+\"[\", RowBox[{StyleBox[\"op\", \"TI\"], \",\", RowBox[{RowBox[{\"{\", \
+RowBox[{SubscriptBox[StyleBox[\"L\", \"TI\"], StyleBox[\"1\", \"TR\"]], \
+\",\", SubscriptBox[StyleBox[\"L\", \"TI\"], StyleBox[\"2\", \"TR\"]], \",\", \
+\"\[Ellipsis]\"}], \"}\"}], \"\[Rule]\", RowBox[{\"{\", \
+RowBox[{SubscriptBox[\"\[Gamma]\", \"1\"], \",\", SubscriptBox[\"\[Gamma]\", \
+\"2\"], \",\", \"\[Ellipsis]\"}], \"}\"}]}], \",\", \"\[Ellipsis]\"}], \
+\"]\"}]], \"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \
+\"\\[LineSeparator]specify gamma damping rates. \"}]]}, {\"\", \
 Cell[TextData[{Cell[BoxData[RowBox[{TemplateBox[List[Cell[TextData[\"QuantumE\
 volve\"]], \"paclet:Wolfram/QuantumFramework/ref/QuantumEvolve\", \"Wolfram \
 Package Symbol\"], \"PackageLink\", Rule[BaseStyle, \"InlineFormula\"]], \
@@ -245,7 +273,7 @@ Package Symbol\"], \"PackageLink\", Rule[BaseStyle, \"InlineFormula\"]], \
 RowBox[{\"\\\"AdditionalEquations\\\"\", \"->\", \"spec\"}]}], \"]\"}]], \
 \"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \
 \"\\[LineSeparator]represents an evolution, given some additional \
-specifications especially for piecewise or hybrid systems .\"}]]}, {\"\", \
+specifications especially for piecewise or hybrid systems.\"}]]}, {\"\", \
 Cell[TextData[{Cell[BoxData[RowBox[{TemplateBox[List[Cell[TextData[\"QuantumE\
 volve\"]], \"paclet:Wolfram/QuantumFramework/ref/QuantumEvolve\", \"Wolfram \
 Package Symbol\"], \"PackageLink\", Rule[BaseStyle, \"InlineFormula\"]], \
@@ -284,17 +312,6 @@ Cell[TextData[{Cell[BoxData[RowBox[{TemplateBox[List[Cell[TextData[\"QuantumM\
 easurementOperator\"]], \
 \"paclet:Wolfram/QuantumFramework/ref/QuantumMeasurementOperator\", \"Wolfram \
 Package Symbol\"], \"PackageLink\", Rule[BaseStyle, \"InlineFormula\"]], \
-\"[\", RowBox[{StyleBox[\"basis\", \"TI\"], \",\", StyleBox[\"target\", \
-\"TI\"]}], \"]\"}]], \"InlineFormula\", Rule[FontFamily, \"Source Sans \
-Pro\"]], \"\\[LineSeparator]represents a measurement operator acting at the \
-qubits indexed in \", Cell[BoxData[StyleBox[\"target\", \"TI\"]], \
-\"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \" in the quantum \
-basis \", Cell[BoxData[StyleBox[\"basis\", \"TI\"]], \"InlineFormula\", \
-Rule[FontFamily, \"Source Sans Pro\"]], \".\"}]]}, {\"\", \
-Cell[TextData[{Cell[BoxData[RowBox[{TemplateBox[List[Cell[TextData[\"QuantumM\
-easurementOperator\"]], \
-\"paclet:Wolfram/QuantumFramework/ref/QuantumMeasurementOperator\", \"Wolfram \
-Package Symbol\"], \"PackageLink\", Rule[BaseStyle, \"InlineFormula\"]], \
 \"[\", RowBox[{StyleBox[\"matrix\", \"TI\"], \",\", StyleBox[\"target\", \
 \"TI\"], \",\", StyleBox[\"basis\", \"TI\"]}], \"]\"}]], \"InlineFormula\", \
 Rule[FontFamily, \"Source Sans Pro\"]], \"\\[LineSeparator]represents a \
@@ -304,6 +321,17 @@ Rule[FontFamily, \"Source Sans Pro\"]], \", in the quantum basis \", \
 Cell[BoxData[StyleBox[\"basis\", \"TI\"]], \"InlineFormula\", \
 Rule[FontFamily, \"Source Sans Pro\"]], \", that acts at the qubits indexed \
 in \", Cell[BoxData[StyleBox[\"target\", \"TI\"]], \"InlineFormula\", \
+Rule[FontFamily, \"Source Sans Pro\"]], \".\"}]]}, {\"\", \
+Cell[TextData[{Cell[BoxData[RowBox[{TemplateBox[List[Cell[TextData[\"QuantumM\
+easurementOperator\"]], \
+\"paclet:Wolfram/QuantumFramework/ref/QuantumMeasurementOperator\", \"Wolfram \
+Package Symbol\"], \"PackageLink\", Rule[BaseStyle, \"InlineFormula\"]], \
+\"[\", RowBox[{StyleBox[\"basis\", \"TI\"], \",\", StyleBox[\"target\", \
+\"TI\"]}], \"]\"}]], \"InlineFormula\", Rule[FontFamily, \"Source Sans \
+Pro\"]], \"\\[LineSeparator]represents a measurement operator acting at the \
+qubits indexed in \", Cell[BoxData[StyleBox[\"target\", \"TI\"]], \
+\"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \" in the quantum \
+basis \", Cell[BoxData[StyleBox[\"basis\", \"TI\"]], \"InlineFormula\", \
 Rule[FontFamily, \"Source Sans Pro\"]], \".\"}]]}, {\"\", \
 Cell[TextData[{Cell[BoxData[RowBox[{TemplateBox[List[Cell[TextData[\"QuantumM\
 easurementOperator\"]], \
@@ -437,6 +465,15 @@ Cell[BoxData[StyleBox[\"s\", \"TI\"]], \"InlineFormula\", Rule[FontFamily, \
 
 
 
+QuantumPhaseSpaceTransform::usage = "\!\(\*Cell[BoxData[GridBox[{{\"\", \
+Cell[TextData[{Cell[BoxData[RowBox[{\"QuantumPhaseSpaceTransform\", \"[\", \
+RowBox[{StyleBox[\"object\", \"TI\"], \",\", StyleBox[\"basis\", \"TI\"]}], \
+\"]\"}]], \"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \" \
+\\[LineSeparator]represents the transformation of quantum object into the \
+phase space basis\"}]]}}]], \"Usage\", Rule[CellID, 361239949]]\)"
+
+
+
 QuantumShortcut::usage = "\!\(\*Cell[BoxData[GridBox[{{\"\", \
 Cell[TextData[{Cell[BoxData[RowBox[{\"QuantumShortcut\", \"[\", \"]\"}]], \
 \"InlineFormula\", Rule[FontFamily, \"Source Sans Pro\"]], \" \
@@ -533,9 +570,9 @@ Rule[FontFamily, \"Source Sans Pro\"]], \".\"}]]}}]], \"Usage\", Rule[CellID, \
 QuantumWignerMICTransform::usage = "\!\(\*Cell[BoxData[GridBox[{{\"\", \
 Cell[TextData[{Cell[BoxData[RowBox[{\"QuantumWignerMICTransform\", \"[\", \
 StyleBox[\"obj\", \"TI\"], \"]\"}]], \"InlineFormula\", Rule[FontFamily, \
-\"Source Sans Pro\"]], \" \\[LineSeparator]transforms obj into a minimal \
-informationally complete basis\"}]]}}]], \"Usage\", Rule[CellID, \
-88450028]]\)"
+\"Source Sans Pro\"]], \" \\[LineSeparator]transforms \", StyleBox[\"obj\", \
+\"TI\"], \" into a minimal informationally complete basis\"}]]}}]], \
+\"Usage\", Rule[CellID, 14939724]]\)"
 
 
 
@@ -543,8 +580,8 @@ QuantumWignerTransform::usage = "\!\(\*Cell[BoxData[GridBox[{{\"\", \
 Cell[TextData[{Cell[BoxData[RowBox[{\"QuantumWignerTransform\", \"[\", \
 StyleBox[\"obj\", \"TI\"], \"]\"}]], \"InlineFormula\", Rule[FontFamily, \
 \"Source Sans Pro\"]], \" \\[LineSeparator]transforms a quantum object into \
-its phase-space representation.\"}]]}}]], \"Usage\", Rule[CellID, \
-37818702]]\)"
+its phase-space representation in the Wigner basis.\"}]]}}]], \"Usage\", \
+Rule[CellID, 37818702]]\)"
 
 
 
