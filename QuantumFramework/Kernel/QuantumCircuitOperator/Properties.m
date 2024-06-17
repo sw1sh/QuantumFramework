@@ -12,7 +12,7 @@ QuantumCircuitOperator["Properties"] := Sort @ $QuantumCircuitOperatorProperties
 
 QuantumCircuitOperatorProp[qco_, "Properties"] := Enclose @ Union @ Join[
     QuantumCircuitOperator["Properties"],
-    ConfirmBy[Last[qco["Operators"]], QuantumFrameworkOperatorQ]["Properties"]
+    ConfirmBy[Last[qco["FullOperators"]], QuantumFrameworkOperatorQ]["Properties"]
 ]
 
 
@@ -22,7 +22,7 @@ qds_QuantumCircuitOperator["ValidQ"] := QuantumCircuitOperatorQ[qds]
 QuantumCircuitOperator::undefprop = "property `` is undefined for this circuit";
 
 $QuantumCircuitPreventCache = {
-    "Association", "Elements", "Options", "Diagram", "Icon", "Qiskit", "QiskitCircuit", "QuantumOperator",
+    "Association", "Elements", "Operators", "FullOperators", "FullElements", "Options", "Diagram", "Icon", "Qiskit", "QiskitCircuit", "QuantumOperator",
     "Flatten", "Double", "Bend", "DiscardExtraQudits", "ToggleExpand", "ExpandElements", "Picture", "Parameters", "ParameterArity"
 }
 
@@ -45,12 +45,14 @@ QuantumCircuitOperatorProp[QuantumCircuitOperator[data_Association], "Associatio
 
 QuantumCircuitOperatorProp[qco_, "DiagramOptions"] := FilterRules[Normal[qco["Association"]], Options[CircuitDraw]]
 
+QuantumCircuitOperatorProp[qco_, "Operators"] := DeleteCases[qco["Elements"], _ ? BarrierQ]
+
 QuantumCircuitOperatorProp[qco_, "FullElements"] := Replace[qco["Elements"], {} :> {QuantumOperator["I"]}]
 
-QuantumCircuitOperatorProp[qco_, "Operators"] := Replace[DeleteCases[qco["Elements"], _ ? BarrierQ], {} :> {QuantumOperator["I"]}]
+QuantumCircuitOperatorProp[qco_, "FullOperators"] := Replace[qco["Operators"], {} :> {QuantumOperator["I"]}]
 
-QuantumCircuitOperatorProp[qco_, "NormalOperators", elementsQ : True | False : False] := If[qco["NormalQ"], qco[If[elementsQ, "FullElements", "Operators"]],
-    First[collectCircuitOperator[#, qco, elementsQ]][If[elementsQ, "FullElements", "Operators"]] & @ MapThread[
+QuantumCircuitOperatorProp[qco_, "NormalOperators", elementsQ : True | False : False] := If[qco["NormalQ"], qco[If[elementsQ, "Elements", "Operators"]],
+    First[collectCircuitOperator[#, qco, elementsQ]][If[elementsQ, "Elements", "Operators"]] & @ MapThread[
         Which[
             BarrierQ[#],
             #,
@@ -72,7 +74,7 @@ QuantumCircuitOperatorProp[qco_, "NormalOperators", elementsQ : True | False : F
             #
         ] &,
         {
-            #[If[elementsQ, "FullElements", "Operators"]],
+            #[If[elementsQ, "Elements", "Operators"]],
             #["Sort"]["NormalOrders", elementsQ]
         } & @ qco["Flatten"]["Sort"]
     ]
@@ -96,14 +98,14 @@ collectCircuitOperator[flatOps_, elements_List, elementsQ_] := Block[{x, xs = el
     {newElements, ops}
 ]
 
-collectCircuitOperator[flatOps_, qc_QuantumCircuitOperator, elementsQ_ : False] := MapAt[QuantumCircuitOperator[#, qc["Options"]] &, collectCircuitOperator[flatOps, qc[If[elementsQ, "FullElements", "Operators"]], elementsQ], {1}]
+collectCircuitOperator[flatOps_, qc_QuantumCircuitOperator, elementsQ_ : False] := MapAt[QuantumCircuitOperator[#, qc["Options"]] &, collectCircuitOperator[flatOps, qc[If[elementsQ, "FullElements", "FullOperators"]], elementsQ], {1}]
 
 
 collectOrder[orders_, ops_, elementsQ_] := FoldPairList[With[{count = If[QuantumCircuitOperatorQ[#2], #2[If[TrueQ[elementsQ], "ElementCount", "OperatorCount"]], 1]}, TakeDrop[#1, count]] &, orders, ops]
 
-collectOrders[orders_] := Fold[{Union[#2[[1]], Complement[#1[[1]], #2[[2]]]], Union[#1[[2]], Complement[#2[[2]], #1[[1]]]]} &, orders]
+collectOrders[orders_List] := If[orders === {}, {}, Fold[{Union[#2[[1]], Complement[#1[[1]], #2[[2]]]], Union[#1[[2]], Complement[#2[[2]], #1[[1]]]]} &, orders]]
 
-collectOrders[orders_, ops_, elementsQ_] := collectOrders /@ collectOrder[orders, ops, elementsQ]
+collectOrders[orders_, ops_, elementsQ_] := Replace[collectOrders[#], {} -> Nothing] & /@ collectOrder[orders, ops, elementsQ]
 
 QuantumCircuitOperatorProp[qco_, "NormalOrders", elementsQ_ : False] := Block[{occupied = {}, getNext, orders},
     getNext[q_] := With[{next = If[MemberQ[occupied, q], Last[Complement[Range[Min[occupied, 0] - 1, 0], occupied]], q]}, AppendTo[occupied, next]; next];
@@ -119,9 +121,9 @@ QuantumCircuitOperatorProp[qco_, "NormalOrders", elementsQ_ : False] := Block[{o
             occupied = Complement[Union[occupied, Select[#["OutputOrder"], NonPositive]], Complement[#["InputOrder"], #["OutputOrder"]]];
             #["Order"]
         ] &,
-        qco["Flatten"][If[TrueQ[elementsQ], "FullElements", "Operators"]]
+        qco["Flatten"][If[TrueQ[elementsQ], "Elements", "Operators"]]
     ];
-    collectOrders[orders, qco[If[TrueQ[elementsQ], "FullElements", "Operators"]], elementsQ]
+    collectOrders[orders, qco[If[TrueQ[elementsQ], "Elements", "Operators"]], elementsQ]
 ]
 
 QuantumCircuitOperatorProp[qco_, "NormalQ"] := Through[qco["Operators"]["Order"]] == qco["NormalOrders"]
@@ -167,7 +169,7 @@ QuantumCircuitOperatorProp[qco_, "OutputOrders"] := qco["NormalOrders"][[All, 1]
 
 QuantumCircuitOperatorProp[qco_, "Orders"] := Through[qco["Operators"]["Order"]]
 
-QuantumCircuitOperatorProp[qco_, "Order"] := collectOrders[qco["NormalOrders"]]
+QuantumCircuitOperatorProp[qco_, "Order"] := Replace[collectOrders[qco["NormalOrders"]], {} -> {{1}, {1}}]
 
 QuantumCircuitOperatorProp[qco_, "InputOrder"] := qco["Order"][[2]]
 
@@ -221,13 +223,13 @@ QuantumCircuitOperatorProp[qco_, "InputOrderQuditMapping"] := Thread[# -> Range[
 QuantumCircuitOperatorProp[qco_, "OutputOrderQuditMapping"] := Thread[# -> Range[Length[#]]] & @ qco["OutputOrder"]
 
 QuantumCircuitOperatorProp[qco_, "InputDimensions"] :=
-    (q |-> ResourceFunction["LookupPart"][#["InputDimensions"], q /. #["InputOrderQuditMapping"], 2] & @
+    (q |-> If[MissingQ[#], 2, ResourceFunction["LookupPart"][#["InputDimensions"], q /. #["InputOrderQuditMapping"], 2]] & @
         SelectFirst[qco["NormalOperators"], op |-> MemberQ[op["InputOrder"], q]]) /@ qco["InputOrder"]
 
 QuantumCircuitOperatorProp[qco_, "InputDimension"] := Times @@ qco["InputDimensions"]
 
 QuantumCircuitOperatorProp[qco_, "OutputDimensions"] :=
-    (q |-> ResourceFunction["LookupPart"][#["OutputDimensions"], q /. #["OutputOrderQuditMapping"], 2] & @
+    (q |-> If[MissingQ[#], 2, ResourceFunction["LookupPart"][#["OutputDimensions"], q /. #["OutputOrderQuditMapping"], 2]] & @
         SelectFirst[Reverse @ qco["NormalOperators"], op |-> MemberQ[op["OutputOrder"], q]]) /@ qco["OutputOrder"]
 
 QuantumCircuitOperatorProp[qco_, "OutputDimension"] := Times @@ qco["OutputDimensions"]
@@ -259,8 +261,8 @@ QuantumCircuitOperatorProp[qco_, "Output"] := If[Length[qco["OutputOrder"]] > 0,
 QuantumCircuitOperatorProp[qco_, "Basis"] := QuantumBasis[
     "Output" -> qco["Output"], "Input" -> qco["Input"],
     "Label" -> qco["Label"],
-    "Picture" -> If[Length[#] > 0 && SameQ @@ #, First[#], "Schrodinger"] & @ DeleteMissing @ Through[qco["NormalOperators"]["Picture"]],
-    "ParameterSpec" -> DeleteDuplicatesBy[Join @@ Through[qco["NormalOperators"]["ParameterSpec"]], First]
+    "Picture" -> If[Length[#] > 0 && SameQ @@ #, First[#], "Schrodinger"] & @ DeleteMissing @ Through[qco["FullOperators"]["Picture"]],
+    "ParameterSpec" -> DeleteDuplicatesBy[Join @@ Through[qco["FullOperators"]["ParameterSpec"]], First]
 ]
 
 QuantumCircuitOperatorProp[qco_, "TensorNetworkInfo"] := Enclose @ Block[{net = Confirm @ qco["TensorNetwork", "PrependInitial" -> False, "Computational" -> False], ops = qco["Flatten"]["Sort"]["NormalOperators"], indices, quditBases},
@@ -342,7 +344,7 @@ QuantumCircuitOperatorProp[qco_, "Flatten", n : _Integer ? NonNegative | Infinit
 
 QuantumCircuitOperatorProp[qco_, "ToggleExpand", pos : {___Integer}] := If[pos === {},
     QuantumCircuitOperator[qco, "Expand" -> Replace[qco["Expand"], {- Infinity -> Infinity, True -> False, None | False -> True, _ -> - Infinity}]],
-    Block[{elements = qco["FullElements"], elem},
+    Block[{elements = qco["Elements"], elem},
         elem = elements[[First[pos]]];
         QuantumCircuitOperator[
             If[ QuantumCircuitOperatorQ[elem],
@@ -436,9 +438,9 @@ CircuitTopology[circuit_QuantumCircuitOperator, opts : OptionsPattern[]] := Bloc
 QuantumCircuitOperatorProp[qco_, "Topology", opts___] := CircuitTopology[qco, opts]
 
 
-QuantumCircuitOperatorProp[qco_, "Picture"] := First @ Commonest[Through[qco["Operators"]["Picture"]]]
+QuantumCircuitOperatorProp[qco_, "Picture"] := First @ Commonest[Through[qco["FullOperators"]["Picture"]]]
 
-QuantumCircuitOperatorProp[qco_, "Parameters"] := DeleteDuplicates[Join @@ Through[qco["Operators"]["Parameters"]]]
+QuantumCircuitOperatorProp[qco_, "Parameters"] := DeleteDuplicates[Join @@ Through[qco["FullOperators"]["Parameters"]]]
 
 QuantumCircuitOperatorProp[qco_, "ParameterArity"] := Length[qco["Parameters"]]
 
@@ -446,5 +448,5 @@ QuantumCircuitOperatorProp[qco_, "ParameterArity"] := Length[qco["Parameters"]]
 (* operator properties *)
 
 QuantumCircuitOperatorProp[qco_, args : PatternSequence[prop_String, ___] | PatternSequence[{prop_String, ___}, ___]] /;
-    MemberQ[Intersection[Last[qco["Operators"]]["Properties"], qco["Properties"]], prop] := qco["CircuitOperator"][args]
+    MemberQ[Intersection[Last[qco["FullOperators"]]["Properties"], qco["Properties"]], prop] := qco["CircuitOperator"][args]
 

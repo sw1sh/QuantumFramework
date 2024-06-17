@@ -36,6 +36,7 @@ Options[QuantumCircuitOperator] := Join[{"Parameters" -> {}, "Picture" -> Automa
 circuitNamePattern = name_String | {name_String, ___} | name_String[___] /; MemberQ[$QuantumCircuitOperatorNames, name]
 
 FromCircuitOperatorShorthand[barrier_ ? BarrierQ] := barrier
+FromCircuitOperatorShorthand[{}] := QuantumCircuitOperator[]
 FromCircuitOperatorShorthand[qc_ ? QuantumCircuitOperatorQ] := qc
 FromCircuitOperatorShorthand[qc_ ? QuantumCircuitOperatorQ -> order_ ? orderQ] := QuantumCircuitOperator[qc, order]
 FromCircuitOperatorShorthand[arg : circuitNamePattern] := QuantumCircuitOperator[arg]
@@ -146,7 +147,7 @@ quantumCircuitApply[qco_QuantumCircuitOperator, qs_QuantumState, OptionsPattern[
     (QuantumCircuitOperator[
         Join[
             MapThread[QuantumState["Register", #2, "Label" -> Ket[{"0"}]] -> {#1} &, {qco["InputOrder"], qco["InputDimensions"]}],
-            Map[QuantumState["Register", 2, "Label" -> Ket[{"0"}]] -> {#1} &, qco["FreeOrder"]]
+            Map[QuantumState["Register", 2, "Label" -> Ket[{"0"}]] -> {#1} &, Complement[qco["FreeOrder"], qco["InputOrder"]]]
         ]
     ] /* qco)[QuantumState[1, 1], opts]
 ]

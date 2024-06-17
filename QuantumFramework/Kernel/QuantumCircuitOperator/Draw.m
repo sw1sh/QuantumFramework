@@ -919,6 +919,7 @@ circuitWires[circuit_QuantumCircuitOperator] := Block[{
 	operators = circuit["NormalOperators", True],
 	orderDims, inWires, outWires
 },
+	If[operators === {}, Return[{{}, {}}]];
 	orderDims = If[BarrierQ[#], {{{}, {}}, {{}, {}}}, {#["Order"], {#["OutputDimensions"], #["InputDimensions"]}}] & /@ operators;
 	inWires = Catenate @ ReplacePart[{-1, _, 2} -> -1] @ FoldPairList[
 		{prev, orderDim} |-> Block[{next, skip, input, output},

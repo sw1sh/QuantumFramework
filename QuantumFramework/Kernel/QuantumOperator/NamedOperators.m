@@ -58,6 +58,8 @@ FromOperatorShorthand[f_Symbol[
 ] /; MemberQ[Attributes[f], NumericFunction] :=
     With[{qo = QuantumOperator[Unevaluated[op]]}, FromOperatorShorthand[Unevaluated[f[left, qo, right]]]]
 
+FromOperatorShorthand[{}] := QuantumOperator["I"]
+
 FromOperatorShorthand[op_ ? QuantumFrameworkOperatorQ] := op
 FromOperatorShorthand[op_ ? QuantumFrameworkOperatorQ -> order_ ? autoOrderQ] := Head[op][op, order]
 
