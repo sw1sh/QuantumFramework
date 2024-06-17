@@ -20,6 +20,7 @@ PacletObject[
             "Wolfram`QuantumFramework`",
             "QuantumFrameworkMain.m"
           },
+          "Wolfram`QuantumFramework`Experimental`",
           "Wolfram`QuantumFramework`ExampleRepository`"
         },
         "Symbols" -> {

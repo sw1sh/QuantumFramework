@@ -1,13 +1,16 @@
-Package["Wolfram`QuantumFramework`"]
+Package["Wolfram`QuantumFramework`Experimental`"]
 
-PackageScope["DecomposedQuantumStateProbabilities"]
-PackageScope["QuantumBeamSearch"]
-PackageScope["QuantumDiagramProcess"]
+PackageImport["Wolfram`QuantumFramework`"]
 
-PackageExport["QuantumCircuitMultiwayGraph"]
-PackageExport["QuantumCircuitMultiwayCausalGraph"]
-PackageExport["QuantumMPS"]
-PackageExport["QuantumMPO"]
+
+PackageExport[DecomposedQuantumStateProbabilities]
+PackageExport[QuantumBeamSearch]
+PackageExport[QuantumDiagramProcess]
+
+PackageExport[QuantumMPS]
+PackageExport[QuantumMPO]
+
+PackageExport[FeynmanBacktracking]
 
 
 
@@ -176,4 +179,40 @@ QuantumMPO[qo_QuantumOperator, m : _Integer | Infinity : Infinity, OptionsPatter
 	];
 	QuantumCircuitOperator[result, "MPO"]
 ]
+
+
+
+$FeynmanBacktrackingCache = <||>;
+
+iFeynmanBacktracking[ops : {___QuantumOperator}, state : {___Integer ? Positive} | Automatic, width_Integer, implicitInputOrder_List : {}] := Enclose @ Block[{
+	key, amplitude, op, outputPos, inputPos, padState, inputs
+},
+	key = {Length[ops], state};
+	If[ key[[1]] == 0,
+		amplitude = Boole @ MatchQ[Delete[state, List /@ implicitInputOrder], {1 ...}];
+		(*$FeynmanBacktrackingCache[key] = {amplitude, 1};*)
+		Return[amplitude]
+	];
+	amplitude = Lookup[$FeynmanBacktrackingCache, Key[key]];
+	If[! MissingQ[amplitude], $FeynmanBacktrackingCache[[Key[key], 2]]++; Return[amplitude[[1]]]];
+
+	op = ops[[-1]];
+	{outputPos, inputPos} = op["Order"];
+	padState = PadRight[Replace[state, Automatic :> ConstantArray[1, Length[width]]], width, 1];
+	inputs = Extract[op["Tensor"], padState[[outputPos]]];
+	amplitude = If[ ArrayQ[inputs],
+		inputs = SparseArray[inputs];
+		Total @ MapThread[#2 iFeynmanBacktracking[Most[ops], ReplacePart[padState, Thread[inputPos -> #1]], width, implicitInputOrder] &, {inputs["ExplicitPositions"], inputs["ExplicitValues"]}]
+		,
+		(* no input - operator is a state *)
+		If[inputs == 0, 0, inputs iFeynmanBacktracking[Most[ops], padState, width, Join[implicitInputOrder, outputPos]]]
+	];
+	$FeynmanBacktrackingCache[key] = {amplitude, 1};
+	amplitude
+]
+
+FeynmanBacktracking[circuit_QuantumCircuitOperator, state : {___Integer ? Positive} : Automatic] := (
+	$FeynmanBacktrackingCache = <||>;
+	iFeynmanBacktracking[circuit["Flatten"]["NormalOperators"], state, circuit["Width"]]
+)
 
