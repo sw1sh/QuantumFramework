@@ -45,6 +45,8 @@ simplifyLabel[l_, out_ : None, in_ : None, order_ : None] := Replace[l, {
     SuperDagger[Bra[x_]] :> Ket[x],
     conj[(name : "XSpider" | "YSpider" | "ZSpider" | "Spider")[phase_]] :> name[-phase],
     conj["WSpider"] :> "WSpider",
+    conj["Curry"] :> "Uncurry",
+    conj["Uncurry"] :> "Curry",
     conj[qn_QuditName] :> simplifyLabel[qn["Dual"]],
     (h : conj)[(h : conj)[label_]] :> simplifyLabel[label, out, in, order]
 }]
