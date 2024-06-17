@@ -188,7 +188,7 @@ QuantumCircuitOperator /: Unequal[left___, qco_QuantumCircuitOperator, right___]
 
 (* part *)
 
-Part[qco_QuantumCircuitOperator, i_, rest___] ^:= With[{elem = qco["Elements"][[i]]}, If[QuantumCircuitOperatorQ[elem], elem[[rest]], QuantumCircuitOperator[{elem}, qco["Options"]][[rest]]]]
+Part[qco_QuantumCircuitOperator, i_, rest___] ^:= With[{elem = ToList[qco["Elements"][[i]]]}, If[QuantumCircuitOperatorQ[elem], elem[[rest]], QuantumCircuitOperator[elem, qco["Options"]][[rest]]]]
 
 Part[qco_QuantumCircuitOperator] ^:= qco
 
