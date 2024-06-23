@@ -298,7 +298,7 @@ Options[TensorNetworkCompile] = Join[{"ReturnCircuit" -> False, "Trace" -> True}
 
 TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enclose @ Block[{
     circuit = qco["Normal"], width, net, phaseSpaceQ, bendQ, order, res,
-    traceOrder, eigenOrder, info, contractionBases, basisCompatibleQ, basis
+    traceOrder, eigenOrder, info, contractionBases, basisCompatibleQ, computationalQ, basis
 },
     width = circuit["Width"];
     info = Confirm @ circuit["TensorNetworkInfo"];
@@ -307,6 +307,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     basisCompatibleQ = And @@ Equal @@@ contractionBases;
     basis = Confirm @ circuit["TensorNetworkBasis"];
     phaseSpaceQ = basis["Picture"] === "PhaseSpace";
+    computationalQ = ! phaseSpaceQ && ! basisCompatibleQ || TrueQ[OptionValue["Computational"]];
     traceOrder = circuit["TraceOrder"];
     eigenOrder = circuit["Eigenorder"];
     order = Sort /@ circuit["Order"];
@@ -320,12 +321,12 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
         ]
     ];
     If[TrueQ[OptionValue["ReturnCircuit"]], Return[circuit]];
-    net = ConfirmBy[QuantumTensorNetwork[circuit, FilterRules[{opts}, Options[QuantumTensorNetwork]], "PrependInitial" -> False, "Computational" -> ! phaseSpaceQ && ! basisCompatibleQ], TensorNetworkQ];
+    net = ConfirmBy[QuantumTensorNetwork[circuit, FilterRules[{opts}, Options[QuantumTensorNetwork]], "PrependInitial" -> False, "Computational" -> computationalQ], TensorNetworkQ];
     res = Confirm @ ContractTensorNetwork[net];
     res = With[{basis = Confirm @ circuit["TensorNetworkBasis"]},
         QuantumState[
             SparseArrayFlatten[res],
-            QuantumBasis[QuditBasis[basis["OutputDimensions"]], QuditBasis[basis["InputDimensions"]]]
+            If[computationalQ, QuantumBasis[QuditBasis[basis["OutputDimensions"]], QuditBasis[basis["InputDimensions"]]], basis]
         ]
     ];
     If[ TrueQ[OptionValue["Trace"]] && traceOrder =!= {},
@@ -342,7 +343,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
         ];
         res = QuantumState[res, QuantumBasis[{basis, basis["Conjugate"]}]]["Unbend"]
         ,
-        res = If[phaseSpaceQ || basisCompatibleQ || ! TrueQ[OptionValue["Computational"]], QuantumState[res["State"], basis], QuantumState[res, basis]];
+        res = If[computationalQ, QuantumState[res, basis], QuantumState[res["State"], basis]];
     ];
     res = Which[
         eigenOrder =!= {},
