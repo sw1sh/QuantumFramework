@@ -9,6 +9,7 @@ PackageExport[QuantumDiagramProcess]
 
 PackageExport[QuantumMPS]
 PackageExport[QuantumMPO]
+PackageExport[QuantumMPSApply]
 
 PackageExport[FeynmanBacktracking]
 
@@ -83,7 +84,7 @@ QuantumDiagramProcess[qco_QuantumCircuitOperator] := With[{
 
 Options[QuantumMPS] = {"Ordered" -> False, "Sides" -> True}
 
-QuantumMPS[qs_ ? QuantumStateQ, m : _Integer | Infinity : Infinity, OptionsPattern[]] := Block[{
+QuantumMPS[qs_QuantumState, m : _Integer | Infinity : Infinity, OptionsPattern[]] := Block[{
 	decompose = If[VectorQ[#[[All, 1]], NumericQ], TakeLargestBy[#, First, UpTo[m]], #] & @ qs["DecomposeWithAmplitudes", qs["Dimensions"]],
 	dimensions = qs["Dimensions"],
 	proba, n, rowVector, colVector, matrices, result
@@ -123,7 +124,7 @@ QuantumMPS[qs_ ? QuantumStateQ, m : _Integer | Infinity : Infinity, OptionsPatte
 	QuantumCircuitOperator[result, "MPS"]
 ]
 
-QuantumMPS[qo_ ? QuantumOperatorQ, m : _Integer | Infinity : Infinity, opts : OptionsPattern[]] :=
+QuantumMPS[qo_QuantumOperator, m : _Integer | Infinity : Infinity, opts : OptionsPattern[]] :=
 	With[{range = Range[Length[qo["InputOrder"]]]},
 		{{"Permutation", qo["InputDimensions"], range} -> qo["InputOrder"] -> range + Length[qo["OutputOrder"]]}
 	] /*
@@ -180,6 +181,39 @@ QuantumMPO[qo_QuantumOperator, m : _Integer | Infinity : Infinity, OptionsPatter
 	QuantumCircuitOperator[result, "MPO"]
 ]
 
+QuantumMPSApply[mps_QuantumCircuitOperator, op_] /; op["InputOrder"] == op["OutputOrder"] && op["OutputQudits"] == 1 := Block[{
+	ops = mps["Operators"],
+	pos, us
+},
+	pos = FirstPosition[ops, o_ /; IntersectingQ[o["OutputOrder"], op["InputOrder"]], Missing[], {1}, Heads -> False];
+	If[MissingQ[pos], mps /* op, QuantumCircuitOperator[ReplacePart[ops, Thread[pos -> op @ Extract[ops, pos]]], mps["Label"] /* op["Label"]]]	
+]
+
+QuantumMPSApply[mps_QuantumCircuitOperator, op_] /; op["InputOrder"] == op["OutputOrder"] && op["OutputQudits"] == 2 := Block[{
+	ops = mps["Operators"],
+	pos, us,
+	newMPS, newOps
+},
+	pos = Position[ops, o_ /; IntersectingQ[o["OutputOrder"], op["InputOrder"]], {1}, Heads -> False];
+	us = Extract[ops, pos];
+	(* swap bond indices, maybe unnecessary as operator looks symmetric (at least for this special case) *)
+	newMPS = QuantumMPS[QuantumOperator[QuantumCircuitOperator[Append[us, op]]]["State"]["Permute", Cycles[{{1, 4}}]]];
+	newOps = {
+		QuantumOperator[newMPS[[;; newMPS["Gates"] / 2]]],
+		QuantumOperator[newMPS[[newMPS["Gates"] / 2 + 1 ;;]]]
+	};
+	newOps = {
+		QuantumOperator[
+			newOps[[1]]["State"]["Permute", FindPermutation[{1, 3, 2}]]["SplitDual", 1],
+			{0} -> {0, First[op["OutputOrder"]]}
+		],
+		QuantumOperator[
+			newOps[[2]]["State"]["Permute", FindPermutation[{3, 1, 2}]]["SplitDual", 2],
+			{0} -> {0, Last[op["OutputOrder"]]}
+		]
+	};
+	QuantumCircuitOperator[ReplacePart[ops, Thread[pos -> newOps]], mps["Label"] /* op["Label"]]	
+]
 
 
 $FeynmanBacktrackingCache = <||>;

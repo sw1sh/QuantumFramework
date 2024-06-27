@@ -1,6 +1,9 @@
 Package["Wolfram`QuantumFramework`"]
 
 
+PackageImport["Wolfram`QuantumFramework`Experimental`"]
+
+
 QuantumBasis::usage = "\!\(\*Cell[BoxData[GridBox[{{\"\", \
 Cell[TextData[{Cell[BoxData[RowBox[{TemplateBox[List[Cell[TextData[\"QuantumB\
 asis\"]], \"paclet:Wolfram/QuantumFramework/ref/QuantumBasis\", \"Wolfram \
