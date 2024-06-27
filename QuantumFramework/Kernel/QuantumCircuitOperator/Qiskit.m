@@ -480,8 +480,8 @@ qc_QiskitCircuit[opts : OptionsPattern[qiskitApply]] := qiskitApply[qc, QuantumS
 qc_QiskitCircuit[qs_QuantumState, opts : OptionsPattern[qiskitApply]] := qiskitApply[qc, qs, opts]
 
 
-qiskitQASM[qc_, OptionsPattern[Join[{"Version" -> 2}, Options[qiskitInitBackend]]]] := Enclose @ Block[{$version = OptionValue["Version"]},
-    Confirm @ qiskitInitBackend[qc, opts];
+qiskitQASM[qc_, opts : OptionsPattern[Join[{"Version" -> 2}, Options[qiskitInitBackend]]]] := Enclose @ Block[{$version = OptionValue["Version"]},
+    Confirm @ qiskitInitBackend[qc, FilterRules[{opts}, Options[qiskitInitBackend]]];
     PythonEvaluate[Context[$version], "
 from qiskit import transpile
 from qiskit_braket_provider import AWSBraketProvider
