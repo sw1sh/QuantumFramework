@@ -38,7 +38,7 @@ $QuantumMeasurementOperatorPreventCache = {"Properties", "QuantumOperator", "Ope
     If[ TrueQ[$QuantumFrameworkPropCache] &&
         ! MemberQ[$QuantumMeasurementOperatorPreventCache, prop] &&
         QuantumMeasurementOperatorProp[qmo, "Basis"]["ParameterArity"] == 0,
-        QuantumMeasurementOperatorProp[qmo, prop, args] = result,
+        Quiet[QuantumMeasurementOperatorProp[qmo, prop, args] = result, Rule::rhs],
         result
     ] /; !FailureQ[Unevaluated @ result] && (!MatchQ[result, _QuantumMeasurementOperatorProp] || Message[QuantumMeasurementOperator::undefprop, prop])
 ]

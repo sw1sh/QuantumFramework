@@ -52,7 +52,7 @@ QuantumState::failprop = "property `` failed with ``"
     If[ TrueQ[$QuantumFrameworkPropCache] &&
         ! MemberQ[{"Properties", "Basis"}, prop] &&
         QuantumStateProp[qs, "Basis"]["ParameterArity"] == 0,
-        QuantumStateProp[qs, prop, args] = result,
+        Quiet[QuantumStateProp[qs, prop, args] = result, Rule::rhs],
         result
     ] /;
         (!FailureQ[Unevaluated @ result] || Message[QuantumState::failprop, prop, result]) &&

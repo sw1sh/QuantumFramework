@@ -81,7 +81,7 @@ QuantumMeasurement::undefprop = "QuantumMeasurement property `` is undefined for
         MemberQ[{"Properties", "QuantumOperator"}, prop] ||
         QuantumMeasurementProp[qm, "Basis"]["ParameterArity"] > 0,
         result,
-        QuantumMeasurementProp[qm, prop, args] = result
+        Quiet[QuantumMeasurementProp[qm, prop, args] = result, Rule::rhs]
     ] /; !MatchQ[result, _QuantumMeasurementProp] || Message[QuantumMeasurement::undefprop, prop]
 ]
 

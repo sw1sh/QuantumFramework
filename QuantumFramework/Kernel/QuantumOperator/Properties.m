@@ -67,7 +67,7 @@ QuantumOperatorProp[QuantumOperator[_, {outputOrder_, _}], "OutputOrder"] := out
     If[ TrueQ[$QuantumFrameworkPropCache] &&
         ! MemberQ[{"Properties", "State", "Basis"}, prop] &&
         QuantumOperatorProp[qo, "Basis"]["ParameterArity"] == 0,
-        QuantumOperatorProp[qo, prop, args] = result,
+        Quiet[QuantumOperatorProp[qo, prop, args] = result, Rule::rhs],
         result
     ] /;
         (!FailureQ[Unevaluated @ result] || Message[QuantumOperator::failprop, prop, result]) &&
