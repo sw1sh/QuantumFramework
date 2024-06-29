@@ -902,7 +902,7 @@ QuantumOperator[{"Right", a_}, opts___] := Enclose @ Block[{A = QuantumOperator[
 
 HamiltonianMixedOperator[h_QuantumOperator] := Block[{d = h["Dimension"], H},
     H = QuantumOperator[h, {1}, QuditBasis[Sqrt[d]]];
-    QuantumOperator[QuantumState[ArrayReshape[Transpose[(H - QuantumOperator[Transpose[H], {2}])["Tensor"], 2 <-> 3], {d, d}], h["Basis"]], h["Order"]]
+    QuantumOperator[QuantumState[ArrayReshape[Transpose[(H - QuantumOperator[Transpose[H], {2}])["Tensor"], 2 <-> 3], {d, d}], h["Dimension"]], h["Order"], h["Basis"]]
 ]
 
 LindbladMixedOperator[l_QuantumOperator] := Block[{d = l["Dimension"], L, LL},
@@ -911,9 +911,10 @@ LindbladMixedOperator[l_QuantumOperator] := Block[{d = l["Dimension"], L, LL},
     QuantumOperator[
         QuantumState[
             ArrayReshape[Transpose[(L @ QuantumOperator[L["Conjugate"], {2}] - (LL + QuantumOperator[Transpose[LL], {2}]) / 2)["Tensor"], 2 <-> 3], {d, d}],
-            l["Basis"]
+            l["Dimension"]
         ],
-        l["Order"]
+        l["Order"],
+        l["Basis"]
     ]
 ]
 
