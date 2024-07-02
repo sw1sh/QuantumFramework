@@ -285,7 +285,7 @@ QuantumCircuitOperator[{"BooleanOracleR",
 ]
 
 QuantumCircuitOperator[{"GrayOracle",
-    fangles : _Function | _List,
+    fangles : _Function | _List : {0},
     prec : _Integer ? Positive : 4,
     n : _Integer ? NonNegative | Automatic : Automatic,
     rotationGate : "RX" | "RY" | "RZ" : "RY"
