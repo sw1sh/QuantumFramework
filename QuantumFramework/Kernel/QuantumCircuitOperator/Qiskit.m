@@ -378,16 +378,18 @@ if <* $fireOpal *>:
 
 Options[qiskitApply] = Join[{"Shots" -> 1024, "Validate" -> False}, Options[qiskitInitBackend]]
 
-qiskitApply[qc_QiskitCircuit, qs_QuantumState, opts : OptionsPattern[]] := Enclose @ Block[{
-    $state = If[qs["Dimension"] == 1, Null, NumericArray @ N @ qs["Reverse"]["StateVector"]],
+qiskitApply[qc_QiskitCircuit, qs: _ ? QuantumStateQ | Automatic, opts : OptionsPattern[]] := Enclose @ Block[{
+    $state = Replace[qs, {Automatic -> Null, _ :> If[qs["Dimension"] == 1, Null, NumericArray @ N @ qs["Reverse"]["StateVector"]]}],
     $shots = OptionValue["Shots"],
     $fireOpal = TrueQ[OptionValue["FireOpal"]],
     $validate = TrueQ[OptionValue["Validate"]],
     env, result
 },
     env = If[$fireOpal, "qctrl", Automatic];
-    ConfirmAssert[qs["InputDimensions"] == {}];
-    ConfirmAssert[AllTrue[qs["OutputDimensions"], EqualTo[2]]];
+    If[ QuantumStateQ[qs],
+        ConfirmAssert[qs["InputDimensions"] == {}];
+        ConfirmAssert[AllTrue[qs["OutputDimensions"], EqualTo[2]]]
+    ];
 
     Confirm @ qiskitInitBackend[qc, FilterRules[{opts}, Options[qiskitInitBackend]]];
 
@@ -475,7 +477,7 @@ qc_QiskitCircuit["QuantumOperator"] := Enclose @ Module[{mat = Chop @ Normal[Con
 
 qc_QiskitCircuit["Matrix"] := qc["QuantumOperator"]["Matrix"]
 
-qc_QiskitCircuit[opts : OptionsPattern[qiskitApply]] := qiskitApply[qc, QuantumState[{"Register", qc["Qubits"]}], opts]
+qc_QiskitCircuit[opts : OptionsPattern[qiskitApply]] := qiskitApply[qc, Automatic, opts]
 
 qc_QiskitCircuit[qs_QuantumState, opts : OptionsPattern[qiskitApply]] := qiskitApply[qc, qs, opts]
 
@@ -534,17 +536,48 @@ qcs = qpy.load(BytesIO(zlib.decompress(<* $qpy *>)))
 "]
 ]
 
-qc_QiskitCircuit["Transpile", basisGates : {_String...} | None : None, opts : OptionsPattern[qiskitInitBackend]]:= Enclose @ Block[{
-    $basisGates = Replace[basisGates, None -> Null]
+Options[qiskitTranspile] = Join[{"InitialLayout" -> None, "OptimizationLevel" -> 0}, Options[qiskitInitBackend]]
+
+qiskitTranspile[qc_QiskitCircuit, basisGates : {_String...} | None : None, opts : OptionsPattern[]] := Enclose @ Block[{
+    $basisGates = Replace[basisGates, None -> Null],
+    $initialLayout = Replace[OptionValue["InitialLayout"], None -> Null],
+    $optimizationLevel = OptionValue["OptimizationLevel"]
 },
-    Confirm @ qiskitInitBackend[qc, opts];
+    Confirm @ qiskitInitBackend[qc, FilterRules[{opts}, Options[qiskitInitBackend]]];
     PythonEvaluate[Context[$basisGates], "
 import pickle
 from qiskit import transpile
 from wolframclient.language import wl
 
-wl.Wolfram.QuantumFramework.QiskitCircuit(pickle.dumps(transpile(qc, backend=backend, basis_gates=<* $basisGates *>)))
+wl.Wolfram.QuantumFramework.QiskitCircuit(
+    pickle.dumps(
+        transpile(qc,
+            backend=backend,
+            basis_gates=<* $basisGates *>,
+            initial_layout=<* $initialLayout *>,
+            optimization_level=<* $optimizationLevel *>
+        )
+    )
+)
 "]
+]
+
+qc_QiskitCircuit["Transpile", args___] := qiskitTranspile[qc, args]
+
+qc_QiskitCircuit["Layout", opts : OptionsPattern[qiskitInitBackend]] := Enclose @ Block[{image},
+    Confirm @ qiskitInitBackend[qc, opts];
+    image = PythonEvaluate[Context[image], "
+from qiskit.visualization import plot_circuit_layout
+import PIL
+import matplotlib
+
+fig = plot_circuit_layout(qc, backend)
+fig.canvas.draw()
+image = PIL.Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
+matplotlib.pyplot.close()
+image
+"];
+    image
 ]
 
 qc_QiskitCircuit["Validate", opts : OptionsPattern[qiskitInitBackend]]:= Enclose[

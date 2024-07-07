@@ -30,7 +30,7 @@ $PythonSession[env_String] := With[{id = StringTemplate["QuantumFramework_``"] @
                 StartExternalSession[{{"Python", "StandardErrorFunction" -> Null},
                     "ID" -> id,
                     "Evaluator" -> <|"Dependencies" -> Join[$BasePythonPackages, $PythonEnvironmentPackages[env]], "PythonRuntime" -> "3.11"|>,
-                    "SessionProlog" -> "import qiskit\nfrom qiskit import QuantumCircuit"
+                    "SessionProlog" -> "import os; os.environ['PATH'] = f\"/opt/homebrew/bin:{os.environ['PATH']}\"; import qiskit"
                 }]
             ]
         ]
