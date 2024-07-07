@@ -211,35 +211,36 @@ logLikelihood[rho_, operators_, events_] := Block[{pick},
 	Log[Tr[rho . #] & /@ Pick[operators, pick]] . Pick[events, pick] // Chop // Re
 ]
 
-Options[increaseLikelihood] = {"maxLikeStepFactors" -> {0.95, 1.05}, "maxLikeIterationLimit" -> 30};
+Options[increaseLikelihood] = {"MaxLikeStepFactors" -> {0.95, 1.05}, "MaxLikeIterationLimit" -> 30, "Pure" -> False};
 increaseLikelihood[{state_, likelihood_, stepSize_}, operators_, events_, opt : OptionsPattern[]] :=
 	increaseLikelihood[{state, likelihood, stepSize, 0}, operators, events, opt]
 
 increaseLikelihood[{state_, likelihood_, stepSize_, iteration_}, operators_, events_, opt : OptionsPattern[]] := Block[{
 	new, newLikelihood
 },
-	If[iteration == OptionValue["maxLikeIterationLimit"], Throw[state]];
+	If[iteration == OptionValue["MaxLikeIterationLimit"], Throw[state]];
 	new = newState2[state, stepSize];
+	If[TrueQ[OptionValue["Pure"]], new[[1]] = UnitVector[Length[new[[1]]], First[PositionLargest[Abs[new[[1]]]]]]];
 	Sow[<|"likelihood" -> likelihood, "stepSize" -> stepSize|>, "optimization"];
 	newLikelihood = logLikelihood[new["densityMatrix"], operators, events];
 	If[	newLikelihood > likelihood,
-		{new, newLikelihood, stepSize OptionValue["maxLikeStepFactors"][[2]], 0},
+		{new, newLikelihood, stepSize OptionValue["MaxLikeStepFactors"][[2]], 0},
 		(*Else*)
 		Sow[1, "rejected"];
-		{state, likelihood, stepSize OptionValue["maxLikeStepFactors"][[1]], iteration + 1}
+		{state, likelihood, stepSize OptionValue["MaxLikeStepFactors"][[1]], iteration + 1}
 	]
 ]
 
 filterOptions[opt___, function_] := FilterRules[{opt}, Options[function]]
 
-Options[maximizeLikelihood] = Join[{"maxLikeIterations" -> 300, "maxLikeInitialStepSize" -> 0.5}, Options[increaseLikelihood]];
+Options[maximizeLikelihood] = Join[{"MaxLikeIterations" -> 300, "MaxLikeInitialStepSize" -> 0.5}, Options[increaseLikelihood]];
 maximizeLikelihood[state_, operators_, events_, opt : OptionsPattern[]] := Block[{
 	likelihood, options, maxLikelihoodState, rejected, n, stepSize
 },
 	likelihood = logLikelihood[state, operators, events];
 	options = filterOptions[opt, increaseLikelihood];
-	n = OptionValue["maxLikeIterations"];
-	stepSize = OptionValue["maxLikeInitialStepSize"]/Length[state]^2;
+	n = OptionValue["MaxLikeIterations"];
+	stepSize = OptionValue["MaxLikeInitialStepSize"]/Length[state]^2;
 	rejected = Total @ First[
 		Reap[maxLikelihoodState =
 			Catch[Nest[increaseLikelihood[#, operators, events, options] &, {toBuresState[state], likelihood, stepSize}, n - 1][[1]]];,
@@ -262,12 +263,13 @@ QuantumStateEstimate::operatorSize = "The operators should all have the same dim
 
 Options[QuantumStateEstimate] = Options[maximizeLikelihood];
 
-QuantumStateEstimate[measurementResult_ ? MeasurementResultQ, opt : OptionsPattern[]] := Block[{
-	operators, events, eventsPerMeasurement, size, probabilities, inversionResult, physicalInversion, inversionState,
+QuantumStateEstimate[measurementResult_ ? MeasurementResultQ, opts : OptionsPattern[]] :=
+	QuantumStateEstimate[Through[Keys[measurementResult]["POVMElements"]], Values[measurementResult], opts]	
+
+QuantumStateEstimate[povmElements_ ? ArrayQ, samples : {{__Integer} ..}, opts : OptionsPattern[]] := Block[{
+	operators = N[povmElements], events = N[samples], eventsPerMeasurement, size, probabilities, inversionResult, physicalInversion, inversionState,
 	maxLikelihoodState, optimizationMeta, bayesianSampler, result, stepSize, startState, bayesianAcceptanceRatio
 },
-	operators = Through[Keys[measurementResult]["POVMElements"]] // N;
-	events = Values[measurementResult] // N;
 	eventsPerMeasurement = Mean[Total /@ events] // Round;
 
 	(*Checks*)
@@ -281,11 +283,11 @@ QuantumStateEstimate[measurementResult_ ? MeasurementResultQ, opt : OptionsPatte
 	events = Flatten[events];
 	inversionResult = inversion[operators, probabilities];
 	physicalInversion = inversionResult["rho"]["PhysicalQ"];
-	inversionState = inversionResult["rho"]["Physical"]["DensityMatrix"];
+	inversionState = inversionResult["rho"][If[TrueQ[OptionValue["Pure"]], "EigenPrune", "Physical"]]["DensityMatrix"];
 	size = Length[inversionState];
 
 	(*Max Likelihood*)
-	optimizationMeta = <|Reap[maxLikelihoodState = maximizeLikelihood[inversionState, operators, events, filterOptions[opt, maximizeLikelihood]]["densityMatrix"];, _, Rule][[2]]|>;
+	optimizationMeta = <|Reap[maxLikelihoodState = maximizeLikelihood[inversionState, operators, events, filterOptions[opts, maximizeLikelihood]]["densityMatrix"];, _, Rule][[2]]|>;
 
 	(*Bayesian Sampling*)
 	stepSize = 4 / Sqrt[eventsPerMeasurement] / size ^ 2;
