@@ -34,15 +34,20 @@ shortcutToGate = Replace[
         {"P", phase_} :> {"PhaseGate", N[phase]},
         {"PhaseShift", k_} :> {"PhaseGate", N[Sign[k] 2 Pi / 2 ^ Abs[k]]},
         {"C", name_, controls___} :> {"Control", shortcutToGate[name], controls},
+        {"Reset", state_} :> Splice @ {"Reset" -> order[[1]], Splice[shortcutToGate /@ Catenate[QuantumShortcut /@ QuantumCircuitOperator[state, order[[1]]]["Operators"][[state["OutputQudits"] + 1 ;;]]]]},
         SuperDagger[name_] :> {"Dagger", shortcutToGate[name]},
         barrier: "Barrier" | "Barrier"[___] :> "Barrier",
+        (name_ -> (order : {_, {}})) :> shortcutToGate[Labeled[{QuantumState[name]["StateVector"]} -> order, name]],
         Labeled[arr_ /; ArrayQ[arr] || NumericArrayQ[arr] -> order_, label_] :> If[
             order[[2]] === {},
             With[{state = QuantumOperator[arr, order]["State"]},
-                If[ MatchQ[order[[1]], {_}] && state == QuantumState[1],
-                    Nothing,
-                    Splice[shortcutToGate /@ Catenate[QuantumShortcut /@ QuantumCircuitOperator[state, order[[1]]]["Operators"][[state["OutputQudits"] + 1 ;;]]]]
-                ]
+                Splice @ {
+                    "Reset" -> order[[1]],
+                    If[ MatchQ[order[[1]], {_}] && state == QuantumState[1],
+                        Nothing,
+                        Splice[shortcutToGate /@ Catenate[QuantumShortcut /@ QuantumCircuitOperator[state, order[[1]]]["Operators"][[state["OutputQudits"] + 1 ;;]]]]
+                    ]
+                }
             ],
             {"Unitary", NumericArray[Normal @ N @ arr, "ComplexReal32"], ToString[label], order}
         ],
@@ -235,7 +240,7 @@ def gate_to_QuantumOperator(gate, order):
     elif gate.name == 'measure':
         return wl.Wolfram.QuantumFramework.QuantumMeasurementOperator(order)
     elif gate.name == 'reset':
-        return wl.Wolfram.QuantumFramework.QuantumOperator('Reset', order),
+        return wl.Wolfram.QuantumFramework.QuantumOperator('Reset', order)
     elif gate.name == 'barrier':
         return 'Barrier'
     elif hasattr(gate, 'num_ctrl_qubits'):
@@ -271,6 +276,8 @@ def qc_to_QuantumCircuitOperator(qc, label=None):
 qc_to_QuantumCircuitOperator(qc)
 "]
 ]
+
+QiskitCircuit /: QuantumCircuitOperator[qc_QiskitCircuit] := qc["QuantumCircuitOperator"]
 
 
 qiskitMatrix[qc_QiskitCircuit] := Block[{$pythonBytes = qc["Bytes"]},

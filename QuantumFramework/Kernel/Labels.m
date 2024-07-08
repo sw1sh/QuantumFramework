@@ -81,6 +81,7 @@ Options[QuantumShortcut] = {"Decompose" -> True}
 QuantumShortcut[qo_QuantumOperator, OptionsPattern[]] := Replace[
     QuantumShortcut[qo["Label"], First[qo["Dimensions"], 1], qo["Order"]],
     {
+        {"Reset" -> order_} :> {{"Reset", qo[]} -> order},
         _Missing /; TrueQ[OptionValue["Decompose"]] && qo["VectorQ"] && qo["Dimensions"] === {2, 2} && MatrixQ[qo["Matrix"], NumericQ] && MatchQ[qo["Order"], {{_}, {_}}] :> QuantumShortcut[qo["ZYZ"]],
         _Missing :> {Labeled[qo["Matrix"] -> qo["Order"], qo["Label"]]}
     }
@@ -115,6 +116,7 @@ QuantumShortcut[label_, dim_Integer : 2, order : {outputOrder : _ ? orderQ, inpu
         (subLabel : "X" | "Y" | "Z" | "I" | "NOT" | "Cap" | "Cup") | (subLabel : "I")[_] :> {nameOrder @ If[dim === 2, subLabel, {subLabel, dim}]},
         Times[x_ ? NumericQ, subLabel_] :> QuantumShortcut[Composition[OverHat[x], subLabel], dim, order, opts],
         (h : SuperDagger | SuperStar)[subLabel_] :> MapAt[h, Confirm @ QuantumShortcut[subLabel, dim, order, opts], {All, 1}],
+        "Reset"[_] :> {nameOrder["Reset"]},
         name_ /; MemberQ[$QuantumOperatorNames, name] :> {nameOrder[name]},
         barrier_ ? BarrierQ :> {barrier},
         _ :> Missing[label]
