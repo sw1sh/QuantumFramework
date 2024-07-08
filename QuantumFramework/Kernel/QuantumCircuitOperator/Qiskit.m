@@ -27,7 +27,7 @@ shortcutToGate = Replace[
         {"U2", a_, b_} :> {"U2Gate", N[a], N[b]},
         {"U", a_, b_, c_} :> {"U3Gate", N[a], N[b], N[c]},
         {"Permutation", perm_} :> {"PermutationGate", PermutationList[perm] - 1},
-        {"GlobalPhase", phase_} :> {"GlobalPhaseGate", Chop[N[phase]]},
+        {"GlobalPhase", phase_} :> {"GlobalPhaseGate", Chop[Re[N[phase]]]},
         {"R", angle_, "X"} :> {"RXGate", N[angle]},
         {"R", angle_, "Y"} :> {"RYGate", N[angle]},
         {"R", angle_, "Z"} :> {"RZGate", N[angle]},
@@ -37,7 +37,7 @@ shortcutToGate = Replace[
         {"Reset", state_} :> Splice @ {"Reset" -> order[[1]], Splice[shortcutToGate /@ Catenate[QuantumShortcut /@ QuantumCircuitOperator[state, order[[1]]]["Operators"][[state["OutputQudits"] + 1 ;;]]]]},
         SuperDagger[name_] :> {"Dagger", shortcutToGate[name]},
         barrier: "Barrier" | "Barrier"[___] :> "Barrier",
-        (name_ -> (order : {_, {}})) :> shortcutToGate[Labeled[{QuantumState[name]["StateVector"]} -> order, name]],
+        (name_ -> (order : {_, {}})) :> shortcutToGate[Labeled[If[MemberQ[$QuantumOperatorNames, name], QuantumOperator, QuantumState][name]["StateMatrix"] -> order, name]],
         Labeled[arr_ /; ArrayQ[arr] || NumericArrayQ[arr] -> order_, label_] :> If[
             order[[2]] === {},
             With[{state = QuantumOperator[arr, order]["State"]},
@@ -114,6 +114,9 @@ def add_gate(circuit, gate_spec, c):
         order[q] -= 1
     if gate.name == 'global_phase':
         order = []
+    if gate.name == 'reset':
+        for o in order:
+            circuit.append(gate, (o, ))
     if len(target) > 0:
         for i, t in enumerate(target):
             circuit.append(gate, [t], (i + c, ))
@@ -383,13 +386,14 @@ if <* $fireOpal *>:
 ", env]
 ]
 
-Options[qiskitApply] = Join[{"Shots" -> 1024, "Validate" -> False}, Options[qiskitInitBackend]]
+Options[qiskitApply] = Join[{"Shots" -> 1024, "Validate" -> False, "DensityMatrix" -> False}, Options[qiskitInitBackend]]
 
 qiskitApply[qc_QiskitCircuit, qs: _ ? QuantumStateQ | Automatic, opts : OptionsPattern[]] := Enclose @ Block[{
     $state = Replace[qs, {Automatic -> Null, _ :> If[qs["Dimension"] == 1, Null, NumericArray @ N @ qs["Reverse"]["StateVector"]]}],
     $shots = OptionValue["Shots"],
     $fireOpal = TrueQ[OptionValue["FireOpal"]],
     $validate = TrueQ[OptionValue["Validate"]],
+    $matrixQ = TrueQ[OptionValue["DensityMatrix"]],
     env, result
 },
     env = If[$fireOpal, "qctrl", Automatic];
@@ -446,8 +450,11 @@ else:
             result = backend.run(circuit, shots = <* $shots *>).result()
             result = result.get_counts(circuit)
         else:
-            from qiskit.quantum_info import Statevector
-            result = Statevector(qc).data
+            from qiskit.quantum_info import Statevector, DensityMatrix
+            if <* $matrixQ *>:
+                result = DensityMatrix(circuit).data
+            else:
+                result = Statevector(circuit).data
 result
 ", env];
     Which[
