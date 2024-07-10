@@ -34,10 +34,14 @@ shortcutToGate = Replace[
         {"P", phase_} :> {"PhaseGate", N[phase]},
         {"PhaseShift", k_} :> {"PhaseGate", N[Sign[k] 2 Pi / 2 ^ Abs[k]]},
         {"C", name_, controls___} :> {"Control", shortcutToGate[name], controls},
-        {"Reset", state_} :> Splice @ {"Reset" -> order[[1]], Splice[shortcutToGate /@ Catenate[QuantumShortcut /@ QuantumCircuitOperator[state, order[[1]]]["Operators"][[state["OutputQudits"] + 1 ;;]]]]},
+        {"Reset", state_} :> Splice[shortcutToGate /@ Catenate[QuantumShortcut /@ QuantumCircuitOperator[state, order[[1]]]["Operators"]]],
         SuperDagger[name_] :> {"Dagger", shortcutToGate[name]},
         barrier: "Barrier" | "Barrier"[___] :> "Barrier",
-        (name_ -> (order : {_, {}})) :> shortcutToGate[Labeled[If[MemberQ[$QuantumOperatorNames, name], QuantumOperator, QuantumState][name]["StateMatrix"] -> order, name]],
+        (name_ -> (order : {_, {}})) :> shortcutToGate[
+            Labeled[
+                If[MemberQ[$QuantumStateNames, name] || StringMatchQ[name, ("0" | "1" | "+" | "-" | "L" | "R") ..], QuantumState, QuantumOperator][name]["StateMatrix"] -> order, name
+            ]
+        ],
         Labeled[arr_ /; ArrayQ[arr] || NumericArrayQ[arr] -> order_, label_] :> If[
             order[[2]] === {},
             With[{state = QuantumOperator[arr, order]["State"]},
@@ -114,14 +118,15 @@ def add_gate(circuit, gate_spec, c):
         order[q] -= 1
     if gate.name == 'global_phase':
         order = []
-    if gate.name == 'reset':
-        for o in order:
-            circuit.append(gate, (o, ))
     if len(target) > 0:
         for i, t in enumerate(target):
             circuit.append(gate, [t], (i + c, ))
     else:
-        circuit.append(gate, tuple(order))
+        if gate.name == 'reset':
+            for o in order:
+                circuit.append(gate, (o, ))
+        else:
+            circuit.append(gate, tuple(order))
     return c + len(target)
 
 c = 0
