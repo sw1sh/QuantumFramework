@@ -119,6 +119,7 @@ QuantumShortcut[label_, dim_Integer : 2, order : {outputOrder : _ ? orderQ, inpu
         "Reset"[_] :> {nameOrder["Reset"]},
         name_ /; MemberQ[$QuantumOperatorNames, name] :> {nameOrder[name]},
         barrier_ ? BarrierQ :> {barrier},
+        "Delay"[delay_] :> {nameOrder @ {"Delay", delay}},
         _ :> Missing[label]
     }]
 ],

@@ -36,7 +36,8 @@ shortcutToGate = Replace[
         {"C", name_, controls___} :> {"Control", shortcutToGate[name], controls},
         {"Reset", state_} :> Splice[shortcutToGate /@ Catenate[QuantumShortcut /@ QuantumCircuitOperator[state, order[[1]]]["Operators"]]],
         SuperDagger[name_] :> {"Dagger", shortcutToGate[name]},
-        barrier: "Barrier" | "Barrier"[___] :> "Barrier",
+        barrier : "Barrier" | "Barrier"[___] :> "Barrier",
+        {"Delay", delay_} :> {"Delay", delay},
         (name_ -> (order : {_, {}})) :> shortcutToGate[
             Labeled[
                 If[MemberQ[$QuantumStateNames, name] || StringMatchQ[name, ("0" | "1" | "+" | "-" | "L" | "R") ..], QuantumState, QuantumOperator][name]["StateMatrix"] -> order, name
@@ -69,6 +70,7 @@ from wolframclient.language.expression import WLFunction
 
 from qiskit import QuantumCircuit
 from qiskit.circuit.gate import Gate
+from qiskit.circuit import Delay
 from qiskit.circuit.library import *
 
 import pickle
@@ -105,6 +107,8 @@ def make_gate(gate_spec):
         order = list(args[2][0])[::-1]
     elif name == 'Barrier':
         gate = Barrier(len(order))
+    elif name == 'Delay':
+        gate = Delay(args[0])
     elif name == 'Measure':
         target = order = list(args[0])
         gate = Measure()
