@@ -1,7 +1,8 @@
 Package["Wolfram`QuantumFramework`"]
 
-PackageScope["CircuitDraw"]
-PackageScope["circuitElementPosition"]
+PackageScope[CircuitDraw]
+PackageScope[circuitElementPosition]
+PackageScope[expandLevel]
 
 
 
@@ -762,7 +763,6 @@ Options[circuitDraw] := DeleteDuplicatesBy[First] @ Join[
 	Options[Style]
 ];
 circuitDraw[circuit_QuantumCircuitOperator, Dynamic[qc_Symbol], position_List, opts : OptionsPattern[]] := Block[{
-	numGates = circuit["GateCount"],
 	order = Union @@ circuit["Order"],
 	freeOrder = circuit["FreeOrder"],
 	inputOrders,
@@ -864,6 +864,7 @@ circuitElementPosition["Barrier", from_, to_, ___] := Range[to - from + 1]
 circuitElementPosition["Barrier"[order_ ? orderQ, ___], from_, to_, ___] := Select[order, Between[{from, to}]] - from + 1
 circuitElementPosition["Barrier"[span : Span[_Integer, _Integer | All], ___], from_, to_, ___] := Range @@ (Replace[List @@ span, {x_Integer :> Clip[x, {from ,to}], All -> to}, {1}] - from + 1)
 circuitElementPosition[order_List, from_, _] := Union[Flatten[order]] - from + 1
+circuitElementPosition[elem_Association, from_, to_] := circuitElementPosition[If[elem["Type"] === "Barrier", elem["Label"], elem["Position"]], from, to]
 circuitElementPosition[op_, from_, to_] := circuitElementPosition[op["Order"], from, to]
 
 

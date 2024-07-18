@@ -1,5 +1,7 @@
 Package["Wolfram`QuantumFramework`"]
 
+PackageScope[collectOrders]
+
 
 
 $QuantumCircuitOperatorProperties = {
