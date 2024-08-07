@@ -20,8 +20,10 @@ PackageExport["QuantumUnlockingMechanism"]
 
 PackageExport["QuantumLockingMechanism"]
 
+PackageExport["QuantumLinearSolve"]
 
-(* ::Section:: *)
+
+(* ::Section::Closed:: *)
 (*Example specific functions *)
 
 
@@ -323,3 +325,159 @@ centralFiniteDifference[f_[vars__],var_,val_]:=With[{h=10.^-3},
 			1/(2 h) ((f[vars]/.var->val+h)-(f[vars]/.var->val-h))
 			
 		]
+
+
+(* ::Section:: *)
+(*QuantumLinearSolver*)
+
+
+QuantumLinearSolverState[A_?MatrixQ,Ansatz_]:=Module[{pauliDecompose, multiplexer, ancillary,ansatzqubits,qc,parameters,state},
+
+	parameters=Ansatz["Parameters"];
+	
+	pauliDecompose=QuantumOperator[A]["PauliDecompose"];
+	
+	ansatzqubits=Range[#,#+Log2@Length@A]&@(Log2@Length@pauliDecompose+1);
+	
+	multiplexer=QuantumCircuitOperator["Multiplexer"[Sequence@@Keys[pauliDecompose]]];
+	
+	ancillary=QuantumState[Sqrt@Values[pauliDecompose]];
+	
+	qc=N@QuantumCircuitOperator[
+		{
+		ancillary,
+		Ansatz->ansatzqubits,
+		multiplexer,
+		SuperDagger[(ancillary["Conjugate"])]
+		},
+		"Parameters"->parameters
+		];
+	
+	qc
+	
+	]
+
+
+QuantumLinearSolve::error ="Global phase deviation exceeds established accuracy, numerical error may be present."
+
+Options[QuantumLinearSolve]=Join[{"Ansatz"->Null,"GlobalPhaseAccuracy"->10^-5,"Multiplexer"->Null},Options[NMinimize]]
+
+QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, args___, opts:OptionsPattern[]]:=Module[
+
+	{parameters,result,state,bstate,globalphase,\[Omega],v,var,QuantumDistanceCostFunction,optparameters,solutionnorm,A,b,complexQ,Ansatz,time,cost,circuit},
+	
+	A = matrix/Norm[matrix];
+	
+	b = Normalize[vector];
+	
+	cost = 1;
+	
+	bstate = QuantumState[b];
+	
+	complexQ = !FreeQ[b,_Complex];
+	
+	If[
+		complexQ,
+		
+		v = Table[Symbol["v"<>ToString[i]],{i,2*Length@vector}],
+		
+		v = Table[Symbol["v"<>ToString[i]],{i,Length@vector}]
+	];
+	
+	var = Delete[0][ToExpression[#<>"_?NumericQ"]&/@(ToString/@v)];
+
+
+ Progress`EvaluateWithProgress[
+
+	If[MatchQ[OptionValue["Ansatz"],Null],
+		If[complexQ,
+			
+			(*If b is complex, then the QuantumState ansatz is the form of \[Sum]Subscript[\[Alpha], j]+Subscript[I\[Beta], j]|0\[Ellipsis]\[RightAngleBracket])*)
+			\[Omega] = Table[Symbol["\[Omega]"<>ToString[i]],{i,2*Length@vector}];
+			
+			Ansatz = QuantumState[(#[[1]]+#[[2]]I)&@Partition[\[Omega],Length[\[Omega]]/2],"Label"->"\!\(\*OverscriptBox[\(x\), \(^\)]\)(\[Omega])","Parameters"->\[Omega]]
+			
+			,
+			
+			(*If b is real, then the QuantumState ansatz is the form of \[Sum]Subscript[\[Alpha], j]|0\[Ellipsis]\[RightAngleBracket])*)		
+			\[Omega] = Table[Symbol["\[Omega]"<>ToString[i]],{i,Length@vector}];
+			
+			Ansatz = QuantumState[\[Omega],"Label"->"\!\(\*OverscriptBox[\(x\), \(^\)]\)(\[Omega])","Parameters"->\[Omega]]
+			
+			],
+	
+			Ansatz = OptionValue["Ansatz"];
+		
+		],
+		
+		<|"Text" -> "Variational x(\[Omega]) ansatz setup"|>
+	];
+
+ Progress`EvaluateWithProgress[
+ 
+	parameters=Ansatz["Parameters"];
+
+	If[
+		!MatchQ[OptionValue["Multiplexer"],Null],
+		
+		state = OptionValue["Multiplexer"],
+		
+		circuit = QuantumLinearSolverState[A,Ansatz];
+		
+		state = circuit[];
+		
+	],
+	
+		<|"Text" -> "Variational \[Psi](\[Omega]) state setup", "ElapsedTime" -> Automatic|>
+	
+	];
+
+
+	QuantumDistanceCostFunction[var]:=1.-QuantumDistance[bstate["Normalized"],state[AssociationThread[parameters->v]]["Normalized"],"Fidelity"];
+
+
+ Progress`EvaluateWithProgress[
+	optparameters =
+		Last[
+		NMinimize[
+			QuantumDistanceCostFunction[Delete[0]@\[Omega]],
+			\[Omega],
+			FilterRules[{opts}, Options[NMinimize]],
+			StepMonitor:>(cost=1.-(QuantumDistanceCostFunction[Delete[0]@\[Omega]]/cost))
+			]
+		],
+		
+	If[
+		MatchQ[OptionValue[Method],Automatic],
+		
+		<|"Text" -> "Hybrid optimization procedure","ElapsedTime"->Automatic|>,
+		
+		<|"Text" -> "Hybrid optimization procedure", "Progress" :> cost , "Percentage" :> cost , "ElapsedTime" -> Automatic(*, "RemainingTime" -> Automatic*)|>
+	]
+
+];
+
+
+
+
+ Progress`EvaluateWithProgress[
+	
+		globalphase=state[<|optparameters|>]["AmplitudesList"]/b;
+	
+		If[StandardDeviation[globalphase]>OptionValue["GlobalPhaseAccuracy"],QuantumLinearSolve::error];
+	
+		result=Ansatz[<|optparameters|>]["AmplitudesList"];
+	
+		result=1/Mean[globalphase]*result*Norm[vector]/Norm[matrix];
+
+		,
+		
+		<|"Text" -> "Applying final normalization"|>
+	
+	];
+	
+	If[MatchQ[{args},{}],
+		result,
+		{result,Association@FilterRules[{"Ansatz"->Ansatz,"CircuitOperator"->circuit,"CircuitDiagram"->circuit["Diagram"],"GlobalPhase"->Around[Mean[globalphase],StandardDeviation[globalphase]],"Parameters"->parameters},args]}
+	]
+]
