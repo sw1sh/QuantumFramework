@@ -331,7 +331,7 @@ centralFiniteDifference[f_[vars__],var_,val_]:=With[{h=10.^-3},
 (*QuantumLinearSolver*)
 
 
-QuantumLinearSolverState[A_?MatrixQ,Ansatz_]:=Module[{pauliDecompose, multiplexer, ancillary,ansatzqubits,qc,parameters,state},
+QuantumLinearSolverCircuit[A_?MatrixQ,Ansatz_]:=Module[{pauliDecompose, multiplexer, ancillary,ansatzqubits,qc,parameters,state},
 
 	parameters=Ansatz["Parameters"];
 	
@@ -364,7 +364,7 @@ Options[QuantumLinearSolve]=Join[{"Ansatz"->Null,"GlobalPhaseAccuracy"->10^-5,"M
 
 QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, args___, opts:OptionsPattern[]]:=Module[
 
-	{parameters,result,state,bstate,globalphase,\[Omega],v,var,QuantumDistanceCostFunction,optparameters,solutionnorm,A,b,complexQ,Ansatz,time,cost,circuit},
+	{parameters,result,state,bstate,globalphase,\[Omega],v,var,QuantumDistanceCostFunction,optparameters,solutionnorm,A,b,complexQ,Ansatz,time,cost,circuit,output},
 	
 	A = matrix/Norm[matrix];
 	
@@ -386,6 +386,7 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, args___, opts:OptionsPatter
 	
 	var = Delete[0][ToExpression[#<>"_?NumericQ"]&/@(ToString/@v)];
 
+	output=args;
 
  Progress`EvaluateWithProgress[
 
@@ -410,7 +411,7 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, args___, opts:OptionsPatter
 		
 		],
 		
-		<|"Text" -> "Variational x(\[Omega]) ansatz setup"|>
+		<|"Text" -> "Ansatz initialization"|>
 	];
 
  Progress`EvaluateWithProgress[
@@ -422,13 +423,13 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, args___, opts:OptionsPatter
 		
 		state = OptionValue["Multiplexer"],
 		
-		circuit = QuantumLinearSolverState[A,Ansatz];
+		circuit = QuantumLinearSolverCircuit[A,Ansatz];
 		
 		state = circuit[];
 		
 	],
 	
-		<|"Text" -> "Variational \[Psi](\[Omega]) state setup", "ElapsedTime" -> Automatic|>
+		<|"Text" -> "Variational circuit initialization", "ElapsedTime" -> Automatic|>
 	
 	];
 
@@ -472,12 +473,16 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, args___, opts:OptionsPatter
 
 		,
 		
-		<|"Text" -> "Applying final normalization"|>
+		<|"Text" -> "Final normalization"|>
 	
 	];
 	
-	If[MatchQ[{args},{}],
+	If[MatchQ[{output},{All}],
+	output = {"Ansatz","CircuitOperator","CircuitDiagram","GlobalPhase","Parameters"}
+	];
+	
+	If[MatchQ[{output},{}],
 		result,
-		{result,Association@FilterRules[{"Ansatz"->Ansatz,"CircuitOperator"->circuit,"CircuitDiagram"->circuit["Diagram"],"GlobalPhase"->Around[Mean[globalphase],StandardDeviation[globalphase]],"Parameters"->parameters},args]}
+		{result,Association@FilterRules[{"Ansatz"->Ansatz,"CircuitOperator"->circuit,"CircuitDiagram"->circuit["Diagram"],"GlobalPhase"->Around[Mean[globalphase],StandardDeviation[globalphase]],"Parameters"->parameters},output]}
 	]
 ]
