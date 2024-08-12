@@ -495,7 +495,7 @@ QuantumOperator["Fourier", opts___] := QuantumOperator[{"Fourier", 2}, opts]
 
 QuantumOperator[{"Fourier", dimension : _Integer ? Positive}, order : (_ ? orderQ) : {1}, opts___] := QuantumOperator[
     QuantumOperator[
-        FourierMatrix[dimension ^ Length[order]],
+        kroneckerProduct @@ ConstantArray[FourierMatrix[dimension], Length[order]],
         dimension,
         Length[order]
     ],
