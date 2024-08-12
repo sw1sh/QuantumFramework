@@ -362,7 +362,7 @@ QuantumLinearSolve::error = "Global phase deviation exceeds threshold; possible 
 
 Options[QuantumLinearSolve]=Join[{"Ansatz"->Automatic,"GlobalPhaseAccuracy"->10^-5},Options[NMinimize]]
 
-QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, args___, opts:OptionsPattern[]]:=Module[
+QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String} | All : "Result", opts:OptionsPattern[]]:=Module[
 
 	{A,b,cost,bstate,complexQ,\[Omega],v,var,output,plength,
 	Ansatz,circuit,parameters,state,globalphase,QuantumDistanceCostFunction,optparameters,result},
@@ -409,11 +409,11 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, args___, opts:OptionsPatter
 		<|"Text" -> "Ansatz initialization"|>
 	];
 
-	If[MatchQ[{args},{"Ansatz"}],Return[Ansatz]];
-	
+	If[MatchQ[prop,"Ansatz"|{"Ansatz"}],Return[Ansatz]];
+
 	var = Delete[0][ToExpression[#<>"_?NumericQ"]&/@(ToString/@v)];
 
-	output=args;
+	output=prop;
 
  Progress`EvaluateWithProgress[
  
@@ -429,8 +429,9 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, args___, opts:OptionsPatter
 	
 	];
 
-	If[MatchQ[{args},{"CircuitOperator"}],Return[circuit]];
+	If[MatchQ[prop,"CircuitOperator"|{"CircuitOperator"}],Return[circuit]];
 
+	If[MatchQ[prop,Alternatives@@Permutations[{"Ansatz","CircuitOperator"}]],Return[AssociationThread[{"Ansatz","CircuitOperator"},{Ansatz,circuit}]]];
 
 	QuantumDistanceCostFunction[var]:=1.-QuantumDistance[bstate["Normalized"],state[AssociationThread[parameters->v]]["Normalized"],"Fidelity"];
 
@@ -475,11 +476,11 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, args___, opts:OptionsPatter
 	
 	];
 	
-	If[MatchQ[{output},{All}],
+	If[MatchQ[output,All],
 	output = {"Ansatz","CircuitOperator","GlobalPhase","Parameters"}
 	];
 	
-	If[MatchQ[{output},{}],
+	If[MatchQ[prop,"Result"],
 		result,
 		Join[<|"Result"->result|>,Association@FilterRules[{"Ansatz"->Ansatz,"CircuitOperator"->circuit,"GlobalPhase"->Around[Mean[globalphase],StandardDeviation[globalphase]],"Parameters"->parameters},output]]
 	]
