@@ -409,6 +409,7 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, args___, opts:OptionsPatter
 		<|"Text" -> "Ansatz initialization"|>
 	];
 
+	If[MatchQ[{args},{"Ansatz"}],Return[Ansatz]];
 	
 	var = Delete[0][ToExpression[#<>"_?NumericQ"]&/@(ToString/@v)];
 
@@ -427,6 +428,9 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, args___, opts:OptionsPatter
 	<|"Text" -> "Variational circuit initialization", "ElapsedTime" -> Automatic|>
 	
 	];
+
+	If[MatchQ[{args},{"CircuitOperator"}],Return[circuit]];
+
 
 	QuantumDistanceCostFunction[var]:=1.-QuantumDistance[bstate["Normalized"],state[AssociationThread[parameters->v]]["Normalized"],"Fidelity"];
 
@@ -477,6 +481,6 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, args___, opts:OptionsPatter
 	
 	If[MatchQ[{output},{}],
 		result,
-		{result,Association@FilterRules[{"Ansatz"->Ansatz,"CircuitOperator"->circuit,"CircuitDiagram"->circuit["Diagram"],"GlobalPhase"->Around[Mean[globalphase],StandardDeviation[globalphase]],"Parameters"->parameters},output]}
+		Join[<|"Result"->result|>,Association@FilterRules[{"Ansatz"->Ansatz,"CircuitOperator"->circuit,"GlobalPhase"->Around[Mean[globalphase],StandardDeviation[globalphase]],"Parameters"->parameters},output]]
 	]
 ]
