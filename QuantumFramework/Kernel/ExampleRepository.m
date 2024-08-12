@@ -476,7 +476,7 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, args___, opts:OptionsPatter
 	];
 	
 	If[MatchQ[{output},{All}],
-	output = {"Ansatz","CircuitOperator","CircuitDiagram","GlobalPhase","Parameters"}
+	output = {"Ansatz","CircuitOperator","GlobalPhase","Parameters"}
 	];
 	
 	If[MatchQ[{output},{}],
