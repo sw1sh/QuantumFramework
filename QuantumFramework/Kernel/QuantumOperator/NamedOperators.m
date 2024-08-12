@@ -508,7 +508,7 @@ QuantumOperator["InverseFourier", opts___] := QuantumOperator[{"InverseFourier",
 
 QuantumOperator[{"InverseFourier", dimension : _Integer ? Positive}, order : (_ ? orderQ) : {1}, opts___] := QuantumOperator[
     QuantumOperator[
-        ConjugateTranspose[FourierMatrix[dimension ^ Length[order]]],
+        kroneckerProduct @@ ConstantArray[ConjugateTranspose @ FourierMatrix[dimension], Length[order]],
         dimension,
         Length[order]
     ],
