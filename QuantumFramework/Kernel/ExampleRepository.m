@@ -358,13 +358,14 @@ QuantumLinearSolverCircuit[A_?MatrixQ,Ansatz_]:=Module[{pauliDecompose, multiple
 	]
 
 
-QuantumLinearSolve::error ="Global phase deviation exceeds established accuracy, numerical error may be present."
+QuantumLinearSolve::error = "Global phase deviation exceeds threshold; possible errors."
 
-Options[QuantumLinearSolve]=Join[{"Ansatz"->Null,"GlobalPhaseAccuracy"->10^-5,"Multiplexer"->Null},Options[NMinimize]]
+Options[QuantumLinearSolve]=Join[{"Ansatz"->Automatic,"GlobalPhaseAccuracy"->10^-5},Options[NMinimize]]
 
 QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, args___, opts:OptionsPattern[]]:=Module[
 
-	{parameters,result,state,bstate,globalphase,\[Omega],v,var,QuantumDistanceCostFunction,optparameters,solutionnorm,A,b,complexQ,Ansatz,time,cost,circuit,output},
+	{A,b,cost,bstate,complexQ,\[Omega],v,var,output,plength,
+	Ansatz,circuit,parameters,state,globalphase,QuantumDistanceCostFunction,optparameters,result},
 	
 	A = matrix/Norm[matrix];
 	
@@ -375,64 +376,57 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, args___, opts:OptionsPatter
 	bstate = QuantumState[b];
 	
 	complexQ = !FreeQ[b,_Complex];
-	
+
+ Progress`EvaluateWithProgress[		
 	If[
-		complexQ,
+		MatchQ[OptionValue["Ansatz"],Automatic], 
+	
+			plength = Length@vector;
+			
+			If[complexQ,
+				
+				v = Table[Symbol["v"<>ToString[i]],{i,2*plength}];
+				\[Omega] = Table[Symbol["\[Omega]"<>ToString[i]],{i,2*plength}];
+				(*If b is complex, then the QuantumState ansatz is the form of \[Sum]Subscript[\[Alpha], j]+Subscript[I\[Beta], j]|0\[Ellipsis]\[RightAngleBracket])*)		
+				Ansatz = QuantumState[(#[[1]]+#[[2]]I)&@Partition[\[Omega],Length[\[Omega]]/2],"Label"->"\!\(\*OverscriptBox[\(x\), \(^\)]\)(\[Omega])","Parameters"->\[Omega]]
+				,
+				v = Table[Symbol["v"<>ToString[i]],{i,plength}];
+				\[Omega] = Table[Symbol["\[Omega]"<>ToString[i]],{i,plength}];
+				(*If b is real, then the QuantumState ansatz is the form of \[Sum]Subscript[\[Alpha], j]|0\[Ellipsis]\[RightAngleBracket])*)			
+				Ansatz = QuantumState[\[Omega],"Label"->"\!\(\*OverscriptBox[\(x\), \(^\)]\)(\[Omega])","Parameters"->\[Omega]]
+			];
+	
+			, 
+			
+			Ansatz = OptionValue["Ansatz"];
+			If[MatchQ[Ansatz,_QuantumCircuitOperator],Ansatz = Ansatz[]];	
+			plength=Length[Ansatz["Parameters"]];
+			v = Table[Symbol["v"<>ToString[i]],{i,plength}];
+			\[Omega] = Ansatz["Parameters"];
+			
+		];
 		
-		v = Table[Symbol["v"<>ToString[i]],{i,2*Length@vector}],
-		
-		v = Table[Symbol["v"<>ToString[i]],{i,Length@vector}]
+		<|"Text" -> "Ansatz initialization"|>
 	];
+
 	
 	var = Delete[0][ToExpression[#<>"_?NumericQ"]&/@(ToString/@v)];
 
 	output=args;
 
  Progress`EvaluateWithProgress[
-
-	If[MatchQ[OptionValue["Ansatz"],Null],
-		If[complexQ,
-			
-			(*If b is complex, then the QuantumState ansatz is the form of \[Sum]Subscript[\[Alpha], j]+Subscript[I\[Beta], j]|0\[Ellipsis]\[RightAngleBracket])*)
-			\[Omega] = Table[Symbol["\[Omega]"<>ToString[i]],{i,2*Length@vector}];
-			
-			Ansatz = QuantumState[(#[[1]]+#[[2]]I)&@Partition[\[Omega],Length[\[Omega]]/2],"Label"->"\!\(\*OverscriptBox[\(x\), \(^\)]\)(\[Omega])","Parameters"->\[Omega]]
-			
-			,
-			
-			(*If b is real, then the QuantumState ansatz is the form of \[Sum]Subscript[\[Alpha], j]|0\[Ellipsis]\[RightAngleBracket])*)		
-			\[Omega] = Table[Symbol["\[Omega]"<>ToString[i]],{i,Length@vector}];
-			
-			Ansatz = QuantumState[\[Omega],"Label"->"\!\(\*OverscriptBox[\(x\), \(^\)]\)(\[Omega])","Parameters"->\[Omega]]
-			
-			],
-	
-			Ansatz = OptionValue["Ansatz"];
-		
-		],
-		
-		<|"Text" -> "Ansatz initialization"|>
-	];
-
- Progress`EvaluateWithProgress[
  
-	parameters=Ansatz["Parameters"];
-
-	If[
-		!MatchQ[OptionValue["Multiplexer"],Null],
-		
-		state = OptionValue["Multiplexer"],
-		
+		parameters=Ansatz["Parameters"];
+		 
 		circuit = QuantumLinearSolverCircuit[A,Ansatz];
-		
+			
 		state = circuit[];
 		
-	],
+	,
 	
-		<|"Text" -> "Variational circuit initialization", "ElapsedTime" -> Automatic|>
+	<|"Text" -> "Variational circuit initialization", "ElapsedTime" -> Automatic|>
 	
 	];
-
 
 	QuantumDistanceCostFunction[var]:=1.-QuantumDistance[bstate["Normalized"],state[AssociationThread[parameters->v]]["Normalized"],"Fidelity"];
 
@@ -465,7 +459,7 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, args___, opts:OptionsPatter
 	
 		globalphase=state[<|optparameters|>]["AmplitudesList"]/b;
 	
-		If[StandardDeviation[globalphase]>OptionValue["GlobalPhaseAccuracy"],QuantumLinearSolve::error];
+		If[StandardDeviation[globalphase] > OptionValue["GlobalPhaseAccuracy"], Message[QuantumLinearSolve::error]];
 	
 		result=Ansatz[<|optparameters|>]["AmplitudesList"];
 	
