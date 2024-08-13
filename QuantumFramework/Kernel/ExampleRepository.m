@@ -385,8 +385,7 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 		PrependTo[cachedResults, data];  
 		If[
 			ContainsAll[Keys[cachedResults], Flatten[{output}]],
-			Return[cachedResults[[output]], Module], 
-			PrependTo[cachedResults, Join[data, cachedResults]]
+			Return[cachedResults[[output]], Module]
 		];);
 	
 	
