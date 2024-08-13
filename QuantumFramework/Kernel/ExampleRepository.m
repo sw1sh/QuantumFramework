@@ -377,16 +377,17 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 	
 	complexQ = !FreeQ[b,_Complex];
 
-	output = Sort[Replace[prop, {All -> {"Ansatz","CircuitOperator","GlobalPhase","Parameters"}, p_String :> {p}}]];
+	output = Replace[prop, All -> {"Ansatz","CircuitOperator","GlobalPhase","Parameters"}];
 	
 	cachedResults=<||>;
 	
-	reporter[data_Association,keys_]:=
+	reporter[data_Association] := (
+		PrependTo[cachedResults, data];  
 		If[
-			ContainsAll[Keys[Join[data,cachedResults]],keys],
-			Return[If[Length[#]>1, #, First[#]]&@Join[data,cachedResults][[keys]],Module],
-			PrependTo[cachedResults,Join[data,cachedResults]]
-		];
+			ContainsAll[Keys[cachedResults], Flatten[{output}]],
+			Return[cachedResults[[output]], Module], 
+			PrependTo[cachedResults, Join[data, cachedResults]]
+		];);
 	
 	
 	
@@ -424,7 +425,7 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 
 	parameters=Ansatz["Parameters"];
 	
-	reporter[<|"Ansatz"->Ansatz,"Parameters"->parameters|>,output];
+	reporter[<|"Ansatz"->Ansatz,"Parameters"->parameters|>];
 
 	var = Delete[0][ToExpression[#<>"_?NumericQ"]&/@(ToString/@v)];
 
@@ -442,7 +443,7 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 	
 	];
 
-	reporter[<|"CircuitOperator"->circuit|>,output];
+	reporter[<|"CircuitOperator"->circuit|>];
 	
 	QuantumDistanceCostFunction[var]:=1.-QuantumDistance[bstate["Normalized"],state[AssociationThread[parameters->v]]["Normalized"],"Fidelity"];
 
@@ -489,6 +490,7 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 
 	If[MatchQ[prop,"Result"],
 		result,
-		reporter[<|"Result"->result,"GlobalPhase"->globalphase|>,PrependTo[output,"Result"]]
+		PrependTo[output,"Result"];
+		reporter[<|"Result"->result,"GlobalPhase"->Around[Mean[globalphase],StandardDeviation[globalphase]]|>]
 	]
 ]
