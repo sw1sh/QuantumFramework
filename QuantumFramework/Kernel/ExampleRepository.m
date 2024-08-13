@@ -364,8 +364,8 @@ Options[QuantumLinearSolve]=Join[{"Ansatz"->Automatic,"GlobalPhaseAccuracy"->10^
 
 QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String} | All : "Result", opts:OptionsPattern[]]:=Module[
 
-	{A,b,cost,bstate,complexQ,\[Omega],v,var,output,plength,
-	Ansatz,circuit,parameters,state,globalphase,QuantumDistanceCostFunction,optparameters,result},
+	{A,b,cost,bstate,complexQ,\[Omega],v,var,output,plength,cachedResults,
+	Ansatz,circuit,parameters,state,globalphase,QuantumDistanceCostFunction,optparameters,result, reporter},
 	
 	A = matrix/Norm[matrix];
 	
@@ -377,6 +377,19 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 	
 	complexQ = !FreeQ[b,_Complex];
 
+	output = Sort[Replace[prop, {All -> {"Ansatz","CircuitOperator","GlobalPhase","Parameters"}, p_String :> {p}}]];
+	
+	cachedResults=<||>;
+	
+	reporter[data_Association,keys_]:=
+		If[
+			ContainsAll[Keys[Join[data,cachedResults]],keys],
+			Return[If[Length[#]>1, #, First[#]]&@Join[data,cachedResults][[keys]],Module],
+			PrependTo[cachedResults,Join[data,cachedResults]]
+		];
+	
+	
+	
  Progress`EvaluateWithProgress[		
 	If[
 		MatchQ[OptionValue["Ansatz"],Automatic], 
@@ -409,16 +422,16 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 		<|"Text" -> "Ansatz initialization"|>
 	];
 
-	If[MatchQ[prop,"Ansatz"|{"Ansatz"}],Return[Ansatz]];
+	parameters=Ansatz["Parameters"];
+	
+	reporter[<|"Ansatz"->Ansatz,"Parameters"->parameters|>,output];
 
 	var = Delete[0][ToExpression[#<>"_?NumericQ"]&/@(ToString/@v)];
 
-	output=prop;
+	
 
  Progress`EvaluateWithProgress[
- 
-		parameters=Ansatz["Parameters"];
-		 
+ 		 
 		circuit = QuantumLinearSolverCircuit[A,Ansatz];
 			
 		state = circuit[];
@@ -429,10 +442,8 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 	
 	];
 
-	If[MatchQ[prop,"CircuitOperator"|{"CircuitOperator"}],Return[circuit]];
-
-	If[MatchQ[prop,Alternatives@@Permutations[{"Ansatz","CircuitOperator"}]],Return[AssociationThread[{"Ansatz","CircuitOperator"},{Ansatz,circuit}]]];
-
+	reporter[<|"CircuitOperator"->circuit|>,output];
+	
 	QuantumDistanceCostFunction[var]:=1.-QuantumDistance[bstate["Normalized"],state[AssociationThread[parameters->v]]["Normalized"],"Fidelity"];
 
 
@@ -475,13 +486,9 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 		<|"Text" -> "Final normalization"|>
 	
 	];
-	
-	If[MatchQ[output,All],
-	output = {"Ansatz","CircuitOperator","GlobalPhase","Parameters"}
-	];
-	
+
 	If[MatchQ[prop,"Result"],
 		result,
-		Join[<|"Result"->result|>,Association@FilterRules[{"Ansatz"->Ansatz,"CircuitOperator"->circuit,"GlobalPhase"->Around[Mean[globalphase],StandardDeviation[globalphase]],"Parameters"->parameters},output]]
+		reporter[<|"Result"->result,"GlobalPhase"->globalphase|>,PrependTo[output,"Result"]]
 	]
 ]
