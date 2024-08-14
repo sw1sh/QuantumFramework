@@ -330,10 +330,12 @@ QuantumOperator[qo_ ? QuantumOperatorQ,
 
 (* composition *)
 
-(qo_QuantumOperator ? QuantumOperatorQ)[qb_ ? QuantumBasisQ] := QuantumBasis[
-    AssociationThread[qo["Output"]["Names"], qo[#]["StateVector"] & /@ qb["BasisStates"]],
-    "Label" -> Replace[qo["Label"] @* qb["Label"], Identity | None @* _ | _ @* None -> None],
-    qb["Options"]
+(qo_QuantumOperator ? QuantumOperatorQ)[qb_ ? QuantumBasisQ] := With[{states = qo /@ qb["BasisStates"]},
+    QuantumBasis[
+        AssociationThread[First[states]["Names"], Through[states["StateVector"]]],
+        "Label" -> Replace[qo["Label"] @* qb["Label"], Identity | None @* _ | _ @* None -> None],
+        qb["Options"]
+    ]
 ]
 
 QuantumOperator::incompatiblePictures = "Pictures `` and `` are incompatible with this operation"
