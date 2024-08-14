@@ -191,10 +191,7 @@ QuantumMeasurementOperatorProp[qmo_, "ProjectionQ"] := qmo["Type"] === "Projecti
 
 QuantumMeasurementOperatorProp[qmo_, "POVMQ"] := qmo["Type"] === "POVM"
 
-QuantumMeasurementOperatorProp[qmo_, "POVMElements"] := If[qmo["POVMQ"],
-    # . ConjugateTranspose[#] & /@ ArrayReshape[qmo["Tensor"], Times @@@ TakeList[qmo["Dimensions"], {qmo["Eigenqudits"], qmo["StateQudits"], qmo["InputQudits"]}]],
-    qmo["Projectors", "Sort" -> True]
-]
+QuantumMeasurementOperatorProp[qmo_, "POVMElements"] := Through[Values[qmo["Operators"]]["MatrixRepresentation"]]
 
 QuantumMeasurementOperatorProp[qmo_, "Operators"] := If[qmo["POVMQ"],
     AssociationThread[qmo["Eigenvalues"], QuantumOperator[#, {Drop[qmo["OutputOrder"], qmo["Eigenqudits"]], qmo["InputOrder"]}, qmo["StateBasis"]] & /@
