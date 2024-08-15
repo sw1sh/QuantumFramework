@@ -370,23 +370,25 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 	A = matrix/Norm[matrix];
 	
 	b = Normalize[vector];
-	
-	cost = 1;
-	
+																											
 	bstate = QuantumState[b];
 	
 	complexQ = !FreeQ[b,_Complex];
 
-	output = Replace[prop, All -> {"Ansatz","CircuitOperator","GlobalPhase","Parameters"}];
+	output = Replace[prop, 
+					{All -> {"Ansatz","CircuitOperator","GlobalPhase","OptimizedParameters","Parameters"},
+					("GlobalPhase"|{"GlobalPhase"})->{"Result","GlobalPhase"},
+					("OptimizedParameters"|{"OptimizedParameters"})->{"Result","OptimizedParameters"}}
+				];
 	
 	cachedResults=<||>;
 	
 	reporter[data_Association] := (
-		PrependTo[cachedResults, data];  
-		If[
-			ContainsAll[Keys[cachedResults], Flatten[{output}]],
-			Return[cachedResults[[output]], Module]
-		];);
+			PrependTo[cachedResults, data];  
+			If[ContainsAll[Keys[cachedResults], Flatten[{output}]],
+				Return[cachedResults[[output]],Module]
+			];
+		);
 	
 	
 	
@@ -395,16 +397,14 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 		MatchQ[OptionValue["Ansatz"],Automatic], 
 	
 			plength = Length@vector;
+			$ModuleNumber=1;
 			
 			If[complexQ,
-				
-				v = Table[Symbol["v"<>ToString[i]],{i,2*plength}];
-				\[Omega] = Table[Symbol["\[Omega]"<>ToString[i]],{i,2*plength}];
+				\[Omega] = Table[Unique[\[FormalOmega]],{i,2*plength}];
 				(*If b is complex, then the QuantumState ansatz is the form of \[Sum]Subscript[\[Alpha], j]+Subscript[I\[Beta], j]|0\[Ellipsis]\[RightAngleBracket])*)		
 				Ansatz = QuantumState[(#[[1]]+#[[2]]I)&@Partition[\[Omega],Length[\[Omega]]/2],"Label"->"\!\(\*OverscriptBox[\(x\), \(^\)]\)(\[Omega])","Parameters"->\[Omega]]
 				,
-				v = Table[Symbol["v"<>ToString[i]],{i,plength}];
-				\[Omega] = Table[Symbol["\[Omega]"<>ToString[i]],{i,plength}];
+				\[Omega] = Table[Unique[\[FormalOmega]],{i,plength}];
 				(*If b is real, then the QuantumState ansatz is the form of \[Sum]Subscript[\[Alpha], j]|0\[Ellipsis]\[RightAngleBracket])*)			
 				Ansatz = QuantumState[\[Omega],"Label"->"\!\(\*OverscriptBox[\(x\), \(^\)]\)(\[Omega])","Parameters"->\[Omega]]
 			];
@@ -412,9 +412,7 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 			, 
 			
 			Ansatz = OptionValue["Ansatz"];
-			If[MatchQ[Ansatz,_QuantumCircuitOperator],Ansatz = Ansatz[]];	
-			plength=Length[Ansatz["Parameters"]];
-			v = Table[Symbol["v"<>ToString[i]],{i,plength}];
+			If[MatchQ[Ansatz,_QuantumCircuitOperator],Ansatz = Ansatz[]];
 			\[Omega] = Ansatz["Parameters"];
 			
 		];
@@ -426,9 +424,6 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 	
 	reporter[<|"Ansatz"->Ansatz,"Parameters"->parameters|>];
 
-	var = Delete[0][ToExpression[#<>"_?NumericQ"]&/@(ToString/@v)];
-
-	
 
  Progress`EvaluateWithProgress[
  		 
@@ -444,35 +439,39 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 
 	reporter[<|"CircuitOperator"->circuit|>];
 	
-	QuantumDistanceCostFunction[var]:=1.-QuantumDistance[bstate["Normalized"],state[AssociationThread[parameters->v]]["Normalized"],"Fidelity"];
+	QuantumDistanceCostFunction[vect_ /; VectorQ[vect, RealValuedNumberQ]]:=1.-QuantumDistance[bstate["Normalized"],state[AssociationThread[parameters->vect]]["Normalized"],"Fidelity"];
 
+
+	
 
  Progress`EvaluateWithProgress[
 	optparameters =
 		Last[
 		NMinimize[
-			QuantumDistanceCostFunction[Delete[0]@\[Omega]],
+			QuantumDistanceCostFunction[\[Omega]],
 			\[Omega],
 			FilterRules[{opts}, Options[NMinimize]],
-			StepMonitor:>(cost=1.-(QuantumDistanceCostFunction[Delete[0]@\[Omega]]/cost))
+			StepMonitor:>(cost=QuantumDistanceCostFunction[\[Omega]])
 			]
 		],
 		
-	If[
-		MatchQ[OptionValue[Method],Automatic],
-		
-		<|"Text" -> "Hybrid optimization procedure","ElapsedTime"->Automatic|>,
-		
-		<|"Text" -> "Hybrid optimization procedure", "Progress" :> cost , "Percentage" :> cost , "ElapsedTime" -> Automatic(*, "RemainingTime" -> Automatic*)|>
-	]
+		If[
+			MatchQ[OptionValue[Method],Automatic],
+			
+			<|"Text" -> "Hybrid optimization procedure","ElapsedTime"->Automatic|>,
+			
+			<|"Text" -> "Hybrid optimization procedure. \nCost function value:", 
+			"Detail"->cost
+			(*"ElapsedTime" -> Automatic "Percentage" :> cost,"Progress" :> cost , "RemainingTime" -> Automatic*)|>
+		]
 
-];
+	];
 
 
-
+	reporter[<|"OptimizedParameters"->optparameters|>];
 
  Progress`EvaluateWithProgress[
-	
+
 		globalphase=state[<|optparameters|>]["AmplitudesList"]/b;
 	
 		If[StandardDeviation[globalphase] > OptionValue["GlobalPhaseAccuracy"], Message[QuantumLinearSolve::error]];
@@ -487,9 +486,6 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 	
 	];
 
-	If[MatchQ[prop,"Result"],
-		result,
-		PrependTo[output,"Result"];
-		reporter[<|"Result"->result,"GlobalPhase"->Around[Mean[globalphase],StandardDeviation[globalphase]]|>]
-	]
+	reporter[<|"Result"->result,"GlobalPhase"->Around[Mean[globalphase],StandardDeviation[globalphase]]|>]
+
 ]
