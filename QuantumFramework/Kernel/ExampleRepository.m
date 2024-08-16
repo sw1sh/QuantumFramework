@@ -337,11 +337,11 @@ QuantumLinearSolverCircuit[A_?MatrixQ,Ansatz_]:=Module[{pauliDecompose, multiple
 	
 	pauliDecompose=QuantumOperator[A]["PauliDecompose"];
 	
-	ansatzqubits=Range[#,#+Log2@Length@A]&@(Log2@Length@pauliDecompose+1);
-	
 	multiplexer=QuantumCircuitOperator["Multiplexer"[Sequence@@Keys[pauliDecompose]]];
 	
 	ancillary=QuantumState[Sqrt@Values[pauliDecompose]];
+	
+	ansatzqubits=Range[ancillary["Qudits"]+1,multiplexer["Range"]];
 	
 	qc=N@QuantumCircuitOperator[
 		{
@@ -362,11 +362,47 @@ QuantumLinearSolve::error = "Global phase deviation exceeds threshold; possible 
 
 Options[QuantumLinearSolve]=Join[{"Ansatz"->Automatic,"GlobalPhaseAccuracy"->10^-5},Options[NMinimize]]
 
+QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ/;!Mod[Log2[Length[vector]],1]==0, prop : _String | {__String} | All : "Result", opts:OptionsPattern[]]:=Module[
+	{result,min,A,b},
+	
+	
+	
+	If[Dimensions[matrix]!={#,#}&@Length[vector],Message[QuantumLinearSolve::dim];Return[$Failed]];
+	
+	Progress`EvaluateWithProgress[
+	
+		min=Min@Select[Table[2^n,{n,1,10}],#>=Length[vector]&];
+		
+		A=ReplacePart[PadRight[matrix,{min,min},0],Table[{i,i}->1,{i,Length@vector+1,min}]];
+		
+		b=Flatten@Append[vector,ConstantArray[0,min-Length@vector]];
+	
+		,
+				
+		<|"Text" -> "Translating to \!\(\*SuperscriptBox[\(2\), \(n\)]\)\!\(\*SuperscriptBox[\(x2\), \(\(n\)\(\\\ \)\)]\)problem"|>
+	
+	];
+	
+	result=QuantumLinearSolve[A,b,prop,opts];
+		
+	If[MatchQ[result,_Association],
+		result["Result"]=Take[result["Result"],Length@vector],
+		result=Take[result,Length@vector]
+	];
+	
+	result				
+]
+
+
+QuantumLinearSolve::dim = "Vector and matrix dimension not compatible."
+
 QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String} | All : "Result", opts:OptionsPattern[]]:=Module[
 
 	{A,b,cost,bstate,complexQ,\[Omega],v,var,output,plength,cachedResults,
 	Ansatz,circuit,parameters,state,globalphase,QuantumDistanceCostFunction,optparameters,result, reporter},
 	
+	If[Dimensions[matrix]!={#,#}&@Length[vector],Message[QuantumLinearSolve::dim];Return[$Failed]];	
+
 	A = matrix/Norm[matrix];
 	
 	b = Normalize[vector];
@@ -389,9 +425,7 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 				Return[cachedResults[[output]],Module]
 			];
 		);
-	
-	
-	
+			
  Progress`EvaluateWithProgress[		
 	If[
 		MatchQ[OptionValue["Ansatz"],Automatic], 
@@ -416,7 +450,7 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 			\[Omega] = Ansatz["Parameters"];
 			
 		];
-		
+		,		
 		<|"Text" -> "Ansatz initialization"|>
 	];
 
@@ -472,7 +506,7 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 
  Progress`EvaluateWithProgress[
 
-		globalphase=state[<|optparameters|>]["AmplitudesList"]/b;
+		globalphase=Divide@@(Part[#,Flatten@SparseArray[Chop[b]]["ExplicitPositions"]]&/@{state[<|optparameters|>]["AmplitudesList"],b});
 	
 		If[StandardDeviation[globalphase] > OptionValue["GlobalPhaseAccuracy"], Message[QuantumLinearSolve::error]];
 	
