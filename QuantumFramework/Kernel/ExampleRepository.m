@@ -398,7 +398,7 @@ QuantumLinearSolve::dim = "Vector and matrix dimension not compatible."
 
 QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String} | All : "Result", opts:OptionsPattern[]]:=Module[
 
-	{A,b,cost,bstate,complexQ,\[Omega],v,var,output,plength,cachedResults,
+	{A,b,cost,bstate,complexQ,\[Omega],v,var,output,plength,cachedResults, points,
 	Ansatz,circuit,parameters,state,globalphase,QuantumDistanceCostFunction,optparameters,result, reporter},
 	
 	If[Dimensions[matrix]!={#,#}&@Length[vector],Message[QuantumLinearSolve::dim];Return[$Failed]];	
@@ -406,7 +406,9 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 	A = matrix/Norm[matrix];
 	
 	b = Normalize[vector];
-																											
+	
+	points={1};
+																																																																																																																																																																																																									
 	bstate = QuantumState[b];
 	
 	complexQ = !FreeQ[b,_Complex];
@@ -485,18 +487,27 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 			QuantumDistanceCostFunction[\[Omega]],
 			\[Omega],
 			FilterRules[{opts}, Options[NMinimize]],
-			StepMonitor:>(cost=QuantumDistanceCostFunction[\[Omega]])
+			StepMonitor:>(AppendTo[points,cost=QuantumDistanceCostFunction[\[Omega]]])
 			]
 		],
 		
 		If[
 			MatchQ[OptionValue[Method],Automatic],
 			
-			<|"Text" -> "Hybrid optimization procedure","ElapsedTime"->Automatic|>,
+					
+			,
+							
+			(
+			<|"Text" -> Dynamic[
+					ListLinePlot[points,
+								PlotLabel->"Cost function minimization",FrameLabel->{"Step","1-|\!\(\*TemplateBox[{\"b\", RowBox[{\" \", RowBox[{\"\[Psi]\", RowBox[{\"(\", \"\[Omega]\", \")\"}]}]}]},\n\"BraKet\"]\)|\!\(\*SuperscriptBox[\(\[InvisibleComma]\), \(2\)]\)"},
+								GridLines->Automatic,Frame->True
+								(*LabelingFunction->(If[#2[[2]]==Length@points,cost]&)*)
+								]
+						]
 			
-			<|"Text" -> "Hybrid optimization procedure. \nCost function value:", 
-			"Detail"->cost
-			(*"ElapsedTime" -> Automatic "Percentage" :> cost,"Progress" :> cost , "RemainingTime" -> Automatic*)|>
+			|>		
+			)
 		]
 
 	];
@@ -506,7 +517,7 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 
  Progress`EvaluateWithProgress[
 
-		globalphase=Divide@@(Part[#,Flatten@SparseArray[Chop[b]]["ExplicitPositions"]]&/@{state[<|optparameters|>]["AmplitudesList"],b});
+		globalphase=Divide@@(Extract[#,SparseArray[Chop[b]]["ExplicitPositions"]]&/@{state[<|optparameters|>]["AmplitudesList"],b});
 	
 		If[StandardDeviation[globalphase] > OptionValue["GlobalPhaseAccuracy"], Message[QuantumLinearSolve::error]];
 	
