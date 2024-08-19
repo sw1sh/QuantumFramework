@@ -401,7 +401,9 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 	Ansatz,circuit,parameters,state,globalphase,QuantumDistanceCostFunction,optparameters,result, reporter},
 	
 	If[Dimensions[matrix]!={#,#}&@Length[vector],Message[QuantumLinearSolve::dim];Return[$Failed]];	
-
+	
+	$ModuleNumber=1;
+	
 	A = matrix/Norm[matrix];
 	
 	b = Normalize[vector];
