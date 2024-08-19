@@ -385,11 +385,10 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ/;!Mod[Log2[Length[vector]],1
 	
 	result=QuantumLinearSolve[A,b,prop,opts];
 		
-	If[MatchQ[result,_Association],
-		result["Result"]=Take[result["Result"],Length@vector],
-		result=Take[result,Length@vector]
-	];
+	If[MatchQ[prop,"Result"],result=Take[result,Length@vector]];
 	
+	If[MatchQ[result,_Association]&&KeyMemberQ[result,"Result"],result["Result"]=Take[result["Result"],Length@vector]];
+
 	result				
 ]
 
@@ -412,9 +411,7 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 	complexQ = !FreeQ[b,_Complex];
 
 	output = Replace[prop, 
-					{All -> {"Ansatz","CircuitOperator","GlobalPhase","OptimizedParameters","Parameters"},
-					("GlobalPhase"|{"GlobalPhase"})->{"Result","GlobalPhase"},
-					("OptimizedParameters"|{"OptimizedParameters"})->{"Result","OptimizedParameters"}}
+					All -> {"Result","Ansatz","CircuitOperator","GlobalPhase","OptimizedParameters","Parameters"}
 				];
 	
 	cachedResults=<||>;
