@@ -398,7 +398,7 @@ QuantumLinearSolve::dim = "Vector and matrix dimension not compatible."
 
 QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String} | All : "Result", opts:OptionsPattern[]]:=Module[
 
-	{A,b,cost,bstate,complexQ,\[Omega],v,var,output,plength,cachedResults, points,
+	{A,b,cost,bstate,complexQ,\[Omega],v,var,output,plength,cachedResults,
 	Ansatz,circuit,parameters,state,globalphase,QuantumDistanceCostFunction,optparameters,result, reporter},
 	
 	If[Dimensions[matrix]!={#,#}&@Length[vector],Message[QuantumLinearSolve::dim];Return[$Failed]];	
@@ -406,8 +406,6 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 	A = matrix/Norm[matrix];
 	
 	b = Normalize[vector];
-	
-	points={1};
 																																																																																																																																																																																																									
 	bstate = QuantumState[b];
 	
@@ -479,37 +477,41 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 
 
 	
-
- Progress`EvaluateWithProgress[
-	optparameters =
-		Last[
-		NMinimize[
-			QuantumDistanceCostFunction[\[Omega]],
-			\[Omega],
-			FilterRules[{opts}, Options[NMinimize]],
-			StepMonitor:>(AppendTo[points,cost=QuantumDistanceCostFunction[\[Omega]]])
+DynamicModule[{points},
+	points={};
+	Progress`EvaluateWithProgress[
+		optparameters =
+			Last[
+			NMinimize[
+				QuantumDistanceCostFunction[\[Omega]],
+				\[Omega],
+				FilterRules[{opts}, Options[NMinimize]],
+				StepMonitor:>(AppendTo[points,cost=QuantumDistanceCostFunction[\[Omega]]])
+				]
+			],
+			
+			If[
+				MatchQ[OptionValue[Method],Automatic],
+				
+				<|"Text" -> "Hybrid optimization procedure","ElapsedTime"->Automatic|>,
+								
+				<|"Text" -> Dynamic[
+							ListLogPlot[points,
+									PlotLabel->"Hybrid optimization procedure",
+									FrameLabel->{"Step","Log[Cost function]"},
+									PlotRange->{0,Log@First[points]},
+									GridLines->Automatic,
+									Frame->True,
+									ImageSize->Small, 
+									AspectRatio->1,
+									PlotLegends->StringForm["Cost function\nminimization value:\n``",ScientificForm[Last[points]]],
+									Joined->True
+									]
+								]								
+				|>		
+				
 			]
-		],
-		
-		If[
-			MatchQ[OptionValue[Method],Automatic],
-			
-					
-			,
-							
-			(
-			<|"Text" -> Dynamic[
-					ListLinePlot[points,
-								PlotLabel->"Cost function minimization",FrameLabel->{"Step","1-|\!\(\*TemplateBox[{\"b\", RowBox[{\" \", RowBox[{\"\[Psi]\", RowBox[{\"(\", \"\[Omega]\", \")\"}]}]}]},\n\"BraKet\"]\)|\!\(\*SuperscriptBox[\(\[InvisibleComma]\), \(2\)]\)"},
-								GridLines->Automatic,Frame->True
-								(*LabelingFunction->(If[#2[[2]]==Length@points,cost]&)*)
-								]
-						]
-			
-			|>		
-			)
 		]
-
 	];
 
 
