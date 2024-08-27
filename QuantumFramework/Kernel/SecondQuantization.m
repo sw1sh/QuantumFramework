@@ -6,6 +6,8 @@ PackageImport["Wolfram`QuantumFramework`"]
 
 PackageExport["$FockSize"]
 
+PackageExport["SetFockSpaceSize"]
+
 PackageExport["a"]
 
 PackageExport["Commutator"]
@@ -38,7 +40,7 @@ PackageExport["HusimiFunction"]
 (*General Definitions*)
 
 
-$FockSize = 15;
+SetFockSpaceSize[size_:15]:=$FockSize = size;
 
 
 Commutator[a_QuantumOperator,b_QuantumOperator]:= a@b - b@a 
@@ -49,21 +51,21 @@ OperatorVariance[state_QuantumState, op_QuantumOperator]:=
 	(state["Dagger"]@ op @ state)["Scalar"]^2
 
 
-FockState[n_,d_ :$FockSize]:= QuantumState[SparseArray[{n+1 -> 1}, d], d]
+FockState[n_,size_ :$FockSize]:= QuantumState[SparseArray[{n+1 -> 1}, size], size]
 
 
-AnnihilationOperator[n_ :$FockSize]:= AnnihilationOperator[n] = 
+AnnihilationOperator[size_ :$FockSize]:= AnnihilationOperator[size] = 
 	QuantumOperator[
-	SparseArray[Band[{1,2}]->Sqrt[Range[n-1]],{n,n}],
-	n]
+	SparseArray[Band[{1,2}]->Sqrt[Range[size-1]],{size,size}],
+	size]
 
 
 a := AnnihilationOperator[]
 
 
-CoherentState[d_:$FockSize] :=
+CoherentState[size_:$FockSize] :=
     Block[{n=0},
-       QuantumState[NestList[(n++; # \[FormalAlpha] / Sqrt[n])&, 1, d - 1], d, "Parameters" -> \[FormalAlpha]]
+       QuantumState[NestList[(n++; # \[FormalAlpha] / Sqrt[n])&, 1, size - 1], size, "Parameters" -> \[FormalAlpha]]
     ]
 
 
@@ -77,22 +79,22 @@ ThermalState[nbar_, size_:$FockSize] :=
     size]["MatrixQuantumState"]
 
 
-DisplacementOperator[\[Alpha]_?NumberQ,dim_:$FockSize]:= 
-										Exp[\[Alpha] AnnihilationOperator[dim]["Dagger"] -\[Alpha]\[Conjugate] AnnihilationOperator[dim]]
+DisplacementOperator[\[Alpha]_?NumberQ,size_:$FockSize]:= Block[{a=AnnihilationOperator[size]},
+										Exp[\[Alpha] a["Dagger"] -\[Alpha]\[Conjugate] a]]
 
 
-SqueezeOperator[xi_?NumericQ,dim_:$FockSize]:= Block[{a=AnnihilationOperator[dim]},
+SqueezeOperator[xi_?NumericQ,size_:$FockSize]:= Block[{a=AnnihilationOperator[size]},
 									Exp[0.5( Conjugate[xi](a @ a)-xi (a["Dagger"]@ a["Dagger"]))]
 									]
 
 
-QuadratureOperators[dim_:$FockSize]:= Block[{a=AnnihilationOperator[dim]},
+QuadratureOperators[size_:$FockSize]:= Block[{a=AnnihilationOperator[size]},
 							{1/2(a+a["Dagger"]),
 							1/(2I)(a-a["Dagger"])};
 						]
 
 
-CatState[dim_:$FockSize] :=
+CatState[size_:$FockSize] :=
     Block[{amplitudes},
         amplitudes =
             Transpose[
@@ -100,17 +102,17 @@ CatState[dim_:$FockSize] :=
                     NestList[
                         (
                             n++;
-                            # {\[Alpha] / Sqrt[n], -\[Alpha] / Sqrt[n]}
+                            # {\[FormalA] / Sqrt[n], -\[FormalA] / Sqrt[n]}
                         )&
                         ,
                         {1, 1}
                         ,
-                        dim - 1
+                        size - 1
                     ]
                 ]
             ];
-        QuantumState[amplitudes[[1]] + E ^ (I \[Phi]) amplitudes[[2]], dim,
-             "Parameters" -> {\[Alpha], \[Phi]}]["Normalize"]
+        QuantumState[amplitudes[[1]] + E ^ (I \[FormalF]) amplitudes[[2]], size,
+             "Parameters" -> {\[FormalA], \[FormalF]}]["Normalize"]
     ]
 
 
