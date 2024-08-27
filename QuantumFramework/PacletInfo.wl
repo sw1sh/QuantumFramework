@@ -22,7 +22,8 @@ PacletObject[
           },
           "Wolfram`QuantumFramework`Experimental`",
           "Wolfram`QuantumFramework`ExampleRepository`",
-          "Wolfram`QuantumFramework`DiagramPlot`"
+          "Wolfram`QuantumFramework`DiagramPlot`",
+          "Wolfram`QuantumFramework`SecondQuantization`"
         },
         "Symbols" -> {
           "Wolfram`QuantumFramework`QuditName",
