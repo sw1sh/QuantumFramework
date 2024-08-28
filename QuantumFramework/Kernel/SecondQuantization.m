@@ -80,7 +80,7 @@ ThermalState[nbar_, size_:$FockSize] :=
 
 
 DisplacementOperator[\[Alpha]_?NumberQ,size_:$FockSize]:= Block[{a=AnnihilationOperator[size]},
-										Exp[\[Alpha] a["Dagger"] -\[Alpha]\[Conjugate] a]]
+										Exp[-\[Alpha] \[Alpha]\[Conjugate]/2]Exp[\[Alpha] a["Dagger"]]@ Exp[-\[Alpha]\[Conjugate] a]]
 
 
 SqueezeOperator[xi_?NumericQ,size_:$FockSize]:= Block[{a=AnnihilationOperator[size]},
