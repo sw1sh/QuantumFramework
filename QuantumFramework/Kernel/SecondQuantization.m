@@ -90,7 +90,7 @@ SqueezeOperator[xi_, size_:$FockSize] :=
 
 QuadratureOperators[size_:$FockSize]:= Block[{a=AnnihilationOperator[size]},
 							{1/2(a+a["Dagger"]),
-							1/(2I)(a-a["Dagger"])};
+							1/(2I)(a-a["Dagger"])}
 						]
 
 
