@@ -28,9 +28,9 @@ PackageExport["CatState"]
 
 PackageExport["QuadratureOperators"]
 
-PackageExport["WignerFunction"]
+PackageExport["WignerRepresentation"]
 
-PackageExport["HusimiFunction"]
+PackageExport["HusimiQRepresentation"]
 
 
 
@@ -123,13 +123,13 @@ CatState[size_:$FockSize] :=
 
 
 (* ::Input::Initialization::Plain:: *)
-Options[WignerFunction]={
+Options[WignerRepresentation]={
 "GParameter"->Sqrt[2]
 };
 
 
 (* ::Input::Initialization::Plain:: *)
-WignerFunction[rho_, xvec_, yvec_, OptionsPattern[]] :=
+WignerRepresentation[rho_, xvec_, yvec_, OptionsPattern[]] :=
     Module[{M, X, Y, A2, B, w0, L, diag, g},
         g = OptionValue["GParameter"];
         M = Length[rho];
@@ -187,7 +187,7 @@ WigLaguerreVal[L_, x_, c_] :=
 
 
 (* ::Input::Initialization::Plain:: *)
-HusimiFunction[\[Psi]_QuantumState, xvec_, yvec_, g_ : Sqrt[2]] :=
+HusimiQRepresentation[\[Psi]_QuantumState, xvec_, yvec_, g_ : Sqrt[2]] :=
     Module[{X, Y, amat, qmat, d, v, qmatList, k, nonZeroEigenpairs},
         {X, Y} = Transpose[Outer[List, xvec, yvec], {3, 2, 1}];
         amat = 0.5 g (X + I Y);
