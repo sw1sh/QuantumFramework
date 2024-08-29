@@ -25,6 +25,7 @@ $AutoCompletionData = With[{
         "QuantumCircuitOperator" -> {circuitNames},
         "QuantumEntanglementMonotone" -> {0, entanglementMonotones, entanglementMonotones},
         "QuantumDistance" -> {0, 0, distances},
+        "QuantumSimilarity" -> {0, 0, distances},
         "PauliStabilizer" -> {stabilizerNames},
         "QuantumPhaseSpaceTransform" -> {0, phaseSpaceBasisNames},
         "QuantumPositiveTransform" -> {0, phaseSpaceBasisNames}

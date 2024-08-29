@@ -37,6 +37,7 @@ PacletObject[
           "Wolfram`QuantumFramework`QuantumTensorProduct",
           "Wolfram`QuantumFramework`QuantumPartialTrace",
           "Wolfram`QuantumFramework`QuantumDistance",
+          "Wolfram`QuantumFramework`QuantumSimilarity",
           "Wolfram`QuantumFramework`QuantumEntanglementMonotone",
           "Wolfram`QuantumFramework`QuantumEntangledQ",
           "Wolfram`QuantumFramework`QuantumWignerTransform",

@@ -197,6 +197,7 @@
             "CS",
             "CPHASE",
             "CNOT",
+            "C0NOT",
             "S",
             "T",
             "V",
@@ -476,6 +477,20 @@
         }
     },
     "QuantumDistance" -> {
+        0,
+        0,
+        {
+            "Fidelity",
+            "RelativeEntropy",
+            "RelativePurity",
+            "Trace",
+            "Bures",
+            "BuresAngle",
+            "HilbertSchmidt",
+            "Bloch"
+        }
+    },
+    "QuantumSimilarity" -> {
         0,
         0,
         {

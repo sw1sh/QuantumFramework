@@ -1,6 +1,8 @@
 Package["Wolfram`QuantumFramework`"]
 
 PackageExport["QuantumDistance"]
+PackageExport["QuantumSimilarity"]
+
 PackageScope["$QuantumDistances"]
 
 
@@ -13,7 +15,7 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ] := QuantumDistance[q
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Fidelity"] := With[{
     rootDensityMatrix = MatrixPower[qs1["Computational"]["DensityMatrix"], 1 / 2]
 },
-    Re[Tr[MatrixPower[rootDensityMatrix . qs2["Computational"]["DensityMatrix"] . rootDensityMatrix, 1 / 2]]]
+    1 - Re[Tr[MatrixPower[rootDensityMatrix . qs2["Computational"]["DensityMatrix"] . rootDensityMatrix, 1 / 2]]]
 ]
 
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativeEntropy"] := With[{
@@ -48,4 +50,7 @@ QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "HilbertSchmidt"] :=
 
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Bloch"] :=
     Re @ EuclideanDistance[qs1["BlochCartesianCoordinates"], qs2["BlochCartesianCoordinates"]]
+
+
+QuantumSimilarity[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, distance_String : "Fidelity"] := 1 - QuantumDistance[qs1, qs2, distance]
 
