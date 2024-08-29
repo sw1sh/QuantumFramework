@@ -8,8 +8,6 @@ PackageExport["$FockSize"]
 
 PackageExport["SetFockSpaceSize"]
 
-PackageExport["a"]
-
 PackageExport["Commutator"]
 
 PackageExport["OperatorVariance"]
@@ -60,9 +58,6 @@ AnnihilationOperator[size_ :$FockSize]:= AnnihilationOperator[size] =
 	size]
 
 
-a := AnnihilationOperator[]
-
-
 CoherentState[size_:$FockSize] :=
     Block[{n=0},
        QuantumState[NestList[(n++; # \[FormalAlpha] / Sqrt[n])&, 1, size - 1], size, "Parameters" -> \[FormalAlpha]]
@@ -83,9 +78,14 @@ DisplacementOperator[\[Alpha]_,size_:$FockSize]:= Block[{a=AnnihilationOperator[
 										Exp[-\[Alpha] \[Alpha]\[Conjugate]/2]Exp[\[Alpha] a["Dagger"]]@ Exp[-\[Alpha]\[Conjugate] a]]
 
 
-SqueezeOperator[xi_?NumericQ,size_:$FockSize]:= Block[{a=AnnihilationOperator[size]},
-									Exp[0.5( Conjugate[xi](a @ a)-xi (a["Dagger"]@ a["Dagger"]))]
-									]
+SqueezeOperator[xi_, size_:$FockSize] :=
+    Module[{tau, nu, a = AnnihilationOperator[size]},
+        tau = xi / Abs[xi] Tanh[Abs[xi]];
+        nu = Log[Cosh[Abs[xi]]];
+        Exp[-tau / 2 ((a^\[Dagger]) @ (a^\[Dagger]))] @ 
+        Exp[-nu ((a^\[Dagger]) @ a + 1/2 QuantumOperator[ "I"[size]])] @ 
+        Exp[Conjugate[tau] / 2 (a @ a)]
+    ]
 
 
 QuadratureOperators[size_:$FockSize]:= Block[{a=AnnihilationOperator[size]},
@@ -95,10 +95,9 @@ QuadratureOperators[size_:$FockSize]:= Block[{a=AnnihilationOperator[size]},
 
 
 CatState[size_:$FockSize] :=
-    Block[{amplitudes},
+    Block[{amplitudes,n=0},
         amplitudes =
             Transpose[
-                Block[{n = 0},
                     NestList[
                         (
                             n++;
@@ -109,7 +108,6 @@ CatState[size_:$FockSize] :=
                         ,
                         size - 1
                     ]
-                ]
             ];
         QuantumState[amplitudes[[1]] + E ^ (I \[FormalF]) amplitudes[[2]], size,
              "Parameters" -> {\[FormalA], \[FormalF]}]["Normalize"]
