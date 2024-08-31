@@ -52,7 +52,7 @@ OperatorVariance[state_QuantumState, op_QuantumOperator]:=
 FockState[n_,size_ :$FockSize]:= 
 If[n>size, Message[FockState::len,n,size],
 QuantumState[SparseArray[{n+1 -> 1}, size], size]]
-FockState::len="Argument `1` cannot be larger that the size of the space `2`";
+FockState::len="Argument `1` cannot be larger that the size of the space, `2`";
 
 
 AnnihilationOperator[size_ :$FockSize]:= AnnihilationOperator[size] = 
