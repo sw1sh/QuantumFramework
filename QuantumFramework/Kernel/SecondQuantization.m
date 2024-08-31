@@ -49,7 +49,8 @@ OperatorVariance[state_QuantumState, op_QuantumOperator]:=
 	(state["Dagger"]@ op @ state)["Scalar"]^2
 
 
-FockState[n_,size_ :$FockSize]:= QuantumState[SparseArray[{n+1 -> 1}, size], size]/;n<=size
+FockState[n_,size_ :$FockSize]:= Block[{m=Mod[n,size]},
+QuantumState[SparseArray[{m+1 -> 1}, size], size]]
 
 
 AnnihilationOperator[size_ :$FockSize]:= AnnihilationOperator[size] = 
