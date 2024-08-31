@@ -49,10 +49,7 @@ OperatorVariance[state_QuantumState, op_QuantumOperator]:=
 	(state["Dagger"]@ op @ state)["Scalar"]^2
 
 
-FockState[n_,size_ :$FockSize]:= 
-If[n>size, Message[FockState::len,n,size],
-QuantumState[SparseArray[{n+1 -> 1}, size], size]]
-FockState::len="Argument `1` cannot be larger that the size of the space `2`";
+FockState[n_,size_ :$FockSize]:= QuantumState[SparseArray[{n+1 -> 1}, size], size]/;n<=size
 
 
 AnnihilationOperator[size_ :$FockSize]:= AnnihilationOperator[size] = 
