@@ -133,7 +133,7 @@ Options[WignerRepresentation]={
 
 (* ::Input::Initialization::Plain:: *)
 WignerRepresentation[rho_, xvec_, yvec_, OptionsPattern[]] :=
-    Module[{M, X, Y, A2, B, w0, L, diag, g},
+    Module[{M, X, Y, A2, B, w0, diag, g},
         g = OptionValue["GParameter"];
         M = Length[rho];
         {X, Y} = Transpose[Outer[List, xvec, yvec], {3, 2, 1}];
@@ -141,17 +141,13 @@ WignerRepresentation[rho_, xvec_, yvec_, OptionsPattern[]] :=
         B = Abs[A2] ^ 2;
         w0 = ConstantArray[2 rho[[1, -1]], {Length[xvec], Length[yvec
             ]}];
-        L = M - 1;
         While[
-            L > 0
-            ,
-            L--;
-            diag = Diagonal[rho, L];
-            w0 = WigLaguerreVal[L, B, diag] + w0 A2 * (L + 1) ^ -0.5;
-                
+            M > 1,
+            M--;
+            diag = Diagonal[rho, M-1] If[M!=1,2,1];
+            w0 = WigLaguerreVal[M-1, B, diag] + w0 A2 * M ^ -0.5;
         ];
-        w0 = Re[w0] Exp[-B 0.5] (g^2 0.5 / \[Pi]);
-        w0
+         Re[w0] Exp[-B 0.5] (g^2 0.5 / \[Pi])
     ]
 
 
