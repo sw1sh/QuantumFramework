@@ -472,7 +472,7 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 
 	reporter[<|"CircuitOperator"->circuit|>];
 	
-	QuantumDistanceCostFunction[vect_ /; VectorQ[vect, RealValuedNumberQ]]:=1.-QuantumDistance[bstate["Normalized"],state[AssociationThread[parameters->vect]]["Normalized"],"Fidelity"];
+	QuantumDistanceCostFunction[vect_ /; VectorQ[vect, RealValuedNumberQ]]:=QuantumDistance[bstate["Normalized"],state[AssociationThread[parameters->vect]]["Normalized"],"Fidelity"];
 
 
 	
