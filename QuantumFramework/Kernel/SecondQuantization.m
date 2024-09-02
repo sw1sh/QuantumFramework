@@ -202,14 +202,14 @@ HusimiQRepresentation[\[Psi]_QuantumState, xvec_, yvec_, g_ : Sqrt[2]] :=
                 ]]], First[#] != 0&];
             qmatList = Map[(#[[1]] HusimiPure[QuantumState[#[[2]], Length[
                 #[[2]]]], amat])&, nonZeroEigenpairs];
+            qmat = 0.25 Total[Re /@ qmatList] g^2
         ];
-        qmat = 0.25 Total[Re /@ qmatList] g^2;
         qmat
     ];
 
 
 HusimiPure[psi_QuantumState, alphaMat_] :=
-    Module[{n, psiVec, qmat, coeffs},
+    Module[{n, psiVec, qmat},
         n = Times @@ psi["Dimensions"];
         psiVec = psi["Matrix"] // Flatten;
         qmat = Function[{q, x},
