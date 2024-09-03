@@ -183,6 +183,8 @@ QuantumOperatorProp[qo_, "MatrixRepresentation"] := qo["Computational"]["Matrix"
 
 QuantumOperatorProp[qo_, "Operator"] := qo["Amplitudes"]
 
+QuantumOperatorProp[qo_, "Formula"] := qo["Sort"]["State"]["Formula"]
+
 
 QuantumOperatorProp[qo_, "QuantumOperator"] := qo
 
