@@ -85,8 +85,8 @@ SqueezeOperator[xi_, size_:$FockSize] :=
     Module[{tau, nu, a = AnnihilationOperator[size]},
         tau = xi / Abs[xi] Tanh[Abs[xi]];
         nu = Log[Cosh[Abs[xi]]];
-        Exp[-tau / 2 ((a^\[Dagger]) @ (a^\[Dagger]))] @ 
-        Exp[-nu ((a^\[Dagger]) @ a + 1/2 QuantumOperator[ "I"[size]])] @ 
+        Exp[-tau / 2 ((a["Dagger"]) @ (a["Dagger"]))] @ 
+        Exp[-nu ((a["Dagger"]) @ a + 1/2 QuantumOperator[ "I"[size]])] @ 
         Exp[Conjugate[tau] / 2 (a @ a)]
     ]
 
