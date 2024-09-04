@@ -38,6 +38,9 @@ PackageExport["HusimiQRepresentation"]
 (*General Definitions*)
 
 
+$FockSize = 20;
+
+
 SetFockSpaceSize[size_:15]:=$FockSize = size;
 
 
@@ -104,7 +107,7 @@ CatState[size_:$FockSize] :=
                     NestList[
                         (
                             n++;
-                            # {\[FormalA] / Sqrt[n], -\[FormalA] / Sqrt[n]}
+                            # {\[FormalAlpha] / Sqrt[n], -\[FormalAlpha] / Sqrt[n]}
                         )&
                         ,
                         {1, 1}
@@ -112,8 +115,8 @@ CatState[size_:$FockSize] :=
                         size - 1
                     ]
             ];
-        QuantumState[amplitudes[[1]] + E ^ (I \[FormalF]) amplitudes[[2]], size,
-             "Parameters" -> {\[FormalA], \[FormalF]}]["Normalize"]
+        QuantumState[amplitudes[[1]] + E ^ (I \[FormalPhi]) amplitudes[[2]], size,
+             "Parameters" -> {\[FormalAlpha], \[FormalPhi]}]["Normalize"]
     ]
 
 
@@ -132,8 +135,9 @@ Options[WignerRepresentation]={
 
 
 (* ::Input::Initialization::Plain:: *)
-WignerRepresentation[rho_, xvec_, yvec_, OptionsPattern[]] :=
-    Module[{M, X, Y, A2, B, w0, diag, g},
+WignerRepresentation[psi_QuantumState, xvec_, yvec_, OptionsPattern[]] :=
+    Module[{rho,M, X, Y, A2, B, w0, diag, g},
+   rho = psi["DensityMatrix"];
         g = OptionValue["GParameter"];
         M = Length[rho];
         {X, Y} = Transpose[Outer[List, xvec, yvec], {3, 2, 1}];
