@@ -41,7 +41,7 @@ PackageScope["toggleShift"]
 PackageScope["alignDimensions"]
 
 PackageScope["SparseArrayFlatten"]
-PackageScope["SparsePseudoInverse"]
+PackageScope["MatrixInverse"]
 PackageScope["SetPrecisionNumeric"]
 PackageScope["TranscendentalRecognize"]
 
@@ -284,7 +284,7 @@ SparseArrayFlatten[x_ ? NumericQ] := x
 SparseArrayFlatten[array_] := Flatten[array]
 
 
-SparsePseudoInverse[matrix_] := SparseArray @ If[SquareMatrixQ[matrix], Quiet @ Check[Inverse[matrix], PseudoInverse[matrix]], PseudoInverse[matrix]]
+MatrixInverse[matrix_] := If[SquareMatrixQ[matrix], Quiet @ Check[Inverse[matrix], PseudoInverse[matrix]], PseudoInverse[matrix]]
 
 
 SetPrecisionNumeric[x_ /; NumericQ[x] || ArrayQ[x, _, NumericQ]] := SetPrecision[x, $MachinePrecision - 3]

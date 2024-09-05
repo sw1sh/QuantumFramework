@@ -217,7 +217,7 @@ QuditBasisProp[qb_, "Conjugate", qudits : {___Integer}] := With[{index = Lookup[
     ]
 ]
 
-QuditBasisProp[qb_, "Inverse"] := QuditBasis[Map[If[# === $QuditIdentity, #, OverBar[#]] &, Normal /@ qb["Names"], {2}], ArrayReshape[#, qb["ElementDimensions"]] & /@ SparsePseudoInverse[qb["ReducedMatrix"]]]
+QuditBasisProp[qb_, "Inverse"] := QuditBasis[Map[If[# === $QuditIdentity, #, OverBar[#]] &, Normal /@ qb["Names"], {2}], ArrayReshape[#, qb["ElementDimensions"]] & /@ MatrixInverse[qb["ReducedMatrix"]]]
 
 
 QuditBasisProp[qb_, "SortedQ"] := OrderedQ[Last /@ Keys @ qb["Representations"]]

@@ -153,8 +153,8 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Dimension"] 
         QuantumState[
             SparseArrayFlatten @ ConfirmQuiet[
                 Dot[
-                    SparsePseudoInverse[newBasis["Output"]["ReducedMatrix"]],
-                    qs["Output"]["ReducedMatrix"] . qs["StateMatrix"] . SparsePseudoInverse[qs["Input"]["ReducedMatrix"]],
+                    MatrixInverse[newBasis["Output"]["ReducedMatrix"]],
+                    qs["Output"]["ReducedMatrix"] . qs["StateMatrix"] . MatrixInverse[qs["Input"]["ReducedMatrix"]],
                     newBasis["Input"]["ReducedMatrix"]
                 ],
                 Dot::dotsh
@@ -165,8 +165,8 @@ QuantumState[qs_ ? QuantumStateQ, newBasis_ ? QuantumBasisQ] /; qs["Dimension"] 
         QuantumState[
             ConfirmQuiet[
                 Dot[
-                    SparsePseudoInverse[newBasis["ReducedMatrix"]],
-                    qs["Basis"]["ReducedMatrix"] . qs["DensityMatrix"] . SparsePseudoInverse[qs["Basis"]["ReducedMatrix"]],
+                    MatrixInverse[newBasis["ReducedMatrix"]],
+                    qs["Basis"]["ReducedMatrix"] . qs["DensityMatrix"] . MatrixInverse[qs["Basis"]["ReducedMatrix"]],
                     newBasis["ReducedMatrix"]
                 ],
                 Dot::dotsh
