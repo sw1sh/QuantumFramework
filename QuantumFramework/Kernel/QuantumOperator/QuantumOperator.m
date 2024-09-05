@@ -495,32 +495,26 @@ addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator 
     orderInput, orderOutput,
     ordered1, ordered2
 },
-    orderInput = Sequence @@ With[{
+    orderInput = With[{
             order = Union[qo1["InputOrder"], qo2["InputOrder"]],
             qbMap = Association[Thread[qo1["InputOrder"] -> qo1["Input"]["Decompose"]], Thread[qo2["InputOrder"] -> qo2["Input"]["Decompose"]]]
         },
             {"OrderedInput", order, QuantumTensorProduct[order /. qbMap]}
     ];
-    orderOutput = Sequence @@ With[{
+    orderOutput = With[{
             order = Union[qo1["OutputOrder"], qo2["OutputOrder"]],
             qbMap = Association[Thread[qo1["OutputOrder"] -> qo1["Output"]["Decompose"]], Thread[qo2["OutputOrder"] -> qo2["Output"]["Decompose"]]]
         },
             {"OrderedOutput", order, QuantumTensorProduct[order /. qbMap]}
     ];
-    ordered1 = qo1[orderInput]["Sort"][orderOutput]["Sort"];
-    ordered2 = qo2[orderInput]["Sort"][orderOutput]["Sort"];
+    ordered1 = ((qo1 @@ orderInput)["Sort"] @@ orderOutput)["Sort"];
+    ordered2 = ((qo2 @@ Most[orderInput])["Sort"] @@ Most[orderOutput])["Sort"];
     ConfirmAssert[ordered1["Dimensions"] == ordered2["Dimensions"]];
     QuantumOperator[
         QuantumState[
-            QuantumState[
-                ordered1["State"]["Computational"]["State"] + ordered2["State"]["Computational"]["State"],
-                QuantumBasis[ordered1["OutputDimensions"], ordered2["InputDimensions"]]
-            ],
-            QuantumBasis[
-                ordered1["Basis"],
-                "Label" -> If[ordered1["Label"] === None || ordered2["Label"] === None, None, ordered1["Label"] + ordered2["Label"]],
-                "ParameterSpec" -> MergeParameterSpecs[ordered1, ordered2]
-            ]
+            addQuantumStates[ordered1["State"], ordered2["State"]],
+            "Label" -> If[ordered1["Label"] === None || ordered2["Label"] === None, None, ordered1["Label"] + ordered2["Label"]],
+            "ParameterSpec" -> MergeParameterSpecs[ordered1, ordered2]
         ],
         ordered1["Order"]
     ]

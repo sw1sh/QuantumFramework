@@ -4,6 +4,7 @@ PackageExport["QuantumState"]
 
 PackageScope["quantumStateQ"]
 PackageScope["QuantumStateQ"]
+PackageScope["addQuantumStates"]
 
 
 
@@ -225,12 +226,9 @@ QuantumState /: Tr[qs_QuantumState] := Tr @ qs["DensityMatrix"]
 
 addQuantumStates[qs1_QuantumState ? QuantumStateQ, qs2_QuantumState ? QuantumStateQ] /; qs1["Dimension"] == qs2["Dimension"] :=
     QuantumState[
-        QuantumState[
-            If[ qs1["StateType"] === qs2["StateType"] === "Vector",
-                qs1["VectorRepresentation"] + qs2["VectorRepresentation"],
-                qs1["MatrixRepresentation"] + qs2["MatrixRepresentation"]
-            ],
-            QuantumBasis[qs1["OutputDimensions"], qs1["InputDimensions"]]
+        If[ qs1["StateType"] === qs2["StateType"] === "Vector",
+            qs1["StateVector"] + QuantumState[qs2, qs1["Basis"]]["StateVector"],
+            qs1["DensityMatrix"] + QuantumState[qs2, qs1["Basis"]]["DensityMatrix"]
         ],
         qs1["Basis"],
         "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
