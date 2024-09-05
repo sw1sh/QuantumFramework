@@ -38,10 +38,7 @@ PackageExport["HusimiQRepresentation"]
 (*General Definitions*)
 
 
-$FockSize = 20;
-
-
-SetFockSpaceSize[size_:15]:=$FockSize = size;
+SetFockSpaceSize[size_:20]:=$FockSize = size;
 
 
 Commutator[a_QuantumOperator,b_QuantumOperator]:= a@b - b@a 
@@ -118,6 +115,9 @@ CatState[size_:$FockSize] :=
         QuantumState[amplitudes[[1]] + E ^ (I \[FormalPhi]) amplitudes[[2]], size,
              "Parameters" -> {\[FormalAlpha], \[FormalPhi]}]["Normalize"]
     ]
+
+
+$FockSize = 20;
 
 
 (* ::Section:: *)
