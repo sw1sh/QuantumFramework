@@ -38,15 +38,14 @@ PackageExport["HusimiQRepresentation"]
 (*General Definitions*)
 
 
-SetFockSpaceSize[size_:20]:=$FockSize = size;
+SetFockSpaceSize[size:_Integer?Positive:16]:=$FockSize = size;
 
 
 Commutator[a_QuantumOperator,b_QuantumOperator]:= a@b - b@a 
 
 
 OperatorVariance[state_QuantumState, op_QuantumOperator]:= 
-	(state["Dagger"]@ (op @ op)@ state)["Scalar"] - 
-	(state["Dagger"]@ op @ state)["Scalar"]^2
+	(state["Dagger"]@ (op @ op)@ state)["Scalar"] - (state["Dagger"]@ op @ state)["Scalar"]^2
 
 
 FockState[n_,size_ :$FockSize]:= 
@@ -117,7 +116,7 @@ CatState[size_:$FockSize] :=
     ]
 
 
-$FockSize = 20;
+SetFockSpaceSize[];
 
 
 (* ::Section:: *)
