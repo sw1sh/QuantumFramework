@@ -12,11 +12,8 @@ $QuantumDistances = {"Fidelity", "RelativeEntropy", "RelativePurity", "Trace", "
 
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ] := QuantumDistance[qs1, qs2, "Fidelity"]
 
-QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Fidelity"] /; qs1["Dimension"] == qs2["Dimension"] := With[{
-    rootDensityMatrix = MatrixPower[qs1["Computational"]["DensityMatrix"], 1 / 2]
-},
-    1 - Re[Tr[MatrixPower[rootDensityMatrix . qs2["Computational"]["DensityMatrix"] . rootDensityMatrix, 1 / 2]]]
-]
+QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "Fidelity"] /; qs1["Dimension"] == qs2["Dimension"] :=
+    1 - Re[Tr[MatrixPower[qs1["Computational"]["DensityMatrix"] . qs2["Computational"]["DensityMatrix"], 1 / 2]]]
 
 QuantumDistance[qs1_ ? QuantumStateQ, qs2_ ? QuantumStateQ, "RelativeEntropy"] /; qs1["Dimension"] == qs2["Dimension"] := If[
     qs2["PureStateQ"],
