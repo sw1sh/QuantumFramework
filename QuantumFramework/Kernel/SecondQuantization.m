@@ -76,17 +76,66 @@ ThermalState[nbar_, size_:$FockSize] :=
     size]["MatrixQuantumState"]
 
 
-DisplacementOperator[\[Alpha]_,size_:$FockSize]:= Block[{a=AnnihilationOperator[size]},
-										Exp[-\[Alpha] \[Alpha]\[Conjugate]/2]Exp[\[Alpha] a["Dagger"]]@ Exp[-\[Alpha]\[Conjugate] a]]
+Options[DisplacementOperator] = {"Ordering" -> "NormalOrdering"};
+
+DisplacementOperator[\[Alpha]_, size_:$FockSize, OptionsPattern[]] :=
+    Block[{a = AnnihilationOperator[size], ordering},
+        
+        ordering = OptionValue["Ordering"];
+        
+        Switch[ordering,
+            "NormalOrdering",
+                Exp[-\[Alpha] Conjugate[\[Alpha]]/2] @ Exp[\[Alpha] (a["Dagger"])] @ Exp[-Conjugate[\[Alpha]] a],
+
+            "WeakOrdering",
+               Exp[\[Alpha] a["Dagger"]-Conjugate[\[Alpha]] a],
+
+            "AntiNormalOrdering",
+                Exp[\[Alpha] Conjugate[\[Alpha]]/2] @ Exp[-Conjugate[\[Alpha]] a] @ Exp[\[Alpha] (a["Dagger"])] ,
+
+            _, 
+                Message[DisplacementOperator::invalidorder, ordering];
+                Abort[]
+        ]
+    ]
+DisplacementOperator::invalidorder = "The value for the 'Ordering' option, `1`, is invalid. Choose from 'NormalOrdering', 'WeakOrdering', or 'AntiNormalOrdering'.";
 
 
-SqueezeOperator[xi_, size_:$FockSize] :=
-    Module[{tau, nu, a = AnnihilationOperator[size]},
+
+Options[SqueezeOperator] = {"Ordering" -> "NormalOrdering"};
+
+SqueezeOperator::invalidorder = "The value for the 'Ordering' option, `1`, is invalid. Choose from 'NormalOrdering', 'WeakOrdering', or 'AntiNormalOrdering'.";
+
+SqueezeOperator[xi_, size_:$FockSize, OptionsPattern[]] :=
+    Module[{tau, nu, a = AnnihilationOperator[size], identityOp, ordering},
+    
+        ordering = OptionValue["Ordering"];
+        
         tau = xi / Abs[xi] Tanh[Abs[xi]];
+        
         nu = Log[Cosh[Abs[xi]]];
-        Exp[-tau / 2 ((a["Dagger"]) @ (a["Dagger"]))] @ 
-        Exp[-nu ((a["Dagger"]) @ a + 1/2 QuantumOperator[ "I"[size]])] @ 
-        Exp[Conjugate[tau] / 2 (a @ a)]
+        
+        identityOp = QuantumOperator["I"[size]];
+        
+        Switch[ordering,
+            "NormalOrdering",
+                Exp[-tau / 2 ((a["Dagger"]) @ (a["Dagger"]))] @ Exp[-
+                    nu ((a["Dagger"]) @ a + 1/2 identityOp)] @ Exp[Conjugate[tau] / 2 (a 
+                    @ a)]
+            ,
+            "WeakOrdering",
+                Exp[1/2 (xi (a["Dagger"] @ a["Dagger"]) - Conjugate[xi
+                    ] (a @ a))]
+            ,
+            "AntiNormalOrdering",
+                Exp[Conjugate[tau] / 2 (a @ a)] @ Exp[-nu ((a["Dagger"
+                    ]) @ a + 1/2 identityOp)] @ Exp[-tau / 2 ((a["Dagger"]) @ (a["Dagger"
+                    ]))]
+            ,
+            _,
+                Message[SqueezeOperator::invalidorder, ordering];
+                Abort[]
+        ]
     ]
 
 
