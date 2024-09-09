@@ -339,7 +339,7 @@ QuantumLinearSolverCircuit[A_?MatrixQ,Ansatz_]:=Module[{pauliDecompose, multiple
 	
 	multiplexer=QuantumCircuitOperator["Multiplexer"[Sequence@@Keys[pauliDecompose]]];
 	
-	ancillary=QuantumState[Sqrt@Values[pauliDecompose]];
+	ancillary=QuantumState[Sqrt@Values[pauliDecompose],"Label"->"\!\(\*SqrtBox[\(m\)]\)"];
 	
 	ansatzqubits=Range[ancillary["Qudits"]+1,multiplexer["Range"]];
 	
@@ -435,11 +435,11 @@ QuantumLinearSolve[matrix_?MatrixQ, vector_?VectorQ, prop : _String | {__String}
 			If[complexQ,
 				\[Omega] = Table[Unique[\[FormalOmega]],{i,2*plength}];
 				(*If b is complex, then the QuantumState ansatz is the form of \[Sum]Subscript[\[Alpha], j]+Subscript[I\[Beta], j]|0\[Ellipsis]\[RightAngleBracket])*)		
-				Ansatz = QuantumState[(#[[1]]+#[[2]]I)&@Partition[\[Omega],Length[\[Omega]]/2],"Label"->"\!\(\*OverscriptBox[\(x\), \(^\)]\)(\[Omega])","Parameters"->\[Omega]]
+				Ansatz = QuantumState[(#[[1]]+#[[2]]I)&@Partition[\[Omega],Length[\[Omega]]/2],"Label"->"Ansatz","Parameters"->\[Omega]]
 				,
 				\[Omega] = Table[Unique[\[FormalOmega]],{i,plength}];
 				(*If b is real, then the QuantumState ansatz is the form of \[Sum]Subscript[\[Alpha], j]|0\[Ellipsis]\[RightAngleBracket])*)			
-				Ansatz = QuantumState[\[Omega],"Label"->"\!\(\*OverscriptBox[\(x\), \(^\)]\)(\[Omega])","Parameters"->\[Omega]]
+				Ansatz = QuantumState[\[Omega],"Label"->"Ansatz","Parameters"->\[Omega]]
 			];
 	
 			, 
