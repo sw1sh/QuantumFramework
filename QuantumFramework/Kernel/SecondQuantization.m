@@ -77,36 +77,39 @@ ThermalState[nbar_, size_:$FockSize] :=
 
 
 Options[DisplacementOperator] = {"Ordering" -> "NormalOrdering"};
+DisplacementOperator::invalidorder = "The value for the 'Ordering' option, `1`, is invalid. Choose from 'NormalOrdering', 'WeakOrdering', or 'AntinormalOrdering'.";
 
-DisplacementOperator[\[Alpha]_, size_:$FockSize, OptionsPattern[]] :=
+DisplacementOperator[\[Alpha]_, opts : OptionsPattern[]] := DisplacementOperator[\[Alpha], $FockSize, opts];
+
+DisplacementOperator[\[Alpha]_, size_, OptionsPattern[]] :=
     Block[{a = AnnihilationOperator[size], ordering},
         
         ordering = OptionValue["Ordering"];
         
         Switch[ordering,
             "NormalOrdering",
-                Exp[-\[Alpha] Conjugate[\[Alpha]]/2] @ Exp[\[Alpha] (a["Dagger"])] @ Exp[-Conjugate[\[Alpha]] a],
+                Exp[-\[Alpha] Conjugate[\[Alpha]]/2]  Exp[\[Alpha] (a["Dagger"])] @ Exp[-Conjugate[\[Alpha]] a],
 
             "WeakOrdering",
                Exp[\[Alpha] a["Dagger"]-Conjugate[\[Alpha]] a],
 
-            "AntiNormalOrdering",
-                Exp[\[Alpha] Conjugate[\[Alpha]]/2] @ Exp[-Conjugate[\[Alpha]] a] @ Exp[\[Alpha] (a["Dagger"])] ,
+            "AntinormalOrdering",
+                Exp[\[Alpha] Conjugate[\[Alpha]]/2]  Exp[-Conjugate[\[Alpha]] a] @ Exp[\[Alpha] (a["Dagger"])] ,
 
             _, 
                 Message[DisplacementOperator::invalidorder, ordering];
                 Abort[]
         ]
     ]
-DisplacementOperator::invalidorder = "The value for the 'Ordering' option, `1`, is invalid. Choose from 'NormalOrdering', 'WeakOrdering', or 'AntiNormalOrdering'.";
-
 
 
 Options[SqueezeOperator] = {"Ordering" -> "NormalOrdering"};
 
-SqueezeOperator::invalidorder = "The value for the 'Ordering' option, `1`, is invalid. Choose from 'NormalOrdering', 'WeakOrdering', or 'AntiNormalOrdering'.";
+SqueezeOperator::invalidorder = "The value for the 'Ordering' option, `1`, is invalid. Choose from 'NormalOrdering', 'WeakOrdering', or 'AntinormalOrdering'.";
 
-SqueezeOperator[xi_, size_:$FockSize, OptionsPattern[]] :=
+SqueezeOperator[xi_, opts : OptionsPattern[]] := SqueezeOperator[xi, $FockSize, opts];
+
+SqueezeOperator[xi_, size_, OptionsPattern[]] :=
     Module[{tau, nu, a = AnnihilationOperator[size], identityOp, ordering},
     
         ordering = OptionValue["Ordering"];
@@ -127,8 +130,8 @@ SqueezeOperator[xi_, size_:$FockSize, OptionsPattern[]] :=
                 Exp[1/2 (xi (a["Dagger"] @ a["Dagger"]) - Conjugate[xi
                     ] (a @ a))]
             ,
-            "AntiNormalOrdering",
-                Exp[Conjugate[tau] / 2 (a @ a)] @ Exp[-nu ((a["Dagger"
+            "AntinormalOrdering",
+                Exp[Conjugate[tau] / 2 (a @ a)] @ Exp[nu ((a["Dagger"
                     ]) @ a + 1/2 identityOp)] @ Exp[-tau / 2 ((a["Dagger"]) @ (a["Dagger"
                     ]))]
             ,
