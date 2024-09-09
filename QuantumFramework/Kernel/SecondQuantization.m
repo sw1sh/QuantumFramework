@@ -127,12 +127,11 @@ SqueezeOperator[xi_, size_, OptionsPattern[]] :=
                     @ a)]
             ,
             "WeakOrdering",
-                Exp[1/2 (xi (a["Dagger"] @ a["Dagger"]) - Conjugate[xi
-                    ] (a @ a))]
+                Exp[1/2 (Conjugate[xi] (a @ a) - xi (a["Dagger"] @ a["Dagger"]))]
             ,
             "AntinormalOrdering",
-                Exp[Conjugate[tau] / 2 (a @ a)] @ Exp[nu ((a["Dagger"
-                    ]) @ a + 1/2 identityOp)] @ Exp[-tau / 2 ((a["Dagger"]) @ (a["Dagger"
+                Exp[1/2 Conjugate[tau] (a @ a)] @ Exp[nu ((a["Dagger"
+                    ]) @ a + 1/2 identityOp)] @ Exp[-1/2 tau ((a["Dagger"]) @ (a["Dagger"
                     ]))]
             ,
             _,
