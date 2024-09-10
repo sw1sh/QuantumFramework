@@ -508,7 +508,7 @@ addQuantumOperators[qo1_QuantumOperator ? QuantumOperatorQ, qo2_QuantumOperator 
             {"OrderedOutput", order, QuantumTensorProduct[order /. qbMap]}
     ];
     ordered1 = ((qo1 @@ orderInput)["Sort"] @@ orderOutput)["Sort"];
-    ordered2 = ((qo2 @@ Most[orderInput])["Sort"] @@ Most[orderOutput])["Sort"];
+    ordered2 = ((qo2 @@ orderInput)["Sort"] @@ orderOutput)["Sort"];
     ConfirmAssert[ordered1["Dimensions"] == ordered2["Dimensions"]];
     QuantumOperator[
         QuantumState[
