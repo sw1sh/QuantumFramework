@@ -23,7 +23,7 @@ PackageExport["QuantumLockingMechanism"]
 PackageExport["QuantumLinearSolve"]
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Example specific functions *)
 
 
@@ -31,18 +31,36 @@ PackageExport["QuantumLinearSolve"]
 (*Quantum Natural Gradient Descent*)
 
 
-FubiniStudyMetricTensor[qstate_QuantumState, var_List]:=Module[{stateMatrix,result,derivatives},
+FubiniStudyMetricTensor::param = "Parameters list must only contain Symbols.";
+
+Options[FubiniStudyMetricTensor]={"Parameters"->Automatic};
+
+FubiniStudyMetricTensor[qstate:_QuantumState| (_List ? VectorQ), opts:OptionsPattern[]]:=
+Module[{var,stateVector,result,derivatives},
 	
-	stateMatrix=qstate["Matrix"]//Normal;
+	If[MatchQ[OptionValue["Parameters"],Automatic],
+		var=qstate["Parameters"],
+		var=OptionValue["Parameters"]
+	];
 	
-	derivatives=Table[D[stateMatrix,i],{i,var}];
+	If[!MatchQ[var,{_Symbol..}],
+			Message[FubiniStudyMetricTensor::param];
+			Return[$Failed]
+	];
+		
+	stateVector=If[MatchQ[qstate,_QuantumState],
+					Normal[qstate["StateVector"]],
+					qstate
+				];
+	
+	derivatives=Table[D[stateVector,i],{i,var}];
 	
 	result=Table[
-			Re[ConjugateTranspose[derivatives[[i]]] . derivatives[[j]]]-(ConjugateTranspose[derivatives[[i]]] . stateMatrix)(ConjugateTranspose[stateMatrix] . derivatives[[j]]),
+			Re[ConjugateTranspose[derivatives[[i]]] . derivatives[[j]]]-(ConjugateTranspose[derivatives[[i]]] . stateVector)(ConjugateTranspose[stateVector] . derivatives[[j]]),
 			{i,Length@derivatives},{j,Length@derivatives}
 			];
 	
-	Flatten/@result
+	result
 ]
 
 
@@ -204,7 +222,7 @@ ASPSRGradientValues[generatorFunction_,pauli_,H_,OptionsPattern[]]:=Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Quantum Locking Mechanism*)
 
 
@@ -294,6 +312,8 @@ Options[QuantumNaturalGradientDescent]={
 
 QuantumNaturalGradientDescent[f_,init_ ? VectorQ , g_, OptionsPattern[]]:=Module[{gradf,steps,\[Eta]},
 	
+	
+	
 	gradf=OptionValue["Jacobian"];
 	
 	steps=OptionValue["MaxIterations"];
@@ -315,8 +335,9 @@ CheapGradient[f_, vars_List, values_ ? VectorQ]:=Module[{permutedVars,nd},
 
 		permutedVars=TakeDrop[#,{1}]&/@NestList[RotateLeft,Thread[vars->values],Length[vars]-1];
 		
+		Parallelize[
 		centralFiniteDifference[f@@(vars/.#[[2]]),Sequence@@First@#[[1]]]&/@permutedVars
-		
+		]
 ]
 
 
@@ -327,7 +348,7 @@ centralFiniteDifference[f_[vars__],var_,val_]:=With[{h=10.^-3},
 		]
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*QuantumLinearSolver*)
 
 
