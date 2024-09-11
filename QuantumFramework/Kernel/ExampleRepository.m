@@ -31,7 +31,7 @@ PackageExport["QuantumLinearSolve"]
 (*Quantum Natural Gradient Descent*)
 
 
-FubiniStudyMetricTensor::param = "Parameters list must only contain Symbols.";
+FubiniStudyMetricTensor::param = "QuantumState parameters ill\[Dash]defined.";
 
 Options[FubiniStudyMetricTensor]={"Parameters"->Automatic};
 
@@ -60,7 +60,8 @@ Module[{var,stateVector,result,derivatives},
 			{i,Length@derivatives},{j,Length@derivatives}
 			];
 	
-	result
+	QuantumOperator[result,"Parameters"->var]
+	
 ]
 
 
@@ -269,52 +270,38 @@ QuantumUnlockingMechanism[lock_List,key_String]:=Module[{result,pass,comb},
 ]
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Gradient descent functions*)
 
 
-Options[GradientDescent]={
-	"Jacobian"->None,
-	
-	"MaxIterations"->50,
-	
-	"LearningRate"->0.8
-}
-
-
-GradientDescent[f_, init_ ? VectorQ, OptionsPattern[]]:=Module[{gradf,steps,\[Eta]},
-
-	gradf=OptionValue["Jacobian"];
-	
-	steps=OptionValue["MaxIterations"];
-	
-	\[Eta]=OptionValue["LearningRate"];
-
-	If[
-		MatchQ[gradf,None],
-		
-			NestList[(#-\[Eta]*CheapGradient[f,Table[Symbol["\[Theta]"<>ToString[i]],{i,Length@init}],#])&,N@init,steps],
-			
-			NestList[(#-\[Eta]*gradf@@#)&,N@init,steps](*f->grad[f]*)
-			
-	]
-]
-
+QuantumNaturalGradientDescent::param = "Metric Tensor parameters ill\[Dash]defined.";
 
 Options[QuantumNaturalGradientDescent]={
-	"Jacobian"->None,
+	
+	"InitialPoint"->Automatic,
+	
+	"Gradient"->None,
 	
 	"MaxIterations"->50,
 	
 	"LearningRate"->0.8
-}
+};
 
-
-QuantumNaturalGradientDescent[f_,init_ ? VectorQ , g_, OptionsPattern[]]:=Module[{gradf,steps,\[Eta]},
+QuantumNaturalGradientDescent[f_, g_QuantumOperator, OptionsPattern[]]:=Module[{gradf,init,steps,\[Eta],MetricTensorFunction},
 	
+	If[!MatchQ[g["Parameters"],{_Symbol..}],
+		Message[QuantumNaturalGradientDescent::param];
+		Return[$Failed]
+	];
 	
+	If[VectorQ[OptionValue["InitialPoint"],NumericQ], 
+		init=OptionValue["InitialPoint"],
+		init=0.01*RandomVariate[NormalDistribution[],Length@g["Parameters"]]
+	];
+																
+	MetricTensorFunction[vect_ /; VectorQ[vect, NumericQ]]:=Normal[N[g[Sequence@@vect]["Matrix"]]];
 	
-	gradf=OptionValue["Jacobian"];
+	gradf=OptionValue["Gradient"];
 	
 	steps=OptionValue["MaxIterations"];
 	
@@ -323,12 +310,16 @@ QuantumNaturalGradientDescent[f_,init_ ? VectorQ , g_, OptionsPattern[]]:=Module
 	If[
 		MatchQ[gradf,None],
 			
-			NestList[(#-\[Eta] LinearSolve[g[#],CheapGradient[f,Table[Symbol["\[Theta]"<>ToString[i]],{i,Length@init}],#]])&,N@init,steps],
+			NestList[(#-\[Eta] LinearSolve[MetricTensorFunction[#],CheapGradient[f,Table[Symbol["\[Theta]"<>ToString[i]],{i,Length@init}],#]])&,N@init,steps],
 			
-			NestList[(#-\[Eta] LinearSolve[g[#],gradf@@#])&,N@init,steps](*f->grad[f]*)
+			NestList[(#-\[Eta] LinearSolve[MetricTensorFunction[#],gradf@@#])&,N@init,steps]
 			
 	]
 ]
+
+
+(* ::Subsection::Closed:: *)
+(*Auxiliar functions*)
 
 
 CheapGradient[f_, vars_List, values_ ? VectorQ]:=Module[{permutedVars,nd},
@@ -346,6 +337,32 @@ centralFiniteDifference[f_[vars__],var_,val_]:=With[{h=10.^-3},
 			1/(2 h) ((f[vars]/.var->val+h)-(f[vars]/.var->val-h))
 			
 		]
+
+
+Options[GradientDescent]={
+	"Gradient"->None,
+	
+	"MaxIterations"->50,
+	
+	"LearningRate"->0.8
+};
+GradientDescent[f_, init_ ? VectorQ, OptionsPattern[]]:=Module[{gradf,steps,\[Eta]},
+
+	gradf=OptionValue["Gradient"];
+	
+	steps=OptionValue["MaxIterations"];
+	
+	\[Eta]=OptionValue["LearningRate"];
+
+	If[
+		MatchQ[gradf,None],
+		
+			NestList[(#-\[Eta]*CheapGradient[f,Table[Symbol["\[Theta]"<>ToString[i]],{i,Length@init}],#])&,N@init,steps],
+			
+			NestList[(#-\[Eta]*gradf@@#)&,N@init,steps](*f->grad[f]*)
+			
+	]
+]
 
 
 (* ::Section::Closed:: *)
