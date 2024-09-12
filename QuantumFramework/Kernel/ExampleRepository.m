@@ -27,7 +27,7 @@ PackageExport["QuantumLinearSolve"]
 (*Example specific functions *)
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Quantum Natural Gradient Descent*)
 
 
@@ -35,13 +35,31 @@ FubiniStudyMetricTensor::param = "QuantumState parameters ill\[Dash]defined.";
 
 Options[FubiniStudyMetricTensor]={"Parameters"->Automatic};
 
-FubiniStudyMetricTensor[qstate:_QuantumState| (_List ? VectorQ), opts:OptionsPattern[]]:=
-Module[{var,stateVector,result,derivatives},
+FubiniStudyMetricTensor[qstate:_QuantumState| (_List ? VectorQ),prop : _String | {__String} | All : "Result", opts:OptionsPattern[]]:=
+Module[
+
+	{var,stateVector,result,derivatives,output,cachedResults,reporter,matrix},
+
+	output = Replace[prop, 
+					All -> {"Result","Matrix","MatrixForm","Parameters","SparseArray"}
+				];	
+
+	cachedResults=<||>;	
+	
+	reporter[data_Association] := (
+		PrependTo[cachedResults, data];  
+		If[ContainsAll[Keys[cachedResults], Flatten[{output}]],
+			Return[cachedResults[[output]],Module]
+		];
+		);		
+									
 	
 	If[MatchQ[OptionValue["Parameters"],Automatic],
 		var=qstate["Parameters"],
 		var=OptionValue["Parameters"]
 	];
+	
+	reporter[<|"Parameters"->var|>];
 	
 	If[!MatchQ[var,{_Symbol..}],
 			Message[FubiniStudyMetricTensor::param];
@@ -60,7 +78,14 @@ Module[{var,stateVector,result,derivatives},
 			{i,Length@derivatives},{j,Length@derivatives}
 			];
 	
-	QuantumOperator[result,"Parameters"->var]
+	result=QuantumOperator[result,"Parameters"->var];
+	
+	reporter[<|"Result"->result,"SparseArray"->result["Matrix"]|>];
+	
+	matrix=result["Matrix"]//Normal//ComplexExpand//Simplify;
+					
+	reporter[<|"Matrix"->matrix,"MatrixForm"->MatrixForm[matrix]|>];
+	
 	
 ]
 
@@ -284,10 +309,12 @@ Options[QuantumNaturalGradientDescent]={
 	
 	"MaxIterations"->50,
 	
-	"LearningRate"->0.8
+	"LearningRate"->0.8,
+	
+	"Parallelize"->Automatic
 };
 
-QuantumNaturalGradientDescent[f_, g_QuantumOperator, OptionsPattern[]]:=Module[{gradf,init,steps,\[Eta],MetricTensorFunction},
+QuantumNaturalGradientDescent[f_, g_QuantumOperator, OptionsPattern[]]:=Module[{p,gradf,init,steps,\[Eta],MetricTensorFunction},
 	
 	If[!MatchQ[g["Parameters"],{_Symbol..}],
 		Message[QuantumNaturalGradientDescent::param];
@@ -298,7 +325,13 @@ QuantumNaturalGradientDescent[f_, g_QuantumOperator, OptionsPattern[]]:=Module[{
 		init=OptionValue["InitialPoint"],
 		init=0.01*RandomVariate[NormalDistribution[],Length@g["Parameters"]]
 	];
-																
+																																																		
+	If[MatchQ[OptionValue["Parallelize"],Automatic],
+			p=(Length[g["Parameters"]]>=4),
+			p=OptionValue["Parallelize"]
+	];
+	
+	
 	MetricTensorFunction[vect_ /; VectorQ[vect, NumericQ]]:=Normal[N[g[Sequence@@vect]["Matrix"]]];
 	
 	gradf=OptionValue["Gradient"];
@@ -310,7 +343,7 @@ QuantumNaturalGradientDescent[f_, g_QuantumOperator, OptionsPattern[]]:=Module[{
 	If[
 		MatchQ[gradf,None],
 			
-			NestList[(#-\[Eta] LinearSolve[MetricTensorFunction[#],CheapGradient[f,Table[Symbol["\[Theta]"<>ToString[i]],{i,Length@init}],#]])&,N@init,steps],
+			NestList[(#-\[Eta] LinearSolve[MetricTensorFunction[#],CheapGradient[f,Table[Symbol["\[Theta]"<>ToString[i]],{i,Length@init}],#,p]])&,N@init,steps],
 			
 			NestList[(#-\[Eta] LinearSolve[MetricTensorFunction[#],gradf@@#])&,N@init,steps]
 			
@@ -318,17 +351,24 @@ QuantumNaturalGradientDescent[f_, g_QuantumOperator, OptionsPattern[]]:=Module[{
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Auxiliar functions*)
 
 
-CheapGradient[f_, vars_List, values_ ? VectorQ]:=Module[{permutedVars,nd},
+CheapGradient[f_, vars_List, values_ ? VectorQ, p_]:=Module[{permutedVars,nd},
 
 		permutedVars=TakeDrop[#,{1}]&/@NestList[RotateLeft,Thread[vars->values],Length[vars]-1];
 		
+		If[p,
+		
 		Parallelize[
 		centralFiniteDifference[f@@(vars/.#[[2]]),Sequence@@First@#[[1]]]&/@permutedVars
+		],
+		
+		centralFiniteDifference[f@@(vars/.#[[2]]),Sequence@@First@#[[1]]]&/@permutedVars
+		
 		]
+			
 ]
 
 
@@ -365,7 +405,7 @@ GradientDescent[f_, init_ ? VectorQ, OptionsPattern[]]:=Module[{gradf,steps,\[Et
 ]
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*QuantumLinearSolver*)
 
 
