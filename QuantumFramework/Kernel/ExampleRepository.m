@@ -309,9 +309,8 @@ Options[QuantumNaturalGradientDescent]={
 	
 	"MaxIterations"->50,
 	
-	"LearningRate"->0.8,
+	"LearningRate"->0.8
 	
-	"Parallelize"->Automatic
 };
 
 QuantumNaturalGradientDescent[f_, g_QuantumOperator, OptionsPattern[]]:=Module[{p,gradf,init,steps,\[Eta],MetricTensorFunction},
@@ -326,12 +325,6 @@ QuantumNaturalGradientDescent[f_, g_QuantumOperator, OptionsPattern[]]:=Module[{
 		init=0.01*RandomVariate[NormalDistribution[],Length@g["Parameters"]]
 	];
 																																																		
-	If[MatchQ[OptionValue["Parallelize"],Automatic],
-			p=(Length[g["Parameters"]]>=4),
-			p=OptionValue["Parallelize"]
-	];
-	
-	
 	MetricTensorFunction[vect_ /; VectorQ[vect, NumericQ]]:=Normal[N[g[Sequence@@vect]["Matrix"]]];
 	
 	gradf=OptionValue["Gradient"];
@@ -343,7 +336,7 @@ QuantumNaturalGradientDescent[f_, g_QuantumOperator, OptionsPattern[]]:=Module[{
 	If[
 		MatchQ[gradf,None],
 			
-			NestList[(#-\[Eta] LinearSolve[MetricTensorFunction[#],CheapGradient[f,Table[Symbol["\[Theta]"<>ToString[i]],{i,Length@init}],#,p]])&,N@init,steps],
+			NestList[(#-\[Eta] LinearSolve[MetricTensorFunction[#],CheapGradient[f,Table[Symbol["\[Theta]"<>ToString[i]],{i,Length@init}],#]])&,N@init,steps],
 			
 			NestList[(#-\[Eta] LinearSolve[MetricTensorFunction[#],gradf@@#])&,N@init,steps]
 			
@@ -355,19 +348,11 @@ QuantumNaturalGradientDescent[f_, g_QuantumOperator, OptionsPattern[]]:=Module[{
 (*Auxiliar functions*)
 
 
-CheapGradient[f_, vars_List, values_ ? VectorQ, p_]:=Module[{permutedVars,nd},
+CheapGradient[f_, vars_List, values_ ? VectorQ]:=Module[{permutedVars,nd},
 
 		permutedVars=TakeDrop[#,{1}]&/@NestList[RotateLeft,Thread[vars->values],Length[vars]-1];
 		
-		If[p,
-		
-		Parallelize[
 		centralFiniteDifference[f@@(vars/.#[[2]]),Sequence@@First@#[[1]]]&/@permutedVars
-		],
-		
-		centralFiniteDifference[f@@(vars/.#[[2]]),Sequence@@First@#[[1]]]&/@permutedVars
-		
-		]
 			
 ]
 
