@@ -130,7 +130,7 @@ SqueezeOperator[xi_, size_, OptionsPattern[]] :=
                 Exp[1/2 (Conjugate[xi] (a @ a) - xi (a["Dagger"] @ a["Dagger"]))]
             ,
             "Antinormal",
-                Exp[1/2 Conjugate[tau] (a @ a)] @ Exp[nu ((a["Dagger"
+                Exp[1/2 Conjugate[tau] (a @ a)] @ Exp[-nu ((a["Dagger"
                     ]) @ a + 1/2 identityOp)] @ Exp[-1/2 tau ((a["Dagger"]) @ (a["Dagger"
                     ]))]
             ,
