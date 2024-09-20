@@ -17,7 +17,8 @@ $QuditBasisNames = {
     "Wigner", "WignerMIC",
     "Pauli", "GellMann", "GellMannMIC", "Bloch", "GellMannBloch", "GellMannBlochMIC",
     "Wootters", "Feynman",
-    "Tetrahedron", "RandomMIC",
+    "Tetrahedron",
+    "RandomMIC", "RandomHaarMIC", "RandomBlochMIC",
     "QBismSIC", "HesseSIC", "HoggarSIC"
 }
 
@@ -26,7 +27,7 @@ $QuditPhaseSpaceBasisNames = Last @ SequenceSplit[$QuditBasisNames, x : {"Wigner
 $QuditBasisCache = <||>
 $QuditBasisCaching = True
 
-QuditBasis[args___] /; $QuditBasisCaching && FreeQ[{args}, "RandomMIC"] := Lookup[
+QuditBasis[args___] /; $QuditBasisCaching && FreeQ[{args}, "RandomMIC" | "RandomHaarMIC" | "RandomBlochMIC"] := Lookup[
     $QuditBasisCache, Key[{args}],
     $QuditBasisCache[{args}] = Block[{$QuditBasisCaching = False}, QuditBasis[args]]
 ]
@@ -235,6 +236,9 @@ QuditBasis[{"RandomMIC", d : _Integer ? Positive : 2, methodOpts : OptionsPatter
         Chop @ GramDual[povm]
     ]
 ]
+
+QuditBasis[{name : "RandomHaarMIC" | "RandomBlochMIC", d : _Integer ? Positive : 2, args___}] :=
+    QuditBasis[{"RandomMIC", d, Method -> {StringReplace[name, "Random" ~~ method__ ~~ "MIC" :> method], args}}]
 
 
 (* MUB *)
