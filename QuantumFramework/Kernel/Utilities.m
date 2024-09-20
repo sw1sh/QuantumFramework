@@ -34,6 +34,7 @@ PackageScope["spinMatrix"]
 PackageScope["fanoMatrix"]
 PackageScope["GellMannMatrices"]
 PackageScope["RegularSimplex"]
+PackageScope["GramMatrix"]
 PackageScope["GramDual"]
 
 PackageScope["toggleSwap"]
@@ -251,7 +252,9 @@ GellMannMatrices[d_Integer ? Positive] := Catenate @ Riffle[
 RegularSimplex[d_Integer ? Positive] := 1 / Sqrt[d + 1] (Append[identityMatrix[d], ConstantArray[1 / d (1 + Sqrt[d + 1]), d]] - 1 / d (1 + 1 / Sqrt[d + 1]))
 
 
-GramDual[x_] := Inverse[Outer[Tr @* Dot, x, x, 1]] . x
+GramMatrix[x_] := Inverse[Outer[Tr @* Dot, x, x, 1]]
+
+GramDual[x_] := GramMatrix[x] . x
 
 
 (* optimization *)
