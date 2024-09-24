@@ -17,7 +17,7 @@ $QuantumOperatorNames = {
     "X", "Y", "Z", "PauliX", "PauliY", "PauliZ", "Shift", "ShiftPhase",
     "H", "Hadamard", "NOT",
     "0", "1",
-    "SWAP", "RootSWAP", "CSWAP", "Fredkin", "Braid",
+    "SWAP", "RootSWAP", "CSWAP", "Fredkin", "C0SWAP", "Braid",
     "C", "Controlled", "C0", "Controlled0", "CX", "CY", "CZ", "CH", "CT", "CS", "CPHASE", "CNOT", "C0NOT",
     "S", "T", "V",
     "Toffoli", "Deutsch",
@@ -620,6 +620,8 @@ QuantumOperator["Toffoli", order : (_ ? orderQ) : {1, 2, 3}] :=
 
 
 QuantumOperator["CSWAP" | "Fredkin", opts___] := QuantumOperator[{"Controlled", "SWAP" -> {2, 3}}, opts]
+
+QuantumOperator["C0SWAP" | "Fredkin0", opts___] := QuantumOperator[{"Controlled0", "SWAP" -> {2, 3}}, opts]
 
 
 
