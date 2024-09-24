@@ -19,7 +19,7 @@ $QuantumCircuitOperatorNames = {
     "Fourier", "InverseFourier",
     "PhaseEstimation",
     "Number", "PhaseNumber",
-    "Controlled",
+    "Controlled", "Switch",
     "Trotterization",
     "Magic",
     "Multiplexer",
@@ -472,6 +472,11 @@ QuantumCircuitOperator[{"Fredkin", n : _Integer : 0}, opts___] := QuantumCircuit
     opts,
     "Label" -> "Fredkin"
 ]["Shift", n]
+
+QuantumCircuitOperator[{"Switch", a_QuantumOperator, b_QuantumOperator}, opts___] /;
+    a["InputDimension"] == a["OutputDimension"] == b["InputDimension"] == b["OutputDimension"] := With[{d = a["InputDimension"]},
+        QuantumCircuitOperator[{"Cup"[d] -> {3, 4}, "C0SWAP"[d], a -> 2, b -> 3, "CSWAP"[d], "Cap"[d] -> {3, 4}}, opts, "Label" -> "Switch"]
+    ]
 
 QuantumCircuitOperator[{"BernsteinVaziraniOracle", secret : {(0 | 1) ...} : {1, 0, 1}, m : _Integer ? NonNegative : 0}, opts___] := With[{n = Length[secret]},
     QuantumCircuitOperator[

@@ -619,9 +619,9 @@ QuantumOperator["Toffoli", order : (_ ? orderQ) : {1, 2, 3}] :=
     QuantumOperator[{"Controlled", "NOT", Most[order]}, {Last[order]}]
 
 
-QuantumOperator["CSWAP" | "Fredkin", opts___] := QuantumOperator[{"Controlled", "SWAP" -> {2, 3}}, opts]
+QuantumOperator[{"CSWAP" | "Fredkin", d : _Integer ? Positive : 2}, opts___] := QuantumOperator[{"Controlled", "SWAP"[d] -> {2, 3}}, opts]
 
-QuantumOperator["C0SWAP" | "Fredkin0", opts___] := QuantumOperator[{"Controlled0", "SWAP" -> {2, 3}}, opts]
+QuantumOperator[{"C0SWAP" | "Fredkin0", d : _Integer ? Positive : 2}, opts___] := QuantumOperator[{"Controlled0", "SWAP"[d] -> {2, 3}}, opts]
 
 
 
@@ -830,13 +830,13 @@ QuantumOperator[{"Deutsch", theta_ : Pi}, order : _ ? orderQ : {1, 2, 3}] := Wit
 
 
 QuantumOperator[{"Switch", a_ ? QuantumOperatorQ, b_ ? QuantumOperatorQ}, order : _ ? orderQ : {1, 2}, opts___] /;
-    a["InputDimension"] == a["OutputDimension"] == b["InputDimension"] == b["OutputDimension"] && Length[order] == 2 := With[{q = Max[order] + 1},
+    a["InputDimension"] == a["OutputDimension"] == b["InputDimension"] == b["OutputDimension"] && Length[order] == 2 := With[{q = Max[order] + 1, d = a["InputDimension"]},
 QuantumPartialTrace[
 	QuantumOperator[
-        QuantumOperator[{"Controlled0", "SWAP"}, Append[order, q]] @
+        QuantumOperator["C0SWAP"[d], Append[order, q]] @
         QuantumOperator[b, order[[{2}]], order[[{2}]]] @
         QuantumOperator[a, {q}, {q}] @
-        QuantumOperator["CSWAP", Append[order, q]],
+        QuantumOperator["CSWAP"[d], Append[order, q]],
         opts,
         "Label" -> "\[ScriptCapitalS]"[a["Label"], b["Label"]]
     ],

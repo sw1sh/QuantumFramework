@@ -463,6 +463,7 @@
             "Number",
             "PhaseNumber",
             "Controlled",
+            "Switch",
             "Trotterization",
             "Magic",
             "Multiplexer",
