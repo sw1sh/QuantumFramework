@@ -32,6 +32,8 @@
             "Feynman",
             "Tetrahedron",
             "RandomMIC",
+            "RandomHaarMIC",
+            "RandomBlochMIC",
             "QBismSIC",
             "HesseSIC",
             "HoggarSIC"
@@ -70,6 +72,8 @@
             "Feynman",
             "Tetrahedron",
             "RandomMIC",
+            "RandomHaarMIC",
+            "RandomBlochMIC",
             "QBismSIC",
             "HesseSIC",
             "HoggarSIC"
@@ -137,6 +141,8 @@
             "Feynman",
             "Tetrahedron",
             "RandomMIC",
+            "RandomHaarMIC",
+            "RandomBlochMIC",
             "QBismSIC",
             "HesseSIC",
             "HoggarSIC"
@@ -184,6 +190,7 @@
             "RootSWAP",
             "CSWAP",
             "Fredkin",
+            "C0SWAP",
             "Braid",
             "C",
             "Controlled",
@@ -277,6 +284,8 @@
             "Feynman",
             "Tetrahedron",
             "RandomMIC",
+            "RandomHaarMIC",
+            "RandomBlochMIC",
             "QBismSIC",
             "HesseSIC",
             "HoggarSIC"
@@ -315,6 +324,8 @@
             "Feynman",
             "Tetrahedron",
             "RandomMIC",
+            "RandomHaarMIC",
+            "RandomBlochMIC",
             "QBismSIC",
             "HesseSIC",
             "HoggarSIC",
@@ -360,6 +371,8 @@
             "Feynman",
             "Tetrahedron",
             "RandomMIC",
+            "RandomHaarMIC",
+            "RandomBlochMIC",
             "QBismSIC",
             "HesseSIC",
             "HoggarSIC"
@@ -408,6 +421,8 @@
             "Feynman",
             "Tetrahedron",
             "RandomMIC",
+            "RandomHaarMIC",
+            "RandomBlochMIC",
             "QBismSIC",
             "HesseSIC",
             "HoggarSIC"
@@ -533,6 +548,8 @@
             "Feynman",
             "Tetrahedron",
             "RandomMIC",
+            "RandomHaarMIC",
+            "RandomBlochMIC",
             "QBismSIC",
             "HesseSIC",
             "HoggarSIC"
@@ -553,6 +570,8 @@
             "Feynman",
             "Tetrahedron",
             "RandomMIC",
+            "RandomHaarMIC",
+            "RandomBlochMIC",
             "QBismSIC",
             "HesseSIC",
             "HoggarSIC"
