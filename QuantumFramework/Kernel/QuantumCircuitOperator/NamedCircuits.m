@@ -473,7 +473,7 @@ QuantumCircuitOperator[{"Fredkin", n : _Integer : 0}, opts___] := QuantumCircuit
     "Label" -> "Fredkin"
 ]["Shift", n]
 
-QuantumCircuitOperator[{"Switch", a_QuantumOperator, b_QuantumOperator}, opts___] /;
+QuantumCircuitOperator[{"Switch", a_QuantumOperator : QuantumOperator["RandomUnitary"], b_QuantumOperator : QuantumOperator["RandomUnitary"]}, opts___] /;
     a["InputDimension"] == a["OutputDimension"] == b["InputDimension"] == b["OutputDimension"] := With[{d = a["InputDimension"]},
         QuantumCircuitOperator[{"Cup"[d] -> {3, 4}, "C0SWAP"[d], a -> 2, b -> 3, "CSWAP"[d], "Cap"[d] -> {3, 4}}, opts, "Label" -> "Switch"]
     ]
