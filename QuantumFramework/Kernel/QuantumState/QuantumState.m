@@ -234,7 +234,7 @@ addQuantumStates[qs1_QuantumState ? QuantumStateQ, qs2_QuantumState ? QuantumSta
         "ParameterSpec" -> MergeParameterSpecs[qs1, qs2]
     ]
 
-QuantumState /: HoldPattern[Plus[states : _QuantumState ...]] :=
+QuantumState /: HoldPattern[Plus[states__QuantumState]] /; Length[{states}] > 1 :=
     If[ Equal @@ (#["Dimension"] & /@ {states}), Fold[addQuantumStates, {states}],
         Failure["QuantumState", <|"MessageTemplate" -> "Incompatible dimensions"|>]
     ]
