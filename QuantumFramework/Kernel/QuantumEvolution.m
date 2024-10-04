@@ -105,7 +105,7 @@ QuantumEvolve[
         Element[
             \[FormalS][parameter],
             If[ state === None,
-                Matrices[hamiltonian["MatrixNameDimensions"]],
+                Matrices[Dimensions[matrix]],
                 If[state["VectorQ"], Vectors[state["Dimension"], If[phaseSpaceQ, Reals, Complexes]], Matrices[state["MatrixDimensions"]]]
             ]
         ]
