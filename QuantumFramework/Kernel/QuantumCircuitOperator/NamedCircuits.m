@@ -1,10 +1,13 @@
-Package["Wolfram`QuantumFramework`"]
+(* ::Package:: *)
 
+Package["Wolfram`QuantumFramework`"]
+PackageImport["Wolfram`QuantumFramework`QuantumOptimization`"]
 PackageScope["$QuantumCircuitOperatorNames"]
 
 
 
 $QuantumCircuitOperatorNames = {
+	"ControlledMultiplexer",
     "Graph", "GHZ",
     "GroverDiffusion", "GroverDiffusion0",
     "GroverPhaseDiffusion", "GroverPhaseDiffusion0",
@@ -787,3 +790,6 @@ QuantumCircuitOperator[{"WignerCHSH", theta_ : Pi / 4}, opts___] := Block[{
 
 QuantumCircuitOperator[name_String | name_String[args___], opts___] /; MemberQ[$QuantumCircuitOperatorNames, name] := QuantumCircuitOperator[{name, args}, opts]
 
+
+
+QuantumCircuitOperator[{"ControlledMultiplexer", matrix_ ? MatrixQ, vector_ ? VectorQ}]:=QuantumLinearSolve[matrix,vector,"CircuitOperator"];

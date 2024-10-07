@@ -1,6 +1,6 @@
 (* ::Package:: *)
 
-Package["Wolfram`QuantumFramework`ExampleRepository`"]
+Package["Wolfram`QuantumFramework`QuantumOptimization`"]
 
 PackageImport["Wolfram`QuantumFramework`"]
 
