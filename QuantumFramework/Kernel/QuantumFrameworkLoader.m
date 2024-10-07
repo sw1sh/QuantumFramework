@@ -35,7 +35,8 @@ PacletManager`Package`loadWolframLanguageCode[
         "Wolfram`QuantumFramework`QuantumWignerTransform",
         "Wolfram`QuantumFramework`QuantumChannel"
     },
-    "HiddenImports" -> {}
+    "HiddenImports" -> {},
+    "SymbolsToProtect" -> {}
 ];
 
 Wolfram`QuantumFramework`PackageScope`Memoize[Wolfram`QuantumFramework`PackageScope`FromOperatorShorthand];
