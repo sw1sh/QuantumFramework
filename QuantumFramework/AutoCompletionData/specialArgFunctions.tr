@@ -430,6 +430,7 @@
     },
     "QuantumCircuitOperator" -> {
         {
+            "ControlledMultiplexer",
             "Graph",
             "GHZ",
             "GroverDiffusion",
@@ -467,6 +468,7 @@
             "Trotterization",
             "Magic",
             "Multiplexer",
+            "ControlledMultiplexer",
             "QuantumState",
             "CHSH",
             "LeggettGarg",

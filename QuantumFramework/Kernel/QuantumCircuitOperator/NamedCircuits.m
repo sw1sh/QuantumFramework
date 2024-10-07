@@ -25,7 +25,7 @@ $QuantumCircuitOperatorNames = {
     "Controlled", "Switch",
     "Trotterization",
     "Magic",
-    "Multiplexer",
+    "Multiplexer", "ControlledMultiplexer",
     "QuantumState",
     "CHSH", "LeggettGarg", "WignerCHSH"
 }
@@ -667,6 +667,8 @@ QuantumCircuitOperator[{"Multiplexer"| "Multiplexor", ops__} -> defaultK : _Inte
 
 QuantumCircuitOperator[{"Multiplexer"| "Multiplexor", ops__}, opts___] := QuantumCircuitOperator[{"Multiplexer", ops} -> Automatic, opts]
 
+QuantumCircuitOperator[{"ControlledMultiplexer", matrix : _ ? MatrixQ : RandomReal[1, {4, 4}], vector : _ ? VectorQ : RandomReal[1, 4]}] :=
+    QuantumLinearSolve[matrix, vector, "CircuitOperator"]
 
 
 RZY[vec_ ? VectorQ] := Block[{a, b, phi, psi, y, z, phase},
@@ -790,6 +792,3 @@ QuantumCircuitOperator[{"WignerCHSH", theta_ : Pi / 4}, opts___] := Block[{
 
 QuantumCircuitOperator[name_String | name_String[args___], opts___] /; MemberQ[$QuantumCircuitOperatorNames, name] := QuantumCircuitOperator[{name, args}, opts]
 
-
-
-QuantumCircuitOperator[{"ControlledMultiplexer", matrix_ ? MatrixQ, vector_ ? VectorQ}]:=QuantumLinearSolve[matrix,vector,"CircuitOperator"];
