@@ -11,30 +11,15 @@ If[ ! pacletInstalledQ["Cotengra", "0.1"],
 
 $ContextAliases["H`"] = "WolframInstitute`Hypergraph`"
 
+ClearAll["Wolfram`QuantumFramework`*", "Wolfram`QuantumFramework`**`*"]
+
 PacletManager`Package`loadWolframLanguageCode[
     "Wolfram/QuantumFramework",
     "Wolfram`QuantumFramework`",
     ParentDirectory[DirectoryName[$InputFileName]],
     "Kernel/QuantumFramework.m",
     "AutoUpdate" -> False,
-    "AutoloadSymbols" -> {
-        "Wolfram`QuantumFramework`QuditName",
-        "Wolfram`QuantumFramework`QuditBasis",
-        "Wolfram`QuantumFramework`QuantumBasis",
-        "Wolfram`QuantumFramework`QuantumState",
-        "Wolfram`QuantumFramework`QuantumOperator",
-        "Wolfram`QuantumFramework`QuantumMeasurementOperator",
-        "Wolfram`QuantumFramework`QuantumCircuitOperator",
-        "Wolfram`QuantumFramework`QuantumMeasurement",
-        "Wolfram`QuantumFramework`QuantumTensorProduct",
-        "Wolfram`QuantumFramework`QuantumPartialTrace",
-        "Wolfram`QuantumFramework`QuantumDistance",
-        "Wolfram`QuantumFramework`QuantumSimilarity",
-        "Wolfram`QuantumFramework`QuantumEntanglementMonotone",
-        "Wolfram`QuantumFramework`QuantumEntangledQ",
-        "Wolfram`QuantumFramework`QuantumWignerTransform",
-        "Wolfram`QuantumFramework`QuantumChannel"
-    },
+    "AutoloadSymbols" -> {},
     "HiddenImports" -> {},
     "SymbolsToProtect" -> {}
 ];
