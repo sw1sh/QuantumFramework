@@ -14,16 +14,10 @@ PackageExport["ASPSRGradientValues"]
 
 PackageExport["FubiniStudyMetricTensor"]
 
-PackageExport["FubiniStudyMetricTensorLayers"]
-
-PackageExport["QuantumUnlockingMechanism"]
-
-PackageExport["QuantumLockingMechanism"]
-
 PackageExport["QuantumLinearSolve"]
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Example specific functions *)
 
 
@@ -87,54 +81,6 @@ Module[
 	reporter[<|"Matrix"->matrix,"MatrixForm"->MatrixForm[matrix]|>];
 	
 	
-]
-
-
-FubiniStudyMetricTensor[layers_List, parameters_List, initParameters_?(VectorQ[#,NumericQ]&)]:=Module[{probabilities,covariance,variance1,variance2},
-	
-	probabilities=Values[
-	
-					N[#[[2,2]][#[[2,1]]][#[[1]][AssociationThread[Rule[parameters,initParameters]]]]["Probabilities"]]&/@layers
-					
-					];
-	
-	covariance=(#[[4]]-(#[[3]]+#[[4]])*(#[[2]]+#[[4]]))&/@probabilities;
-	
-	variance1=(#*(1-#))&@Total[#[[{3,4}]]]&/@probabilities;
-	
-	variance2=(#*(1-#))&@Total[#[[{2,4}]]]&/@probabilities;
-	
-	BlockDiagonalMatrix[{{#[[1]],#[[2]]},{#[[2]],#[[3]]}}&/@Thread[Chop[{variance1,covariance,variance2},10^-8]]]
-]
-
-
-FubiniStudyMetricTensorLayers[qc_QuantumCircuitOperator, parameters_List]:=Module[{elements,input,layers},
-	
-	(*Re-generating Original QuantumCircuitOperator Inputs*)
-	
-		elements=DeleteCases[qc["Elements"],"Barrier"];
-	
-		input=#["Label"]->#["InputOrder"]&/@elements;
-
-	(*Cleaning inputs (subscripts and innecesary brackets) to correctly build subcircuits*)
-	
-		input=input/.Subscript[x_String,y_String]:>x<>y/."CNOT"[___]:>"CNOT";
-
-	(*Generating layers by splitting when parametric variables are found, dropping useless gates*)
-	
-		input=Most[SplitBy[input,FreeQ[#,Alternatives@@parameters]&]];
-
-	(*Building layers*)
-	
-		layers=Table[input[[;;i]],{i,Range[2,Length@input,2]}];
-
-	(*Changing last parametric Pauli gates from each layer to their correspondant QuantumMeasurementOperator*)
-		
-		layers=MapAt[#/.Rule[(pauli:("RX"|"RY"|"RZ"))[_],n_]:>QuantumMeasurementOperator[StringDelete[pauli,"R"],n]&,layers,{All,-1}];
-	
-	(*Output: QuantumState of first layer (parametrization is possible for QuamtumState from a Parametrized QuantumCircuit) and Measurements*)
-	
-		{QuantumCircuitOperator[Flatten[#[[;;-2]]],"Parameters"->parameters][],#[[-1]]}&/@layers
 ]
 
 
