@@ -96,7 +96,7 @@ QuantumEvolve[
     equations = Join[
         {
             \[FormalS]'[parameter] == rhs,
-            \[FormalS][0] == init
+            \[FormalS][If[numericQ, parameterSpec[[2]], 0]] == init
         },
         Flatten[{OptionValue["AdditionalEquations"]}]
     ];
