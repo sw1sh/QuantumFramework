@@ -155,6 +155,7 @@
             "Permutation",
             "Uncurry",
             "Curry",
+            "Zero",
             "Fourier",
             "InverseFourier",
             "XRotation",

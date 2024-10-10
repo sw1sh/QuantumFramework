@@ -8,7 +8,7 @@ PackageScope["FromOperatorShorthand"]
 
 
 $QuantumOperatorNames = {
-    "Identity", "I", "Permutation", "Uncurry", "Curry",
+    "Identity", "I", "Permutation", "Uncurry", "Curry", "Zero",
     "Fourier", "InverseFourier",
     "XRotation", "YRotation", "ZRotation", "U", "Phase", "P", "RX", "RY", "RZ", "R",
     "Diagonal", "GlobalPhase",
@@ -145,6 +145,8 @@ QuantumOperator[{"Identity" | "I", params__}, opts___] :=
 QuantumOperator[{"Identity" | "I", dim_Integer ? Positive}, opts___] :=
     Enclose @ QuantumOperator[{"Identity", {dim}}, opts]
 
+
+QuantumOperator[{"Zero" | "O", args___} | "Zero" | "O", opts___] := Log[QuantumOperator["I"[args], opts]]
 
 
 QuantumOperator[name : "XRotation" | "YRotation" | "ZRotation" | "RX" | "RY" | "RZ", opts___] :=  QuantumOperator[{name, Pi / 2}, opts]
