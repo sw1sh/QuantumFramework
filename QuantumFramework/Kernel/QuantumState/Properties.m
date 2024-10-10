@@ -5,6 +5,7 @@ Package["Wolfram`QuantumFramework`"]
 $QuantumStateProperties = {
     "StateType", "State", "Basis",
     "Amplitudes", "Amplitude", "Weights", "Probabilities", "Probability", "StateVector", "DensityMatrix",
+    "AmplitudesList", "AmplitudeList", "ProbabilitiesList", "ProbabilityList",
     "NormalizedState", "NormalizedAmplitudes", "NormalizedStateVector", "NormalizedDensityMatrix",
     "Entropy", "VonNeumannEntropy", "LogicalEntropy",
     "Purity", "Type", "PureStateQ", "MixedStateQ", "MatrixQ", "VectorQ", "UnknownQ", "PhysicalQ",
