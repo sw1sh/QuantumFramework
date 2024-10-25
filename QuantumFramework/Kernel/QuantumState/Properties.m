@@ -322,6 +322,8 @@ QuantumStateProp[qs_, "FullTransitionGraph", opts : OptionsPattern[]] := With[{
 
 QuantumStateProp[qs_, "Formula", OptionsPattern[]] /; qs["DegenerateStateQ"] := RawBoxes[0]
 
+QuantumStateProp[qs_, "Formula", OptionsPattern[]] /; qs["EmptyStateQ"] := RawBoxes[""]
+
 MinusBoxQ[boxes_] := MatchQ[boxes, RowBox[{"-" | _ ? MinusBoxQ, __}]]
 
 QuantumStateProp[qs_, "Formula", OptionsPattern[{"Normalize" -> False, "Form" -> StandardForm}]] := RawBoxes @ With[{s = qs["Pure"], form = OptionValue["Form"]},
@@ -592,7 +594,7 @@ QuantumStateProp[qs_, "Disentangle"] /; qs["PureStateQ"] := With[{s = qs["Schmid
 
 QuantumStateProp[qs_, "Decompose", {}] := {{qs}}
 
-QuantumStateProp[qs_, "Decompose", dims : {_Integer ? Positive ...}] /; qs["VectorQ"] || qs["DegenerateStateQ"] := Enclose @ If[Length[dims] == 1, {{qs}},
+QuantumStateProp[qs_, "Decompose", dims : {_Integer ? Positive ...}] /; qs["VectorQ"] || qs["DegenerateStateQ"] || qs["EmptyStateQ"] := Enclose @ If[Length[dims] == 1, {{qs}},
 Block[{s = Confirm @ qs["SchmidtBasis", First[dims]], basis},
     basis = s["Basis"]["Decompose"];
     If[s["DegenerateStateQ"], Return[{QuantumState[0, #] & /@ basis}]];
@@ -739,7 +741,7 @@ QuantumStateProp[qs_, "Purify"] := Sqrt[qs]["Bend"]
 QuantumStateProp[qs_, "Unpurify"] := qs["Unbend"] ^ 2
 
 
-QuantumStateProp[qs_, "Pure"] := If[qs["PureStateQ"] || qs["DegenerateStateQ"], qs, qs["Bend"]]
+QuantumStateProp[qs_, "Pure"] := If[qs["PureStateQ"] || qs["DegenerateStateQ"] || qs["EmptyStateQ"], qs, qs["Bend"]]
 
 QuantumStateProp[qs_, "Mixed"] := If[qs["MixedStateQ"], qs, qs["Unbend"]]
 

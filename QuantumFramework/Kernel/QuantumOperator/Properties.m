@@ -373,6 +373,8 @@ QuantumOperatorProp[qo_, "OrderedOutput", order_ ? orderQ, qb_ ? QuditBasisQ] :=
 
 QuantumOperatorProp[qo_, "OrderedFormula", OptionsPattern[]] /; qo["State"]["DegenerateStateQ"] := 0
 
+QuantumOperatorProp[qo_, "OrderedFormula", OptionsPattern[]] /; qo["State"]["EmptyStateQ"] := ""
+
 QuantumOperatorProp[qo_, "OrderedFormula", OptionsPattern["Normalize" -> False]] := With[{s = qo["State"]["Pure"]},
     With[{
         v = SparseArray @ s[If[TrueQ[OptionValue["Normalize"]], "NormalizedStateVector", "StateVector"]],
