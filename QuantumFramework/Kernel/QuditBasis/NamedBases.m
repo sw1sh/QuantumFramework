@@ -29,7 +29,7 @@ $QuditBasisCaching = True
 
 QuditBasis[args___] /; $QuditBasisCaching && FreeQ[{args}, "RandomMIC" | "RandomHaarMIC" | "RandomBlochMIC"] := Lookup[
     $QuditBasisCache, Key[{args}],
-    $QuditBasisCache[{args}] = Block[{$QuditBasisCaching = False}, QuditBasis[args]]
+    Enclose[$QuditBasisCache[{args}] = Block[{$QuditBasisCaching = False}, Confirm @ QuditBasis[args]]]
 ]
 
 
