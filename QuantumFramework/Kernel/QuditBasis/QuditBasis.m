@@ -136,10 +136,28 @@ QuditBasis /: Plus[qb__QuditBasis ? QuditBasisQ] := Module[{
 
 (* multiplication *)
 
-QuditBasis /: Times[qb__QuditBasis ? QuditBasisQ] := QuditBasis @ Association @ Values @ Merge[
+QuditBasis /: HoldPattern[Times[qb__QuditBasis ? QuditBasisQ]] /; Length[{qb}] > 1 := QuditBasis @ Association @ Values @ Merge[
     ResourceFunction["KeyGroupBy"][#["Canonical"]["Representations"], Last] & /@ {qb},
     {QuantumTensorProduct[#[[All, 1, 1]]], #[[1, 1, -1]]} -> TensorProduct @@ #[[All, 2]] & /@ Tuples[Normal[#]] &
 ]
+
+
+(* numeric function *)
+
+QuditBasis /: f_Symbol[left : Except[_QuditBasis] ..., qb_QuditBasis, right : Except[_QuditBasis] ...] /; MemberQ[Attributes[f], NumericFunction] :=
+    Enclose @ QuditBasis[
+        qb["Names"],
+        ArrayReshape[
+            Transpose @ ConfirmBy[
+                If[ MemberQ[{Plus, Minus, Times, Conjugate}, f],
+                    f[left, qb["Matrix"], right],
+                    Check[MatrixFunction[f[left, #, right] &, qb["Matrix"], Method -> "Jordan"], MatrixFunction[f[left, #, right] &, qb["Matrix"]]]
+                ],
+                MatrixQ
+            ],
+            Prepend[qb["Dimension"]] @ qb["ElementDimensions"]
+        ]
+    ]
 
 
 (* N *)
@@ -155,6 +173,12 @@ Scan[
     (Symbol[#][qb_QuditBasis, args___] ^:= qb[#, args]) &,
     {"Simplify", "FullSimplify", "Chop", "ComplexExpand"}
 ]
+
+(* other up-values *)
+
+Inverse[qb_QuditBasis] ^:= qb["Inverse"]
+
+Conjugate[qb_QuditBasis] ^:= qb["Conjugate"]
 
 
 (* formatting *)
