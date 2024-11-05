@@ -716,7 +716,7 @@ QuantumStateProp[qs_, "Double"] := With[{out = qs["OutputQudits"], in = qs["Inpu
 
 QuantumStateProp[qs_, "Unbend"] := Enclose @ With[{out = Sqrt[qs["OutputDimension"]], in = Sqrt[qs["InputDimension"]]},
     If[
-        qs["PureStateQ"] && IntegerQ[out] && IntegerQ[in],
+        qs["VectorQ"] && IntegerQ[out] && IntegerQ[in],
         QuantumState[
             ArrayReshape[
                 Transpose[ArrayReshape[qs["StateVector"], {out, out, in, in}], {1, 3, 2, 4}],
