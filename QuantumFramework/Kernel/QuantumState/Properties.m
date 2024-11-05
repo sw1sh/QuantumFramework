@@ -513,7 +513,7 @@ QuantumStateProp[qs_, "Canonical"] := QuantumState[qs, qs["Basis"]["Canonical"]]
 
 QuantumStateProp[qs_, "SchmidtBasis", dim : _Integer | Automatic : Automatic] /; qs["VectorQ"] && dim === Automatic || Divisible[qs["Dimension"], dim] := Module[{
     uMatrix, alphaValues, wMatrix,
-    n = Replace[dim, Automatic -> If[
+    n = Replace[dim, Automatic :> If[
         qs["Qudits"] > 1,
         First @ qs["Dimensions"],
         Replace[Divisors[qs["Dimension"]], {{1, d_} :> d, {___, d_, _} :> d}]
@@ -561,10 +561,12 @@ QuantumStateProp[qs_, "Bipartition", bipartition : {{_Integer..}, {_Integer..}}]
 QuantumStateProp[qs_, "Bipartition", qudits : {_Integer..}] /; ContainsAll[Range[qs["Qudits"]], qudits] :=
     qs["Split", qs["Qudits"]]["Permute", FindPermutation[Join[qudits, Complement[Range[qs["Qudits"]], qudits]]]]["Bipartition", Times @@ qs["Dimensions"][[qudits]]]
 
-QuantumStateProp[qs_, "Bipartition", dim : _Integer | Automatic : Automatic] := If[
+QuantumStateProp[qs_, "Bipartition", dim : _Integer | Automatic : Automatic] := Which[
     qs["Qudits"] == 2,
     qs,
-
+    qs["ComputationalQ"],
+    QuantumState[qs, With[{d = Replace[dim, Automatic :> If[qs["Qudits"] > 1, First @ qs["Dimensions"], Replace[Divisors[qs["Dimension"]], {{1, d_} :> d, {___, d_, _} :> d}]]]}, {d, qs["Dimension"] / d}]],
+    True,
     If[ qs["VectorQ"],
         qs["SchmidtBasis", dim],
         (qs["Eigenvalues"] . (#["SchmidtBasis", dim]["MatrixState"] & /@ qs["Eigenstates"]))
