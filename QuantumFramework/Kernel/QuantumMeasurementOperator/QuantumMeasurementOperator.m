@@ -105,7 +105,7 @@ QuantumMeasurementOperator[qo_ ? QuantumOperatorQ, args : PatternSequence[___, E
 
 QuantumMeasurementOperator[tensor_ ? TensorQ /; TensorRank[tensor] == 3, target : (_ ? targetQ) : {1}, args___] :=
     QuantumMeasurementOperator[
-        With[{op = QuantumOperator[MatrixFunction[Sqrt, #] & /@ tensor], dims = Dimensions[tensor]},
+        With[{op = QuantumOperator[MatrixPower[#, 1 / 2] & /@ tensor], dims = Dimensions[tensor]},
             QuantumOperator[
                 op["State"]["Split", 2],
                 {Prepend[target, 0], target},
@@ -158,7 +158,7 @@ QuantumMeasurementOperator[qm_ ? QuantumMeasurementQ, opts___] := QuantumMeasure
 QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOperatorQ | _ ? QuantumBasisQ], ___], target : (_ ? targetsQ | _ ? targetQ), opts___] :=
     Enclose @ With[{qb = ConfirmBy[QuantumBasis[args], QuantumBasisQ]}, QuantumMeasurementOperator[qb, target, opts]]
 
-QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOperatorQ], ___]] := QuantumMeasurementOperator[QuantumBasis[args]]
+QuantumMeasurementOperator[args : PatternSequence[Except[_ ? QuantumFrameworkOperatorQ], ___]] := Enclose @ QuantumMeasurementOperator[ConfirmBy[QuantumBasis[args], QuantumBasisQ]]
 
 (* mutation *)
 

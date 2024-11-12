@@ -182,7 +182,7 @@ QuditBasis["Wigner", args___] := QuditBasis[{"Wigner", 2}, args]
 QuditBasis[{"Wigner", qb_QuditBasis /; QuditBasisQ[qb], opts : OptionsPattern[WignerBasis]}, args___] :=
     QuditBasis[WignerBasis[qb, opts], args]
 
-QuditBasis[{"Wigner", basisArgs___, opts : OptionsPattern[]}, args___] := QuditBasis[{"Wigner", QuditBasis[basisArgs], opts}, args]
+QuditBasis[{"Wigner", basisArgs___, opts : OptionsPattern[]}, args___] := Enclose @ QuditBasis[{"Wigner", ConfirmBy[QuditBasis[basisArgs], QuditBasisQ], opts}, args]
 
 
 QuditBasis[{"WignerMIC", args___}, opts___] := QuditBasis[QuantumWignerMICBasis[args], opts]

@@ -21,7 +21,7 @@ QuantumStateQ[qs_QuantumState] := System`Private`HoldValidQ[qs]
 QuantumStateQ[___] := False
 
 
-qs_QuantumState /; quantumStateQ[Unevaluated[qs]] && ! System`Private`HoldValidQ[qs] := System`Private`HoldSetValid[qs]
+qs_QuantumState /; System`Private`HoldNotValidQ[qs] && quantumStateQ[Unevaluated[qs]] := System`Private`HoldSetValid[qs]
 
 
 (* basis argument input *)
