@@ -6,10 +6,16 @@ PackageScope["QuantumChannelQ"]
 
 
 
-QuantumChannelQ[QuantumChannel[qo_]] := QuantumOperatorQ[qo] &&
+quantumChannelQ[QuantumChannel[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated[qo]]]] :=
     qo["OutputQudits"] - qo["InputQudits"] >= 0 && AllTrue[Join[qo["InputOrder"], Drop[qo["OutputOrder"], qo["OutputQudits"] - qo["InputQudits"]]], Positive]
 
+quantumChannelQ[___] := False
+
+QuantumChannelQ[qc_QuantumChannel] := System`Private`HoldValidQ[qc] || quantumChannelQ[Unevaluated[qc]]
+
 QuantumChannelQ[___] := False
+
+qc_QuantumChannel /; System`Private`HoldNotValidQ[qc] && quantumChannelQ[Unevaluated[qc]] := System`Private`HoldSetValid[qc]
 
 
 QuantumChannel[opArgs_List, args___] := Enclose @ Block[{ops = QuantumOperator[#, args]["Computational"] & /@ opArgs, order, inputDims, outputDims},

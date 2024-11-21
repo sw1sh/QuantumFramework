@@ -2,12 +2,12 @@ Package["Wolfram`QuantumFramework`"]
 
 
 
-QuantumChannel /: MakeBoxes[qc_QuantumChannel, TraditionalForm] /; QuantumChannelQ[qc] :=
+QuantumChannel /: MakeBoxes[qc_QuantumChannel /; QuantumChannelQ[Unevaluated[qc]], TraditionalForm] :=
     With[{boxes = ToBoxes[qc["QuantumOperator"], TraditionalForm]},
         InterpretationBox[boxes, qc]
     ]
 
-QuantumChannel /: MakeBoxes[qc_QuantumChannel /; QuantumChannelQ[qc], format_] := Enclose[With[{
+QuantumChannel /: MakeBoxes[qc_QuantumChannel /; QuantumChannelQ[Unevaluated[qc]], format_] := Enclose[With[{
     icon = If[
         qc["Dimension"] < 2 ^ 9,
         ComplexArrayPlot[

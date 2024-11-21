@@ -9,21 +9,17 @@ PackageScope["StackQuantumOperators"]
 QuantumOperator::invalidInputOrder = "input order should be a list of distinct input qudit positions"
 QuantumOperator::invalidOutputOrder = "output order should be a list of distinct output qudit positions"
 
-quantumOperatorQ[QuantumOperator[qs_, {outputOrder_ ? orderQ, inputOrder_ ? orderQ}]] :=
-    QuantumStateQ[qs] &&
-    (orderQ[outputOrder] || (Message[QuantumOperator::invalidOutputOrder]; False)) &&
-    (orderQ[inputOrder] || (Message[QuantumOperator::invalidInputOrder]; False))
-
+quantumOperatorQ[QuantumOperator[qs_QuantumState /; QuantumStateQ[Unevaluated[qs]], {_ ? orderQ, _ ? orderQ}]] := True
 
 quantumOperatorQ[___] := False
 
 
-QuantumOperatorQ[qo_QuantumOperator] := System`Private`HoldValidQ[qo]
+QuantumOperatorQ[qo_QuantumOperator] := System`Private`HoldValidQ[qo] || quantumOperatorQ[Unevaluated[qo]]
 
 QuantumOperatorQ[___] := False
 
 
-qo_QuantumOperator /; quantumOperatorQ[Unevaluated[qo]] && ! System`Private`HoldValidQ[qo] := System`Private`HoldSetValid[qo]
+qo_QuantumOperator /; System`Private`HoldNotValidQ[qo] && quantumOperatorQ[Unevaluated[qo]] := System`Private`HoldSetValid[qo]
 
 
 (* constructors *)

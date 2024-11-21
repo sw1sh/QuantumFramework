@@ -8,15 +8,12 @@ PackageScope["addQuantumStates"]
 
 
 
-quantumStateQ[QuantumState[state_, basis_]] :=
-    stateQ[state] &&
-    QuantumBasisQ[basis] &&
-    Length[state] === basis["Dimension"]
+quantumStateQ[QuantumState[state_SparseArray ? stateQ, qb_QuantumBasis /; QuantumBasisQ[Unevaluated[qb]]]] := Length[state] === qb["Dimension"]
 
 quantumStateQ[___] := False
 
 
-QuantumStateQ[qs_QuantumState] := System`Private`HoldValidQ[qs]
+QuantumStateQ[qs_QuantumState] := System`Private`HoldValidQ[qs] || quantumStateQ[Unevaluated[qs]]
 
 QuantumStateQ[___] := False
 

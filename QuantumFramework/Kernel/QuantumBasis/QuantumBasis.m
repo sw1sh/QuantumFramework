@@ -17,7 +17,7 @@ $QuantumBasisPictures = {
 
 (* Messages *)
 
-QuantumBasis::wrongData = "has wrong data";
+QuantumBasis::wrongData = "has wrong data: ``";
 
 QuantumBasis::picture = "should have one of the following pictures " <> StringRiffle[$QuantumBasisPictures, ", "] <> ". But got: ``";
 
@@ -46,8 +46,8 @@ $QuantumBasisDefaults = {
 
 ParameterSpecQ[spec_] := MatchQ[spec, subSpecs : {{_, _ ? NumericQ, _ ? NumericQ}...} /; DuplicateFreeQ[subSpecs[[All, 1]]]]
 
-quantumBasisQ[QuantumBasis[data_Association]] := Enclose[
-    ConfirmAssert[ContainsAll[Keys[data], $QuantumBasisDataKeys], Message[QuantumBasis::wrongData]];
+quantumBasisQ[QuantumBasis[data : HoldPattern[Association[(_String -> _) ...]]]] := Enclose[
+    ConfirmAssert[ContainsAll[Keys[data], $QuantumBasisDataKeys]];
 
     ConfirmAssert[QuditBasisQ[data["Input"]]];
     ConfirmAssert[QuditBasisQ[data["Output"]]];
@@ -64,9 +64,15 @@ quantumBasisQ[QuantumBasis[data_Association]] := Enclose[
 quantumBasisQ[___] := False
 
 
-QuantumBasisQ[qb : QuantumBasis[_]] := System`Private`HoldValidQ[qb]
+QuantumBasisQ[qb : QuantumBasis[_]] := System`Private`HoldValidQ[qb] || quantumBasisQ[Unevaluated @ qb]
 
 QuantumBasisQ[___] := False
+
+
+qb_QuantumBasis /; System`Private`HoldNotValidQ[qb] && quantumBasisQ[Unevaluated @ qb] := (
+    System`Private`HoldSetValid[qb];
+    System`Private`HoldSetNoEntry[qb]
+)
 
 
 (* mutation *)
@@ -175,11 +181,6 @@ QuantumBasis[args : (_String ? (MatchQ[Alternatives @@ $QuantumBasisPictures]) |
     QuantumBasis["Computational", args, "Label" -> None]
 
 QuantumBasis[qb_QuantumBasis, args__] := Enclose @ QuantumBasis[ConfirmBy[QuantumBasis[args], QuantumBasisQ], qb["Options"]]
-
-qb_QuantumBasis /; System`Private`HoldNotValidQ[qb] && quantumBasisQ[Unevaluated @ qb] := (
-    System`Private`HoldSetValid[qb];
-    System`Private`HoldSetNoEntry[qb]
-)
 
 
 (* equality *)

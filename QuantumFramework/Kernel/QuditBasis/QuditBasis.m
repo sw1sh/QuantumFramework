@@ -15,24 +15,17 @@ QuditBasis::dependentElements = "elements should be linearly independent";
 
 
 
-quditBasisQ[QuditBasis[representations_Association]] := Enclose[
-Module[{
-},
-    ConfirmAssert[AllTrue[Keys @ representations, MatchQ[{_QuditName, _Integer ? Positive}]]];
-    ConfirmAssert[And @@ ResourceFunction["KeyGroupBy"][
+quditBasisQ[QuditBasis[representations : HoldPattern[Association[({_QuditName, _Integer ? Positive} -> _) ...]]]] :=
+    And @@ ResourceFunction["KeyGroupBy"][
         Select[representations, TensorRank[#] > 0 &],
         Last,
         Apply[Equal] @* Map[Dimensions]
-    ]];
-    True
-],
-False &
-]
+    ]
 
 quditBasisQ[___] := False
 
 
-QuditBasisQ[qb : QuditBasis[_]] := System`Private`HoldValidQ[qb]
+QuditBasisQ[qb : QuditBasis[_]] := System`Private`HoldValidQ[qb] || quditBasisQ[Unevaluated @ qb]
 
 QuditBasisQ[___] := False
 
@@ -183,11 +176,11 @@ Conjugate[qb_QuditBasis] ^:= qb["Conjugate"]
 
 (* formatting *)
 
-QuditBasis /: MakeBoxes[qb_QuditBasis /; QuditBasisQ[qb], format : TraditionalForm] := With[{boxes = ToBoxes[Normal /@ qb["Association"], format]},
+QuditBasis /: MakeBoxes[qb_QuditBasis /; QuditBasisQ[Unevaluated[qb]], format : TraditionalForm] := With[{boxes = ToBoxes[Normal /@ qb["Association"], format]},
     InterpretationBox[boxes, qb]
 ]
 
-QuditBasis /: MakeBoxes[qb_QuditBasis /; QuditBasisQ[qb], format_] := With[{
+QuditBasis /: MakeBoxes[qb_QuditBasis /; QuditBasisQ[Unevaluated[qb]], format_] := With[{
     icon = If[
         qb["ElementDimension"] < 2 ^ 9,
         ComplexArrayPlot[

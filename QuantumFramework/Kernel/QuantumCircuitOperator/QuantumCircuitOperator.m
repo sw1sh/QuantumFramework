@@ -10,23 +10,17 @@ PackageScope["FromCircuitOperatorShorthand"]
 
 BarrierQ[barrier_] := MatchQ[barrier, "Barrier" | "Barrier"[_ ? orderQ, ___] | "Barrier"[Span[_Integer, _Integer | All], ___]]
 
-quantumCircuitOperatorQ[QuantumCircuitOperator[data_Association]] /; ! AtomQ[Unevaluated[data]] :=
-    QuantumCircuitOperatorQ[QuantumCircuitOperator[data]]
-
-quantumCircuitOperatorQ[QuantumCircuitOperator[KeyValuePattern[{"Elements" -> elements_}]]] :=
-    AllTrue[elements,
-        BarrierQ[#] ||
-        QuantumFrameworkOperatorQ[#] &
-    ]
+quantumCircuitOperatorQ[QuantumCircuitOperator[data : HoldPattern[Association[(_String -> _) ...]]]] :=
+    KeyExistsQ[data, "Elements"] && AllTrue[Lookup[data, "Elements"], BarrierQ[#] || QuantumFrameworkOperatorQ[#] &]
 
 QuantumCircuitOperatorQ[___] := False
 
-QuantumCircuitOperatorQ[qco_QuantumCircuitOperator] := System`Private`HoldValidQ[qco]
+QuantumCircuitOperatorQ[qco_QuantumCircuitOperator] := System`Private`HoldValidQ[qco] || quantumCircuitOperatorQ[Unevaluated[qco]]
 
 QuantumCircuitOperatorQ[___] := False
 
 
-qco_QuantumCircuitOperator /; quantumCircuitOperatorQ[Unevaluated[qco]] && ! System`Private`HoldValidQ[qco] := System`Private`HoldSetValid[qco]
+qco_QuantumCircuitOperator /; System`Private`HoldNotValidQ[qco] && quantumCircuitOperatorQ[Unevaluated[qco]] := System`Private`HoldSetValid[qco]
 
 
 Options[QuantumCircuitOperator] := Join[{"Parameters" -> {}, "Picture" -> Automatic}, Options[CircuitDraw]]

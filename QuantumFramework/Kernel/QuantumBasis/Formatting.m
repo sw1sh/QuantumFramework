@@ -15,11 +15,11 @@ basisDimensionSummaryItem[o_] := If[o["InputDimension"] === o["OutputDimension"]
 basisQuditsSummaryItem[o_] := {"Qudits: ", If[o["InputQudits"] === o["OutputQudits"], o["InputQudits"], {o["OutputQudits"], o["InputQudits"]}]}
 
 
-QuantumBasis /: MakeBoxes[qb_QuantumBasis ? QuantumBasisQ, format : TraditionalForm] := With[{boxes = ToBoxes[qb["Association"], format]},
+QuantumBasis /: MakeBoxes[qb_QuantumBasis /; QuantumBasisQ[Unevaluated[qb]], format : TraditionalForm] := With[{boxes = ToBoxes[qb["Association"], format]},
     InterpretationBox[boxes, qb]
 ]
 
-QuantumBasis /: MakeBoxes[qb_QuantumBasis ? QuantumBasisQ, format : StandardForm] := With[{
+QuantumBasis /: MakeBoxes[qb_QuantumBasis /; QuantumBasisQ[Unevaluated[qb]], format : StandardForm] := With[{
     icon = If[
         qb["ElementDimension"] < 2 ^ 9,
         ComplexArrayPlot[

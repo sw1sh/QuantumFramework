@@ -2,12 +2,12 @@ Package["Wolfram`QuantumFramework`"]
 
 
 
-QuantumCircuitOperator /: MakeBoxes[qco_QuantumCircuitOperator, TraditionalForm] /; QuantumCircuitOperatorQ[qco] :=
+QuantumCircuitOperator /: MakeBoxes[qco_QuantumCircuitOperator /; QuantumCircuitOperatorQ[Unevaluated[qco]], TraditionalForm] :=
     With[{diagram = ToBoxes[qco["Diagram"], StandardForm]},
         InterpretationBox[diagram, qco]
     ]
 
-QuantumCircuitOperator /: MakeBoxes[qco_QuantumCircuitOperator /; QuantumCircuitOperatorQ[qco], format_] := Enclose[
+QuantumCircuitOperator /: MakeBoxes[qco_QuantumCircuitOperator /; QuantumCircuitOperatorQ[Unevaluated[qco]], format_] := Enclose[
 BoxForm`ArrangeSummaryBox["QuantumCircuitOperator",
     qco,
     Tooltip[

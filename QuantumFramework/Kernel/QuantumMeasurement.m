@@ -9,7 +9,7 @@ CategoricalDistribution
 
 
 
-QuantumMeasurementQ[QuantumMeasurement[qmo_ ? QuantumMeasurementOperatorQ]] := True
+QuantumMeasurementQ[QuantumMeasurement[qmo_QuantumMeasurementOperator /; QuantumMeasurementOperatorQ[Unevaluated[qmo]]]] := True
 
 QuantumMeasurementQ[___] := False
 
@@ -276,12 +276,12 @@ Scan[
 
 (* formatting *)
 
-QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement, TraditionalForm] /; QuantumMeasurementQ[qm] :=
+QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement, TraditionalForm] /; QuantumMeasurementQ[Unevaluated[qm]] :=
     With[{proba = ToBoxes[qm["Probabilities"]]},
         InterpretationBox[proba, qm]
     ]
 
-QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement ? QuantumMeasurementQ, format_] := Module[{icon},
+QuantumMeasurement /: MakeBoxes[qm_QuantumMeasurement /; QuantumMeasurementQ[Unevaluated[qm]], format_] := Module[{icon},
     icon = With[{proba = TimeConstrained[qm["Probability"], 1]},
         If[
             ! FailureQ[proba] && AllTrue[proba, NumericQ],

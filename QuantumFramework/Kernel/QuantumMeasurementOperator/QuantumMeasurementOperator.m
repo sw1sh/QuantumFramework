@@ -6,17 +6,17 @@ PackageScope["QuantumMeasurementOperatorQ"]
 
 
 
-quantumMeasurementOperatorQ[QuantumMeasurementOperator[qo_, _ ? targetsQ]] := QuantumOperatorQ[qo]
+quantumMeasurementOperatorQ[QuantumMeasurementOperator[qo_QuantumOperator /; QuantumOperatorQ[Unevaluated[qo]], _ ? targetsQ]] := True
 
 quantumMeasurementOperatorQ[___] := False
 
 
-QuantumMeasurementOperatorQ[qmo_QuantumMeasurementOperator] := System`Private`HoldValidQ[qmo]
+QuantumMeasurementOperatorQ[qmo_QuantumMeasurementOperator] := System`Private`HoldValidQ[qmo] || quantumMeasurementOperatorQ[Unevaluated[qmo]]
 
 QuantumMeasurementOperatorQ[___] := False
 
 
-qmo_QuantumMeasurementOperator /; quantumMeasurementOperatorQ[Unevaluated[qmo]] && ! System`Private`HoldValidQ[qmo] := System`Private`HoldSetValid[qmo]
+qmo_QuantumMeasurementOperator /; System`Private`HoldNotValidQ[qmo] && quantumMeasurementOperatorQ[Unevaluated[qmo]] := System`Private`HoldSetValid[qmo]
 
 
 (* constructors *)
