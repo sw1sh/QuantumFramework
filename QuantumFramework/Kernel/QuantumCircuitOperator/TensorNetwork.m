@@ -304,7 +304,7 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
     info = Confirm @ circuit["TensorNetworkInfo"];
     contractionBases = Partition[Lookup[info["QuditBases"], Catenate[info["ContractionIndices"]]], 2];
     ConfirmAssert[AllTrue[contractionBases, Equal @@ Through[#["Dimension"]] &]];
-    basisCompatibleQ = And @@ Equal @@@ contractionBases;
+    basisCompatibleQ = TrueQ[And @@ Equal @@@ contractionBases];
     basis = Confirm @ circuit["TensorNetworkBasis"];
     phaseSpaceQ = basis["Picture"] === "PhaseSpace";
     computationalQ = ! phaseSpaceQ && ! basisCompatibleQ || TrueQ[OptionValue["Computational"]];
@@ -341,9 +341,9 @@ TensorNetworkCompile[qco_QuantumCircuitOperator, opts : OptionsPattern[]] := Enc
         If[ eigenOrder =!= {},
             order = {Join[Take[Select[order[[1]], NonPositive], - Length[eigenOrder]], Select[order[[1]], Positive]], order[[2]]};
         ];
-        res = QuantumState[res, QuantumBasis[{basis, basis["Conjugate"]}]]["Unbend"]
+        res = QuantumState[If[computationalQ, res, res["State"]], QuantumBasis[{basis, basis["Conjugate"]}]]["Unbend"]
         ,
-        res = If[computationalQ, QuantumState[res, basis], QuantumState[res["State"], basis]];
+        res = QuantumState[If[computationalQ, res, res["State"]], basis];
     ];
     res = Which[
         eigenOrder =!= {},
