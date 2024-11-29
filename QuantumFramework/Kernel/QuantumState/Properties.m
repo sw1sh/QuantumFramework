@@ -443,7 +443,7 @@ QuantumStateProp[qs_, "VonNeumannEntropy" | "Entropy", logBase_ ? NumericQ] := E
         qs["PureStateQ"],
         0,
         ConfirmAssert[qs["Dimension"] < 2 ^ 10];
-        Enclose[Chop @ Simplify @ - Tr[matrix . ConfirmBy[MatrixLog[matrix, Method -> "Jordan"], MatrixQ]] / Log[logBase], $Failed &]
+        Chop[Simplify[Total[- # Log[logBase, #]] & @ Normalize[Select[qs["Eigenvalues"], ! NumericQ[#] || # != 0 &], Total]]]
     ]
 ],
     Indeterminate &
