@@ -226,7 +226,9 @@ QuantumMeasurementProp[qm_, "StateAssociation" | "StatesAssociation"] := Part[
 
 QuantumMeasurementProp[qm_, "StateAmplitudes"] := Map[Simplify, #["Amplitudes"]] & /@ qm["StateAssociation"]
 
-QuantumMeasurementProp[qm_, "StateProbabilities"] := Select[Chop /@ Merge[Thread[qm["States"] -> qm["ProbabilitiesList"]], Total], # != 0 &]
+QuantumMeasurementProp[qm_, "StateProbability"] := AssociationThread[qm["States"], qm["ProbabilitiesList"]]
+
+QuantumMeasurementProp[qm_, "StateProbabilities"] := Select[Chop /@ Merge[Thread[qm["States"] -> qm["ProbabilitiesList"]], Total], ! NumericQ[#] || # != 0 &]
 
 QuantumMeasurementProp[qm_, "StateProbabilityTable"] := Dataset[qm["StateProbabilities"]]
 
