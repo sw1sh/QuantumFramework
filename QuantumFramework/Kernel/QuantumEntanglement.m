@@ -6,7 +6,10 @@ PackageScope["$QuantumEntanglementMonotones"]
 
 
 
-$QuantumEntanglementMonotones = {"Concurrence", "Negativity", "LogNegativity", "EntanglementEntropy", "RenyiEntropy", "Realignment"}
+$QuantumEntanglementMonotones = {
+    "Concurrence", "Negativity", "LogNegativity", "EntanglementEntropy", "RenyiEntropy", "Realignment",
+    "MutualInformationI", "MutualInformationJ", "Discord"
+}
 
 QuantumEntangledQ[qs_ ? QuantumStateQ, biPartition_ : Automatic, method_String : "Realignment"] /; MemberQ[$QuantumEntanglementMonotones, method] :=
     Enclose[Chop[ConfirmMatch[QuantumEntanglementMonotone[qs, biPartition, method], _ ? NumericQ]] > 0, Indeterminate &]
@@ -80,4 +83,32 @@ QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "Real
     With[{bqs = qs["Bipartition", biPartition]["Normalized"]},
         Total @ SingularValueList @ ArrayReshape[Transpose[bqs["Bend"]["Tensor"], 2 <-> 3], bqs["Dimensions"] ^ 2] - 1
     ]
+
+
+(* Quantum Discord *)
+
+MutualInformationI[rho_QuantumState, biPartition_ : Automatic] := With[
+    {s = rho["Bipartition", biPartition]},
+
+	QuantumPartialTrace[s, {1}]["Entropy"] + QuantumPartialTrace[s, {2}]["Entropy"] - s["Entropy"]
+]
+
+MutualInformationJ[rho_QuantumState, qm : _QuantumMeasurementOperator | Automatic : Automatic,biPartition_ : Automatic] := With[
+    {s = rho["Bipartition", biPartition]},
+    {m = QuantumMeasurementOperator[Replace[qm, Automatic :> QuantumMeasurementOperator[]], {2}][s]}, 
+
+    QuantumPartialTrace[s, {2}]["Entropy"] - m["ProbabilitiesList"] . (Simplify[QuantumPartialTrace[#, {2}]]["Entropy"] & /@ m["States"])
+]
+
+QuantumDiscord[rho_QuantumState, qm : _QuantumMeasurementOperator | Automatic : Automatic, biPartition_ : Automatic] :=
+	MutualInformationI[rho, biPartition] - MutualInformationJ[rho, qm, biPartition]
+
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, biPartition_ : Automatic, "MutualInformationI"] :=
+    MutualInformationI[qs, biPartition]
+
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, qm : _QuantumMeasurementOperator | Automatic : Automatic, biPartition_ : Automatic, "MutualInformationJ"] :=
+    MutualInformationJ[qs, qm, biPartition]
+
+QuantumEntanglementMonotone[qs_ ? QuantumStateQ, qm : _QuantumMeasurementOperator | Automatic : Automatic, biPartition_ : Automatic, "Discord"] :=
+    QuantumDiscord[qs, qm, biPartition]
 

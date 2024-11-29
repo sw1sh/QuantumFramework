@@ -484,7 +484,10 @@
             "LogNegativity",
             "EntanglementEntropy",
             "RenyiEntropy",
-            "Realignment"
+            "Realignment",
+            "MutualInformationI",
+            "MutualInformationJ",
+            "Discord"
         },
         {
             "Concurrence",
@@ -492,7 +495,10 @@
             "LogNegativity",
             "EntanglementEntropy",
             "RenyiEntropy",
-            "Realignment"
+            "Realignment",
+            "MutualInformationI",
+            "MutualInformationJ",
+            "Discord"
         }
     },
     "QuantumDistance" -> {
