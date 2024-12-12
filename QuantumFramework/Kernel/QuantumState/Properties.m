@@ -34,7 +34,8 @@ $QuantumStateProperties = {
     "Formula", "Simplify", "FullSimplify",
     "Diagram", "CircuitDiagram",
     "BlochPlot", "AmplitudePlot", "ProbabilityPlot",
-    "PieChart", "SectorChart"
+    "PieChart", "SectorChart",
+    "PauliTree"
 };
 
 QuantumState["Properties"] := Union @ Join[$QuantumStateProperties, QuantumBasis["Properties"]]
@@ -986,6 +987,8 @@ QuantumStateProp[qs_, "ProbabilitiesPlot" | "ProbabilitiesChart", opts : Options
 QuantumStateProp[qs_, "PieChart", args___] := QuditPieChart[qs, args]
 
 QuantumStateProp[qs_, "SectorChart", args___] := QuditSectorChart[qs, args]
+
+QuantumStateProp[qs_, "PauliTree" | "PauliGraph", args___] := QuantumStatePauliTree[qs, args]
 
 
 (* basis properties *)
