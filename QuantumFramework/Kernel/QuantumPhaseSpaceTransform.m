@@ -82,7 +82,7 @@ QuantumPositiveTransform[qb_QuditBasis, ___] := sectorBasis[qb]
 QuantumPositiveTransform[op_QuantumOperator, args___] := QuantumOperator[QuantumPositiveTransform[op["State"], args], op["Order"] /. {} -> {First[Flatten[op["Order"]]]}]
 QuantumPositiveTransform[qs_QuantumState] /; qs["Picture"] == "PhaseSpace" := QuantumState[
 	Flatten[QuantumPositiveTransform[qs["StateTensor"]]],
-	QuantumBasis[Sequence @@ QuantumPositiveTransform[qs["QuditBasis"]["Canonical"]]["SplitDual", qs["OutputQudits"]], "Label" -> qs["Label"]]
+	QuantumBasis[Sequence @@ QuantumPositiveTransform[qs["QuditBasis"]["Canonical"]]["Split", qs["OutputQudits"]], "Label" -> qs["Label"]]
 ]
 QuantumPositiveTransform[qs_QuantumState, args___] := QuantumPositiveTransform[QuantumPhaseSpaceTransform[qs, args]]
 QuantumPositiveTransform[qc_QuantumChannel, args___] := QuantumChannel[QuantumPositiveTransform[qc["QuantumOperator"], args]]
