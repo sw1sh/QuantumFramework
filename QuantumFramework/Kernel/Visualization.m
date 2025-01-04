@@ -108,29 +108,34 @@ QuditSectorChart[qs_QuantumState, args___] := With[{proba = Normal @ Reverse @ Q
 
 Options[QuantumStatePauliTree] = Options[Graph]
 
-QuantumStatePauliTree[qs_QuantumState, opts : OptionsPattern[]] := Block[{n = qs["Qudits"], decomp, keys, values, selector, leaves, leaveValues, vertices, tree, weights},
+QuantumStatePauliTree[qs_QuantumState, opts : OptionsPattern[]] := Block[{n = qs["Qudits"], decomp, keys, values, selector, leaves, scaledValues, vertices, tree, weights, scaledWeights, edges},
 	decomp = Chop /@ Join[AssociationThread[StringJoin /@ Tuples[{"I", "X", "Y", "Z"}, n] -> 0], qs["Operator"]["PauliDecompose"]];
 	keys = (FirstPosition[{"I", "X", "Y", "Z"}, #][[1]] & /@ Characters[#]) & /@ Keys[decomp];
 	values = Normalize[Values[decomp]];
-    selector = ! NumberQ[#] || # != 0 & /@ values;
+    selector = ! NumericQ[#] || # != 0 & /@ values;
 	leaves = Pick[keys, selector];
-	leaveValues = If[AllTrue[#, NumericQ], Rescale[#], #] & @ Pick[values, selector];
+    values = Pick[values, selector];
+	scaledValues = If[AllTrue[#, NumericQ], Rescale[#, {Min[#, 0], Max[#, 1]}], #] & @ values;
 	vertices = Union @@ (NestList[Most, #, n] & /@ leaves);
 	tree = NestTree[{"I", "X", "Y", "Z"} &, Null, n];
 	weights = Fold[
 		{ws, key} |-> <|ws, key -> Total @ Lookup[ws, Select[Keys @ ws, key == Take[#, UpTo[Length[key]]] &]]|>,
-		<|AssociationThread[VertexList[tree][[All, 2]], 0], Thread[leaves -> leaveValues]|>,
+		<|AssociationThread[VertexList[tree][[All, 2]], 0], Thread[leaves -> values]|>,
 		ReverseSortBy[VertexList[tree][[All, 2]], Length]
 	];
+    scaledWeights = If[AllTrue[#, NumericQ], Rescale[#, {Min[#, 0], Max[#, 1]}], #] & @ weights;
+    edges = UndirectedEdge[#1[[2]], #2[[2]], #2[[1]]] & @@@ EdgeList[tree];
 	Subgraph[
 		Graph[
-			UndirectedEdge[#1[[2]], #2[[2]], #2[[1]]] & @@@ EdgeList[tree],
+			edges,
 			opts,
+            VertexWeight -> (#[[2]] -> weights[#[[2]]] & /@ edges),
+            EdgeWeight -> (# -> weights[#[[2]]] & /@ edges),
 			EdgeLabels -> UndirectedEdge[_,_,pauli_] :> Framed[pauli, Background -> White, FrameStyle -> None, FrameMargins -> None],
-			EdgeStyle -> UndirectedEdge[root_,_,pauli_] :> Directive[Thickness[0.002 Log[1 + Replace[weights[root], _ ? (Not @* NumericQ) -> 0]]], Switch[pauli, "I", Black, "X", Red, "Y", Green, "Z", Blue]],
+			EdgeStyle -> UndirectedEdge[root_,_,pauli_] :> Directive[Thickness[0.002 Log[1 + Replace[scaledWeights[root], _ ? (Not @* NumericQ) -> 0]]], Switch[pauli, "I", Black, "X", Red, "Y", Green, "Z", Blue]],
 			EdgeShapeFunction -> "Line",
-			VertexSize -> Thread[leaves -> Scaled[.03]],
-			VertexStyle -> Thread[leaves -> ColorData["TemperatureMap"] /@ Replace[leaveValues, _ ? (Not @* NumericQ) -> 1, 1]],
+			VertexSize -> (# -> {"Scaled", .03} & /@ leaves),
+			VertexStyle -> Thread[leaves -> ColorData["TemperatureMap"] /@ Replace[scaledValues, _ ? (Not @* NumericQ) -> 1, 1]],
 			VertexShapeFunction -> Prepend[_ -> None] @ Thread[leaves -> Automatic],
 			GraphLayout -> "BalloonEmbedding"
 		],
