@@ -139,11 +139,12 @@ QuantumCircuitMultiwayCausalGraph[sg_ ? GraphQ, opts : OptionsPattern[]] := Encl
 
 UntaggedGraph[g_] := Graph[VertexList[g], EdgeList[g][[All, ;; 2]], Options[g] /. e_DirectedEdge :> e[[;; 2]]]
 
-Options[QuantumCircuitPathGraph] = Join[{"Tagged" -> False}, Options[Graph]]
+Options[QuantumCircuitPathGraph] = Join[{"Tagged" -> False, "ThicknessFactor" -> 5}, Options[Graph]]
 
 QuantumCircuitPathGraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]] := Block[{
 	ops = qc["NormalOperators"], g, weights,
-	taggedQ = TrueQ[OptionValue["Tagged"]]
+	taggedQ = TrueQ[OptionValue["Tagged"]],
+	thickness = OptionValue["ThicknessFactor"]
 },
 	If[	qc["InputOrder"] =!= {},
 		PrependTo[ops, QuantumOperator[QuantumState[QuantumState[{1}, qc["InputDimensions"]], qc["Input"]["Dual"]], {qc["InputOrder"], {}}]]
@@ -169,7 +170,7 @@ QuantumCircuitPathGraph[qc_ ? QuantumCircuitOperatorQ, opts : OptionsPattern[]] 
 		VertexWeight -> Thread[VertexList[g] -> 1],
         EdgeWeight -> weights,
 		EdgeStyle -> If[AllTrue[weights, RealValuedNumericQ],
-			Thread[EdgeList[g] -> ({Arrowheads[0.0075], Thickness[0.001 Abs[#]], If[N[Sign[#]] == -1., Blue, Red]} & /@ weights)],
+			Thread[EdgeList[g] -> ({Arrowheads[0.0075], Thickness[thickness 0.001 Abs[#]], If[N[Sign[#]] == -1., Blue, Red]} & /@ weights)],
 			Automatic
 		],
 		VertexCoordinates -> RotationTransform[- Pi / 2] @ GraphEmbedding[g, {"MultipartiteEmbedding", "VertexPartition" -> Length /@ GatherBy[VertexList[g], First]}],
