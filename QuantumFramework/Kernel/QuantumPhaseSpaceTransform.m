@@ -79,6 +79,7 @@ QuantumPositiveTransform[tensor_ ? TensorQ] := Enclose @ With[{dims = TensorDime
     ]
 ]
 QuantumPositiveTransform[qb_QuditBasis, ___] := sectorBasis[qb]
+QuantumPositiveTransform[qb_QuantumBasis, ___] := QuantumBasis[QuantumPositiveTransform[qb["Output"]], QuantumPositiveTransform[qb["Input"]], qb["Options"]]
 QuantumPositiveTransform[op_QuantumOperator, args___] := QuantumOperator[QuantumPositiveTransform[op["State"], args], op["Order"] /. {} -> {First[Flatten[op["Order"]]]}]
 QuantumPositiveTransform[qs_QuantumState] /; qs["Picture"] == "PhaseSpace" := QuantumState[
 	Flatten[QuantumPositiveTransform[qs["StateTensor"]]],
