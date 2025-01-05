@@ -648,8 +648,8 @@ QuantumOperatorProp[qo_, "PauliDecompose"] /; qo["InputDimensions"] == qo["Outpu
 ]
 
 
-UnitaryEulerAngles[a_, b_, c_, d_] := With[{theta = Simplify[2 ArcSin[Abs[b]]]},
-    If[NumericQ[theta] && theta == 0, {0, 0, Simplify[Mod[Arg[d], 2 Pi]]}, {theta, Simplify[Mod[Arg[c], 2 Pi]], Simplify[Mod[Arg[b] - Pi, 2 Pi]]}]
+UnitaryEulerAngles[_, b_, c_, d_] := With[{theta = Simplify[2 ArcSin[Abs[b]]]},
+    If[NumericQ[theta] && theta == 0, {0, 0, Simplify[Mod[Arg[d], 2 Pi]]}, {Simplify[Mod[Arg[c], 2 Pi]], theta, Simplify[Mod[Arg[b] - Pi, 2 Pi]]}]
 ]
 UnitaryEulerAngles[u_ ? SquareMatrixQ] /; Dimensions[u] === {2, 2} := UnitaryEulerAngles[u[[1, 1]], u[[1, 2]] , u[[2, 1]], u[[2, 2]]]
 
@@ -657,7 +657,7 @@ UnitaryEulerAngles[qo_QuantumOperator] := UnitaryEulerAngles[qo["MatrixRepresent
 
 UnitaryEulerAnglesWithPhase[u_ ? SquareMatrixQ] /; Dimensions[u] === {2, 2} := With[{a = u[[1, 1]], b = u[[1, 2]], c = u[[2, 1]], d = u[[2, 2]]},
     With[{phase = Simplify[Arg[a]], theta = Simplify[2 ArcSin[Abs[b]]]},
-        {If[NumericQ[theta] && theta == 0, {0, 0, Simplify[Mod[Arg[d] - phase, 2 Pi]]}, {theta, Simplify[Mod[Arg[c] - phase, 2 Pi]], Simplify[Mod[Arg[b] - Pi - phase, 2 Pi]]}], phase}
+        {If[NumericQ[theta] && theta == 0, {0, 0, Simplify[Mod[Arg[d] - phase, 2 Pi]]}, {Simplify[Mod[Arg[c] - phase, 2 Pi]], theta, Simplify[Mod[Arg[b] - Pi - phase, 2 Pi]]}], phase}
     ]
 ]
 
@@ -665,9 +665,17 @@ UnitaryEulerAnglesWithPhase[mat_ ? MatrixQ] /; Times @@ Dimensions[mat] == 4 := 
 
 UnitaryEulerAnglesWithPhase[qo_QuantumOperator] := UnitaryEulerAnglesWithPhase[qo["MatrixRepresentation"]]
 
+UnitaryAngles[arg_] := UnitaryEulerAngles[arg][[{2, 1, 3}]]
+
+UnitaryAnglesWithPhase[arg_] := MapAt[#[[{2, 1, 3}]] &, UnitaryEulerAnglesWithPhase[arg], {1}]
+
+
+QuantumOperatorProp[qo_, "EulerAngles"] /; qo["VectorQ"] && qo["Dimension"] == 4 := First[UnitaryEulerAnglesWithPhase[qo["MatrixRepresentation"]]]
+
+QuantumOperatorProp[qo_, "EulerAnglesWithPhase"] /; qo["VectorQ"] && qo["Dimension"] == 4 := UnitaryEulerAnglesWithPhase[qo["MatrixRepresentation"]]
 
 QuantumOperatorProp[qo_, "ZYZ"] /; qo["VectorQ"] && qo["Dimension"] == 4 := Enclose @ Module[{angles, phase},
-    {angles, phase} = UnitaryEulerAnglesWithPhase[qo["MatrixRepresentation"]];
+    {angles, phase} = UnitaryAnglesWithPhase[qo["MatrixRepresentation"]];
     If[ NumericQ[phase] && phase == 0,
         QuantumOperator[{"U", Splice @ angles}, qo["Order"]],
         QuantumCircuitOperator[{QuantumOperator[{"GlobalPhase", phase}], QuantumOperator[{"U", Splice @ angles}, qo["Order"]]}]
@@ -676,7 +684,7 @@ QuantumOperatorProp[qo_, "ZYZ"] /; qo["VectorQ"] && qo["Dimension"] == 4 := Encl
 
 QuantumOperatorProp[qo_, "SimpleQASM"] /; qo["Dimensions"] === {2, 2} := Enclose @ With[{
     angles = ToLowerCase @ ToString[NumberForm[N[#]]] & /@
-        ConfirmBy[UnitaryEulerAngles[qo["MatrixRepresentation"]], AllTrue[NumericQ]]
+        ConfirmBy[UnitaryAngles[qo["MatrixRepresentation"]], AllTrue[NumericQ]]
 },
     StringTemplate["U(``, ``, ``)"][Sequence @@ angles]
 ]
