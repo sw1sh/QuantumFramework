@@ -9,8 +9,8 @@ PackageExport[QuantumCircuitTokenEventGraph]
 
 
 operatorApply[op_, states : {_ ? QuantumStateQ ...}, basisQ_ : False] := Enclose @ With[{
-	inputOrder = op["InputOrder"],
-	outputOrder = op["OutputOrder"],
+	outputOrder = Replace[op["FullOutputOrder"], op["OutputOrderQuditMapping"], 1],
+	inputOrder = Replace[op["FullInputOrder"], op["InputOrderQuditMapping"], 1],
 	decompose = If[TrueQ[basisQ], {"BasisDecompose"}, {"DecomposeWithAmplitudes", op["OutputDimensions"]}]
 },
 	Map[
@@ -37,15 +37,24 @@ QuantumCircuitMultiwayGraph[PatternSequence[circuit_, initStates_ : Automatic], 
 			index++;
 			MapIndexed[
 				With[{newPos = Join[pos, #2]},
-					Labeled[{newPos, If[TrueQ[OptionValue["Normalize"]], #1[[2]], With[{factor = #1[[1]] ^ (1 / Length[op["FullOutputOrder"]])}, MapAt[factor * # &, #1[[2]], List /@ op["FullOutputOrder"]]]]}, <|
-						"Input" -> op["FullInputOrder"],
-						"Output" -> op["FullOutputOrder"],
-						"Step" -> Length[newPos],
-						"TreePosition" -> newPos,
-						"Index" -> index,
-						"Probability" -> #1[[1]] / norm,
-						"Operator" -> op
-					|>]
+					Labeled[
+						{newPos, If[TrueQ[OptionValue["Normalize"]],
+							#1[[2]]
+							,
+							With[{factor = #1[[1]] ^ (1 / Length[op["FullOutputOrder"]])},
+								MapAt[factor * # &, #1[[2]], List /@ Replace[op["FullOutputOrder"], op["OutputOrderQuditMapping"], 1]]
+							]
+						]},
+						<|
+							"Input" -> op["FullInputOrder"],
+							"Output" -> op["FullOutputOrder"],
+							"Step" -> Length[newPos],
+							"TreePosition" -> newPos,
+							"Index" -> index,
+							"Probability" -> #1[[1]] / norm,
+							"Operator" -> op
+						|>
+					]
 				] &,
 				weightedStates
 			]
