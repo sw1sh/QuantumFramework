@@ -10,6 +10,8 @@ PackageExport["SetFockSpaceSize"]
 
 PackageExport["Commutator"]
 
+PackageExport["G2Coherence"]
+
 PackageExport["OperatorVariance"]
 
 PackageExport["CoherentState"]
@@ -46,6 +48,9 @@ Commutator[a_QuantumOperator,b_QuantumOperator]:= a@b - b@a
 
 OperatorVariance[state_QuantumState, op_QuantumOperator]:= 
 	(state["Dagger"]@ (op @ op)@ state)["Scalar"] - (state["Dagger"]@ op @ state)["Scalar"]^2
+
+
+G2Coherence[\[Psi]_QuantumState,aOp_QuantumOperator]:= (SuperDagger[\[Psi]]@(SuperDagger[aOp]@SuperDagger[aOp]@aOp@aOp)@\[Psi])["Scalar"]/(SuperDagger[\[Psi]]@(SuperDagger[aOp] aOp)@\[Psi])["Scalar"]^2
 
 
 FockState[n_,size_ :$FockSize]:= 
@@ -181,31 +186,49 @@ SetFockSpaceSize[];
 (* ::Input::Initialization::Plain:: *)
 Options[WignerRepresentation]={
 "GaussianScaling"->Sqrt[2],
-"GridSize"->80
+"GridSize"->50
 };
 
 
 (* ::Input::Initialization::Plain:: *)
-WignerRepresentation[psi_QuantumState, {x_,xmin_,xmax_}, {p_,pmin_,pmax_}, OptionsPattern[]] :=
-    Module[{rho,M, X, Y, A2, B, w0, diag, g,xvec,pvec},
-   rho = psi["DensityMatrix"];
-        g = OptionValue["GaussianScaling"];
-        M = Length[rho];
-   xvec=Subdivide[xmin,xmax,OptionValue["GridSize"]-1];
-        pvec=Subdivide[pmin,pmax,OptionValue["GridSize"]-1];
-        {X, Y} = Transpose[Outer[List, xvec, pvec], {3, 2, 1}];
-        A2 = g * (X + I Y);
-        B = Abs[A2] ^ 2;
-        w0 = ConstantArray[2 rho[[1, -1]], {Length[xvec], Length[pvec
-            ]}];
-        While[
-            M > 1,
-            M--;
-            diag = Diagonal[rho, M-1] If[M!=1,2,1];
-            w0 = WigLaguerreVal[M-1, B, diag] + w0 A2 * M ^ -0.5;
+WignerRepresentation[psi_QuantumState, {x_, xmin_, xmax_}, {p_, pmin_,
+     pmax_}, OptionsPattern[]] := Module[{rho, M, X, Y, A2, B, w0, diag,
+ 
+    g, xvec, pvec},
+
+    rho = psi["DensityMatrix"];
+
+    g = OptionValue["GaussianScaling"];
+
+    M = Length[rho];
+
+    xvec = N@Subdivide[xmin, xmax, OptionValue["GridSize"] - 1];
+
+    pvec = N@Subdivide[pmin, pmax, OptionValue["GridSize"] - 1];
+
+    {X, Y} = Transpose[Outer[List, xvec, pvec], {3, 2, 1}];
+
+    A2 = g * (X + I Y);
+
+    B = Abs[A2] ^ 2;
+
+    w0 = ConstantArray[2 rho[[1, -1]], {Length[xvec], Length[pvec]}];
+        
+    While[
+        M > 1
+        ,
+        M--;
+        diag = Diagonal[rho, M - 1] If[M != 1,
+            2
+            ,
+            1
         ];
-         Interpolation[MapThread[List,{Flatten[Outer[List,xvec,pvec],1],Flatten[ Re[w0] Exp[-B 0.5] (g^2 0.5 / \[Pi])]}]]
-    ]
+        w0 = WigLaguerreVal[M - 1, B, diag] + w0 A2 * M ^ -0.5;
+    ];
+
+    Interpolation[MapThread[List, {Flatten[Outer[List, xvec, pvec], 1
+        ], Flatten[Transpose[Re[w0] Exp[-B 0.5] (g^2 0.5 / \[Pi])]]}]]
+]
 
 
 (* ::Input::Initialization::Plain:: *)
@@ -244,19 +267,27 @@ WigLaguerreVal[L_, x_, c_] :=
 
 Options[HusimiQRepresentation]={
 "GaussianScaling"->Sqrt[2],
-"GridSize"->80
+"GridSize"->50
 };
 
 
 (* ::Input::Initialization::Plain:: *)
-HusimiQRepresentation[\[Psi]_QuantumState, {x_,xmin_,xmax_},{p_,pmin_,pmax_}, OptionsPattern[]] :=
-    Module[{X, Y, amat, qmat, d, v, qmatList, k, nonZeroEigenpairs,g,xvec,pvec},
-        g=OptionValue["GaussianScaling"]; 
-xvec=Subdivide[xmin,xmax,OptionValue["GridSize"]-1];
-        pvec=Subdivide[pmin,pmax,OptionValue["GridSize"]-1]; 
-{X, Y} = Transpose[Outer[List, xvec, pvec], {3, 2, 1}];
+HusimiQRepresentation[\[Psi]_QuantumState, {x_, xmin_, xmax_}, {p_, pmin_,
+     pmax_}, OptionsPattern[]] :=
+    Module[{X, Y, amat, qmat, d, v, qmatList, k, nonZeroEigenpairs, g,
+         xvec, pvec},
+        g = OptionValue["GaussianScaling"];
+
+        xvec = Subdivide[xmin, xmax, OptionValue["GridSize"] - 1];
+
+        pvec = Subdivide[pmin, pmax, OptionValue["GridSize"] - 1];
+
+        {X, Y} = Transpose[Outer[List, xvec, pvec], {3, 2, 1}];
+
         amat = 0.5 g (X + I Y);
+
         qmat = ConstantArray[0, Dimensions[amat]];
+
         If[\[Psi]["PureStateQ"],
             qmat = HusimiPure[\[Psi], amat]
             ,
@@ -266,7 +297,9 @@ xvec=Subdivide[xmin,xmax,OptionValue["GridSize"]-1];
                 #[[2]]]], amat])&, nonZeroEigenpairs];
             qmat = 0.25 Total[Re /@ qmatList] g^2
         ];
-        Interpolation[MapThread[List,{Flatten[Outer[List,xvec,pvec],1],Flatten[ qmat]}]]
+
+        Interpolation[MapThread[List, {Flatten[Outer[List, xvec, pvec
+            ], 1], Flatten[Transpose@qmat]}]]
     ];
 
 
