@@ -16,12 +16,31 @@ PackageExport["FubiniStudyMetricTensor"]
 
 PackageExport["QuantumLinearSolve"]
 
+PackageExport["ParametrizedLayer"]
+
+PackageExport["EntaglementLayer"]
+
+PackageExport["GenerateParameters"]
+
 
 (* ::Section:: *)
+(*Quantum Optimization Functionalities*)
+
+
+Options[ParametrizedLayer]={"Symbol"->"\[Theta]"};
+ParametrizedLayer[op_,range_List,OptionsPattern[]]:=Sequence@@Table[op[Symbol[OptionValue["Symbol"]<>ToString[i]]]->Flatten[Position[range,i]],{i,range}]
+
+EntaglementLayer[cop_,range_List]:=Sequence@@Thread[cop->Subsets[range,{2}]]
+
+Options[GenerateParameters]={"Symbol"->"\[Theta]"};
+GenerateParameters[NQubits_,NLayers_,OptionsPattern[]]:=Table[Symbol[OptionValue["Symbol"]<>ToString[i] ],{i,1,NLayers *NQubits}]
+
+
+(* ::Section::Closed:: *)
 (*Example specific functions *)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Quantum Natural Gradient Descent*)
 
 
