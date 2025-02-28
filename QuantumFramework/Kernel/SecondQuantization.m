@@ -50,7 +50,7 @@ OperatorVariance[state_QuantumState, op_QuantumOperator]:=
 	(state["Dagger"]@ (op @ op)@ state)["Scalar"] - (state["Dagger"]@ op @ state)["Scalar"]^2
 
 
-G2Coherence[\[Psi]_QuantumState,aOp_QuantumOperator]:= (SuperDagger[\[Psi]]@(SuperDagger[aOp]@SuperDagger[aOp]@aOp@aOp)@\[Psi])["Scalar"]/(SuperDagger[\[Psi]]@(SuperDagger[aOp] aOp)@\[Psi])["Scalar"]^2
+G2Coherence[\[Psi]_QuantumState,aOp_QuantumOperator]:= (SuperDagger[\[Psi]]@(SuperDagger[aOp]@SuperDagger[aOp]@aOp@aOp)@\[Psi])["Scalar"]/(SuperDagger[\[Psi]]@(SuperDagger[aOp]@aOp)@\[Psi])["Scalar"]^2
 
 
 FockState[n_,size_ :$FockSize]:= 
@@ -302,9 +302,9 @@ HusimiQRepresentation[\[Psi]_QuantumState, {xmin_, xmax_}, {pmin_,pmax_}, Option
 
 
 HusimiPure[psi_QuantumState, alphaMat_] :=
-    Module[{n, psiVec, qmat},
+    Module[{n, psiVec, qmat,z},
         n = Times @@ psi["Dimensions"];
-        psiVec = psi["Matrix"] // Flatten;
+        psiVec = psi["StateVector"];
         qmat = Function[{q, x},
                     q . z ^ Range[Length[q] - 1, 0, -1] /. z -> x
                 ][Reverse[psiVec / Sqrt[Factorial /@ Range[0, n - 1]]
