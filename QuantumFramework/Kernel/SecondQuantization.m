@@ -186,13 +186,12 @@ SetFockSpaceSize[];
 (* ::Input::Initialization::Plain:: *)
 Options[WignerRepresentation]={
 "GaussianScaling"->Sqrt[2],
-"GridSize"->50
+"GridSize"->100
 };
 
 
 (* ::Input::Initialization::Plain:: *)
-WignerRepresentation[psi_QuantumState, {x_, xmin_, xmax_}, {p_, pmin_,
-     pmax_}, OptionsPattern[]] := Module[{rho, M, X, Y, A2, B, w0, diag,
+WignerRepresentation[psi_QuantumState, {xmin_, xmax_}, {pmin_,pmax_}, OptionsPattern[]] := Module[{rho, M, X, Y, A2, B, w0, diag,
  
     g, xvec, pvec},
 
@@ -267,13 +266,12 @@ WigLaguerreVal[L_, x_, c_] :=
 
 Options[HusimiQRepresentation]={
 "GaussianScaling"->Sqrt[2],
-"GridSize"->50
+"GridSize"->100
 };
 
 
 (* ::Input::Initialization::Plain:: *)
-HusimiQRepresentation[\[Psi]_QuantumState, {x_, xmin_, xmax_}, {p_, pmin_,
-     pmax_}, OptionsPattern[]] :=
+HusimiQRepresentation[\[Psi]_QuantumState, {xmin_, xmax_}, {pmin_,pmax_}, OptionsPattern[]] :=
     Module[{X, Y, amat, qmat, d, v, qmatList, k, nonZeroEigenpairs, g,
          xvec, pvec},
         g = OptionValue["GaussianScaling"];
